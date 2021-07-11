@@ -1936,6 +1936,11 @@ namespace spadas
 		{
 			prevIndex = prevValid ? (index - 1) : UINF;
 			nextIndex = nextValid ? (index + 1) : UINF;
+			listVars->retain();
+		}
+		~ListElemVars()
+		{
+			listVars->release();
 		}
 	};
 

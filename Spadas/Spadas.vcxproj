@@ -29,7 +29,6 @@
     <ClCompile Include="auto_sample.cpp" />
     <ClCompile Include="auto_type.cpp" />
     <ClCompile Include="auto_util.cpp" />
-    <ClCompile Include="auto_vector.cpp" />
     <ClCompile Include="auto_video.cpp" />
     <ClCompile Include="binary.cpp" />
     <ClCompile Include="binary_base64.cpp" />
