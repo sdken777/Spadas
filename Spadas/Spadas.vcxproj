@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="binary.h" />
+    <ClInclude Include="console.h" />
+    <ClInclude Include="file.h" />
+    <ClInclude Include="image_bz.h" />
+    <ClInclude Include="oscillator.h" />
+    <ClInclude Include="spadas.h" />
+    <ClInclude Include="spadas_core.h" />
+    <ClInclude Include="spadas_define.h" />
+    <ClInclude Include="spadas_template.h" />
+    <ClInclude Include="string_bz.h" />
+    <ClInclude Include="string_encoding.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="auto_bus.cpp" />
+    <ClCompile Include="auto_plugin.cpp" />
+    <ClCompile Include="auto_sample.cpp" />
+    <ClCompile Include="auto_type.cpp" />
+    <ClCompile Include="auto_util.cpp" />
+    <ClCompile Include="auto_vector.cpp" />
+    <ClCompile Include="auto_video.cpp" />
+    <ClCompile Include="binary.cpp" />
+    <ClCompile Include="binary_base64.cpp" />
+    <ClCompile Include="binary_des.cpp" />
+    <ClCompile Include="binary_factory.cpp" />
+    <ClCompile Include="binary_sha1.cpp" />
+    <ClCompile Include="console.cpp" />
+    <ClCompile Include="console_linux.cpp" />
+    <ClCompile Include="console_windows.cpp" />
+    <ClCompile Include="file_console.cpp" />
+    <ClCompile Include="file_io.cpp" />
+    <ClCompile Include="file_linux.cpp" />
+    <ClCompile Include="file_path.cpp" />
+    <ClCompile Include="file_windows.cpp" />
+    <ClCompile Include="image.cpp" />
+    <ClCompile Include="image_bmp.cpp" />
+    <ClCompile Include="image_fastcvt.cpp" />
+    <ClCompile Include="image_merge3d.cpp" />
+    <ClCompile Include="image_pointer.cpp" />
+    <ClCompile Include="image_resize.cpp" />
+    <ClCompile Include="image_rotate.cpp" />
+    <ClCompile Include="image_rowio.cpp" />
+    <ClCompile Include="image_type.cpp" />
+    <ClCompile Include="math_biginteger.cpp" />
+    <ClCompile Include="mt_task.cpp" />
+    <ClCompile Include="refcount_object.cpp" />
+    <ClCompile Include="utility_codec.cpp" />
+    <ClCompile Include="math.cpp" />
+    <ClCompile Include="math_matrix.cpp" />
+    <ClCompile Include="matrix.cpp" />
+    <ClCompile Include="mt_barrier.cpp" />
+    <ClCompile Include="mt_flag.cpp" />
+    <ClCompile Include="mt_lock.cpp" />
+    <ClCompile Include="mt_threads.cpp" />
+    <ClCompile Include="mt_type.cpp" />
+    <ClCompile Include="oscillator.cpp" />
+    <ClCompile Include="refcount_atom.cpp" />
+    <ClCompile Include="refcount_vars.cpp" />
+    <ClCompile Include="space.cpp" />
+    <ClCompile Include="string.cpp" />
+    <ClCompile Include="string_encoding.cpp" />
+    <ClCompile Include="string_static.cpp" />
+    <ClCompile Include="string_linux.cpp" />
+    <ClCompile Include="string_windows.cpp" />
+    <ClCompile Include="utility_imagematrix.cpp" />
+    <ClCompile Include="utility_mmap.cpp" />
+    <ClCompile Include="utility_ping.cpp" />
+    <ClCompile Include="utility_static.cpp" />
+    <ClCompile Include="utility_tick.cpp" />
+    <ClCompile Include="utility_timer.cpp" />
+    <ClCompile Include="utility_type.cpp" />
+    <ClCompile Include="utility_version.cpp" />
+    <ClCompile Include="xml.cpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{1CD3C5A7-8313-41F2-98D2-3F683BDB26E4}</ProjectGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)bin64\</OutDir>
+    <TargetName>Spadas</TargetName>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)bin64\debug\</OutDir>
+    <TargetName>Spadas</TargetName>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;SPADAS_ENV_WINDOWS;SPADAS_ARCH_X86;SPADAS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>../;../include64;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ImportLibrary>$(SolutionDir)lib64\$(TargetName).lib</ImportLibrary>
+      <AdditionalLibraryDirectories>../lib64</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y spadas*.h ..\include64\</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>Disabled</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;SPADAS_ENV_WINDOWS;SPADAS_ARCH_X86;SPADAS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>../;../include64;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ImportLibrary>$(SolutionDir)lib64\$(TargetName).lib</ImportLibrary>
+      <AdditionalLibraryDirectories>../lib64</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y spadas*.h ..\include64\</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

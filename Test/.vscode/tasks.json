@@ -1,0 +1,70 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "调试构建(Linux-X86本机)",
+            "command": "/usr/bin/make",
+            "args": [
+                "-j4",
+                "TYPE=exe",
+                "MODE=debug",
+                "PLATFORM=linux",
+                "TARGET=test",
+                "DEPENDS=spadas",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "shell",
+            "label": "发布构建(Linux-X86本机)",
+            "command": "/usr/bin/make",
+            "args": [
+                "-j4",
+                "TYPE=exe",
+                "MODE=release",
+                "PLATFORM=linux",
+                "TARGET=test",
+                "DEPENDS=spadas",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "shell",
+            "label": "调试构建(Linux-Arm本机)",
+            "command": "/usr/bin/make",
+            "args": [
+                "-j4",
+                "TYPE=exe",
+                "MODE=debug",
+                "PLATFORM=linuxarm",
+                "TARGET=test",
+                "DEPENDS=spadas",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "shell",
+            "label": "发布构建(Linux-Arm本机)",
+            "command": "/usr/bin/make",
+            "args": [
+                "-j4",
+                "TYPE=exe",
+                "MODE=release",
+                "PLATFORM=linuxarm",
+                "TARGET=test",
+                "DEPENDS=spadas",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "shell",
+            "label": "清理",
+            "command": "/usr/bin/make",
+            "args": [
+                "clean",
+            ],
+            "problemMatcher":"$gcc",
+        }
+    ],
+    "version": "2.0.0"
+}

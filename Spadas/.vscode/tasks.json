@@ -1,0 +1,72 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "调试构建(Linux-X86本机)",
+            "command": "/usr/bin/make",
+            "args": [
+                "-j4",
+                "TYPE=lib",
+                "MODE=debug",
+                "PLATFORM=linux",
+                "TARGET=spadas",
+                "DEPENDS=pthread",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "shell",
+            "label": "发布构建(Linux-X86本机)",
+            "command": "/usr/bin/make",
+            "args": [
+                "-j4",
+                "TYPE=lib",
+                "MODE=release",
+                "PLATFORM=linux",
+                "TARGET=spadas",
+                "DEPENDS=pthread",
+                "POSTBUILD_COMMAND=cp spadas*.h ../includex/",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "shell",
+            "label": "调试构建(Linux-Arm本机)",
+            "command": "/usr/bin/make",
+            "args": [
+                "-j4",
+                "TYPE=lib",
+                "MODE=debug",
+                "PLATFORM=linuxarm",
+                "TARGET=spadas",
+                "DEPENDS=pthread",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "shell",
+            "label": "发布构建(Linux-Arm本机)",
+            "command": "/usr/bin/make",
+            "args": [
+                "-j4",
+                "TYPE=lib",
+                "MODE=release",
+                "PLATFORM=linuxarm",
+                "TARGET=spadas",
+                "DEPENDS=pthread",
+                "POSTBUILD_COMMAND=cp spadas*.h ../includexa/",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "shell",
+            "label": "清理",
+            "command": "/usr/bin/make",
+            "args": [
+                "clean",
+            ],
+            "problemMatcher":"$gcc",
+        }
+    ],
+    "version": "2.0.0"
+}

@@ -1,0 +1,17 @@
+{
+    "files.exclude": {
+        ".project": true,
+        ".cproject": true,
+        ".settings": true,
+        "*.vcxproj": true,
+        "*.vcxproj.user": true,
+        "*.vcxproj.filters": true,
+    },
+    "C_Cpp.default.defines": [
+        "SPADAS_ENV_LINUX",
+    ],
+    "C_Cpp.default.includePath": [
+        "../includex",
+        // "../includexa",
+    ],
+}

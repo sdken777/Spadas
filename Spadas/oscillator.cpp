@@ -1,0 +1,237 @@
+﻿
+#include "spadas.h"
+
+#include "oscillator.h"
+
+namespace spadas_internal
+{
+    using namespace spadas;
+    
+	struct OscillatorEvent
+	{
+		Bool disposable;
+		Bool toSet;
+		ULong passed;
+		ULong offset;
+		ULong period;
+		Flag trigger;
+		OscillatorEvent *prev;
+		OscillatorEvent *next;
+		OscillatorEvent() : disposable(FALSE), toSet(FALSE), passed(ULINF), offset(ULINF), period(0), prev(NULL), next(NULL)
+		{
+		}
+		OscillatorEvent(Bool disposable0, Bool toSet0, ULong period0, Flag trigger0, OscillatorEvent* prev0, OscillatorEvent* next0) : disposable(disposable0), toSet(toSet0), passed(ULINF), offset(ULINF), period(period0), trigger(trigger0), prev(prev0), next(next0)
+		{
+		}
+	};
+	
+	class OscillatorVars : public Vars
+	{
+	public:
+		Lock lock;
+		OscillatorEvent *head, *tail;
+		Timer timer;
+		OscillatorVars()
+		{
+			head = new OscillatorEvent();
+			tail = new OscillatorEvent();
+			head->next = tail;
+			tail->prev = head;
+			oscillatorID = startOscillator();
+		}
+		~OscillatorVars()
+		{
+			stopOscillator(oscillatorID);
+			OscillatorEvent *ptr = head->next;
+			while (ptr != tail)
+			{
+				OscillatorEvent * nextPtr = ptr->next;
+				delete ptr;
+				ptr = nextPtr;
+			}
+			delete head;
+			delete tail;
+		}
+	private:
+		UInt oscillatorID;
+		UInt startOscillator();
+		void stopOscillator(UInt id);
+	};
+	
+	OscillatorManager::OscillatorManager()
+	{
+		oscillator = NULL;
+	}
+	OscillatorManager::~OscillatorManager()
+	{
+		if (oscillator) delete oscillator;
+	}
+	Oscillator *OscillatorManager::obj()
+	{
+		lock.enter();
+		if (!oscillator) oscillator = new Oscillator;
+		lock.leave();
+		return oscillator;
+	}
+	OscillatorManager om;
+}
+
+using namespace spadas;
+using namespace spadas_internal;
+
+Oscillator::Oscillator() : Object<class OscillatorVars>(new OscillatorVars(), TRUE)
+{
+}
+
+void Oscillator::add(Flag trigger, UInt period, Bool disposable, Bool toSet)
+{
+	vars->lock.enter();
+	{
+		OscillatorEvent* newEvent = new OscillatorEvent(disposable, toSet, (ULong)period, trigger, vars->head, vars->head->next);
+		newEvent->prev->next = newEvent;
+		newEvent->next->prev = newEvent;
+	}
+	vars->lock.leave();
+}
+
+void Oscillator::remove(Flag trigger)
+{
+	vars->lock.enter();
+	{
+		OscillatorEvent *ptr = vars->head->next;
+		while (ptr != vars->tail)
+		{
+			if (ptr->trigger == trigger)
+			{
+				OscillatorEvent *ptrNext = ptr->next;
+				ptr = ptr->prev;
+				delete ptr->next;
+				ptr->next = ptrNext;
+				ptrNext->prev = ptr;
+				break;
+			}
+			ptr = ptr->next;
+		}
+	}
+	vars->lock.leave();
+}
+
+void Oscillator::pulse()
+{
+	vars->lock.enter();
+	{
+		ULong count = (ULong)vars->timer.check();
+		OscillatorEvent *ptr = vars->head->next;
+		while (ptr != vars->tail)
+		{
+			if (ptr->passed == ULINF)
+			{
+				ptr->offset = count % ptr->period;
+				ptr->passed = count - ptr->offset;
+			}
+			else if (count - ptr->offset >= ptr->passed + ptr->period)
+			{
+				if (ptr->toSet) ptr->trigger.set();
+				else ptr->trigger.reset();
+				if (ptr->disposable)
+				{
+					OscillatorEvent *ptrNext = ptr->next;
+					ptr = ptr->prev;
+					delete ptr->next;
+					ptr->next = ptrNext;
+					ptrNext->prev = ptr;
+				}
+				else
+				{
+					ULong tmp = count - ptr->offset;
+					ptr->passed = tmp - tmp % ptr->period;
+				}
+			}
+			ptr = ptr->next;
+		}
+	}
+	vars->lock.leave();
+}
+
+#if defined(SPADAS_ENV_WINDOWS)
+
+#include <Windows.h>
+#pragma comment(lib, "winmm.lib")
+
+void spadas_internal::sleepTime(spadas::UInt time)
+{
+	Sleep((DWORD)time);
+}
+
+void __stdcall oscillatorCallback(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
+{
+	om.obj()->pulse();
+}
+
+UInt OscillatorVars::startOscillator()
+{
+	TIMECAPS tickCaps;
+	ZeroMemory(&tickCaps, sizeof(TIMECAPS));
+	timeGetDevCaps(&tickCaps, sizeof(TIMECAPS));
+		
+	UInt timerID = timeSetEvent(1, tickCaps.wPeriodMin, oscillatorCallback, 0, TIME_PERIODIC);
+		
+	if (timerID == 0)
+	{
+		SPADAS_ERROR_MSG("timerID == 0");
+		system::exit();
+		return 0;
+	}
+	return timerID;
+}
+
+void OscillatorVars::stopOscillator(UInt id)
+{
+	timeKillEvent(id);
+}
+
+#else // SPADAS_ENV_LINUX
+
+#include <pthread.h>
+#include <unistd.h>
+
+void spadas_internal::sleepTime(spadas::UInt time)
+{
+	usleep(time * 1000);
+}
+
+volatile Bool oscillatorShouldEnd = FALSE;
+Pointer oscillatorThreadFunc(Pointer param)
+{
+	while (!oscillatorShouldEnd)
+	{
+		om.obj()->pulse();
+		sleepTime(1);
+	}
+	return 0;
+}
+
+UInt OscillatorVars::startOscillator()
+{
+	sched_param sched;
+	sched.sched_priority = 99;
+	
+	pthread_attr_t threadAttri;
+	pthread_attr_init(&threadAttri);
+	pthread_attr_setschedparam(&threadAttri, &sched);
+	pthread_attr_setdetachstate(&threadAttri, PTHREAD_CREATE_DETACHED);
+	
+	pthread_t thread;
+	pthread_create(&thread, &threadAttri, oscillatorThreadFunc, NULL);
+	
+	pthread_attr_destroy(&threadAttri);
+	
+	return 0;
+}
+void OscillatorVars::stopOscillator(UInt id)
+{
+	oscillatorShouldEnd = TRUE;
+	sleepTime(10);
+}
+
+#endif

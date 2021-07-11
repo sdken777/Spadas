@@ -1,0 +1,281 @@
+﻿
+#include "spadas.h"
+
+namespace spadas
+{
+	struct TaskThreadContext
+	{
+		Flag valid;
+		Interface<ITask> task;
+		Flag shouldEnd;
+
+		TaskThreadContext() {}
+	};
+
+	class TaskManagerVars : public Vars
+	{
+	public:
+		SPADAS_VARS_DEF(TaskManager, Vars)
+
+		ListNode<TaskThreadContext> threads;
+		Lock threadsLock;
+
+		void stopAll(UInt timeout);
+
+		TaskManagerVars()
+		{
+			threads.joinNext(threads);
+		}
+		~TaskManagerVars()
+		{
+			stopAll(1200);
+			threads.collapse();
+		}
+	};
+}
+
+using namespace spadas;
+using namespace spadas_internal;
+
+const String spadas::TaskManager::TypeName = "spadas.TaskManager";
+
+#if defined(SPADAS_ENV_WINDOWS)
+
+#include <process.h>
+#include <Windows.h>
+#undef max
+#undef min
+
+UInt __stdcall taskThreadFunc(Pointer param);
+void taskThreadCreate(TaskManagerVars *vars)
+{
+	HANDLE thisHandle = (HANDLE)_beginthreadex(NULL, 0, taskThreadFunc, vars, 0, NULL);
+	SetThreadPriority(thisHandle, THREAD_PRIORITY_NORMAL);
+	CloseHandle(thisHandle);
+}
+
+UInt __stdcall taskThreadFunc(Pointer param)
+
+#else // SPADAS_ENV_LINUX
+
+#include <pthread.h>
+#include <unistd.h>
+#include <linux/unistd.h>
+
+Pointer taskThreadFunc(Pointer param);
+void taskThreadCreate(TaskManagerVars *vars)
+{
+	sched_param sched;
+	sched.sched_priority = 50;
+
+	pthread_attr_t threadAttri;
+	pthread_attr_init(&threadAttri);
+	pthread_attr_setschedparam(&threadAttri, &sched);
+	pthread_attr_setdetachstate(&threadAttri, PTHREAD_CREATE_DETACHED);
+
+	pthread_t thread;
+	pthread_create(&thread, &threadAttri, taskThreadFunc, vars);
+
+	pthread_attr_destroy(&threadAttri);
+}
+
+Pointer taskThreadFunc(Pointer param)
+
+#endif
+
+// taskThreadFunc
+{
+	TaskManagerVars *vars = (TaskManagerVars*)param;
+
+	ListNode<TaskThreadContext> targetNode;
+	while (!targetNode.value().task.isValid())
+	{
+		vars->threadsLock.enter();
+		ListNode<TaskThreadContext> currentNode = vars->threads.next();
+		while (currentNode != vars->threads)
+		{
+			if (!currentNode.value().valid.check())
+			{
+				targetNode = currentNode;
+				break;
+			}
+			currentNode = currentNode.next();
+		}
+		vars->threadsLock.leave();
+		Flag(1).waitSet();
+	}
+
+	targetNode.value().valid.set();
+	targetNode.value().task->onRunTask(targetNode.value().shouldEnd);
+
+	vars->threadsLock.enter();
+	targetNode.removeSelf();
+	vars->threadsLock.leave();
+
+	return 0;
+}
+
+TaskManager::TaskManager() : Object<TaskManagerVars>(new TaskManagerVars, TRUE)
+{
+
+}
+
+void TaskManager::start(Interface<ITask> task)
+{
+	SPADAS_ERROR_RETURN(!task.isValid());
+
+	vars->threadsLock.enter();
+
+	ListNode<TaskThreadContext> currentNode = vars->threads.next();
+	while (currentNode != vars->threads)
+	{
+		if (currentNode.value().task == task)
+		{
+			vars->threadsLock.leave();
+			return;
+		}
+		currentNode.goNext();
+	}
+
+	vars->threadsLock.leave();
+
+	TaskThreadContext newContext;
+	newContext.task = task;
+
+	vars->threadsLock.enter();
+	vars->threads.insertPrevious(newContext);
+	vars->threadsLock.leave();
+
+	taskThreadCreate(vars);
+
+	newContext.valid.waitSet();
+}
+
+Bool TaskManager::stop(Interface<ITask> task, UInt timeout)
+{
+	SPADAS_ERROR_RETURNVAL(!task.isValid(), TRUE);
+
+	Bool targetNodeFound = FALSE;
+	ListNode<TaskThreadContext> targetNode;
+
+	vars->threadsLock.enter();
+	{
+		ListNode<TaskThreadContext> currentNode = vars->threads.next();
+		while (currentNode != vars->threads)
+		{
+			if (currentNode.value().task == task)
+			{
+				targetNodeFound = TRUE;
+				targetNode = currentNode;
+				break;
+			}
+			currentNode.goNext();
+		}
+	}
+	vars->threadsLock.leave();
+	
+	if (!targetNodeFound) return TRUE;
+
+	targetNode.value().shouldEnd.set();
+
+	Timer timer;
+	while (timer.check() < (Double)timeout)
+	{
+		Bool found = FALSE;
+		vars->threadsLock.enter();
+		{
+			ListNode<TaskThreadContext> currentNode = vars->threads.next();
+			while (currentNode != vars->threads)
+			{
+				if (currentNode.value().task == task)
+				{
+					found = TRUE;
+					break;
+				}
+				currentNode.goNext();
+			}
+		}
+		vars->threadsLock.leave();
+
+		if (!found) return TRUE;
+
+		Flag(10).waitSet();
+	}
+
+	return FALSE;
+}
+
+Array<Interface<ITask> > TaskManager::getTasks()
+{
+	ArrayX<Interface<ITask> > list;
+	LockProxy p(vars->threadsLock);
+
+	ListNode<TaskThreadContext> currentNode = vars->threads.next();
+	while (currentNode != vars->threads)
+	{
+		list.append(currentNode.value().task);
+		currentNode = currentNode.next();
+	}
+
+	return list.toArray();
+}
+
+Bool TaskManager::isTaskRunning(Interface<ITask> task)
+{
+	SPADAS_ERROR_RETURNVAL(task.isNull(), FALSE)
+
+	ArrayX<Interface<ITask> > list;
+	LockProxy p(vars->threadsLock);
+
+	ListNode<TaskThreadContext> currentNode = vars->threads.next();
+	while (currentNode != vars->threads)
+	{
+		if (currentNode.value().task == task) return TRUE;
+		currentNode.goNext();
+	}
+
+	return FALSE;
+}
+
+Bool TaskManager::waitAll(Flag interrupt)
+{
+	while (!interrupt.check())
+	{
+		LockProxy p(vars->threadsLock);
+		if (vars->threads.next() == vars->threads) return TRUE;
+		Flag(10).waitSet();
+	}
+	return FALSE;
+}
+
+void TaskManager::stopAll(UInt timeout)
+{
+	vars->stopAll(timeout);
+}
+
+void TaskManagerVars::stopAll(UInt timeout)
+{
+	threadsLock.enter();
+
+	ListNode<TaskThreadContext> currentNode = threads.next();
+	while (currentNode != threads)
+	{
+		currentNode.value().shouldEnd.set();
+		currentNode = currentNode.next();
+	}
+
+	threadsLock.leave();
+
+	Timer timer;
+	while (timer.check() < (Double)timeout)
+	{
+		threadsLock.enter();
+		if (threads.next() == threads)
+		{
+			threadsLock.leave();
+			return;
+		}
+		threadsLock.leave();
+		Flag(10).waitSet();
+	}
+}

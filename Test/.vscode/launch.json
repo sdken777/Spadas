@@ -1,0 +1,70 @@
+{
+    "version": "0.2.0",
+
+    "configurations": [
+        {
+            "name": "调试运行(Linux-X86本机)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/../binx/debug/test",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/../binx/debug/",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "preLaunchTask": "调试构建(Linux-X86本机)",
+            "setupCommands": [
+                {
+                    "description": "为 gdb 启用整齐打印",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "发布运行(Linux-X86本机)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/../binx/test",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/../binx/",
+            "environment": [],
+            "externalConsole": false,
+            "preLaunchTask": "发布构建(Linux-X86本机)",
+        },
+        {
+            "name": "调试运行(Linux-Arm本机)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/../binxa/debug/test",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/../binxa/debug/",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "preLaunchTask": "调试构建(Linux-Arm本机)",
+            "setupCommands": [
+                {
+                    "description": "为 gdb 启用整齐打印",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "发布运行(Linux-Arm本机)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/../binxa/test",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/../binxa/",
+            "environment": [],
+            "externalConsole": false,
+            "preLaunchTask": "发布构建(Linux-Arm本机)",
+        },
+    ]
+}
