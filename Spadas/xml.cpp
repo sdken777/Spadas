@@ -558,10 +558,10 @@ Array<XMLNode> XML::nodeLeavesWithTagName(XMLNode node, String tagName)
 	{
 		if (leaves[i].value().tag == tagName) okIndices[okNum++] = i;
 	}
-	Array<XMLNode> out(okNum);
+	Array<XMLNode> out = Array<XMLNode>::createUninitialized(okNum);
 	for (UInt i = 0; i < okNum; i++)
 	{
-		out[i] = leaves[okIndices[i]];
+		out.initialize(i, leaves[okIndices[i]]);
 	}
 	return out;
 }

@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // Array基于placement new初始化，新增createUninitialized和initialize方法
+// 版本定义 // 其他类基于Array.createUninitialized/initialize优化
 #define SPADAS_VERSION_MAJOR 7
 #define SPADAS_VERSION_MINOR 1
-#define SPADAS_VERSION_BUILD 0
+#define SPADAS_VERSION_BUILD 1
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：7.1.0\n
+* 本文档对应Spadas版本：7.1.1\n
 *
 * \n
 * \section top1 基本功能概述

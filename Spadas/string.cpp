@@ -770,15 +770,15 @@ Array<String> String::split(String string)
 	matches.trim(nMatches);
 	
 	UInt outSize = nMatches + 1;
-	Array<String> out(outSize);
+	Array<String> out = Array<String>::createUninitialized(outSize);
 	
 	UInt index = 0;
-	out[index++] = String(*this, Region(0, matches[0]));
+	out.initialize(index++, String(*this, Region(0, matches[0])));
 	for (UInt i = 0; i < nMatches - 1; i++)
 	{
-		out[index++] = String(*this, Region(matches[i] + length, max((Int)matches[i+1] - (Int)matches[i] - (Int)length, 0)));
+		out.initialize(index++, String(*this, Region(matches[i] + length, max((Int)matches[i+1] - (Int)matches[i] - (Int)length, 0))));
 	}
-	out[index++] = String(*this, Region(matches[nMatches-1] + length, UINF));
+	out.initialize(index++, String(*this, Region(matches[nMatches-1] + length, UINF)));
 	
 	return out;
 }

@@ -1216,12 +1216,11 @@ namespace spadas
 	template <typename Type>
 	Array<TreeNode<Type> > TreeNode<Type>::leaves()
 	{
-		Array<TreeNode<Type> > out(this->vars->nLeaves);
-		TreeNode<Type> *outData = out.data();
+		Array<TreeNode<Type> > out = Array<TreeNode<Type> >::createUninitialized(this->vars->nLeaves);
 		TreeNodeVars<Type> *leafVars = this->vars->leaf0Vars;
 		for (UInt i = 0; i < this->vars->nLeaves; i++)
 		{
-			outData[i] = TreeNode<Type>(leafVars);
+			out.initialize(i, TreeNode<Type>(leafVars));
 			leafVars = leafVars->nextVars;
 		}
 		return out;
@@ -1365,10 +1364,10 @@ namespace spadas
 	{
 		UInt depth0 = depth();
 		TreeNodeVars<Type> *currentVars = this->vars;
-		Array<TreeNode<Type> > out(depth0 + 1);
+		Array<TreeNode<Type> > out = Array<TreeNode<Type> >::createUninitialized(depth0 + 1);
 		for (UInt i = 0; i <= depth0; i++)
 		{
-			out[i] = TreeNode<Type>(currentVars);
+			out.initialize(i, TreeNode<Type>(currentVars));
 			currentVars = currentVars->rootVars;
 		}
 		return out;
@@ -2083,11 +2082,11 @@ namespace spadas
 	template<typename Type>
 	Array<Type> List<Type>::toArray()
 	{
-		Array<Type> arr(this->vars->size);
+		Array<Type> arr = Array<Type>::createUninitialized(this->vars->size);
 		ListNode<Type> node = this->vars->origin.next();
 		for (UInt i = 0; i < this->vars->size; i++)
 		{
-			arr[i] = node.value();
+			arr.initialize(i, node.value());
 			node = node.next();
 		}
 		return arr;
@@ -2458,11 +2457,10 @@ namespace spadas
 	{
 		this->vars->lock.enter();
 		UInt nOuts = math::min(this->vars->nElements, num);
-		Array<Type> out(nOuts);
-		Type *outData = out.data();
+		Array<Type> out = Array<Type>::createUninitialized(nOuts);
 		for (UInt i = 0; i < nOuts; i++)
 		{
-			outData[i] = this->vars->origin.next().value();
+			out.initialize(i, this->vars->origin.next().value());
 			this->vars->origin.removeNext();
 		}
 		this->vars->nDequeued += nOuts;
@@ -2729,9 +2727,8 @@ namespace spadas
 	template <typename KeyType, typename ValueType>
 	Array<KeyType> Map<KeyType, ValueType>::keys()
 	{
-		Array<KeyType> out(this->vars->size);
-		if (this->vars->size == 0) return out;
-		KeyType* outData = out.data();
+		if (this->vars->size == 0) return Array<KeyType>();
+		Array<KeyType> out = Array<KeyType>::createUninitialized(this->vars->size);
 		UInt count = 0;
 		UInt tableSize = this->vars->table.size();
 		ListNode<KeyValue<KeyType, ValueType> >** tableData = this->vars->table.data();
@@ -2741,7 +2738,7 @@ namespace spadas
 			ListNode<KeyValue<KeyType, ValueType> > node = *tableData[i];
 			while (TRUE)
 			{
-				outData[count++] = node.value().key;
+				out.initialize(count++, node.value().key);
 				if (node.hasNext()) node.goNext();
 				else break;
 			}
@@ -2760,9 +2757,8 @@ namespace spadas
 	template <typename KeyType, typename ValueType>
 	Array<ValueType> Map<KeyType, ValueType>::values()
 	{
-		Array<ValueType> out(this->vars->size);
-		if (this->vars->size == 0) return out;
-		ValueType* outData = out.data();
+		if (this->vars->size == 0) return Array<ValueType>();
+		Array<ValueType> out = Array<ValueType>::createUninitialized(this->vars->size);
 		UInt count = 0;
 		UInt tableSize = this->vars->table.size();
 		ListNode<KeyValue<KeyType, ValueType> >** tableData = this->vars->table.data();
@@ -2772,7 +2768,7 @@ namespace spadas
 			ListNode<KeyValue<KeyType, ValueType> > node = *tableData[i];
 			while (TRUE)
 			{
-				outData[count++] = node.value().value;
+				out.initialize(count++, node.value().value);
 				if (node.hasNext()) node.goNext();
 				else break;
 			}
@@ -2783,9 +2779,8 @@ namespace spadas
 	template <typename KeyType, typename ValueType>
 	Array<KeyValue<KeyType, ValueType> > Map<KeyType, ValueType>::keyValues()
 	{
-		Array<KeyValue<KeyType, ValueType> > out(this->vars->size);
-		if (this->vars->size == 0) return out;
-		KeyValue<KeyType, ValueType>* outData = out.data();
+		if (this->vars->size == 0) return Array<KeyValue<KeyType, ValueType> >();
+		Array<KeyValue<KeyType, ValueType> > out = Array<KeyValue<KeyType, ValueType> >::createUninitialized(this->vars->size);
 		UInt count = 0;
 		UInt tableSize = this->vars->table.size();
 		ListNode<KeyValue<KeyType, ValueType> >** tableData = this->vars->table.data();
@@ -2795,7 +2790,7 @@ namespace spadas
 			ListNode<KeyValue<KeyType, ValueType> > node = *tableData[i];
 			while (TRUE)
 			{
-				outData[count++] = node.value();
+				out.initialize(count++, node.value());
 				if (node.hasNext()) node.goNext();
 				else break;
 			}
@@ -2814,11 +2809,14 @@ namespace spadas
 	template <typename KeyType, typename ValueType>
 	void Map<KeyType, ValueType>::pairs(Array<KeyType>& keys, Array<ValueType>& values)
 	{
-		keys = Array<KeyType>(this->vars->size);
-		values = Array<ValueType>(this->vars->size);
-		if (this->vars->size == 0) return;
-		KeyType* keysData = keys.data();
-		ValueType* valuesData = values.data();
+		if (this->vars->size == 0)
+		{
+			keys = Array<KeyType>();
+			values = Array<ValueType>();
+			return;
+		}
+		keys = Array<KeyType>::createUninitialized(this->vars->size);
+		values = Array<ValueType>::createUninitialized(this->vars->size);
 		UInt count = 0;
 		UInt tableSize = this->vars->table.size();
 		ListNode<KeyValue<KeyType, ValueType> >** tableData = this->vars->table.data();
@@ -2828,8 +2826,8 @@ namespace spadas
 			ListNode<KeyValue<KeyType, ValueType> > node = *tableData[i];
 			while (TRUE)
 			{
-				keysData[count] = node.value().key;
-				valuesData[count++] = node.value().value;
+				keys.initialize(count, node.value().key);
+				values.initialize(count++, node.value().value);
 				if (node.hasNext()) node.goNext();
 				else break;
 			}
@@ -2855,12 +2853,12 @@ namespace spadas
 			mapKeys[i].index = i;
 		}
 		math::sort(mapKeys);
-		keys = Array<KeyType>(mapKeys.size());
-		values = Array<ValueType>(mapKeys.size());
+		keys = Array<KeyType>::createUninitialized(mapKeys.size());
+		values = Array<ValueType>::createUninitialized(mapKeys.size());
 		for (UInt i = 0; i < mapKeys.size(); i++)
 		{
-			keys[i] = mapKeys[i].key;
-			values[i] = valuesRaw[mapKeys[i].index];
+			keys.initialize(i, mapKeys[i].key);
+			values.initialize(i, valuesRaw[mapKeys[i].index]);
 		}
 	}
 
@@ -3051,8 +3049,9 @@ namespace spadas
 	String String::mergeWithConstructor(Array<Type> arr, String separator)
 	{
 		if (arr.isEmpty()) return String();
-		Array<String> strs(arr.size());
-		for (UInt i = 0; i < arr.size(); i++) strs[i] = String(arr[i]);
+		UInt size = arr.size();
+		Array<String> strs = Array<String>::createUninitialized(size);
+		for (UInt i = 0; i < size; i++) strs.initialize(i, String(arr[i]));
 		return mergeStrings(strs, separator);
 	}
 
@@ -3060,8 +3059,9 @@ namespace spadas
 	String String::mergeWithToString(Array<Type> arr, String separator)
 	{
 		if (arr.isEmpty()) return String();
-		Array<String> strs(arr.size());
-		for (UInt i = 0; i < arr.size(); i++) strs[i] = arr[i].toString();
+		UInt size = arr.size();
+		Array<String> strs = Array<String>::createUninitialized(size);
+		for (UInt i = 0; i < size; i++) strs.initialize(i, arr[i].toString());
 		return mergeStrings(strs, separator);
 	}
 
@@ -3197,35 +3197,34 @@ namespace spadas
 	{
 		if (src.isEmpty()) return Array<DstType>();
 		UInt size = src.size();
-		Array<DstType> dst(size);
-		for (UInt i = 0; i < size; i++) dst[i] = *(DstType*)&src[i];
+		Array<DstType> dst = Array<DstType>::createUninitialized(size);
+		for (UInt i = 0; i < size; i++) dst.initialize(i, *(DstType*)&src[i]);
 		return dst;
 	}
 
 	template<typename Type>
 	Array<Type> spadas::utility::unpackKeys(Array<DecimalKey<Type> > keys)
 	{
-		Array<Type> out(keys.size());
-		for (UInt i = 0; i < keys.size(); i++) out[i] = keys[i].value();
+		Array<Type> out = Array<Type>::createUninitialized(keys.size());
+		for (UInt i = 0; i < keys.size(); i++) out.initialize(i, keys[i].value());
 		return out;
 	}
 
 	template<typename Type>
 	Array<Type> spadas::utility::unpackKeys(Array<StructureKey<Type> > keys)
 	{
-		Array<Type> out(keys.size());
-		for (UInt i = 0; i < keys.size(); i++) out[i] = keys[i].value();
+		Array<Type> out = Array<Type>::createUninitialized(keys.size());
+		for (UInt i = 0; i < keys.size(); i++) out.initialize(i, keys[i].value());
 		return out;
 	}
 
 	template<typename Type, typename ValueType>
 	Array<KeyValue<Type, ValueType> > spadas::utility::unpackKeyValues(Array<KeyValue<DecimalKey<Type>, ValueType> > keyValues)
 	{
-		Array<KeyValue<Type, ValueType> > out(keyValues.size());
+		Array<KeyValue<Type, ValueType> > out = Array<KeyValue<Type, ValueType> >::createUninitialized(keyValues.size());
 		for (UInt i = 0; i < keyValues.size(); i++)
 		{
-			out[i].key = keyValues[i].key.value();
-			out[i].value = keyValues[i].value;
+			out.initialize(i, KeyValue<Type, ValueType>(keyValues[i].key.value(), keyValues[i].value));
 		}
 		return out;
 	}
@@ -3233,11 +3232,10 @@ namespace spadas
 	template<typename Type, typename ValueType>
 	Array<KeyValue<Type, ValueType> > spadas::utility::unpackKeyValues(Array<KeyValue<StructureKey<Type>, ValueType> > keyValues)
 	{
-		Array<KeyValue<Type, ValueType> > out(keyValues.size());
+		Array<KeyValue<Type, ValueType> > out = Array<KeyValue<Type, ValueType> >::createUninitialized(keyValues.size());
 		for (UInt i = 0; i < keyValues.size(); i++)
 		{
-			out[i].key = keyValues[i].key.value();
-			out[i].value = keyValues[i].value;
+			out.initialize(i, KeyValue<Type, ValueType>(keyValues[i].key.value(), keyValues[i].value));
 		}
 		return out;
 	}
