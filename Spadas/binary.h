@@ -11,7 +11,7 @@ namespace spadas
 		UInt size;
 		Byte *data;
 		BinaryVars* binded;
-		BinaryVars(UInt size0) : size(size0), data(new Byte[size0]), binded(NULL)
+		BinaryVars(UInt size0, Byte* data0) : size(size0), data(data0), binded(NULL)
 		{ }
 		BinaryVars(UInt size0, Byte* data0, BinaryVars* binded0) : size(size0), data(data0), binded(binded0)
 		{
@@ -20,7 +20,6 @@ namespace spadas
 		~BinaryVars()
 		{
 			if (binded) binded->release();
-			else delete[] data;
 		}
 	};
 }

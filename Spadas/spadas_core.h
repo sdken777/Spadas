@@ -1422,7 +1422,7 @@ namespace spadas
 		/// @brief 从一个 spadas::Byte 数组指针创建对象，需指定数据块大小（创建时将拷贝源数据）
 		/// @param arr 源数据数组指针
 		/// @param size 源数据数组大小（字节单位）
-		Binary(const Byte arr[], UInt size);
+		Binary(Byte *arr, UInt size);
 		
 		/// @brief 从另一个数据块的子区域拷贝并创建对象
 		/// @param input 源数据数组
@@ -1530,25 +1530,6 @@ namespace spadas
 	};
 #endif
 #endif
-
-	class SPADAS_API BinaryFactory : public Object<class BinaryFactoryVars>
-	{
-	public:
-		/// 类名称
-		static const String TypeName;
-
-		/// 创建一个二进制数据块工厂，默认大小为8字节
-		BinaryFactory();
-
-		/// 创建一个可生成指定大小二进制数据块的工厂，数据块大小将被限定为4的倍数，且范围在4~4096之内
-		BinaryFactory(UInt binaryBytes);
-
-		/// 生成二进制数据块并按指定大小裁剪，数据值不进行初始化
-		Binary create(UInt trimSize = UINF);
-
-		/// 生成二进制数据块并按指定大小裁剪，并按指定值对所有字节初始化
-		Binary create(UInt trimSize, Byte origin);
-	};
 
 	// 字符串 //////////////////////////////////////////////////////////////
 

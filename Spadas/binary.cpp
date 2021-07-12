@@ -13,7 +13,10 @@ Binary::Binary()
 Binary::Binary(UInt size)
 {
 	if (size == 0) return;
-	setVars(new BinaryVars(math::min(size, ARRAY_SIZE_LIMIT)), TRUE);
+	size = math::min(size, ARRAY_SIZE_LIMIT);
+	Byte* newVarsRaw = new Byte[sizeof(BinaryVars) + size];
+	BinaryVars* newVars = new (newVarsRaw)BinaryVars(size, &newVarsRaw[sizeof(BinaryVars)]);
+	setVars(newVars, TRUE);
 }
 
 Binary::Binary(UInt size, Byte origin)
@@ -21,7 +24,9 @@ Binary::Binary(UInt size, Byte origin)
 	if (size == 0) return;
 
 	size = math::min(size, ARRAY_SIZE_LIMIT);
-	setVars(new BinaryVars(size), TRUE);
+	Byte* newVarsRaw = new Byte[sizeof(BinaryVars) + size];
+	BinaryVars* newVars = new (newVarsRaw)BinaryVars(size, &newVarsRaw[sizeof(BinaryVars)]);
+	setVars(newVars, TRUE);
 
 	Byte *data = vars->data;
 	if (size < MEMCPY_THRESH)
@@ -34,15 +39,24 @@ Binary::Binary(UInt size, Byte origin)
 	}
 }
 
-Binary::Binary(const Byte arr[], UInt size)
+Binary::Binary(Byte *arr, UInt size)
 {
 	if (arr == NULL || size == 0) return;
 
 	size = math::min(size, ARRAY_SIZE_LIMIT);
-	setVars(new BinaryVars(size), TRUE);
+	Byte* newVarsRaw = new Byte[sizeof(BinaryVars) + size];
+	BinaryVars* newVars = new (newVarsRaw)BinaryVars(size, &newVarsRaw[sizeof(BinaryVars)]);
+	setVars(newVars, TRUE);
 
 	Byte *data = vars->data;
-	for (UInt i = 0; i < size; i++) data[i] = arr[i];
+	if (size < MEMCPY_THRESH)
+	{
+		for (UInt i = 0; i < size; i++) data[i] = arr[i];
+	}
+	else
+	{
+		utility::memoryCopy(arr, data, size);
+	}
 }
 
 Binary::Binary(Binary input, Region region)
@@ -59,7 +73,9 @@ Binary::Binary(Binary input, Region region)
 	if (size <= 0) return;
 
 	size = math::min((UInt)size, ARRAY_SIZE_LIMIT);
-	setVars(new BinaryVars(size), TRUE);
+	Byte* newVarsRaw = new Byte[sizeof(BinaryVars) + size];
+	BinaryVars* newVars = new (newVarsRaw)BinaryVars(size, &newVarsRaw[sizeof(BinaryVars)]);
+	setVars(newVars, TRUE);
 
 	Byte *srcData = input.vars->data;
 	Byte *dstData = vars->data;
@@ -134,14 +150,31 @@ Binary Binary::clone()
 {
 	if (!vars) return Binary();
 	Binary out(vars->size);
-	utility::memoryCopy(vars->data, out.vars->data, vars->size);
+	Byte* srcData = vars->data;
+	Byte* dstData = out.vars->data;
+	if (vars->size < MEMCPY_THRESH)
+	{
+		for (UInt i = 0; i < vars->size; i++) dstData[i] = srcData[i];
+	}
+	else
+	{
+		utility::memoryCopy(srcData, dstData, vars->size);
+	}
     return out;
 }
 
 void Binary::clear(Byte val)
 {
 	if (!vars) return;
-	utility::memorySet(val, vars->data, vars->size);
+	Byte* data = vars->data;
+	if (vars->size < MEMCPY_THRESH)
+	{
+		for (UInt i = 0; i < vars->size; i++) data[i] = val;
+	}
+	else
+	{
+		utility::memorySet(val, data, vars->size);
+	}
 }
 
 void Binary::copy(Binary src, Region srcRegion, UInt thisOffset)
@@ -152,9 +185,16 @@ void Binary::copy(Binary src, Region srcRegion, UInt thisOffset)
 	SPADAS_ERROR_RETURN(thisOffset + srcRegion.size > vars->size);
 	Byte *srcData = src.vars->data;
 	Byte *dstData = vars->data;
-	for (UInt i = 0, srcI = srcRegion.offset, dstI = thisOffset; i < srcRegion.size; i++, srcI++, dstI++)
+	if (srcRegion.size < MEMCPY_THRESH)
 	{
-		dstData[dstI] = srcData[srcI];
+		for (UInt i = 0, srcI = srcRegion.offset, dstI = thisOffset; i < srcRegion.size; i++, srcI++, dstI++)
+		{
+			dstData[dstI] = srcData[srcI];
+		}
+	}
+	else
+	{
+		utility::memoryCopy(&srcData[srcRegion.offset], &dstData[thisOffset], srcRegion.size);
 	}
 }
 
@@ -191,7 +231,14 @@ Binary Binary::merge(Array<Binary> binaries)
 		if (bin.isEmpty()) continue;
 		Byte *srcData = bin.vars->data;
 		UInt copySize = bin.vars->size;
-		utility::memoryCopy(srcData, &dstData[n], copySize);
+		if (copySize < MEMCPY_THRESH)
+		{
+			for (UInt x = 0; x < copySize; x++) dstData[n + x] = srcData[x];
+		}
+		else
+		{
+			utility::memoryCopy(srcData, &dstData[n], copySize);
+		}
 		n += copySize;
 	}
 	return out;

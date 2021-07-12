@@ -33,7 +33,6 @@
     <ClCompile Include="binary.cpp" />
     <ClCompile Include="binary_base64.cpp" />
     <ClCompile Include="binary_des.cpp" />
-    <ClCompile Include="binary_factory.cpp" />
     <ClCompile Include="binary_sha1.cpp" />
     <ClCompile Include="console.cpp" />
     <ClCompile Include="console_linux.cpp" />
