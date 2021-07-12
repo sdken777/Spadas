@@ -1930,17 +1930,12 @@ namespace spadas
 		ListNode<Type> nextNode;
 		Bool nextValid;
 		UInt nextIndex;
-		ListVars<Type> *listVars;
-		ListElemVars(ListNode<Type> node, Bool valid, UInt index, ListNode<Type> prevNode, Bool prevValid, ListNode<Type> nextNode, Bool nextValid, ListVars<Type> *listVars)
-			: node(node), valid(valid), index(index), prevNode(prevNode), prevValid(prevValid), nextNode(nextNode), nextValid(nextValid), listVars(listVars)
+		List<Type> list;
+		ListElemVars(ListNode<Type> node, Bool valid, UInt index, ListNode<Type> prevNode, Bool prevValid, ListNode<Type> nextNode, Bool nextValid, List<Type> list)
+			: node(node), valid(valid), index(index), prevNode(prevNode), prevValid(prevValid), nextNode(nextNode), nextValid(nextValid), list(list)
 		{
 			prevIndex = prevValid ? (index - 1) : UINF;
 			nextIndex = nextValid ? (index + 1) : UINF;
-			listVars->retain();
-		}
-		~ListElemVars()
-		{
-			listVars->release();
 		}
 	};
 
@@ -2065,8 +2060,8 @@ namespace spadas
 	}
 
 	template<typename Type>
-	ListElem<Type>::ListElem(ListNode<Type> node, Bool valid, UInt index, ListNode<Type> prevNode, Bool prevValid, ListNode<Type> nextNode, Bool nextValid, ListVars<Type> *listVars)
-		: Object<ListElemVars<Type> >(new ListElemVars<Type>(node, valid, index, prevNode, prevValid, nextNode, nextValid, listVars), TRUE)
+	ListElem<Type>::ListElem(ListNode<Type> node, Bool valid, UInt index, ListNode<Type> prevNode, Bool prevValid, ListNode<Type> nextNode, Bool nextValid, List<Type> list)
+		: Object<ListElemVars<Type> >(new ListElemVars<Type>(node, valid, index, prevNode, prevValid, nextNode, nextValid, list), TRUE)
 	{}
 
 	template<typename Type>
@@ -2136,7 +2131,7 @@ namespace spadas
 		if (this->vars->valid)
 		{
 			this->vars->prevNode = this->vars->node.previous();
-			if (this->vars->prevNode == this->vars->listVars->origin)
+			if (this->vars->prevNode == this->vars->list.getVars()->origin)
 			{
 				this->vars->prevValid = FALSE;
 				this->vars->prevIndex = UINF;
@@ -2164,7 +2159,7 @@ namespace spadas
 		if (this->vars->valid)
 		{
 			this->vars->nextNode = this->vars->node.next();
-			if (this->vars->nextNode == this->vars->listVars->origin)
+			if (this->vars->nextNode == this->vars->list.getVars()->origin)
 			{
 				this->vars->nextValid = FALSE;
 				this->vars->nextIndex = UINF;
@@ -2186,7 +2181,7 @@ namespace spadas
 		this->vars->prevIndex = this->vars->index;
 		this->vars->index++;
 		if (this->vars->nextValid) this->vars->nextIndex++;
-		this->vars->listVars->size++;
+		this->vars->list.getVars()->size++;
 	}
 
 	template<typename Type>
@@ -2196,7 +2191,7 @@ namespace spadas
 		this->vars->nextNode = this->vars->node.insertNext(val);
 		this->vars->nextValid = TRUE;
 		this->vars->nextIndex = this->vars->index + 1;
-		this->vars->listVars->size++;
+		this->vars->list.getVars()->size++;
 	}
 
 	template<typename Type>
@@ -2207,7 +2202,7 @@ namespace spadas
 		this->vars->valid = FALSE;
 		this->vars->index = UINF;
 		if (this->vars->nextValid) this->vars->nextIndex--;
-		this->vars->listVars->size--;
+		this->vars->list.getVars()->size--;
 	}
 
 	///////////////////////////////////////////////////////

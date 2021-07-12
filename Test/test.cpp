@@ -219,11 +219,11 @@ public:
 
 int main(int argc, char* argv[])
 {
-	Test().taskTest();
-	Test().pathTest();
-	Test().deriveTest();
-	Test().licenseIndexTest();
-	//Test().arrayTest();
+	//Test().taskTest();
+	//Test().pathTest();
+	//Test().deriveTest();
+	//Test().licenseIndexTest();
+	Test().arrayTest();
 
 	console::print("over");
 	return 0;

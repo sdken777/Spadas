@@ -987,11 +987,12 @@ namespace spadas
 	template <typename Type> class ListElemVars;
 
 	/// 链表元素遍历器
+	template <typename Type> class List;
 	template <typename Type> class ListElem : public Object<ListElemVars<Type> >
 	{
 	public:
 		/// 构造函数，由 List::head 和 List::tail 调用生成
-		ListElem(ListNode<Type> node, Bool valid, UInt index, ListNode<Type> prevNode, Bool prevValid, ListNode<Type> nextNode, Bool nextValid, ListVars<Type> *listVars);
+		ListElem(ListNode<Type> node, Bool valid, UInt index, ListNode<Type> prevNode, Bool prevValid, ListNode<Type> nextNode, Bool nextValid, List<Type> list);
 
 		/// 当前元素是否在链表中
 		Bool isInList();
