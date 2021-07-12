@@ -706,6 +706,14 @@ namespace spadas
 		/// @returns 创建的数组
 		template <typename ArgType>
 		static Array<Type> create(UInt size, ArgType firstValue, ...);
+
+		/// @brief [非安全操作] 创建一个具有指定大小但未初始化的数组，需要随后调用init方法确保对每个元素都初始化了仅一次
+		/// @param size 创建数组的大小
+		/// @returns 新创建的数组
+		static Array<Type> createUninitialized(UInt size);
+
+		/// [非安全操作] 初始化元素，需要确保序号在范围内
+		void initialize(UInt index, const Type& val);
 		
 		/// @brief 合并多个数组
 		/// @param arrs 将合并的多个数组
@@ -3671,6 +3679,13 @@ namespace spadas
 		/// 检查字节序是否Big-Endian
 		SPADAS_API Bool isBigEndian();
 
+		/// 检查类型是否为简单类型
+		template <typename Type>
+		inline Bool isPlainType() { return __is_standard_layout(Type) && __is_trivial(Type); }
+
+		/// 获得当前系统时间
+		SPADAS_API Time getTime();
+
 		/// 获得当前系统时间，带毫秒信息
 		SPADAS_API TimeWithMS getTimeWithMS();
 
@@ -3682,9 +3697,6 @@ namespace spadas
 
 		/// 添加环境变量
 		SPADAS_API void addEnvironmentPath(Path path);
-
-		/// 获得当前系统时间
-		SPADAS_API Time getTime();
 
 		/// Ping，超时单位为毫秒
 		SPADAS_API Bool ping(String ip, UInt timeout = 1000);

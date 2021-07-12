@@ -217,12 +217,54 @@ public:
 	}
 };
 
+
+
+class AAA : public Object<class AAAVars>
+{
+public:
+	static String TypeName;
+
+	AAA();
+	AAA(UInt val);
+	String toString();
+};
+
+class AAAVars : public Vars
+{
+public:
+	SPADAS_VARS_DEF(AAA, Vars);
+	String value;
+
+	AAAVars(String val) : value(val)
+	{
+		console::print("Construct");
+	}
+	~AAAVars()
+	{
+		console::print("Destruct");
+	}
+};
+
+String AAA::TypeName = "AAA";
+
+AAA::AAA() : Object<AAAVars>(new AAAVars("default"), TRUE)
+{
+}
+AAA::AAA(UInt val) : Object<AAAVars>(new AAAVars(val), TRUE)
+{
+}
+
+String AAA::toString()
+{
+	return vars->value;
+}
+
 int main(int argc, char* argv[])
 {
-	//Test().taskTest();
-	//Test().pathTest();
-	//Test().deriveTest();
-	//Test().licenseIndexTest();
+	Test().taskTest();
+	Test().pathTest();
+	Test().deriveTest();
+	Test().licenseIndexTest();
 	Test().arrayTest();
 
 	console::print("over");

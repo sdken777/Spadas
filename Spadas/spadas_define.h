@@ -2,7 +2,7 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // TODO
+// 版本定义 // Array基于placement new初始化，新增createUninitialized和initialize方法
 #define SPADAS_VERSION_MAJOR 7
 #define SPADAS_VERSION_MINOR 1
 #define SPADAS_VERSION_BUILD 0
@@ -217,6 +217,9 @@
 
 // 支持可变参数列表
 #include <stdarg.h>
+
+// 支持指定位置构造函数
+#include <new.h>
 
 // 空指针
 #ifndef NULL

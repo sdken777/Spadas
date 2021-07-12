@@ -440,7 +440,7 @@ namespace spadas
 		UInt size;
 		Type *data;
 		ArrayVars<Type>* binded;
-		ArrayVars(UInt size0) : size(size0), data(new Type[size0]), binded(0)
+		ArrayVars(UInt size0, Type* data0) : size(size0), data(data0), binded(0)
 		{ }
 		ArrayVars(UInt size0, Type* data0, ArrayVars<Type>* binded0) : size(size0), data(data0), binded(binded0)
 		{
@@ -449,7 +449,13 @@ namespace spadas
 		~ArrayVars()
 		{
 			if (binded) binded->release();
-			else delete[] data;
+			else if (!system::isPlainType<Type>())
+			{
+				for (UInt i = 0; i < size; i++)
+				{
+					(&data[i])->~Type();
+				}
+			}
 		}
 	};
 
@@ -461,7 +467,17 @@ namespace spadas
 	Array<Type>::Array(UInt size)
 	{
 		if (size == 0) return;
-		this->setVars(new ArrayVars<Type>(math::min(size, ARRAY_SIZE_LIMIT)), TRUE);
+		size = math::min(size, ARRAY_SIZE_LIMIT);
+		Byte* newVarsRaw = new Byte[sizeof(ArrayVars<Type>) + sizeof(Type) * size];
+		ArrayVars<Type>* newVars = new (newVarsRaw)ArrayVars<Type>(size, (Type*)&newVarsRaw[sizeof(ArrayVars<Type>)]);
+		if (!system::isPlainType<Type>())
+		{
+			for (UInt i = 0; i < size; i++)
+			{
+				new (&newVars->data[i])Type();
+			}
+		}
+		this->setVars(newVars, TRUE);
 	}
 
 	template<typename Type>
@@ -469,9 +485,13 @@ namespace spadas
 	{
 		if (size == 0) return;
 		size = math::min(size, ARRAY_SIZE_LIMIT);
-		this->setVars(new ArrayVars<Type>(size), TRUE);
-		Type *data = this->vars->data;
-		for (UInt i = 0; i < size; i++) data[i] = originValue;
+		Byte* newVarsRaw = new Byte[sizeof(ArrayVars<Type>) + sizeof(Type) * size];
+		ArrayVars<Type>* newVars = new (newVarsRaw)ArrayVars<Type>(size, (Type*)&newVarsRaw[sizeof(ArrayVars<Type>)]);
+		for (UInt i = 0; i < size; i++)
+		{
+			new (&newVars->data[i])Type(originValue);
+		}
+		this->setVars(newVars, TRUE);
 	}
 
 	template<typename Type>
@@ -479,9 +499,13 @@ namespace spadas
 	{
 		if (arr == 0 || size == 0) return;
 		size = math::min(size, ARRAY_SIZE_LIMIT);
-		this->setVars(new ArrayVars<Type>(size), TRUE);
-		Type *data = this->vars->data;
-		for (UInt i = 0; i < size; i++) data[i] = arr[i];
+		Byte* newVarsRaw = new Byte[sizeof(ArrayVars<Type>) + sizeof(Type) * size];
+		ArrayVars<Type>* newVars = new (newVarsRaw)ArrayVars<Type>(size, (Type*)&newVarsRaw[sizeof(ArrayVars<Type>)]);
+		for (UInt i = 0; i < size; i++)
+		{
+			new (&newVars->data[i])Type(arr[i]);
+		}
+		this->setVars(newVars, TRUE);
 	}
 
 	template<typename Type>
@@ -496,10 +520,14 @@ namespace spadas
 		Int size = endIndex + 1 - startIndex;
 		if (size <= 0) return;
 		size = math::min((UInt)size, ARRAY_SIZE_LIMIT);
-		this->setVars(new ArrayVars<Type>(size), TRUE);
-		Type *srcData = input.vars->data;
-		Type *dstData = this->vars->data;
-		for (Int i = 0; i < size; i++) dstData[i] = srcData[i + startIndex];
+		Byte* newVarsRaw = new Byte[sizeof(ArrayVars<Type>) + sizeof(Type) * size];
+		ArrayVars<Type>* newVars = new (newVarsRaw)ArrayVars<Type>(size, (Type*)&newVarsRaw[sizeof(ArrayVars<Type>)]);
+		Type* srcData = input.vars->data;
+		for (UInt i = 0; i < size; i++)
+		{
+			new (&newVars->data[i])Type(srcData[i + startIndex]);
+		}
+		this->setVars(newVars, TRUE);
 	}
 
 	template<typename Type>
@@ -578,12 +606,7 @@ namespace spadas
 	Array<Type> Array<Type>::clone()
 	{
 		if (!this->vars) return Array<Type>();
-		UInt size = this->vars->size;
-		Array<Type> out(size);
-		Type *srcData = this->vars->data;
-		Type *dstData = out.vars->data;
-		for (UInt i = 0; i < size; i++) dstData[i] = srcData[i];
-		return out;
+		else return Array<Type>(this->vars->data, this->vars->size);
 	}
 
 	template<typename Type>
@@ -603,7 +626,7 @@ namespace spadas
 		UInt srcSize = src.vars->size;
 		SPADAS_ERROR_RETURN(srcRegion.offset < 0 || srcRegion.offset + srcRegion.size > srcSize);
 		SPADAS_ERROR_RETURN(thisOffset + srcRegion.size > this->vars->size);
-		Type *srcData = src->vars->data;
+		Type *srcData = src.vars->data;
 		Type *dstData = this->vars->data;
 		for (UInt i = 0, srcI = srcRegion.offset, dstI = thisOffset; i < srcRegion.size; i++, srcI++, dstI++)
 		{
@@ -637,11 +660,10 @@ namespace spadas
 		{
 			UInt subArraySize = sizes[i];
 			if (subArraySize == 0) continue;
-			Array<Type> subArray(subArraySize);
-			Type *dstData = subArray.vars->data;
+			Array<Type> subArray = Array<Type>::createUninitialized(subArraySize);
 			for (UInt j = 0; j < subArraySize; j++)
 			{
-				dstData[j] = this->vars->data[n++];
+				subArray.initialize(j, this->vars->data[n++]);
 			}
 			out[i] = subArray;
 		}
@@ -660,10 +682,9 @@ namespace spadas
 				Type *thisData = this->vars->data;
 				UInt arrSize = arr.vars->size;
 				Type *arrData = arr.vars->data;
-				Array<Type> out(thisSize + arrSize);
-				Type *outData = out.vars->data;
-				for (UInt i = 0; i < thisSize; i++) outData[i] = thisData[i];
-				for (UInt i = thisSize, j = 0; j < arrSize; i++, j++) outData[i] = arrData[j];
+				Array<Type> out = Array<Type>::createUninitialized(thisSize + arrSize);
+				for (UInt i = 0; i < thisSize; i++) out.initialize(i, thisData[i]);
+				for (UInt i = thisSize, j = 0; j < arrSize; i++, j++) out.initialize(i, arrData[j]);
 				return out;
 			}
 		}
@@ -673,9 +694,7 @@ namespace spadas
 	template<typename Type>
 	Array<Type> Array<Type>::scalar(Type element)
 	{
-		Array<Type> out(1);
-		out[0] = element;
-		return out;
+		return Array<Type>(&element, 1);
 	}
 
 	template<typename Type>
@@ -683,18 +702,35 @@ namespace spadas
 	Array<Type> Array<Type>::create(UInt size, ArgType firstValue, ...)
 	{
 		if (size == 0) return Array<Type>();
-		Array<Type> out(size);
-		Type *data = out.vars->data;
-		data[0] = (Type)firstValue;
+		Array<Type> out = Array<Type>::createUninitialized(size);
+		out.initialize(0, (const Type&)firstValue);
 		if (size == 1) return out;
 		va_list list;
 		va_start(list, firstValue);
 		for (UInt i = 1; i < size; i++)
 		{
-			data[i] = (Type)va_arg(list, ArgType);
+			out.initialize(i, (const Type&)va_arg(list, ArgType));
 		}
 		va_end(list);
 		return out;
+	}
+
+	template<typename Type>
+	Array<Type> Array<Type>::createUninitialized(UInt size)
+	{
+		if (size == 0) return Array<Type>();
+		size = math::min(size, ARRAY_SIZE_LIMIT);
+		Byte* newVarsRaw = new Byte[sizeof(ArrayVars<Type>) + sizeof(Type) * size];
+		ArrayVars<Type>* newVars = new (newVarsRaw)ArrayVars<Type>(size, (Type*)&newVarsRaw[sizeof(ArrayVars<Type>)]);
+		Array<Type> out;
+		out.setVars(newVars, TRUE);
+		return out;
+	}
+
+	template<typename Type>
+	void Array<Type>::initialize(UInt index, const Type& val)
+	{
+		new (&this->vars->data[index])Type(val);
 	}
 
 	template<typename Type>
@@ -704,8 +740,7 @@ namespace spadas
 		for (UInt i = 0; i < arrs.size(); i++) totalSize += arrs[i].size();
 		if (totalSize == 0) return Array<Type>();
 		SPADAS_ERROR_RETURNVAL(totalSize > ARRAY_SIZE_LIMIT, Array<Type>());
-		Array<Type> out(totalSize);
-		Type *dstData = out.vars->data;
+		Array<Type> out = Array<Type>::createUninitialized(totalSize);
 		UInt n = 0;
 		for (UInt i = 0; i < arrs.size(); i++)
 		{
@@ -713,7 +748,7 @@ namespace spadas
 			if (!arr.vars) continue;
 			Type *srcData = arr.vars->data;
 			UInt copySize = arr.vars->size;
-			for (UInt j = 0; j < copySize; j++) dstData[n++] = srcData[j];
+			for (UInt j = 0; j < copySize; j++) out.initialize(n++, srcData[j]);
 		}
 		return out;
 	}
@@ -723,9 +758,8 @@ namespace spadas
 	Array<TargetType> Array<Type>::asArray()
 	{
 		if (!this->vars) return Array<TargetType>();
-		Array<TargetType> output(this->vars->size);
-		TargetType *outputData = output.data();
-		for (UInt i = 0; i < this->vars->size; i++) outputData[i] = this->vars->data[i].template as<TargetType>();
+		Array<TargetType> output = Array<TargetType>::createUninitialized(this->vars->size);
+		for (UInt i = 0; i < this->vars->size; i++) output.initialize(i, this->vars->data[i].template as<TargetType>());
 		return output;
 	}
 
