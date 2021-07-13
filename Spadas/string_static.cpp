@@ -54,8 +54,12 @@ using namespace string_internal;
 String String::createWithSize(UInt size)
 {
 	if (size == 0) return String();
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + size];
+	StringVars* newVars = new (newVarsRaw)StringVars(size, &newVarsRaw[sizeof(StringVars)]);
+
 	String out;
-	out.setVars(new StringVars(size), TRUE);
+	out.setVars(newVars, TRUE);
 	return out;
 }
 

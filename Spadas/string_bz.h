@@ -6,23 +6,19 @@ namespace spadas
     public:
 		SPADAS_VARS_DEF(String, Vars)
 
-		// buffer
 		UInt size;
-		Byte *data;
-        
-		// length
+		Byte* data;
 		UInt length;
+		Byte* extData;
 		
 		// constructors
-		StringVars(UInt size0): size(size0), data(new Byte[size0]), length(0)
-		{
-			data[0] = 0;
-		}
+		StringVars(UInt size0, Byte* data0): size(size0), data(data0), length(0), extData(0)
+		{}
         
 		// destructor
         ~StringVars()
         {
-            delete[] data;
+            if (extData) delete[] extData;
         }
 	};
 }
@@ -30,8 +26,6 @@ namespace spadas
 namespace spadas_internal
 {
 	using namespace spadas;
-	
-	const UInt SIZE_LIMIT = 10000000;	// 10 millions
 
 	Bool doubleToPrettyString(Double val, Char output[48], Int& length);
 	

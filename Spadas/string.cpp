@@ -78,7 +78,12 @@ String::String(Char character)
 {
 	if (character == 0) return;
 
-	setVars(new StringVars(2), TRUE);
+	const UInt dataSize = 2;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	vars->data[0] = (Byte)character;
 	vars->data[1] = 0;
 	vars->length = 1;
@@ -88,7 +93,12 @@ String::String(WChar character)
 {
 	if (character == 0) return;
 
-	setVars(new StringVars(5), TRUE);
+	const UInt dataSize = 5;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	vars->length = math::min(vars->size - 1, wCharToUTF8(&character, 1, (Char*)vars->data, vars->size));
 	vars->data[vars->length] = 0;
 }
@@ -100,7 +110,12 @@ String::String(const Char text[])
 	UInt textLength = lengthChar(text);
 	if (textLength == 0) return;
 
-	setVars(new StringVars(textLength * 2 + 1), TRUE);
+	UInt dataSize = textLength * 2 + 1;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	vars->length = math::min(vars->size - 1, charToUTF8(text, textLength, (Char*)vars->data, vars->size));
 	vars->data[vars->length] = 0;
 }
@@ -112,7 +127,12 @@ String::String(const WChar text[])
 	UInt textLength = lengthWChar(text);
 	if (textLength == 0) return;
 
-	setVars(new StringVars(textLength * 4 + 1), TRUE);
+	UInt dataSize = textLength * 4 + 1;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	vars->length = math::min(vars->size - 1, wCharToUTF8(text, textLength, (Char*)vars->data, vars->size));
 	vars->data[vars->length] = 0;
 }
@@ -124,7 +144,12 @@ String::String(Array<Char> text)
 	Char* textData = text.data();
 	UInt textLength = text.size();
 
-	setVars(new StringVars(textLength * 2 + 1), TRUE);
+	UInt dataSize = textLength * 2 + 1;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	vars->length = math::min(vars->size - 1, charToUTF8(textData, textLength, (Char*)vars->data, vars->size));
 	vars->data[vars->length] = 0;
 }
@@ -136,13 +161,24 @@ String::String(Array<WChar> text)
 	WChar *textData = text.data();
 	UInt textLength = text.size();
 
-	setVars(new StringVars(textLength * 4 + 1), TRUE);
+	UInt dataSize = textLength * 4 + 1;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	vars->length = math::min(vars->size - 1, wCharToUTF8(textData, textLength, (Char*)vars->data, vars->size));
 	vars->data[vars->length] = 0;
 }
 
-String::String(Bool val) : Object<StringVars>(new StringVars(6), TRUE)
+String::String(Bool val)
 {
+	const UInt dataSize = 6;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	if (val)
 	{
 		vars->data[0] = 'T';
@@ -164,26 +200,50 @@ String::String(Bool val) : Object<StringVars>(new StringVars(6), TRUE)
 	}
 }
 
-String::String(Byte val) : Object<StringVars>(new StringVars(16), TRUE)
+String::String(Byte val)
 {
+	const UInt dataSize = 16;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	UInt length = printToString((Char*)vars->data, 16, "%u", (UInt)val);
 	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
-String::String(Word val) : Object<StringVars>(new StringVars(16), TRUE)
+String::String(Word val)
 {
+	const UInt dataSize = 16;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	UInt length = printToString((Char*)vars->data, 16, "%u", (UInt)val);
 	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
-String::String(UInt val) : Object<StringVars>(new StringVars(16), TRUE)
+String::String(UInt val)
 {
+	const UInt dataSize = 16;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	UInt length = printToString((Char*)vars->data, 16, "%u", val);
 	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
-String::String(UInt val, UInt nDigits) : Object<StringVars>(new StringVars(nDigits + 1), TRUE)
+String::String(UInt val, UInt nDigits)
 {
+	UInt dataSize = nDigits + 1;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	UInt *units = new UInt[nDigits];
 	for (UInt i = 0; i < nDigits; i++)
 	{
@@ -201,14 +261,26 @@ String::String(UInt val, UInt nDigits) : Object<StringVars>(new StringVars(nDigi
 	delete[] units;
 }
 
-String::String(ULong val) : Object<StringVars>(new StringVars(32), TRUE)
+String::String(ULong val)
 {
+	const UInt dataSize = 32;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	UInt length = printToString((Char*)vars->data, 32, "%llu", val);
 	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
-String::String(ULong val, UInt nDigits) : Object<StringVars>(new StringVars(nDigits + 1), TRUE)
+String::String(ULong val, UInt nDigits)
 {
+	UInt dataSize = nDigits + 1;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	UInt *units = new UInt[nDigits];
 	for (UInt i = 0; i < nDigits; i++)
 	{
@@ -226,38 +298,74 @@ String::String(ULong val, UInt nDigits) : Object<StringVars>(new StringVars(nDig
 	delete[] units;
 }
 
-String::String(Short val) : Object<StringVars>(new StringVars(16), TRUE)
+String::String(Short val)
 {
+	const UInt dataSize = 16;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	UInt length = printToString((Char*)vars->data, 16, "%d", (Int)val);
 	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
-String::String(Int val) : Object<StringVars>(new StringVars(16), TRUE)
+String::String(Int val)
 {
+	const UInt dataSize = 16;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	UInt length = printToString((Char*)vars->data, 16, "%d", val);
 	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
-String::String(Long val) : Object<StringVars>(new StringVars(32), TRUE)
+String::String(Long val)
 {
+	const UInt dataSize = 32;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	UInt length = printToString((Char*)vars->data, 32, "%lld", val);
 	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
-String::String(Float val) : Object<StringVars>(new StringVars(32), TRUE)
+String::String(Float val)
 {
+	const UInt dataSize = 32;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	UInt length = printToString((Char*)vars->data, 32, "%.3f", val);
 	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
-String::String(Double val) : Object<StringVars>(new StringVars(64), TRUE)
+String::String(Double val)
 {
+	const UInt dataSize = 64;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	UInt length = printToString((Char*)vars->data, 64, "%.3lf", val);
 	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
-String::String(Float val, UInt nDigits) : Object<StringVars>(new StringVars(48), TRUE)
+String::String(Float val, UInt nDigits)
 {
+	const UInt dataSize = 48;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	if (nDigits == UINF)
 	{
 		Int length = 0;
@@ -282,8 +390,14 @@ String::String(Float val, UInt nDigits) : Object<StringVars>(new StringVars(48),
 	}
 }
 
-String::String(Double val, UInt nDigits) : Object<StringVars>(new StringVars(64), TRUE)
+String::String(Double val, UInt nDigits)
 {
+	const UInt dataSize = 64;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+
 	if (nDigits == UINF)
 	{
 		Int length = 0;
@@ -314,7 +428,12 @@ String::String(Binary binary)
 
 	Byte* binData = binary.data();
 	UInt binSize = binary.size();
-	setVars(new StringVars(binSize + 1), TRUE);
+
+	UInt dataSize = binSize + 1;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
 
 	utility::memoryCopy(binData, vars->data, binSize);
 	vars->data[binSize] = 0;
@@ -333,8 +452,12 @@ String::String(String src, Region region)
     endIndex = math::min((Int)srcLength - 1, endIndex);
     Int length = endIndex + 1 - startIndex;
 	if (length <= 0) return;
-    
-	setVars(new StringVars(length + 1), TRUE);
+
+	UInt dataSize = length + 1;
+
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
 
 	utility::memoryCopy(&src.vars->data[startIndex], vars->data, length);
 	vars->data[length] = 0;
@@ -478,10 +601,16 @@ void String::operator +=(String append)
 	UInt appendLength = append.vars->length;
 	if (!vars)
 	{
-		setVars(new StringVars(appendLength + 1), TRUE);
+		UInt dataSize = appendLength + 1;
+
+		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+		setVars(newVars, TRUE);
+
 		utility::memoryCopy(append.vars->data, vars->data, appendLength);
 		vars->data[appendLength] = 0;
 		vars->length = appendLength;
+
 		return;
 	}
 
@@ -491,8 +620,8 @@ void String::operator +=(String append)
 	{
 		Byte *dstData = new Byte[(totalLength + 1) * 2];
 		utility::memoryCopy(vars->data, dstData, originLength);
-		delete[] vars->data;
-		vars->data = dstData;
+		if (vars->extData) delete[] vars->extData;
+		vars->data = vars->extData = dstData;
 		vars->size = (totalLength + 1) * 2;
 	}
 
