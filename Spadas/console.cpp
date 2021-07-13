@@ -115,7 +115,7 @@ String Key::toString(Int val)
 			}
 			else if (val < Key::F1)
 			{
-				return (String)"Key " + (WChar)(65 + val - Key::A);
+				return (String)"Key " + (Char)(65 + val - Key::A);
 			}
 			else
 			{

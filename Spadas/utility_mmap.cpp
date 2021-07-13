@@ -72,7 +72,7 @@ MemoryMap::MemoryMap(Path file, PointerInt offset, PointerInt size)
 	GetSystemInfo(&systemInfo);
 	SPADAS_ERROR_RETURN(offset % systemInfo.dwAllocationGranularity != 0);
 
-	HANDLE fileHandle = CreateFileW(fileFullPath.data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+	HANDLE fileHandle = CreateFileW(fileFullPath.wchars().data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
 	SPADAS_ERROR_RETURN(fileHandle == (HANDLE)-1);
 
 	HANDLE mmapHandle = CreateFileMappingW(fileHandle, 0, PAGE_READWRITE, 0, (DWORD)(offset + size), 0);

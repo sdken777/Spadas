@@ -7,22 +7,21 @@ using namespace spadas;
 using namespace spadas::math;
 using namespace spadas_internal;
 
-Char staticZeroChar = 0;
-WChar staticZeroWChar = 0;
+Byte staticZeroByte = 0;
 
-Bool spadas_internal::doubleToPrettyString(Double val, WChar output[48], Int& length)
+Bool spadas_internal::doubleToPrettyString(Double val, Char output[48], Int& length)
 {
 	if (val > 1000000000000000000.0 || val < -1000000000000000000.0) return FALSE;
 
 	Long valInt = (Long)val;
 	if (val == valInt)
 	{
-		int len = spadas_internal::printToString(output, 48, L"%lld", valInt);
+		int len = spadas_internal::printToString(output, 48, "%lld", valInt);
 		length = len;
 		return TRUE;
 	}
 
-	int len = spadas_internal::printToString(output, 48, L"%.16f", val);
+	int len = spadas_internal::printToString(output, 48, "%.16f", val);
 
 	if (output[len - 1] == '0')
 	{
@@ -80,7 +79,7 @@ String::String(Char character)
 	if (character == 0) return;
 
 	setVars(new StringVars(2), TRUE);
-	vars->data[0] = (WChar)character;
+	vars->data[0] = (Byte)character;
 	vars->data[1] = 0;
 	vars->length = 1;
 }
@@ -89,10 +88,9 @@ String::String(WChar character)
 {
 	if (character == 0) return;
 
-	setVars(new StringVars(2), TRUE);
-	vars->data[0] = character;
-	vars->data[1] = 0;
-	vars->length = 1;
+	setVars(new StringVars(5), TRUE);
+	vars->length = math::min(vars->size - 1, wCharToUTF8(&character, 1, (Char*)vars->data, vars->size));
+	vars->data[vars->length] = 0;
 }
 
 String::String(const Char text[])
@@ -102,19 +100,9 @@ String::String(const Char text[])
 	UInt textLength = lengthChar(text);
 	if (textLength == 0) return;
 
-	setVars(new StringVars(textLength + 1), TRUE);
-	UInt dstLength = charToWChar(text, textLength, vars->data, textLength + 1);
-
-	if (dstLength <= textLength)
-	{
-		vars->data[dstLength] = 0;
-		vars->length = dstLength;
-	}
-	else
-	{
-		vars->data[textLength] = 0;
-		vars->length = lengthWChar(vars->data);
-	}
+	setVars(new StringVars(textLength * 2 + 1), TRUE);
+	vars->length = math::min(vars->size - 1, charToUTF8(text, textLength, (Char*)vars->data, vars->size));
+	vars->data[vars->length] = 0;
 }
 
 String::String(const WChar text[])
@@ -124,10 +112,21 @@ String::String(const WChar text[])
 	UInt textLength = lengthWChar(text);
 	if (textLength == 0) return;
 
-	setVars(new StringVars(textLength + 1), TRUE);
-	for (UInt i = 0; i < textLength; i++) vars->data[i] = text[i];
-	vars->data[textLength] = 0;
-	vars->length = textLength;
+	setVars(new StringVars(textLength * 4 + 1), TRUE);
+	vars->length = math::min(vars->size - 1, wCharToUTF8(text, textLength, (Char*)vars->data, vars->size));
+	vars->data[vars->length] = 0;
+}
+
+String::String(Array<Char> text)
+{
+	if (text.isEmpty()) return;
+
+	Char* textData = text.data();
+	UInt textLength = text.size();
+
+	setVars(new StringVars(textLength * 2 + 1), TRUE);
+	vars->length = math::min(vars->size - 1, charToUTF8(textData, textLength, (Char*)vars->data, vars->size));
+	vars->data[vars->length] = 0;
 }
 
 String::String(Array<WChar> text)
@@ -137,38 +136,29 @@ String::String(Array<WChar> text)
 	WChar *textData = text.data();
 	UInt textLength = text.size();
 
-	setVars(new StringVars(textLength + 1), TRUE);
-	for (UInt i = 0; i < textLength; i++)
-	{
-		vars->data[i] = textData[i];
-		if (textData[i] == 0)
-		{
-			vars->length = i;
-			return;
-		}
-	}
-	vars->data[textLength] = 0;
-	vars->length = textLength;
+	setVars(new StringVars(textLength * 4 + 1), TRUE);
+	vars->length = math::min(vars->size - 1, wCharToUTF8(textData, textLength, (Char*)vars->data, vars->size));
+	vars->data[vars->length] = 0;
 }
 
 String::String(Bool val) : Object<StringVars>(new StringVars(6), TRUE)
 {
 	if (val)
 	{
-		vars->data[0] = L'T';
-		vars->data[1] = L'R';
-		vars->data[2] = L'U';
-		vars->data[3] = L'E';
+		vars->data[0] = 'T';
+		vars->data[1] = 'R';
+		vars->data[2] = 'U';
+		vars->data[3] = 'E';
 		vars->data[4] = 0;
 		vars->length = 4;
 	}
 	else
 	{
-		vars->data[0] = L'F';
-		vars->data[1] = L'A';
-		vars->data[2] = L'L';
-		vars->data[3] = L'S';
-		vars->data[4] = L'E';
+		vars->data[0] = 'F';
+		vars->data[1] = 'A';
+		vars->data[2] = 'L';
+		vars->data[3] = 'S';
+		vars->data[4] = 'E';
 		vars->data[5] = 0;
 		vars->length = 5;
 	}
@@ -176,20 +166,20 @@ String::String(Bool val) : Object<StringVars>(new StringVars(6), TRUE)
 
 String::String(Byte val) : Object<StringVars>(new StringVars(16), TRUE)
 {
-	UInt length = printToString(vars->data, 16, L"%u", (UInt)val);
-	vars->length = length == UINF ? lengthWChar(vars->data) : length;
+	UInt length = printToString((Char*)vars->data, 16, "%u", (UInt)val);
+	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
 String::String(Word val) : Object<StringVars>(new StringVars(16), TRUE)
 {
-	UInt length = printToString(vars->data, 16, L"%u", (UInt)val);
-	vars->length = length == UINF ? lengthWChar(vars->data) : length;
+	UInt length = printToString((Char*)vars->data, 16, "%u", (UInt)val);
+	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
 String::String(UInt val) : Object<StringVars>(new StringVars(16), TRUE)
 {
-	UInt length = printToString(vars->data, 16, L"%u", val);
-	vars->length = length == UINF ? lengthWChar(vars->data) : length;
+	UInt length = printToString((Char*)vars->data, 16, "%u", val);
+	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
 String::String(UInt val, UInt nDigits) : Object<StringVars>(new StringVars(nDigits + 1), TRUE)
@@ -203,7 +193,7 @@ String::String(UInt val, UInt nDigits) : Object<StringVars>(new StringVars(nDigi
 
 	for (UInt i = 0; i < nDigits; i++)
 	{
-		vars->data[i] = (WChar)(units[nDigits - i - 1] + 48);
+		vars->data[i] = (Char)(units[nDigits - i - 1] + 48);
 	}
 	vars->data[nDigits] = 0;
 	vars->length = nDigits;
@@ -213,8 +203,8 @@ String::String(UInt val, UInt nDigits) : Object<StringVars>(new StringVars(nDigi
 
 String::String(ULong val) : Object<StringVars>(new StringVars(32), TRUE)
 {
-	UInt length = printToString(vars->data, 32, L"%llu", val);
-	vars->length = length == UINF ? lengthWChar(vars->data) : length;
+	UInt length = printToString((Char*)vars->data, 32, "%llu", val);
+	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
 String::String(ULong val, UInt nDigits) : Object<StringVars>(new StringVars(nDigits + 1), TRUE)
@@ -228,7 +218,7 @@ String::String(ULong val, UInt nDigits) : Object<StringVars>(new StringVars(nDig
 
 	for (UInt i = 0; i < nDigits; i++)
 	{
-		vars->data[i] = (WChar)(units[nDigits - i - 1] + 48);
+		vars->data[i] = (Char)(units[nDigits - i - 1] + 48);
 	}
 	vars->data[nDigits] = 0;
 	vars->length = nDigits;
@@ -238,32 +228,32 @@ String::String(ULong val, UInt nDigits) : Object<StringVars>(new StringVars(nDig
 
 String::String(Short val) : Object<StringVars>(new StringVars(16), TRUE)
 {
-	UInt length = printToString(vars->data, 16, L"%d", (Int)val);
-	vars->length = length == UINF ? lengthWChar(vars->data) : length;
+	UInt length = printToString((Char*)vars->data, 16, "%d", (Int)val);
+	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
 String::String(Int val) : Object<StringVars>(new StringVars(16), TRUE)
 {
-	UInt length = printToString(vars->data, 16, L"%d", val);
-	vars->length = length == UINF ? lengthWChar(vars->data) : length;
+	UInt length = printToString((Char*)vars->data, 16, "%d", val);
+	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
 String::String(Long val) : Object<StringVars>(new StringVars(32), TRUE)
 {
-	UInt length = printToString(vars->data, 32, L"%lld", val);
-	vars->length = length == UINF ? lengthWChar(vars->data) : length;
+	UInt length = printToString((Char*)vars->data, 32, "%lld", val);
+	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
 String::String(Float val) : Object<StringVars>(new StringVars(32), TRUE)
 {
-	UInt length = printToString(vars->data, 32, L"%.3f", val);
-	vars->length = length == UINF ? lengthWChar(vars->data) : length;
+	UInt length = printToString((Char*)vars->data, 32, "%.3f", val);
+	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
 String::String(Double val) : Object<StringVars>(new StringVars(64), TRUE)
 {
-	UInt length = printToString(vars->data, 64, L"%.3lf", val);
-	vars->length = length == UINF ? lengthWChar(vars->data) : length;
+	UInt length = printToString((Char*)vars->data, 64, "%.3lf", val);
+	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 }
 
 String::String(Float val, UInt nDigits) : Object<StringVars>(new StringVars(48), TRUE)
@@ -271,7 +261,7 @@ String::String(Float val, UInt nDigits) : Object<StringVars>(new StringVars(48),
 	if (nDigits == UINF)
 	{
 		Int length = 0;
-		if (doubleToPrettyString((Double)val, vars->data, length))
+		if (doubleToPrettyString((Double)val, (Char*)vars->data, length))
 		{
 			vars->length = length;
 		}
@@ -279,16 +269,16 @@ String::String(Float val, UInt nDigits) : Object<StringVars>(new StringVars(48),
 		{
 			if (val >= 0) val = FINF;
 			else val = NFINF;
-			printToString(vars->data, 48, L"%f", val);
+			printToString((Char*)vars->data, 48, "%f", val);
 		}
 	}
 	else
 	{
-		WChar format[16];
-		printToString(format, 16, L"%%.%df", math::min(nDigits, 10u));
+		Char format[16];
+		printToString(format, 16, "%%.%df", math::min(nDigits, 10u));
 
-		UInt length = printToString(vars->data, 48, format, val);
-		vars->length = length == UINF ? lengthWChar(vars->data) : length;
+		UInt length = printToString((Char*)vars->data, 48, format, val);
+		vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 	}
 }
 
@@ -297,7 +287,7 @@ String::String(Double val, UInt nDigits) : Object<StringVars>(new StringVars(64)
 	if (nDigits == UINF)
 	{
 		Int length = 0;
-		if (doubleToPrettyString(val, vars->data, length))
+		if (doubleToPrettyString(val, (Char*)vars->data, length))
 		{
 			vars->length = length;
 		}
@@ -305,16 +295,16 @@ String::String(Double val, UInt nDigits) : Object<StringVars>(new StringVars(64)
 		{
 			if (val >= 0) val = DINF;
 			else val = NDINF;
-			printToString(vars->data, 64, L"%lf", val);
+			printToString((Char*)vars->data, 64, "%lf", val);
 		}
 	}
 	else
 	{
-		WChar format[16];
-		printToString(format, 16, L"%%.%dlf", math::min(nDigits, 20u));
+		Char format[16];
+		printToString(format, 16, "%%.%dlf", math::min(nDigits, 20u));
 
-		UInt length = printToString(vars->data, 64, format, val);
-		vars->length = length == UINF ? lengthWChar(vars->data) : length;
+		UInt length = printToString((Char*)vars->data, 64, format, val);
+		vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
 	}
 }
 
@@ -322,20 +312,13 @@ String::String(Binary binary)
 {
     if (binary.isEmpty()) return;
 
+	Byte* binData = binary.data();
 	UInt binSize = binary.size();
 	setVars(new StringVars(binSize + 1), TRUE);
-	UInt dstLength = utf8ToWChar((Char*)binary.data(), binSize, vars->data, binSize + 1);
 
-	if (dstLength <= binSize)
-	{
-		vars->data[dstLength] = 0;
-		vars->length = dstLength;
-	}
-	else
-	{
-		vars->data[binSize] = 0;
-		vars->length = lengthWChar(vars->data);
-	}
+	utility::memoryCopy(binData, vars->data, binSize);
+	vars->data[binSize] = 0;
+	vars->length = lengthChar((Char*)vars->data);
 }
 
 String::String(String src, Region region)
@@ -353,10 +336,8 @@ String::String(String src, Region region)
     
 	setVars(new StringVars(length + 1), TRUE);
 
-	WChar *srcData = src.vars->data;
-	WChar *newData = vars->data;
-    for (UInt iSrc = startIndex, iDst = 0; iSrc <= (UInt)endIndex; iSrc++, iDst++) newData[iDst] = srcData[iSrc];
-    newData[length] = 0;
+	utility::memoryCopy(&src.vars->data[startIndex], vars->data, length);
+	vars->data[length] = 0;
     vars->length = length;
 }
 
@@ -369,7 +350,7 @@ Bool String::operator ==(String string)
 	else
 	{
 		if (string.isEmpty()) return FALSE;
-		else return compareString(vars->data, string.vars->data) == 0;
+		else return compareString((Char*)vars->data, (Char*)string.vars->data) == 0;
 	}
 }
 
@@ -382,7 +363,7 @@ Bool String::operator !=(String string)
 	else
 	{
 		if (string.isEmpty()) return TRUE;
-		else return compareString(vars->data, string.vars->data) != 0;
+		else return compareString((Char*)vars->data, (Char*)string.vars->data) != 0;
 	}
 }
 
@@ -395,7 +376,7 @@ Bool String::operator >(String string)
 	else
 	{
 		if (string.isEmpty()) return TRUE;
-		else return compareString(vars->data, string.vars->data) > 0;
+		else return compareString((Char*)vars->data, (Char*)string.vars->data) > 0;
 	}
 }
 
@@ -408,7 +389,7 @@ Bool String::operator <(String string)
 	else
 	{
 		if (string.isEmpty()) return FALSE;
-		else return compareString(vars->data, string.vars->data) < 0;
+		else return compareString((Char*)vars->data, (Char*)string.vars->data) < 0;
 	}
 }
 
@@ -430,9 +411,8 @@ String String::clone()
 
 	UInt length = vars->length;
 	String out = String::createWithSize(length + 1);
-	WChar *srcData = vars->data;
-	WChar *dstData = out.vars->data;
-	for (UInt i = 0; i < length; i++) dstData[i] = srcData[i];
+	Byte* dstData = out.vars->data;
+	utility::memoryCopy(vars->data, dstData, length);
 	dstData[length] = 0;
 	out.vars->length = length;
 	return out;
@@ -441,97 +421,49 @@ String String::clone()
 void String::updateLength()
 {
 	if (!vars) return;
-	vars->length = lengthWChar(vars->data);
+	vars->length = lengthChar((Char*)vars->data);
 }
 
-WChar& String::operator [](UInt index)
-{
-	SPADAS_ERROR_RETURNVAL(!vars || index >= vars->size, *(new WChar));
-	return vars->data[index];
-}
-
-WChar *String::data()
+Byte *String::bytes()
 {
 	if (!vars)
 	{
-		staticZeroWChar = 0;
-		return &staticZeroWChar;
+		staticZeroByte = 0;
+		return &staticZeroByte;
 	}
 	else return vars->data;
 }
 
-Char *String::dataA()
+UInt String::byteSize()
 {
-	if (isEmpty())
-	{
-		staticZeroChar = 0;
-		return &staticZeroChar;
-	}
-
-	if (vars->bufferA) delete[] vars->bufferA;
-
-	UInt length = vars->length;
-	UInt bufferASize = (length + 1) * sizeof(WChar);
-	vars->bufferA = new Char[bufferASize];
-	UInt dstLength = wCharToChar(vars->data, length, vars->bufferA, bufferASize);
-
-	if (dstLength >= bufferASize) vars->bufferA[bufferASize - 1] = 0;
-	else vars->bufferA[dstLength] = 0;
-
-	return vars->bufferA;
+	return vars ? vars->size : 0;
 }
 
-Char *String::dataA(UInt& len)
+Array<Char> String::chars()
 {
-	if (isEmpty())
-	{
-		len = 0;
-		staticZeroChar = 0;
-		return &staticZeroChar;
-	}
+	if (isEmpty()) return Array<Char>();
 
-	if (vars->bufferA) delete[] vars->bufferA;
-
-	UInt length = vars->length;
-	UInt bufferASize = (length + 1) * sizeof(WChar);
-	vars->bufferA = new Char[bufferASize];
-	UInt dstLength = wCharToChar(vars->data, length, vars->bufferA, bufferASize);
-
-	if (dstLength < bufferASize)
-	{
-		vars->bufferA[dstLength] = 0;
-		len = dstLength;
-	}
-	else
-	{
-		vars->bufferA[bufferASize - 1] = 0;
-		len = lengthChar(vars->bufferA);
-	}
-
-	return vars->bufferA;
+	Array<Char> output(vars->length * 2 + 1);
+	UInt outputLength = utf8ToChar((Char*)vars->data, vars->length, output.data(), output.size());
+	output[outputLength] = 0;
+	output.trim(outputLength + 1);
+	return output;
 }
 
-Array<WChar> String::dataArray()
+Array<WChar> String::wchars()
 {
 	if (isEmpty()) return Array<WChar>();
 
-	UInt length = vars->length;
-	WChar *data = vars->data;
-
-	Array<WChar> arr(length);
-	WChar *arrData = arr.data();
-	for (UInt i = 0; i < arr.size(); i++) arrData[i] = data[i];
-	return arr;
+	Array<WChar> output(vars->length + 1);
+	UInt outputLength = utf8ToWChar((Char*)vars->data, vars->length, output.data(), output.size());
+	output[outputLength] = 0;
+	output.trim(outputLength + 1);
+	return output;
 }
 
 UInt String::length()
 {
 	return vars ? vars->length : 0;
-}
-
-UInt String::size()
-{
-	return vars ? vars->size : 0;
 }
 
 Bool String::isEmpty()
@@ -543,29 +475,30 @@ void String::operator +=(String append)
 {
 	if (append.isEmpty()) return;
 
+	UInt appendLength = append.vars->length;
 	if (!vars)
 	{
-		setVars(new StringVars((append.length() + 1) * 2), TRUE);
+		setVars(new StringVars(appendLength + 1), TRUE);
+		utility::memoryCopy(append.vars->data, vars->data, appendLength);
+		vars->data[appendLength] = 0;
+		vars->length = appendLength;
+		return;
 	}
 
 	UInt originLength = vars->length;
-	UInt appendLength = append.vars->length;
-	WChar *appendData = append.vars->data;
-
-	UInt resultSize = originLength + appendLength + 1;
-	if (resultSize > vars->size)
+	UInt totalLength = originLength + appendLength;
+	if (totalLength + 1 > vars->size)
 	{
-		WChar *dstData = new WChar[resultSize * 2];
-		for (UInt i = 0; i < originLength; i++) dstData[i] = vars->data[i];
+		Byte *dstData = new Byte[(totalLength + 1) * 2];
+		utility::memoryCopy(vars->data, dstData, originLength);
 		delete[] vars->data;
 		vars->data = dstData;
-		vars->size = resultSize * 2;
+		vars->size = (totalLength + 1) * 2;
 	}
 
-	WChar *dstData = vars->data;
-	for (UInt iSrc = 0, iDst = originLength; iSrc < appendLength; iSrc++, iDst++) dstData[iDst] = appendData[iSrc];
-	dstData[resultSize - 1] = 0;
-	vars->length = originLength + appendLength;
+	utility::memoryCopy(append.vars->data, &vars->data[originLength], appendLength);
+	vars->data[totalLength] = 0;
+	vars->length = totalLength;
 }
 
 String String::operator +(String append)
@@ -575,17 +508,13 @@ String String::operator +(String append)
 
 	UInt originLength = vars->length;
 	UInt appendLength = append.vars->length;
-	WChar *originData = vars->data;
-	WChar *appendData = append.vars->data;
+	UInt totalLength = originLength + appendLength;
 
 	String out = String::createWithSize(originLength + appendLength + 1);
-	WChar *outData = out.data();
-	
-	for (UInt i = 0; i < originLength; i++) outData[i] = originData[i];
-	for (UInt iSrc = 0, iDst = originLength; iSrc < appendLength; iSrc++, iDst++) outData[iDst] = appendData[iSrc];
-	outData[originLength + appendLength] = 0;
-	out.vars->length = originLength + appendLength;
-
+	utility::memoryCopy(vars->data, out.vars->data, originLength);
+	utility::memoryCopy(append.vars->data, &out.vars->data[originLength], appendLength);
+	out.vars->data[totalLength] = 0;
+	out.vars->length = totalLength;
 	return out;
 }
 
@@ -594,7 +523,7 @@ Optional<Int> String::toInt()
 	if (isEmpty()) return Optional<Int>();
 
 	Int val;
-	if (scanFromString(vars->data, vars->size, L"%d", &val)) return val;
+	if (scanFromString((Char*)vars->data, vars->size, "%d", &val)) return val;
 	else return Optional<Int>();
 }
 
@@ -603,7 +532,7 @@ Optional<Long> String::toLong()
 	if (isEmpty()) return Optional<Long>();
 
 	Long val;
-	if (scanFromString(vars->data, vars->size, L"%lld", &val)) return val;
+	if (scanFromString((Char*)vars->data, vars->size, "%lld", &val)) return val;
 	else return Optional<Long>();
 }
 
@@ -612,7 +541,7 @@ Optional<Float> String::toFloat()
 	if (isEmpty()) return Optional<Float>();
 
 	Float val;
-	if (scanFromString(vars->data, vars->size, L"%f", &val)) return val;
+	if (scanFromString((Char*)vars->data, vars->size, "%f", &val)) return val;
 	else return Optional<Float>();
 }
 
@@ -621,7 +550,7 @@ Optional<Double> String::toDouble()
 	if (isEmpty()) return Optional<Double>();
 
 	Double val;
-	if (scanFromString(vars->data, vars->size, L"%lf", &val)) return val;
+	if (scanFromString((Char*)vars->data, vars->size, "%lf", &val)) return val;
 	else return Optional<Double>();
 }
 
@@ -630,7 +559,7 @@ String String::toUpper()
 	if (isEmpty()) return String();
 
 	String out = clone();
-	WChar *data = out.vars->data;
+	Byte *data = out.vars->data;
 	UInt length = vars->length;
 	for (UInt i = 0; i < length; i++)
 	{
@@ -644,7 +573,7 @@ String String::toLower()
 	if (isEmpty()) return String();
 
 	String out = clone();
-	WChar *data = out.vars->data;
+	Byte *data = out.vars->data;
 	UInt length = vars->length;
 	for (UInt i = 0; i < length; i++)
 	{
@@ -661,8 +590,8 @@ Bool String::startsWith(String target)
 	UInt targetLength = target.vars->length;
 	if (targetLength == 0 || targetLength > srcLength) return FALSE;
 
-	WChar *srcData = vars->data;
-	WChar *targetData = target.vars->data;
+	Byte *srcData = vars->data;
+	Byte *targetData = target.vars->data;
 	for (UInt i = 0; i < targetLength; i++)
 	{
 		if (srcData[i] != targetData[i]) return FALSE;
@@ -678,8 +607,8 @@ Bool String::endsWith(String target)
 	UInt targetLength = target.vars->length;
 	if (targetLength == 0 || targetLength > srcLength) return FALSE;
 
-	WChar *srcData = vars->data;
-	WChar *targetData = target.vars->data;
+	Byte *srcData = vars->data;
+	Byte *targetData = target.vars->data;
 	UInt offset = srcLength - targetLength;
 	for (UInt i = 0; i < targetLength; i++)
 	{
@@ -691,21 +620,7 @@ Bool String::endsWith(String target)
 Binary String::toBinary()
 {
 	if (isEmpty()) return Binary();
-
-	UInt bufferSize = (vars->length + 1) * 4; // UTF-8
-	Binary out(bufferSize);
-
-	UInt dstLength = wCharToUTF8(vars->data, vars->length, (Char*)out.data(), bufferSize);
-
-	if (dstLength >= bufferSize)
-	{
-		Char *outData = (Char*)out.data();
-		outData[bufferSize - 1] = 0;
-		dstLength = lengthChar(outData);
-	}
-
-	out.trim(dstLength);
-	return out;
+	else return Binary(vars->data, vars->length);
 }
 
 Array<UInt> String::search(String string)
@@ -715,7 +630,7 @@ Array<UInt> String::search(String string)
 	SPADAS_ERROR_RETURNVAL(string.isEmpty(), Array<UInt>());
 
 	UInt subLength = string.vars->length;
-	WChar *subData = string.vars->data;
+	Byte *subData = string.vars->data;
 
 	UInt srcLength = vars->length;
 
@@ -776,7 +691,7 @@ Array<String> String::split(String string)
 	out.initialize(index++, String(*this, Region(0, matches[0])));
 	for (UInt i = 0; i < nMatches - 1; i++)
 	{
-		out.initialize(index++, String(*this, Region(matches[i] + length, max((Int)matches[i+1] - (Int)matches[i] - (Int)length, 0))));
+		out.initialize(index++, String(*this, Region(matches[i] + length, math::max((Int)matches[i+1] - (Int)matches[i] - (Int)length, 0))));
 	}
 	out.initialize(index++, String(*this, Region(matches[nMatches-1] + length, UINF)));
 	
@@ -810,14 +725,14 @@ String String::replace(String oldString, String newString)
 	String out = String::createWithSize(srcStringLength + nMatches * newStringLength - nMatches * oldStringLength + 1);
 	out.vars->length = srcStringLength + nMatches * newStringLength - nMatches * oldStringLength;
 
-	WChar *srcStringData = vars->data;
-	WChar *newStringData = newString.data(); // vars可能为空
-	WChar *outData = out.vars->data;
+	Byte *srcStringData = vars->data;
+	Byte *newStringData = newString.bytes(); // vars可能为空
+	Byte *outData = out.vars->data;
 
 	UInt outIndex = 0;
 	if (matches[0] != 0)
 	{
-		utility::memoryCopy(&srcStringData[0], &outData[outIndex], matches[0] * sizeof(WChar));
+		utility::memoryCopy(&srcStringData[0], &outData[outIndex], matches[0]);
 		outIndex += matches[0];
 	}
 	
@@ -825,28 +740,28 @@ String String::replace(String oldString, String newString)
 	{
 		if (newStringLength != 0)
 		{
-			utility::memoryCopy(newStringData, &outData[outIndex], newStringLength * sizeof(WChar));
+			utility::memoryCopy(newStringData, &outData[outIndex], newStringLength);
 			outIndex += newStringLength;
 		}
 		
-		UInt copySize = max((Int)matches[i+1] - (Int)matches[i] - (Int)oldStringLength, 0);
+		UInt copySize = math::max((Int)matches[i+1] - (Int)matches[i] - (Int)oldStringLength, 0);
 		if (copySize != 0)
 		{
-			utility::memoryCopy(&srcStringData[matches[i] + oldStringLength], &outData[outIndex], copySize * sizeof(WChar));
+			utility::memoryCopy(&srcStringData[matches[i] + oldStringLength], &outData[outIndex], copySize);
 			outIndex += copySize;
 		}
 	}
 	
 	if (newStringLength != 0)
 	{
-		utility::memoryCopy(newStringData, &outData[outIndex], newStringLength * sizeof(WChar));
+		utility::memoryCopy(newStringData, &outData[outIndex], newStringLength);
 		outIndex += newStringLength;
 	}
 	
-	UInt copySize = max((Int)srcStringLength - (Int)matches[nMatches-1] - (Int)oldStringLength, 0);
+	UInt copySize = math::max((Int)srcStringLength - (Int)matches[nMatches-1] - (Int)oldStringLength, 0);
 	if (copySize != 0)
 	{
-		utility::memoryCopy(&srcStringData[matches[nMatches-1] + oldStringLength], &outData[outIndex], copySize * sizeof(WChar));
+		utility::memoryCopy(&srcStringData[matches[nMatches-1] + oldStringLength], &outData[outIndex], copySize);
 		outIndex += copySize;
 	}
 	

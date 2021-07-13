@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <sys/timeb.h>
 
+#define MEMOP_THRESH 16
+
 using namespace spadas;
 
 // isBigEndian
@@ -25,7 +27,15 @@ void spadas::system::exit()
 // memorySet
 void spadas::utility::memorySet(Byte value, Pointer dst, UInt setSize)
 {
-	if (dst) memset(dst, (int) value, (size_t) setSize);
+	if (setSize < MEMOP_THRESH)
+	{
+		Byte* dstBytes = (Byte*)dst;
+		for (UInt i = 0; i < setSize; i++) dstBytes[i] = value;
+	}
+	else
+	{
+		memset(dst, (int)value, (size_t)setSize);
+	}
 }
 
 // getEnv
@@ -43,21 +53,27 @@ Enum<Environment> spadas::system::getEnv()
 // command
 void spadas::system::command(String cmd)
 {
-	if (::system(cmd.dataA())) {};
+	if (::system(cmd.chars().data())) {};
 }
 
 // memoryCopy
+void spadas::utility::memoryCopy(Pointer src, Pointer dst, UInt copySize)
+{
+	if (copySize < MEMOP_THRESH)
+	{
+		Byte* srcBytes = (Byte*)src;
+		Byte* dstBytes = (Byte*)dst;
+		for (UInt i = 0; i < copySize; i++) dstBytes[i] = srcBytes[i];
+	}
+	else
+	{
 #if defined(SPADAS_ENV_WINDOWS)
-void spadas::utility::memoryCopy(Pointer src, Pointer dst, UInt copySize)
-{
-	if (src && dst) memcpy_s(dst, (rsize_t)copySize, src, (rsize_t)copySize);
-}
+		memcpy_s(dst, (rsize_t)copySize, src, (rsize_t)copySize);
 #elif defined(SPADAS_ENV_LINUX)
-void spadas::utility::memoryCopy(Pointer src, Pointer dst, UInt copySize)
-{
-	if (src && dst) memcpy(dst, src, (size_t)copySize);
-}
+		memcpy(dst, src, (size_t)copySize);
 #endif
+	}
+}
 
 // getTime
 #if defined(SPADAS_ENV_WINDOWS)
@@ -155,7 +171,7 @@ void spadas::system::addEnvironmentPath(Path path)
 	if (srcComps.contain(target)) return;
 
 	String newVar = src + ";" + target;
-	SetEnvironmentVariableW(L"Path", newVar.data());
+	SetEnvironmentVariableW(L"Path", newVar.wchars().data());
 }
 #elif defined(SPADAS_ENV_LINUX)
 void spadas::system::addEnvironmentPath(Path path)
@@ -170,7 +186,7 @@ void spadas::system::addEnvironmentPath(Path path)
 	if (!envComps.contain(targetFolder))
 	{
 		env += (String)":" + targetFolder;
-		setenv("PATH", env.dataA(), 1);
+		setenv("PATH", env.chars().data(), 1);
 	}
 
 	env = getenv("LD_LIBRARY_PATH");
@@ -178,7 +194,7 @@ void spadas::system::addEnvironmentPath(Path path)
 	if (!envComps.contain(targetFolder))
 	{
 		env += (String)":" + targetFolder;
-		setenv("LD_LIBRARY_PATH", env.dataA(), 1);
+		setenv("LD_LIBRARY_PATH", env.chars().data(), 1);
 	}
 }
 #endif

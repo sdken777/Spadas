@@ -23,7 +23,7 @@ using namespace console_internal;
 
 void spadas::console::popup(String text)
 {
-	MessageBoxW(0, text.data(), L"", MB_OK);
+	MessageBoxW(0, text.wchars().data(), L"", MB_OK);
 }
 
 DefaultConsole::DefaultConsole() : Object<Vars>(new Vars(), TRUE)
@@ -135,7 +135,7 @@ Enum<Key> DefaultConsole::checkKey()
 
 void DefaultConsole::print(String text, Enum<MessageLevel> level)
 {
-	wprintf_s(L"%s\n", text.data());
+	wprintf_s(L"%s\n", text.wchars().data());
 }
 
 #endif

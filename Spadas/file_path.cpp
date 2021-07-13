@@ -26,11 +26,12 @@ namespace spadas
 
 namespace file_internal
 {
-	Bool/* isValid */ getContentsString(String pathString, Bool& isAbsolute, String& rootString, String& contentsString, String separator)
+	Bool/* isValid */ getContentsString(String pathString, Bool& isAbsolute, String& rootString, String& contentsString, Char separator)
 	{
-		if (separator[0] == (WChar)0x2f) // Linux style
+		Byte *pathStringData = pathString.bytes();
+		if ((Byte)separator == 0x2f) // Linux style
 		{
-			if (pathString.length() >= 2 && pathString[1] == L':') return FALSE;
+			if (pathString.length() >= 2 && pathStringData[1] == (Byte)':') return FALSE;
 
 			rootString = String();
 			if (pathString.isEmpty())
@@ -38,7 +39,7 @@ namespace file_internal
 				isAbsolute = FALSE;
 				contentsString = String();
 			}
-			else if (pathString[0] == separator[0])
+			else if (pathStringData[0] == (Byte)separator)
 			{
 				isAbsolute = TRUE;
 				contentsString = String(pathString, Region(1, UINF));
@@ -51,9 +52,9 @@ namespace file_internal
 		}
 		else // Window style
 		{
-			if (pathString.length() >= 1 && pathString[0] == separator[0]) return FALSE;
+			if (pathString.length() >= 1 && pathStringData[0] == (Byte)separator) return FALSE;
 
-			isAbsolute = pathString.length() >= 2 && pathString[1] == L':';
+			isAbsolute = pathString.length() >= 2 && pathStringData[1] == (Byte)':';
 			if (isAbsolute)
 			{
 				rootString = String(pathString, Region(0, 2));
@@ -73,9 +74,9 @@ namespace file_internal
 		ListNode<String> workPathComponents;
 		workPathComponents.joinNext(workPathComponents);
 
-		String separator = getSeparatorChar();
+		Char separator = getSeparatorChar();
 
-		if (workPathString.isEmpty() || workPathString[workPathString.length() - 1] != separator[0]) return ListNode<String>();
+		if (workPathString.isEmpty() || workPathString.bytes()[workPathString.length() - 1] != (Byte)separator) return ListNode<String>();
 		workPathString = String(workPathString, Region(0, workPathString.length() - 1));
 
 		Bool dummy;
@@ -93,17 +94,17 @@ namespace file_internal
 
     String generateFullPath(ListNode<String> root, Bool isFolder)
     {
-        String separator = getSeparatorChar();
+        String separatorString = getSeparatorChar();
         String out = String::createWithSize(1024);
         out += root.value();
         ListNode<String> currentNode = root.next();
 		while (currentNode != root)
 		{
-			out += separator;
+			out += separatorString;
 			out += currentNode.value();
 			currentNode.goNext();
 		}
-        if (isFolder) out += separator;
+        if (isFolder) out += separatorString;
         return out;
     }
 
@@ -116,7 +117,7 @@ namespace file_internal
 			String contentString = folderContents[i];
 			Path contentPath = folderPath.childPath(contentString);
 			contents[contents.size()] = contentPath;
-			if (contentString[contentString.length() - 1] == (WChar)separator) // folder
+			if (contentString.bytes()[contentString.length() - 1] == (Byte)separator) // folder
 			{
 				addFolderContents(contents, contentPath, folderString + contentString);
 			}
@@ -158,16 +159,17 @@ Path::Path()
 Path::Path(String pathString)
 {
 	/* standardize input */
-	String separator = getSeparatorChar();
+	Char separator = getSeparatorChar();
+	String separatorString(separator);
 	
-	if (pathString.isEmpty() || pathString == ".") pathString = String(".") + separator;
-	if (pathString == "..") pathString = String("..") + separator;
+	if (pathString.isEmpty() || pathString == ".") pathString = String(".") + separatorString;
+	if (pathString == "..") pathString = String("..") + separatorString;
 
-	if (separator[0] == (WChar)0x2f) pathString = pathString.replace((WChar)0x5c, (WChar)0x2f);
-	else pathString = pathString.replace((WChar)0x2f, (WChar)0x5c);
+	if ((Byte)separator == 0x2f) pathString = pathString.replace((Char)0x5c, (Char)0x2f);
+	else pathString = pathString.replace((Char)0x2f, (Char)0x5c);
 	
 	/* check if pathString is a folder and remove the last separator */
-	Bool isFolder = !pathString.isEmpty() && pathString[pathString.length() - 1] == separator[0];
+	Bool isFolder = !pathString.isEmpty() && pathString.bytes()[pathString.length() - 1] == (Byte)separator;
 	if (isFolder) pathString = String(pathString, Region(0, pathString.length() - 1));
 	
 	/* check if pathString is absolute and get root and contents */
@@ -289,12 +291,12 @@ void file_internal::removeTree(Path path)
 {
 	if (path.isFolder())
 	{
-		WChar separator = (WChar)getSeparatorChar();
+		Char separator = getSeparatorChar();
 		Array<Path> contentsInFolder0 = path.folderContents(TRUE);
 		for (Int i = contentsInFolder0.size() - 1; i >= 0; i--)
 		{
 			String contentPathString = contentsInFolder0[i].fullPath();
-			if (contentPathString[contentPathString.length() - 1] == separator) folderRemove(contentPathString);
+			if (contentPathString.bytes()[contentPathString.length() - 1] == (Byte)separator) folderRemove(contentPathString);
 			else fileRemove(contentPathString);
 		}
 		folderRemove(path.fullPath());
@@ -475,8 +477,8 @@ Path Path::childFile(String childName)
 	SPADAS_ERROR_RETURNVAL(!vars, Path());
 	SPADAS_ERROR_RETURNVAL(!isFolder(), Path());
     
-    String separator = getSeparatorChar();
-	SPADAS_ERROR_RETURNVAL(childName.isEmpty() || childName == "." || childName == ".." || childName[childName.length() - 1] == separator[0], Path());
+    Char separator = getSeparatorChar();
+	SPADAS_ERROR_RETURNVAL(childName.isEmpty() || childName == "." || childName == ".." || childName.bytes()[childName.length() - 1] == (Byte)separator, Path());
 	
 	Path path;
 	path.setVars(new PathVars(), TRUE);
@@ -492,8 +494,8 @@ Path Path::childFolder(String childName)
 	SPADAS_ERROR_RETURNVAL(!vars, Path());
 	SPADAS_ERROR_RETURNVAL(!isFolder(), Path());
     
-    String separator = getSeparatorChar();
-	SPADAS_ERROR_RETURNVAL(childName.isEmpty() || childName == "." || childName == ".." || childName[childName.length() - 1] == separator[0], Path());
+	Char separator = getSeparatorChar();
+	SPADAS_ERROR_RETURNVAL(childName.isEmpty() || childName == "." || childName == ".." || childName.bytes()[childName.length() - 1] == (Byte)separator, Path());
 	
 	Path path;
 	path.setVars(new PathVars(), TRUE);
@@ -510,16 +512,17 @@ Path Path::childPath(String pathString)
 	SPADAS_ERROR_RETURNVAL(!isFolder(), Path());
 
 	/* standardize input */
-	String separator = getSeparatorChar();
+	Char separator = getSeparatorChar();
+	String separatorString(separator);
 	
-	if (pathString.isEmpty() || pathString == ".") pathString = String(".") + separator;
-	if (pathString == "..") pathString = String("..") + separator;
+	if (pathString.isEmpty() || pathString == ".") pathString = String(".") + separatorString;
+	if (pathString == "..") pathString = String("..") + separatorString;
 	
-	if (separator[0] == (WChar)0x2f) pathString = pathString.replace((WChar)0x5c, (WChar)0x2f);
-	else pathString = pathString.replace((WChar)0x2f, (WChar)0x5c);
+	if ((Byte)separator == 0x2f) pathString = pathString.replace((Char)0x5c, (Char)0x2f);
+	else pathString = pathString.replace((Char)0x2f, (Char)0x5c);
 	
 	/* check if pathString is a folder and remove the last separator */
-	Bool isFolder = !pathString.isEmpty() && pathString[pathString.length() - 1] == separator[0];
+	Bool isFolder = !pathString.isEmpty() && pathString.bytes()[pathString.length() - 1] == (Byte)separator;
 	if (isFolder) pathString = String(pathString, Region(0, pathString.length() - 1));
 	
 	/* check if pathString is absolute and get root and contents */
@@ -576,22 +579,21 @@ Bool Path::contain(Path path, String& pathString)
 	String srcPath = fullPath();
 	String dstPath = path.fullPath();
 	UInt srcPathLen = srcPath.length();
-	WChar *srcPathData = srcPath.data();
-	WChar *dstPathData = dstPath.data();
+	UInt dstPathLen = dstPath.length();
 
-	Bool same = TRUE;
-	for (UInt i = 0; i < srcPathLen; i++)
+	if (dstPathLen < srcPathLen) return FALSE;
+	if (!dstPath.startsWith(srcPath)) return FALSE;
+
+	if (dstPathLen == srcPathLen)
 	{
-		if (srcPathData[i] != dstPathData[i])
-		{
-			same = FALSE;
-			break;
-		}
+		pathString = String();
+		return TRUE;
 	}
-	if (!same) return FALSE;
-
-	pathString = String(dstPath, Region(srcPathLen, UINF));
-	return TRUE;
+	else
+	{
+		pathString = String(dstPath, Region(srcPathLen, UINF));
+		return TRUE;
+	}
 }
 
 Path Path::parentFolder()

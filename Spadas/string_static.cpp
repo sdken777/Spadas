@@ -7,44 +7,44 @@ namespace string_internal
 {
 	using namespace spadas;
 
-	Char hexCharacter(UInt value)
+	Byte hexCharacter(UInt value)
 	{
 		switch (value)
 		{
 			case 0:
-				return '0';
+				return (Byte)'0';
 			case 1:
-				return '1';
+				return (Byte)'1';
 			case 2:
-				return '2';
+				return (Byte)'2';
 			case 3:
-				return '3';
+				return (Byte)'3';
 			case 4:
-				return '4';
+				return (Byte)'4';
 			case 5:
-				return '5';
+				return (Byte)'5';
 			case 6:
-				return '6';
+				return (Byte)'6';
 			case 7:
-				return '7';
+				return (Byte)'7';
 			case 8:
-				return '8';
+				return (Byte)'8';
 			case 9:
-				return '9';
+				return (Byte)'9';
 			case 10:
-				return 'A';
+				return (Byte)'A';
 			case 11:
-				return 'B';
+				return (Byte)'B';
 			case 12:
-				return 'C';
+				return (Byte)'C';
 			case 13:
-				return 'D';
+				return (Byte)'D';
 			case 14:
-				return 'E';
+				return (Byte)'E';
 			case 15:
-				return 'F';
+				return (Byte)'F';
 		}
-		return '\0';
+		return 0;
 	}
 }
 
@@ -61,31 +61,29 @@ String String::createWithSize(UInt size)
 
 String String::createHexString(Byte value)
 {
-	Char buf[3];
+	Binary buf(2);
 	
 	buf[0] = hexCharacter((UInt)((value & 0xf0) >> 4));
 	buf[1] = hexCharacter((UInt)((value & 0x0f) >> 0));
-	buf[2] = 0;
 	
 	return buf;
 }
 
 String String::createHexString(Word value)
 {
-	Char buf[5];
+	Binary buf(4);
 
 	buf[0] = hexCharacter((UInt)((value & 0xf000) >> 12));
 	buf[1] = hexCharacter((UInt)((value & 0x0f00) >> 8));
 	buf[2] = hexCharacter((UInt)((value & 0x00f0) >> 4));
 	buf[3] = hexCharacter((UInt)((value & 0x000f) >> 0));
-	buf[4] = 0;
 
 	return buf;
 }
 
 String String::createHexString(UInt value)
 {
-	Char buf[9];
+	Binary buf(8);
 	
 	buf[0] = hexCharacter((value & 0xf0000000) >> 28);
 	buf[1] = hexCharacter((value & 0x0f000000) >> 24);
@@ -95,7 +93,6 @@ String String::createHexString(UInt value)
 	buf[5] = hexCharacter((value & 0x00000f00) >> 8);
 	buf[6] = hexCharacter((value & 0x000000f0) >> 4);
 	buf[7] = hexCharacter((value & 0x0000000f) >> 0);
-	buf[8] = 0;
 	
 	return buf;
 }
@@ -108,39 +105,36 @@ String String::createHexString(ULong value)
 
 String String::createBinString(Byte value)
 {
-	Char buf[9];
+	Binary buf(8);
 
 	for (UInt i = 0; i < 8; i++)
 	{
-		buf[i] = (((UInt)value << (24 + i)) >> 31) == 0 ? '0' : '1';
+		buf[i] = (((UInt)value << (24 + i)) >> 31) == 0 ? (Byte)'0' : (Byte)'1';
 	}
-	buf[8] = 0;
 
 	return buf;
 }
 
 String String::createBinString(Word value)
 {
-	Char buf[17];
+	Binary buf(16);
 
 	for (UInt i = 0; i < 16; i++)
 	{
-		buf[i] = (((UInt)value << (16 + i)) >> 31) == 0 ? '0' : '1';
+		buf[i] = (((UInt)value << (16 + i)) >> 31) == 0 ? (Byte)'0' : (Byte)'1';
 	}
-	buf[16] = 0;
 
 	return buf;
 }
 
 String String::createBinString(UInt value)
 {
-	Char buf[33];
+	Binary buf(32);
 
 	for (UInt i = 0; i < 32; i++)
 	{
-		buf[i] = ((value << i) >> 31) == 0 ? '0' : '1';
+		buf[i] = ((value << i) >> 31) == 0 ? (Byte)'0' : (Byte)'1';
 	}
-	buf[32] = 0;
 
 	return buf;
 }

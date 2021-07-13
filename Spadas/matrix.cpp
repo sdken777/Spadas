@@ -768,22 +768,23 @@ String Matrix<Type>::toString(UInt nDigits) \
     UInt nCols = vars->dims[1]; \
     String format = (String)"%." + nDigits + "lf\t"; \
     String outString = String::createWithSize(nRows * (nCols + 1) * 32); \
-    WChar *outStringData = outString.data(); \
+    Byte *outStringData = outString.bytes(); \
     String rowString = String::createWithSize(nCols * 32); \
+	Byte *rowStringData = rowString.bytes(); \
     UInt outIndex = 0; \
     for (UInt i = 0; i < nRows; i++) \
     { \
         Type *rowData = &vars->data[i * nCols]; \
-        rowString[0] = 0; \
+        rowStringData[0] = 0; \
         UInt index = 0; \
         for (UInt j = 0; j < nCols; j++) \
         { \
-            UInt length = printToString(&rowString[index], 32, format.data(), (Double)rowData[j]); \
-            index += length == UINF ? lengthWChar(&rowString[index]) : length; \
+            UInt length = printToString((Char*)&rowStringData[index], 32, (Char*)format.bytes(), (Double)rowData[j]); \
+            index += length == UINF ? lengthChar((Char*)&rowStringData[index]) : length; \
         } \
         rowString.updateLength(); \
         UInt rowLength = rowString.length(); \
-        for (UInt n = 0; n < rowLength; n++) outStringData[outIndex + n] = rowString[n]; \
+        for (UInt n = 0; n < rowLength; n++) outStringData[outIndex + n] = rowStringData[n]; \
         outStringData[outIndex + rowLength] = 10; \
         outIndex += rowLength + 1; \
     } \
@@ -815,15 +816,16 @@ void Matrix<Type>::save(Path filePath, UInt nDigits) \
     UInt nCols = vars->dims[1]; \
     String format = (String)"%." + nDigits + "lf\t"; \
     String rowString = String::createWithSize(nCols * 32); \
+	Byte *rowStringData = rowString.bytes(); \
     for (UInt i = 0; i < nRows; i++) \
     { \
         Type *rowData = &vars->data[i * nCols]; \
-        rowString[0] = 0; \
+        rowStringData[0] = 0; \
         UInt index = 0; \
         for (UInt j = 0; j < nCols; j++) \
         { \
-            UInt length = printToString(&rowString[index], 32, format.data(), (Double)rowData[j]); \
-            index += length == UINF ? lengthWChar(&rowString[index]) : length; \
+            UInt length = printToString((Char*)&rowStringData[index], 32, (Char*)format.bytes(), (Double)rowData[j]); \
+            index += length == UINF ? lengthChar((Char*)&rowStringData[index]) : length; \
         } \
         rowString.updateLength(); \
         file.print(rowString); \
@@ -872,15 +874,15 @@ Matrix<Type>::Matrix(Path filePath) \
 	{ \
 		String rowString = rowStrings[i]; \
 		UInt rowStringLength = rowString.length(); \
-		Array<WChar> rowChars(rowStringLength + 1); \
-		WChar *charsSrc = rowString.data(); \
-		WChar *charsDst = rowChars.data(); \
+		Binary rowChars(rowStringLength + 1); \
+		Byte *charsSrc = rowString.bytes(); \
+		Byte *charsDst = rowChars.data(); \
 		Type *matRow = &outData[i * nCols]; \
 		startIndices[0] = 0; \
 		UInt k = 1; \
 		for (UInt n = 0; n < rowStringLength; n++) \
 		{ \
-			if (charsSrc[n] == L'\t') \
+			if (charsSrc[n] == (Byte)'\t') \
 			{ \
 				charsDst[n] = 0; \
 				if (k < nCols) startIndices[k++] = n + 1; \
@@ -890,7 +892,7 @@ Matrix<Type>::Matrix(Path filePath) \
 		charsDst[rowStringLength] = 0; \
 		for (UInt n = 0; n < k; n++) \
 		{ \
-			if (scanFromString(&charsDst[startIndices[n]], rowChars.size() - startIndices[n], L"%lf", &val)) matRow[n] = (Type)val; \
+			if (scanFromString((Char*)&charsDst[startIndices[n]], rowChars.size() - startIndices[n], "%lf", &val)) matRow[n] = (Type)val; \
 		} \
 	} \
 	operator =(out); \

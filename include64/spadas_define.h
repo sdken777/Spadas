@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // SPADAS_DEBUG整理
+// 版本定义 // 字符串数据改为UTF8编码保存，以及相应的其他类更改。在memoryCopy/memorySet内部判断THRESH。新增String.ctr(Array<Char>), String.bytes, String.byteSize, String.chars, String.wchars。移除String.operator[], String.data, String.dataA, String.dataArray, String.size
 #define SPADAS_VERSION_MAJOR 7
 #define SPADAS_VERSION_MINOR 1
-#define SPADAS_VERSION_BUILD 4
+#define SPADAS_VERSION_BUILD 5
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：7.1.4\n
+* 本文档对应Spadas版本：7.1.5\n
 *
 * \n
 * \section top1 基本功能概述

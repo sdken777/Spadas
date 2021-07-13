@@ -28,15 +28,7 @@ Binary::Binary(UInt size, Byte origin)
 	BinaryVars* newVars = new (newVarsRaw)BinaryVars(size, &newVarsRaw[sizeof(BinaryVars)]);
 	setVars(newVars, TRUE);
 
-	Byte *data = vars->data;
-	if (size < MEMCPY_THRESH)
-	{
-		for (UInt i = 0; i < size; i++) data[i] = origin;
-	}
-	else
-	{
-		utility::memorySet(origin, data, size);
-	}
+	utility::memorySet(origin, vars->data, size);
 }
 
 Binary::Binary(Byte *arr, UInt size)
@@ -48,15 +40,7 @@ Binary::Binary(Byte *arr, UInt size)
 	BinaryVars* newVars = new (newVarsRaw)BinaryVars(size, &newVarsRaw[sizeof(BinaryVars)]);
 	setVars(newVars, TRUE);
 
-	Byte *data = vars->data;
-	if (size < MEMCPY_THRESH)
-	{
-		for (UInt i = 0; i < size; i++) data[i] = arr[i];
-	}
-	else
-	{
-		utility::memoryCopy(arr, data, size);
-	}
+	utility::memoryCopy(arr, vars->data, size);
 }
 
 Binary::Binary(Binary input, Region region)
@@ -77,16 +61,7 @@ Binary::Binary(Binary input, Region region)
 	BinaryVars* newVars = new (newVarsRaw)BinaryVars(size, &newVarsRaw[sizeof(BinaryVars)]);
 	setVars(newVars, TRUE);
 
-	Byte *srcData = input.vars->data;
-	Byte *dstData = vars->data;
-	if ((UInt)size < MEMCPY_THRESH)
-	{
-		for (Int i = 0; i < size; i++) dstData[i] = srcData[i + startIndex];
-	}
-	else
-	{
-		utility::memoryCopy(&srcData[startIndex], dstData, size);
-	}
+	utility::memoryCopy(&input.vars->data[startIndex], vars->data, size);
 }
 
 Binary Binary::create(UInt size, Byte firstByte, ...)
@@ -150,31 +125,14 @@ Binary Binary::clone()
 {
 	if (!vars) return Binary();
 	Binary out(vars->size);
-	Byte* srcData = vars->data;
-	Byte* dstData = out.vars->data;
-	if (vars->size < MEMCPY_THRESH)
-	{
-		for (UInt i = 0; i < vars->size; i++) dstData[i] = srcData[i];
-	}
-	else
-	{
-		utility::memoryCopy(srcData, dstData, vars->size);
-	}
+	utility::memoryCopy(vars->data, out.vars->data, vars->size);
     return out;
 }
 
 void Binary::clear(Byte val)
 {
 	if (!vars) return;
-	Byte* data = vars->data;
-	if (vars->size < MEMCPY_THRESH)
-	{
-		for (UInt i = 0; i < vars->size; i++) data[i] = val;
-	}
-	else
-	{
-		utility::memorySet(val, data, vars->size);
-	}
+	utility::memorySet(val, vars->data, vars->size);
 }
 
 void Binary::copy(Binary src, Region srcRegion, UInt thisOffset)
@@ -183,19 +141,7 @@ void Binary::copy(Binary src, Region srcRegion, UInt thisOffset)
 	UInt srcSize = src.vars->size;
 	SPADAS_ERROR_RETURN(srcRegion.offset < 0 || srcRegion.offset + srcRegion.size > srcSize);
 	SPADAS_ERROR_RETURN(thisOffset + srcRegion.size > vars->size);
-	Byte *srcData = src.vars->data;
-	Byte *dstData = vars->data;
-	if (srcRegion.size < MEMCPY_THRESH)
-	{
-		for (UInt i = 0, srcI = srcRegion.offset, dstI = thisOffset; i < srcRegion.size; i++, srcI++, dstI++)
-		{
-			dstData[dstI] = srcData[srcI];
-		}
-	}
-	else
-	{
-		utility::memoryCopy(&srcData[srcRegion.offset], &dstData[thisOffset], srcRegion.size);
-	}
+	utility::memoryCopy(&src.vars->data[srcRegion.offset], &vars->data[thisOffset], srcRegion.size);
 }
 
 Array<Binary> Binary::split(Array<UInt> sizes)
@@ -229,16 +175,8 @@ Binary Binary::merge(Array<Binary> binaries)
 	{
 		Binary& bin = binaries[i];
 		if (bin.isEmpty()) continue;
-		Byte *srcData = bin.vars->data;
 		UInt copySize = bin.vars->size;
-		if (copySize < MEMCPY_THRESH)
-		{
-			for (UInt x = 0; x < copySize; x++) dstData[n + x] = srcData[x];
-		}
-		else
-		{
-			utility::memoryCopy(srcData, &dstData[n], copySize);
-		}
+		utility::memoryCopy(bin.vars->data, &dstData[n], copySize);
 		n += copySize;
 	}
 	return out;
@@ -252,25 +190,10 @@ Binary Binary::operator +(Binary bin)
 		else
 		{
 			UInt thisSize = vars->size, binSize = bin.vars->size;
-			Byte *thisData = vars->data, *binData = bin.vars->data;
 			Binary out(thisSize + binSize);
 			Byte *outData = out.vars->data;
-			if (thisSize < MEMCPY_THRESH)
-			{
-				for (UInt i = 0; i < thisSize; i++) outData[i] = thisData[i];
-			}
-			else
-			{
-				utility::memoryCopy(thisData, outData, thisSize);
-			}
-			if (binSize < MEMCPY_THRESH)
-			{
-				for (UInt i = 0, j = thisSize; i < binSize; i++, j++) outData[j] = binData[i];
-			}
-			else
-			{
-				utility::memoryCopy(binData, &outData[thisSize], binSize);
-			}
+			utility::memoryCopy(vars->data, outData, thisSize);
+			utility::memoryCopy(bin.vars->data, &outData[thisSize], binSize);
 			return out;
 		}
 	}

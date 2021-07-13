@@ -8,16 +8,13 @@ namespace spadas
 
 		// buffer
 		UInt size;
-		WChar *data;
+		Byte *data;
         
 		// length
 		UInt length;
 		
-		// for getter
-		Char *bufferA;
-		
 		// constructors
-		StringVars(UInt size0): size(size0), data(new WChar[size0]), length(0), bufferA(NULL)
+		StringVars(UInt size0): size(size0), data(new Byte[size0]), length(0)
 		{
 			data[0] = 0;
 		}
@@ -26,7 +23,6 @@ namespace spadas
         ~StringVars()
         {
             delete[] data;
-            if (bufferA) delete[] bufferA;
         }
 	};
 }
@@ -37,15 +33,15 @@ namespace spadas_internal
 	
 	const UInt SIZE_LIMIT = 10000000;	// 10 millions
 
-	Bool doubleToPrettyString(Double val, WChar output[48], Int& length);
+	Bool doubleToPrettyString(Double val, Char output[48], Int& length);
 	
 	UInt lengthChar(const Char str[]);
 	UInt lengthWChar(const WChar str[]);
-	Int compareString(const WChar str1[], const WChar str2[]);
-	UInt charToWChar(const Char src[], UInt srcLength, WChar dst[], UInt dstSize); // return dstLength
-	UInt wCharToChar(const WChar src[], UInt srcLength, Char dst[], UInt dstSize); // return dstLength
+	Int compareString(const Char str1[], const Char str2[]);
+	UInt utf8ToChar(const Char src[], UInt srcLength, Char dst[], UInt dstSize); // return dstLength
+	UInt charToUTF8(const Char src[], UInt srcLength, Char dst[], UInt dstSize); // return dstLength
 	UInt utf8ToWChar(const Char src[], UInt srcLength, WChar dst[], UInt dstSize); // return dstLength
 	UInt wCharToUTF8(const WChar src[], UInt srcLength, Char dst[], UInt dstSize); // return dstLength
-	UInt printToString(WChar dst[], UInt dstSize, const WChar format[], ...); // return dstLength
-	Bool scanFromString(const WChar src[], UInt srcSize, const WChar format[], Pointer val); // return true if OK, only output one value
+	UInt printToString(Char dst[], UInt dstSize, const Char format[], ...); // numeric only. return dstLength
+	Bool scanFromString(const Char src[], UInt srcSize, const Char format[], Pointer val); // numeric only. return true if OK, only output one value
 }

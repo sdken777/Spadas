@@ -1419,18 +1419,18 @@ BigInteger::BigInteger(Binary integerData, Bool sign) : Object<BigIntegerVars>(n
 		return;
 	}
 
-	String hexText = String::createWithSize((integerData.size() - validIndex) * 2 + 1);
+	Binary hexText((integerData.size() - validIndex) * 2 + 1);
+	Byte* hexTextData = hexText.data();
 	for (UInt i = validIndex; i < integerData.size(); i++)
 	{
 		Byte byteVal = integerData[i];
 		Int upper = byteVal / 16, lower = byteVal % 16;
-		hexText[2 * (i - validIndex)] = (upper >= 10) ? ('A' + (upper - 10)) : ('0' + upper);
-		hexText[2 * (i - validIndex) + 1] = (lower >= 10) ? ('A' + (lower - 10)) : ('0' + lower);
+		hexTextData[2 * (i - validIndex)] = (upper >= 10) ? ('A' + (upper - 10)) : ('0' + upper);
+		hexTextData[2 * (i - validIndex) + 1] = (lower >= 10) ? ('A' + (lower - 10)) : ('0' + lower);
 	}
-	hexText[(integerData.size() - validIndex) * 2] = 0;
-	hexText.updateLength();
+	hexTextData[(integerData.size() - validIndex) * 2] = 0;
 
-	vars->rossi = BigInt::Rossi(hexText.dataA(), 16);
+	vars->rossi = BigInt::Rossi((Char*)hexTextData, 16);
 	vars->sign = vars->rossi == BigInt::Rossi() ? TRUE : sign;
 }
 
@@ -1438,19 +1438,18 @@ Optional<BigInteger> BigInteger::createFromString(String decimalString)
 {
 	if (decimalString.isEmpty() || decimalString == "-0") decimalString = "0";
 
-	Bool isNegative = decimalString[0] == L'-';
-
+	Byte* stringData = decimalString.bytes();
 	UInt stringLength = decimalString.length();
-	WChar *stringData = decimalString.data();
+	Bool isNegative = stringData[0] == (Byte)'-';
+
 	for (UInt i = isNegative ? 1 : 0; i < stringLength; i++)
 	{
-		if (stringData[i] < L'0' || stringData[i] > L'9') return Optional<BigInteger>();
+		if (stringData[i] < (Byte)'0' || stringData[i] > (Byte)'9') return Optional<BigInteger>();
 	}
 
 	BigInteger ret;
-	Char *stringDataA = decimalString.dataA();
 	ret.vars->sign = !isNegative;
-	ret.vars->rossi = BigInt::Rossi(&stringDataA[isNegative ? 1 : 0], 10);
+	ret.vars->rossi = BigInt::Rossi((Char*)&stringData[isNegative ? 1 : 0], 10);
 	return ret;
 }
 
@@ -1471,18 +1470,19 @@ Binary BigInteger::getData()
 
 	Binary ret((hexText.length() + 1) / 2);
 	
+	Byte* hexTextData = hexText.bytes();
 	UInt retStartIndex = 0, hexTextStartIndex = 0;
 	if (hexText.length() % 2 == 1)
 	{
-		WChar hexChar = hexText[0];
+		Byte hexChar = hexTextData[0];
 		ret[0] = hexChar > '9' ? (hexChar - 'a' + 10) : (hexChar - '0');
 		retStartIndex = hexTextStartIndex = 1;
 	}
 
 	for (UInt i = retStartIndex, n = hexTextStartIndex; i < ret.size(); i++, n += 2)
 	{
-		WChar hexChar1 = hexText[n];
-		WChar hexChar2 = hexText[n + 1];
+		Byte hexChar1 = hexTextData[n];
+		Byte hexChar2 = hexTextData[n + 1];
 		ret[i] = ((hexChar1 > '9' ? (hexChar1 - 'a' + 10) : (hexChar1 - '0')) << 4) +
 			(hexChar2 > '9' ? (hexChar2 - 'a' + 10) : (hexChar2 - '0'));
 	}

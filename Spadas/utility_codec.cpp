@@ -69,9 +69,5 @@ UInt MagicNumber::getNumber()
 String MagicNumber::toString()
 {
 	if (!vars) return String();
-	String out = String::createWithSize(5);
-	for (UInt i = 0; i < 4; i++) out[i] = (WChar)vars->magic[i];
-	out[4] = 0;
-	out.updateLength();
-	return out;
+	else return Binary((Byte*)vars->magic, 4);
 }

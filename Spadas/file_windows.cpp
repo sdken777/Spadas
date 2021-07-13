@@ -25,7 +25,7 @@ namespace file_internal
 		GetModuleFileNameW(NULL, buffer, 1024);
 
 		String bufferString = buffer;
-		Array<UInt> slashLocations = bufferString.search(L'\\');
+		Array<UInt> slashLocations = bufferString.search('\\');
 		
 		if (slashLocations.isEmpty()) return String();
 		else return String(bufferString, Region(0, slashLocations.last() + 1));
@@ -38,8 +38,8 @@ namespace file_internal
 		String pathString(path);
 		if (pathString.isEmpty()) return String();
 		
-		String separator = getSeparatorChar();
-		if (pathString[pathString.length()-1] != separator[0]) return pathString + separator;
+		Char separator = getSeparatorChar();
+		if (pathString.bytes()[pathString.length()-1] != (Byte)separator) return pathString + separator;
 		else return pathString;
 	}
 	String getSpadasFilesPathString()
@@ -58,7 +58,7 @@ namespace file_internal
 	Pointer fileOpen(String fileName, Bool outputMode)
 	{
 		FILE *file;
-		_wfopen_s(&file, fileName.data(), outputMode ? L"wb+" : L"rb");
+		_wfopen_s(&file, fileName.wchars().data(), outputMode ? L"wb+" : L"rb");
 		return (Pointer)file;
 	}
 
@@ -159,44 +159,44 @@ namespace file_internal
 	// file operations
 	Bool fileExist(String name)
 	{
-		UInt res = GetFileAttributesW(name.data());
+		UInt res = GetFileAttributesW(name.wchars().data());
 		return res != UINF && (res & FILE_ATTRIBUTE_DIRECTORY) == 0;
 	}
 
 	void fileMove(String srcFile, String dstFile)
 	{
-		MoveFileW(srcFile.data(), dstFile.data());
+		MoveFileW(srcFile.wchars().data(), dstFile.wchars().data());
 	}
 
 	void fileCopy(String srcFile, String dstFile)
 	{
-		CopyFileW(srcFile.data(), dstFile.data(), FALSE);
+		CopyFileW(srcFile.wchars().data(), dstFile.wchars().data(), FALSE);
 	}
 
 	void fileRemove(String fileName)
 	{
-		DeleteFileW(fileName.data());
+		DeleteFileW(fileName.wchars().data());
 	}
 
 	Bool folderExist(String name)
 	{
-		UInt res = GetFileAttributesW(name.data());
+		UInt res = GetFileAttributesW(name.wchars().data());
 		return res != UINF && (res & FILE_ATTRIBUTE_DIRECTORY) != 0;
 	}
 
 	void folderCreate(String folderName)
 	{
-		CreateDirectoryW(folderName.data(), 0);
+		CreateDirectoryW(folderName.wchars().data(), 0);
 	}
 
 	void folderMove(String srcFolderName, String dstFolderName)
 	{
-		MoveFileW(srcFolderName.data(), dstFolderName.data());
+		MoveFileW(srcFolderName.wchars().data(), dstFolderName.wchars().data());
 	}
 
 	void folderRemove(String folderName)
 	{
-		RemoveDirectoryW(folderName.data());
+		RemoveDirectoryW(folderName.wchars().data());
 	}
 
 	Array<String> folderGetContents(String targetFolder)
@@ -211,7 +211,7 @@ namespace file_internal
 		ArrayX<String> out;
 		while (TRUE)
 		{
-			if (!file) file = FindFirstFileW(contentsString.data(), &fileInfo);
+			if (!file) file = FindFirstFileW(contentsString.wchars().data(), &fileInfo);
 			else fileExist = FindNextFileW(file, &fileInfo);
 
 			if (!file || !fileExist) break;

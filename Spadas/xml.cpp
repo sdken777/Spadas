@@ -34,16 +34,16 @@ namespace xml_internal
 	Bool okForTagOrAttributeName(String text)
 	{
 		UInt textLength = text.length();
-		WChar *textData = text.data();
+		Byte *textData = text.bytes();
 		for (UInt i = 0; i < textLength; i++)
 		{
-			if ((textData[i] >= L'0' && textData[i] <= L'9') ||
-				(textData[i] >= L'A' && textData[i] <= L'Z') ||
-				(textData[i] >= L'a' && textData[i] <= L'z') ||
-				(textData[i] == L'_') ||
-				(textData[i] == L'.') ||
-				(textData[i] == L'-') ||
-				(textData[i] == L':')) continue;
+			if ((textData[i] >= '0' && textData[i] <= '9') ||
+				(textData[i] >= 'A' && textData[i] <= 'Z') ||
+				(textData[i] >= 'a' && textData[i] <= 'z') ||
+				(textData[i] == '_') ||
+				(textData[i] == '.') ||
+				(textData[i] == '-') ||
+				(textData[i] == ':')) continue;
 			return FALSE;
 		}
 		return TRUE;
@@ -53,56 +53,57 @@ namespace xml_internal
 	String encodeES(String text, Bool includeQuotation)
 	{
 		UInt textLength = text.length();
-		WChar *textData = text.data();
+		Byte *textData = text.bytes();
 		UInt countAmp = 0, countLt = 0, countGt = 0, countQuot = 0;
 		for (UInt i = 0; i < textLength; i++)
 		{
-			if (textData[i] == L'&') countAmp++;
-			else if (textData[i] == L'<') countLt++;
-			else if (textData[i] == L'>') countGt++;
-			else if (includeQuotation && textData[i] == L'\"') countQuot++;
+			if (textData[i] == '&') countAmp++;
+			else if (textData[i] == '<') countLt++;
+			else if (textData[i] == '>') countGt++;
+			else if (includeQuotation && textData[i] == '\"') countQuot++;
 		}
 		
 		String out = String::createWithSize(textLength + 1 + countAmp * 4 + countQuot * 5 + countLt * 3 + countGt * 3);
+		Byte* outData = out.bytes();
 		
 		UInt k = 0;
 		for (UInt i = 0; i < textLength; i++)
 		{
-			WChar character = textData[i];
-			if (character == L'&')
+			Byte character = textData[i];
+			if (character == '&')
 			{
-				out[k++] = L'&';
-				out[k++] = L'a';
-				out[k++] = L'm';
-				out[k++] = L'p';
-				out[k++] = L';';
+				outData[k++] = '&';
+				outData[k++] = 'a';
+				outData[k++] = 'm';
+				outData[k++] = 'p';
+				outData[k++] = ';';
 			}
-			else if (character == L'<')
+			else if (character == '<')
 			{
-				out[k++] = L'&';
-				out[k++] = L'l';
-				out[k++] = L't';
-				out[k++] = L';';
+				outData[k++] = '&';
+				outData[k++] = 'l';
+				outData[k++] = 't';
+				outData[k++] = ';';
 			}
-			else if (character == L'>')
+			else if (character == '>')
 			{
-				out[k++] = L'&';
-				out[k++] = L'g';
-				out[k++] = L't';
-				out[k++] = L';';
+				outData[k++] = '&';
+				outData[k++] = 'g';
+				outData[k++] = 't';
+				outData[k++] = ';';
 			}
-			else if (includeQuotation && character == L'\"')
+			else if (includeQuotation && character == '\"')
 			{
-				out[k++] = L'&';
-				out[k++] = L'q';
-				out[k++] = L'u';
-				out[k++] = L'o';
-				out[k++] = L't';
-				out[k++] = L';';
+				outData[k++] = '&';
+				outData[k++] = 'q';
+				outData[k++] = 'u';
+				outData[k++] = 'o';
+				outData[k++] = 't';
+				outData[k++] = ';';
 			}
-			else out[k++] = character;
+			else outData[k++] = character;
 		}
-		out[k] = 0;
+		outData[k] = 0;
 		out.updateLength();
 		return out;
 	}
@@ -110,36 +111,37 @@ namespace xml_internal
 	String decodeES(String text)
 	{
 		UInt textLength = text.length();
-		WChar *textData = text.data();
+		Byte *textData = text.bytes();
 		UInt countAmp = 0, countLt = 0, countGt = 0, countQuot = 0;
 		for (UInt i = 0; i < textLength; i++)
 		{
-			if (textData[i] == L'&')
+			if (textData[i] == '&')
 			{
-				if (i + 4 < textLength && textData[i+1] == L'a' && textData[i+2] == L'm' && textData[i+3] == L'p' && textData[i+4] == L';') { countAmp++; i += 4; }
-				else if (i + 3 < textLength && textData[i+1] == L'l' && textData[i+2] == L't' && textData[i+3] == L';') { countLt++; i += 3; }
-				else if (i + 3 < textLength && textData[i+1] == L'g' && textData[i+2] == L't' && textData[i+3] == L';') { countGt++; i += 3; }
-				else if (i + 5 < textLength && textData[i+1] == L'q' && textData[i+2] == L'u' && textData[i+3] == L'o' && textData[i+4] == L't' && textData[i+5] == L';') { countQuot++; i += 5; }
+				if (i + 4 < textLength && textData[i+1] == 'a' && textData[i+2] == 'm' && textData[i+3] == 'p' && textData[i+4] == ';') { countAmp++; i += 4; }
+				else if (i + 3 < textLength && textData[i+1] == 'l' && textData[i+2] == 't' && textData[i+3] == ';') { countLt++; i += 3; }
+				else if (i + 3 < textLength && textData[i+1] == 'g' && textData[i+2] == 't' && textData[i+3] == ';') { countGt++; i += 3; }
+				else if (i + 5 < textLength && textData[i+1] == 'q' && textData[i+2] == 'u' && textData[i+3] == 'o' && textData[i+4] == 't' && textData[i+5] == ';') { countQuot++; i += 5; }
 			}
 		}
 		
 		String out = String::createWithSize(textLength + 1 - countAmp * 4 - countQuot * 5 - countLt * 3 - countGt * 3);
+		Byte* outData = out.bytes();
 		
 		UInt k = 0;
 		for (UInt i = 0; i < textLength; i++)
 		{
-			if (textData[i] == L'&')
+			if (textData[i] == '&')
 			{
-				if (i + 4 < textLength && textData[i+1] == L'a' && textData[i+2] == L'm' && textData[i+3] == L'p' && textData[i+4] == L';') { out[k++] = L'&'; i += 4; }
-				else if (i + 3 < textLength && textData[i+1] == L'l' && textData[i+2] == L't' && textData[i+3] == L';') { out[k++] = L'<'; i += 3; }
-				else if (i + 3 < textLength && textData[i+1] == L'g' && textData[i+2] == L't' && textData[i+3] == L';') { out[k++] = L'>'; i += 3; }
-				else if (i + 5 < textLength && textData[i+1] == L'q' && textData[i+2] == L'u' && textData[i+3] == L'o' && textData[i+4] == L't' && textData[i+5] == L';') { out[k++] = L'\"'; i += 5; }
-				else out[k++] = L'&';
+				if (i + 4 < textLength && textData[i+1] == 'a' && textData[i+2] == 'm' && textData[i+3] == 'p' && textData[i+4] == ';') { outData[k++] = '&'; i += 4; }
+				else if (i + 3 < textLength && textData[i+1] == 'l' && textData[i+2] == 't' && textData[i+3] == ';') { outData[k++] = '<'; i += 3; }
+				else if (i + 3 < textLength && textData[i+1] == 'g' && textData[i+2] == 't' && textData[i+3] == ';') { outData[k++] = '>'; i += 3; }
+				else if (i + 5 < textLength && textData[i+1] == 'q' && textData[i+2] == 'u' && textData[i+3] == 'o' && textData[i+4] == 't' && textData[i+5] == ';') { outData[k++] = '\"'; i += 5; }
+				else outData[k++] = '&';
 			}
-			else out[k++] = textData[i];
+			else outData[k++] = textData[i];
 		}
 		
-		out[k] = 0;
+		outData[k] = 0;
 		out.updateLength();
 		return out;
 	}
@@ -170,22 +172,23 @@ namespace xml_internal
 			String valueString = subStrings[2*i+1];
 			
 			attribute.name = String::createWithSize(nameString.length() + 1);
+			Byte *attributeNameData = attribute.name.bytes();
 			UInt k = 0;
-			WChar *nameStringData = nameString.data();
+			Byte *nameStringData = nameString.bytes();
 			UInt nameStringLength = nameString.length();
 			for (UInt n = 0; n < nameStringLength; n++)
 			{
-				if (nameStringData[n] == L'=') break;
+				if (nameStringData[n] == '=') break;
 				
-				if ((nameStringData[n] >= L'0' && nameStringData[n] <= L'9') ||
-					(nameStringData[n] >= L'A' && nameStringData[n] <= L'Z') ||
-					(nameStringData[n] >= L'a' && nameStringData[n] <= L'z') ||
-					nameStringData[n] == L'_' || nameStringData[n] == L'.')
+				if ((nameStringData[n] >= '0' && nameStringData[n] <= '9') ||
+					(nameStringData[n] >= 'A' && nameStringData[n] <= 'Z') ||
+					(nameStringData[n] >= 'a' && nameStringData[n] <= 'z') ||
+					nameStringData[n] == '_' || nameStringData[n] == '.')
 				{
-					attribute.name[k++] = nameStringData[n];
+					attributeNameData[k++] = nameStringData[n];
 				}
 			}
-			attribute.name[k] = 0;
+			attributeNameData[k] = 0;
 			attribute.name.updateLength();
 			attribute.value = decodeES(valueString);
 		}
@@ -225,13 +228,14 @@ namespace xml_internal
 		UInt startBracketNum = 0;
 		UInt endBracketNum = 0;
 		
+		Byte* rawStringData = rawString.bytes();
 		for (UInt i = 0; i < nBrackets; i++)
 		{
 			SPADAS_ERROR_RETURNVAL((i != 0 && leftAngleLocations[i] < rightAngleLocations[i - 1]) || leftAngleLocations[i] > rightAngleLocations[i], FALSE);
 
 			/* get bracket type */
-			WChar leftAngleSymbol = rawString[leftAngleLocations[i]+1];
-			WChar rightAngleSymbol = rawString[rightAngleLocations[i]-1];
+			Byte leftAngleSymbol = rawStringData[leftAngleLocations[i]+1];
+			Byte rightAngleSymbol = rawStringData[rightAngleLocations[i]-1];
 			
 			if (leftAngleSymbol == '?' || leftAngleSymbol == '!' ||
 				rightAngleSymbol == '?' || rightAngleSymbol == '!' ||

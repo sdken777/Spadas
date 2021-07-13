@@ -1,8 +1,6 @@
 ﻿
 namespace spadas
 {
-	const UInt MEMCPY_THRESH = 16;
-
 	class BinaryVars : public Vars
 	{
 	public:

@@ -18,7 +18,7 @@ Bool spadas::system::ping(String ip, UInt timeout)
 	HANDLE iHwnd;
 	iHwnd = IcmpCreateFile();
 
-	IPAddr pAddr = (IPAddr)inet_addr(ip.dataA());
+	IPAddr pAddr = (IPAddr)inet_addr((Char*)ip.bytes());
 	icmp_echo_reply pData;
 	IcmpSendEcho(iHwnd, pAddr, NULL, 0, NULL, (LPVOID)&pData, sizeof(icmp_echo_reply), timeout);
 
@@ -39,7 +39,7 @@ Bool spadas::system::ping(String ip, UInt timeout)
 	Int t = math::max(1, math::ceil((Double)timeout / 1000));
 	String command = (String)"ping -c 1 -W " + t + " " + ip;
 
-	FILE *pf = popen(command.dataA(), "r");
+	FILE *pf = popen((Char*)command.bytes(), "r");
 	if (pf == NULL) return FALSE;
 
 	char result[2048] = {0};

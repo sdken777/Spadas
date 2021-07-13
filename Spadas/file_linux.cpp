@@ -33,7 +33,7 @@ namespace file_internal
 		procname[len] = '\0';
 		String executablePathString = procname;
 
-		Array<UInt> slashLocations = executablePathString.search(L'/');
+		Array<UInt> slashLocations = executablePathString.search('/');
 		if (slashLocations.isEmpty()) return String();
 
 		if (slashLocations.size() >= 4) // 调试时判定

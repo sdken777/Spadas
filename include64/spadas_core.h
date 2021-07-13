@@ -1515,8 +1515,12 @@ namespace spadas
 		/// @param text 字符数组指针（以0结尾）
 		String(const WChar text[]);
 
+		/// @brief 由 spadas::Char 字符数组初始化
+		/// @param text 字符数组（不要求以0结尾）
+		String(Array<Char> text);
+
 		/// @brief 由 spadas::WChar 字符数组初始化
-		/// @param text 字符数组
+		/// @param text 字符数组（不要求以0结尾）
 		String(Array<WChar> text);
 
 		/// @brief 由 spadas::Bool 初始化，字符串为"TRUE"或"FALSE"
@@ -1579,8 +1583,8 @@ namespace spadas
 		/// @param nDigits 保留小数位数，范围为0~20以及UINF(自适应)
 		String(Double val, UInt nDigits);
 
-		/// @brief 从UTF-8编码数据创建字符串对象
-		/// @param binary UTF-8编码数据
+		/// @brief 从UTF-8二进制数据创建字符串对象
+		/// @param binary UTF-8二进制数据（不要求以0结尾）
 		String(Binary binary);
 
 		/// @brief 从另一个字符串中的一段文本拷贝并创建字符串对象
@@ -1606,29 +1610,23 @@ namespace spadas
 		/// 克隆出一个新对象
 		String clone();
 		
-		/// 计算并更新字符串长度（在调用方括号或data方法对字符串数据进行更改后必须调用本方法）
+		/// 计算并更新字符串长度（在调用bytes方法对字符串数据进行更改后必须调用本方法）
 		void updateLength();
 
-		/// [可修改] 取得字符串中某字符值，若修改了数据则必须调用updateLength方法
-		WChar& operator [](UInt index);
+		/// [可修改] 取得字符串UTF-8数据的头指针，其中至少应有一个字节为0，若修改了数据则必须调用updateLength方法
+		Byte *bytes();
 
-		/// [可修改] 取得字符串数据的头指针，指针最后以0结尾，若修改了数据则必须调用updateLength方法
-		WChar *data();
+		/// 取得字符串UTF-8数据的字节数
+		UInt byteSize();
 
-		/// 转换为Char型字符串并取得头指针，指针最后以0结尾
-		Char *dataA();
+		/// 转换为Char数组，以0结尾（因此有效长度为数组长度-1）
+		Array<Char> chars();
 
-		/// 转换为Char型字符串并取得头指针，指针最后以0结尾。同时输出Char型字符串长度，该长度有可能与length方法获得的结果不同
-		Char *dataA(UInt& length);
+		/// 转换为WChar数组，以0结尾（因此有效长度为数组长度-1）
+		Array<WChar> wchars();
 
-		/// 以WChar定长数组取得字符串的数据，其所有元素都为有效值，不以0结尾
-		Array<WChar> dataArray();
-
-		/// 取得字符串长度 (WChar单位)
+		/// 取得字符串长度 (UTF-8字节数)
 		UInt length();
-
-		/// 取得字符串数据块的大小（字节单位），至少为sizeof(WChar)*(length()+1)
-		UInt size();
 
 		/// 是否为空字符串
 		Bool isEmpty();
@@ -1654,7 +1652,7 @@ namespace spadas
 		/// 转换为 spadas::Double 数值
 		Optional<Double> toDouble();
 		
-		/// 转换为UTF-8编码数据
+		/// 转换为UTF-8二进制数据（不以0结尾）
 		Binary toBinary();
 
 		/// 转换为全大写字符串
@@ -1741,7 +1739,7 @@ namespace spadas
 	{
 	public:
 		Byte dummy[SPADAS_STRING_DUMMY_BYTES];
-		WChar* data;
+		Char* data; // UTF-8数据（Windows下无法查看中文）
 		UInt length;
 	};
 #endif
