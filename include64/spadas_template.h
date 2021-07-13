@@ -449,7 +449,7 @@ namespace spadas
 		~ArrayVars()
 		{
 			if (binded) binded->release();
-			else if (!system::isPlainType<Type>())
+			else if (!system::isTrivialType<Type>())
 			{
 				for (UInt i = 0; i < size; i++)
 				{
@@ -470,7 +470,7 @@ namespace spadas
 		size = math::min(size, ARRAY_SIZE_LIMIT);
 		Byte* newVarsRaw = new Byte[sizeof(ArrayVars<Type>) + sizeof(Type) * size];
 		ArrayVars<Type>* newVars = new (newVarsRaw)ArrayVars<Type>(size, (Type*)&newVarsRaw[sizeof(ArrayVars<Type>)]);
-		if (!system::isPlainType<Type>())
+		if (!system::isTrivialType<Type>())
 		{
 			for (UInt i = 0; i < size; i++)
 			{
@@ -2532,21 +2532,23 @@ namespace spadas
 	/// 映射与字典实现
 	///////////////////////////////////////////////////////
 	template<typename Type>
-	DecimalKey<Type>::DecimalKey()
+	NumericKey<Type>::NumericKey()
 	{}
 
 	template<typename Type>
-	DecimalKey<Type>::DecimalKey(Type value) : val(value)
-	{}
+	NumericKey<Type>::NumericKey(Type value) : val(value)
+	{
+		SPADAS_ERROR_PASS(!system::isStandardLayoutType<Type>());
+	}
 
 	template<typename Type>
-	Type DecimalKey<Type>::value()
+	Type NumericKey<Type>::value()
 	{
 		return val;
 	}
 
 	template<typename Type>
-	Bool DecimalKey<Type>::operator ==(DecimalKey<Type> decimal)
+	Bool NumericKey<Type>::operator ==(NumericKey<Type> decimal)
 	{
 		UInt typeSize = sizeof(Type);
 		Byte *srcBytes = (Byte*)&val;
@@ -2559,25 +2561,25 @@ namespace spadas
 	}
 
 	template<typename Type>
-	Bool DecimalKey<Type>::operator !=(DecimalKey<Type> decimal)
+	Bool NumericKey<Type>::operator !=(NumericKey<Type> decimal)
 	{
 		return !(operator ==(decimal));
 	}
 
 	template<typename Type>
-	Bool DecimalKey<Type>::operator >(DecimalKey<Type> decimal)
+	Bool NumericKey<Type>::operator >(NumericKey<Type> decimal)
 	{
 		return val > decimal.val;
 	}
 
 	template<typename Type>
-	Bool DecimalKey<Type>::operator <(DecimalKey<Type> decimal)
+	Bool NumericKey<Type>::operator <(NumericKey<Type> decimal)
 	{
 		return val < decimal.val;
 	}
 
 	template<typename Type>
-	Word DecimalKey<Type>::getHash()
+	Word NumericKey<Type>::getHash()
 	{
 		UInt typeSize = sizeof(Type);
 		UInt typeSizeWord = typeSize >> 1;
@@ -2587,50 +2589,6 @@ namespace spadas
 		for (UInt i = 0; i < typeSizeWord; i++) hash ^= words[i];
 		if (typeSize & 0x01) hash ^= bytes[typeSize - 1];
 		return hash;
-	}
-
-	template<typename Type>
-	StructureKey<Type>::StructureKey()
-	{}
-
-	template<typename Type>
-	StructureKey<Type>::StructureKey(Type value) : val(value)
-	{}
-
-	template<typename Type>
-	Type StructureKey<Type>::value()
-	{
-		return val;
-	}
-
-	template<typename Type>
-	Bool StructureKey<Type>::operator ==(StructureKey<Type> target)
-	{
-		return val == target.val;
-	}
-
-	template<typename Type>
-	Bool StructureKey<Type>::operator !=(StructureKey<Type> target)
-	{
-		return val != target.val;
-	}
-
-	template<typename Type>
-	Bool StructureKey<Type>::operator >(StructureKey<Type> target)
-	{
-		return val > target.val;
-	}
-
-	template<typename Type>
-	Bool StructureKey<Type>::operator <(StructureKey<Type> target)
-	{
-		return val < target.val;
-	}
-
-	template<typename Type>
-	Word StructureKey<Type>::getHash()
-	{
-		return val.toString().getHash();
 	}
 
 	template <typename KeyType, typename ValueType> class MapVars : public Vars
@@ -3203,15 +3161,7 @@ namespace spadas
 	}
 
 	template<typename Type>
-	Array<Type> spadas::utility::unpackKeys(Array<DecimalKey<Type> > keys)
-	{
-		Array<Type> out = Array<Type>::createUninitialized(keys.size());
-		for (UInt i = 0; i < keys.size(); i++) out.initialize(i, keys[i].value());
-		return out;
-	}
-
-	template<typename Type>
-	Array<Type> spadas::utility::unpackKeys(Array<StructureKey<Type> > keys)
+	Array<Type> spadas::utility::unpackKeys(Array<NumericKey<Type> > keys)
 	{
 		Array<Type> out = Array<Type>::createUninitialized(keys.size());
 		for (UInt i = 0; i < keys.size(); i++) out.initialize(i, keys[i].value());
@@ -3219,18 +3169,7 @@ namespace spadas
 	}
 
 	template<typename Type, typename ValueType>
-	Array<KeyValue<Type, ValueType> > spadas::utility::unpackKeyValues(Array<KeyValue<DecimalKey<Type>, ValueType> > keyValues)
-	{
-		Array<KeyValue<Type, ValueType> > out = Array<KeyValue<Type, ValueType> >::createUninitialized(keyValues.size());
-		for (UInt i = 0; i < keyValues.size(); i++)
-		{
-			out.initialize(i, KeyValue<Type, ValueType>(keyValues[i].key.value(), keyValues[i].value));
-		}
-		return out;
-	}
-
-	template<typename Type, typename ValueType>
-	Array<KeyValue<Type, ValueType> > spadas::utility::unpackKeyValues(Array<KeyValue<StructureKey<Type>, ValueType> > keyValues)
+	Array<KeyValue<Type, ValueType> > spadas::utility::unpackKeyValues(Array<KeyValue<NumericKey<Type>, ValueType> > keyValues)
 	{
 		Array<KeyValue<Type, ValueType> > out = Array<KeyValue<Type, ValueType> >::createUninitialized(keyValues.size());
 		for (UInt i = 0; i < keyValues.size(); i++)

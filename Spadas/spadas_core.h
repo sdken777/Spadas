@@ -1199,62 +1199,30 @@ namespace spadas
 		{ return key < target.key; }
 	};
 
-	/// 数值键
-	template <typename Type> class DecimalKey
+	/// 数值键，将标准布局类型的值转为键
+	template <typename Type> class NumericKey
 	{
 	public:
 		/// 默认构造函数
-		DecimalKey();
+		NumericKey();
 
-		/// 基于指定值创建
-		DecimalKey(Type value);
+		/// 基于指定值创建（若为非紧凑结构体，则初始化时应将所有字节置为0）
+		NumericKey(Type value);
 
 		/// 获取数值
 		Type value();
 
 		/// 是否等于
-		Bool operator ==(DecimalKey<Type> decimal);
+		Bool operator ==(NumericKey<Type> decimal);
 
 		/// 是否不等于
-		Bool operator !=(DecimalKey<Type> decimal);
+		Bool operator !=(NumericKey<Type> decimal);
 
 		/// 是否大于，需要Type支持>重载符
-		Bool operator >(DecimalKey<Type> decimal);
+		Bool operator >(NumericKey<Type> decimal);
 
 		/// 是否小于，需要Type支持<重载符
-		Bool operator <(DecimalKey<Type> decimal);
-
-		/// 获取哈希值
-		Word getHash();
-
-	private:
-		Type val;
-	};
-
-	/// 结构体键，Type需要支持toString函数以及==、!=等重载符。对于字段全部为数值的紧凑结构体，可使用 spadas::DecimalKey 以提高索引效率
-	template <typename Type> class StructureKey
-	{
-	public:
-		/// 默认构造函数
-		StructureKey();
-
-		/// 基于指定结构体数据创建
-		StructureKey(Type value);
-
-		/// 获取结构体数据
-		Type value();
-
-		/// 是否等于
-		Bool operator ==(StructureKey<Type> target);
-
-		/// 是否不等于
-		Bool operator !=(StructureKey<Type> target);
-
-		/// 是否大于，需要Type支持>重载符
-		Bool operator >(StructureKey<Type> target);
-
-		/// 是否小于，需要Type支持<重载符
-		Bool operator <(StructureKey<Type> target);
+		Bool operator <(NumericKey<Type> decimal);
 
 		/// 获取哈希值
 		Word getHash();
@@ -1360,40 +1328,40 @@ namespace spadas
 	};
 
 	/// 布尔键
-	typedef DecimalKey<Bool> BoolKey;
+	typedef NumericKey<Bool> BoolKey;
 
 	/// 8位无符号整数键
-	typedef DecimalKey<Byte> ByteKey;
+	typedef NumericKey<Byte> ByteKey;
 
 	/// 16位无符号整数键
-	typedef DecimalKey<Word> WordKey;
+	typedef NumericKey<Word> WordKey;
 
 	/// 32位无符号整数键
-	typedef DecimalKey<UInt> UIntKey;
+	typedef NumericKey<UInt> UIntKey;
 
 	/// 64位无符号整数键
-	typedef DecimalKey<ULong> ULongKey;
+	typedef NumericKey<ULong> ULongKey;
 
 	/// 16位带符号整数键
-	typedef DecimalKey<Short> ShortKey;
+	typedef NumericKey<Short> ShortKey;
 
 	/// 32位带符号整数键
-	typedef DecimalKey<Int> IntKey;
+	typedef NumericKey<Int> IntKey;
 
 	/// 64位带符号整数键
-	typedef DecimalKey<Long> LongKey;
+	typedef NumericKey<Long> LongKey;
 
 	/// Char字符键
-	typedef DecimalKey<Char> CharKey;
+	typedef NumericKey<Char> CharKey;
 
 	/// WChar字符键
-	typedef DecimalKey<WChar> WCharKey;
+	typedef NumericKey<WChar> WCharKey;
 
 	/// 32位浮点数键
-	typedef DecimalKey<Float> FloatKey;
+	typedef NumericKey<Float> FloatKey;
 
 	/// 64位浮点数键
-	typedef DecimalKey<Double> DoubleKey;
+	typedef NumericKey<Double> DoubleKey;
 
 	/// 字符串键值对
 	typedef KeyValue<String, String> StringKeyValue;
@@ -3660,9 +3628,13 @@ namespace spadas
 		/// 检查字节序是否Big-Endian
 		SPADAS_API Bool isBigEndian();
 
-		/// 检查类型是否为简单类型
+		/// 检查类型是否为普通类型
 		template <typename Type>
-		inline Bool isPlainType() { return __is_standard_layout(Type) && __is_trivial(Type); }
+		inline Bool isTrivialType() { return __is_trivial(Type); }
+
+		/// 检查类型是否为标准布局类型
+		template <typename Type>
+		inline Bool isStandardLayoutType() { return __is_standard_layout(Type); }
 
 		/// 获得当前系统时间
 		SPADAS_API Time getTime();
@@ -3708,19 +3680,11 @@ namespace spadas
 
 		/// 将数值键数组转为数值数组
 		template <typename Type>
-		Array<Type> unpackKeys(Array<DecimalKey<Type> > keys);
-
-		/// 将结构体键数组转为结构体数组
-		template <typename Type>
-		Array<Type> unpackKeys(Array<StructureKey<Type> > keys);
+		Array<Type> unpackKeys(Array<NumericKey<Type> > keys);
 
 		/// 将数值键的键值对数组转为数值的键值对数组
 		template <typename Type, typename ValueType>
-		Array<KeyValue<Type, ValueType> > unpackKeyValues(Array<KeyValue<DecimalKey<Type>, ValueType> > keyValues);
-
-		/// 将结构体键的键值对数组转为结构体的键值对数组
-		template <typename Type, typename ValueType>
-		Array<KeyValue<Type, ValueType> > unpackKeyValues(Array<KeyValue<StructureKey<Type>, ValueType> > keyValues);
+		Array<KeyValue<Type, ValueType> > unpackKeyValues(Array<KeyValue<NumericKey<Type>, ValueType> > keyValues);
 
 		/*
 		* ByteBGR: size=(height, width, 3)
