@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // isPlainType分为isTrivialType和isStandardLayoutType。DecimalKey和StructureKey合并为NumericKey，并要求类型标准布局
+// 版本定义 // SPADAS_DEBUG整理
 #define SPADAS_VERSION_MAJOR 7
 #define SPADAS_VERSION_MINOR 1
-#define SPADAS_VERSION_BUILD 3
+#define SPADAS_VERSION_BUILD 4
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：7.1.3\n
+* 本文档对应Spadas版本：7.1.4\n
 *
 * \n
 * \section top1 基本功能概述
@@ -237,6 +237,14 @@
 
 // 方便变量数据定义
 #define SPADAS_VARS_DEF(classType, baseVarsType) virtual String getTypeName() { return classType::TypeName; } virtual ListNode<String> getBaseChain() { return genBaseChain(baseVarsType::getTypeName(), baseVarsType::getBaseChain()); }
+
+// 调试用
+#if defined(SPADAS_DEBUG)
+#if defined(SPADAS_ENV_WINDOWS)
+#define SPADAS_BINARY_DUMMY_BYTES 16
+#define SPADAS_STRING_DUMMY_BYTES 20
+#endif
+#endif
 
 // OpenCV兼容性
 typedef struct _IplImage IplImage;

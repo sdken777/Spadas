@@ -1478,25 +1478,13 @@ namespace spadas
 	};
 
 #if defined(SPADAS_DEBUG)
-#if defined(SPADAS_ENV_WINDOWS)
-	class BinaryVars : public Vars
-	{
-	public:
-		UInt size;
-		Byte* data;
-		BinaryVars* binded;
-	};
-#endif
-#if defined(SPADAS_ENV_LINUX)
 	class BinaryVars
 	{
 	public:
-		Byte dummy[12];
+		Byte dummy[SPADAS_BINARY_DUMMY_BYTES];
 		UInt size;
 		Byte* data;
-		BinaryVars* binded;
 	};
-#endif
 #endif
 
 	// 字符串 //////////////////////////////////////////////////////////////
@@ -1749,24 +1737,13 @@ namespace spadas
 	};
 
 #if defined(SPADAS_DEBUG)
-#if defined(SPADAS_ENV_WINDOWS)
-	class StringVars : public Vars
-	{
-	public:
-		UInt dummy;
-		WChar* data;
-		UInt length;
-	};
-#endif
-#if defined(SPADAS_ENV_LINUX)
 	class StringVars
 	{
 	public:
-		Byte dummy[16];
+		Byte dummy[SPADAS_STRING_DUMMY_BYTES];
 		WChar* data;
 		UInt length;
 	};
-#endif
 #endif
 
 	// 枚举对象 //////////////////////////////////////////////////////////////

@@ -219,11 +219,14 @@ public:
 
 int main(int argc, char* argv[])
 {
-	Test().taskTest();
-	Test().pathTest();
-	Test().deriveTest();
-	Test().licenseIndexTest();
-	Test().arrayTest();
+	//Test().taskTest();
+	//Test().pathTest();
+	//Test().deriveTest();
+	//Test().licenseIndexTest();
+	//Test().arrayTest();
+
+	Binary bin = Binary::create(4, 1, 2, 3, 4);
+	String str = "ABC";
 
 	console::print("over");
 	return 0;
