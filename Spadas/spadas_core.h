@@ -965,7 +965,7 @@ namespace spadas
 		/// 取得大小
 		UInt size();
 		
-		/// 扩展或缩减大小至指定值
+		/// 扩展大小至指定值
 		void setSize(UInt size);
 
 		/// 在数组末尾扩展1个元素
@@ -984,7 +984,7 @@ namespace spadas
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
 		void copyRegion(Pointer, UInt, Array<Type>&, UInt, UInt, UInt, UInt);
-		Type *getSegmentData(UInt);
+		Pointer getSegmentNode(UInt);
 	};
 
 	/// spadas::List 模板类的变量数据
@@ -3601,14 +3601,6 @@ namespace spadas
 
 		/// 检查字节序是否Big-Endian
 		SPADAS_API Bool isBigEndian();
-
-		/// 检查类型是否为普通类型
-		template <typename Type>
-		inline Bool isTrivialType() { return __is_trivial(Type); }
-
-		/// 检查类型是否为标准布局类型
-		template <typename Type>
-		inline Bool isStandardLayoutType() { return __is_standard_layout(Type); }
 
 		/// 获得当前系统时间
 		SPADAS_API Time getTime();

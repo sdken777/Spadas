@@ -43,21 +43,25 @@ namespace spadas_internal
 	template<typename Type> struct ArrayXNode
 	{
 		Type* buffer;
+		UInt initialized;
 		ArrayXNode<Type>* children[2];
-		ArrayXNode(Type* bufferUninitialized, UInt bufferSize) : buffer(bufferUninitialized)
+		ArrayXNode(Type* bufferUninitialized, UInt bufferSize) : buffer(bufferUninitialized), initialized(bufferSize * (UInt)(Bool)__is_trivial(Type))
 		{
 			children[0] = 0;
 			children[1] = 0;
-			if (!system::isTrivialType<Type>())
-			{
-				for (UInt i = 0; i < bufferSize; i++) new (&buffer[i])Type();
-			}
 		}
-		ArrayXNode(Type* bufferUninitialized, UInt bufferSize, Type& defaultValue) : buffer(bufferUninitialized)
+		ArrayXNode(Type* bufferUninitialized, UInt bufferSize, Type& defaultValue) : buffer(bufferUninitialized), initialized(bufferSize)
 		{
 			children[0] = 0;
 			children[1] = 0;
 			for (UInt i = 0; i < bufferSize; i++) new (&buffer[i])Type(defaultValue);
+		}
+		void release()
+		{
+			if (!__is_trivial(Type))
+			{
+				for (UInt i = 0; i < initialized; i++) (&buffer[i])->~Type();
+			}
 		}
 	};
 
@@ -470,7 +474,7 @@ namespace spadas
 		~ArrayVars()
 		{
 			if (binded) binded->release();
-			else if (!system::isTrivialType<Type>())
+			else if (!__is_trivial(Type))
 			{
 				for (UInt i = 0; i < size; i++)
 				{
@@ -491,7 +495,7 @@ namespace spadas
 		size = math::min(size, ARRAY_SIZE_LIMIT);
 		Byte* newVarsRaw = new Byte[sizeof(ArrayVars<Type>) + sizeof(Type) * size];
 		ArrayVars<Type>* newVars = new (newVarsRaw)ArrayVars<Type>(size, (Type*)&newVarsRaw[sizeof(ArrayVars<Type>)]);
-		if (!system::isTrivialType<Type>())
+		if (!__is_trivial(Type))
 		{
 			for (UInt i = 0; i < size; i++)
 			{
@@ -1672,25 +1676,31 @@ namespace spadas
 		Byte segmentSizePower;
 		Word segmentSizeMask;
 		UInt accessingSegment;
-		Type* accessingData;
+		spadas_internal::ArrayXNode<Type>* accessingNode;
 		UInt lastSegment;
 		UInt lastNextIndex;
-		Type* lastData;
+		spadas_internal::ArrayXNode<Type>* lastNode;
 		Type defaultValue;
 		spadas_internal::ArrayXNode<Type> root;
-		ArrayXVars(UInt segSize, UInt power, Type* rootBufferUninitialized) : size(0), segmentSize(segSize), withDefault(FALSE), segmentSizePower((Byte)power), segmentSizeMask((Word)(segSize - 1)), accessingSegment(1), accessingData(rootBufferUninitialized), lastSegment(1), lastNextIndex(0), lastData(rootBufferUninitialized), root(rootBufferUninitialized, segSize)
-		{ }
-		ArrayXVars(UInt segSize, UInt power, Type& defaultVal, Type* rootBufferUninitialized) : size(0), segmentSize(segSize), withDefault(TRUE), segmentSizePower((Byte)power), segmentSizeMask((Word)(segSize - 1)), accessingSegment(1), accessingData(rootBufferUninitialized), lastSegment(1), lastNextIndex(0), lastData(rootBufferUninitialized), defaultValue(defaultVal), root(rootBufferUninitialized, segSize, defaultVal)
-		{ }
+		ArrayXVars(UInt segSize, UInt power, Type* rootBufferUninitialized) : size(0), segmentSize(segSize), withDefault(FALSE), segmentSizePower((Byte)power), segmentSizeMask((Word)(segSize - 1)), accessingSegment(1), lastSegment(1), lastNextIndex(0), root(rootBufferUninitialized, segSize)
+		{
+			accessingNode = lastNode = &root;
+		}
+		ArrayXVars(UInt segSize, UInt power, Type& defaultVal, Type* rootBufferUninitialized) : size(0), segmentSize(segSize), withDefault(TRUE), segmentSizePower((Byte)power), segmentSizeMask((Word)(segSize - 1)), accessingSegment(1), lastSegment(1), lastNextIndex(0), defaultValue(defaultVal), root(rootBufferUninitialized, segSize, defaultVal)
+		{
+			accessingNode = lastNode = &root;
+		}
 		~ArrayXVars()
 		{
 			if (root.children[0]) releaseNode(root.children[0]);
 			if (root.children[1]) releaseNode(root.children[1]);
+			root.release();
 		}
 		void releaseNode(spadas_internal::ArrayXNode<Type>* node)
 		{
 			if (node->children[0]) releaseNode(node->children[0]);
 			if (node->children[1]) releaseNode(node->children[1]);
+			node->release();
 			delete node;
 		}
 	};
@@ -1730,7 +1740,7 @@ namespace spadas
 	}
 
 	template<typename Type>
-	Type* ArrayX<Type>::getSegmentData(UInt segment)
+	Pointer ArrayX<Type>::getSegmentNode(UInt segment)
 	{
 		Int depth = (Int)math::depth(segment);
 		spadas_internal::ArrayXNode<Type>* currentNode = &this->vars->root;
@@ -1758,7 +1768,7 @@ namespace spadas
 			}
 			currentNode = currentNode->children[(UInt)(Bool)(segment & (1 << i))];
 		}
-		return currentNode->buffer;
+		return currentNode;
 	}
 
 	template<typename Type>
@@ -1776,16 +1786,25 @@ namespace spadas
 		{
 			SPADAS_ERROR_RETURNVAL(index >= ARRAYX_SIZE_LIMIT, *(new Type));
 			this->vars->accessingSegment = segment;
-			this->vars->accessingData = getSegmentData(segment);
+			this->vars->accessingNode = (spadas_internal::ArrayXNode<Type>*)getSegmentNode(segment);
 		}
 		if (index >= this->vars->size)
 		{
 			this->vars->size = index + 1;
 			this->vars->lastSegment = segment;
 			this->vars->lastNextIndex = localIndex + 1;
-			this->vars->lastData = this->vars->accessingData;
+			this->vars->lastNode = this->vars->accessingNode;
 		}
-		return this->vars->accessingData[localIndex];
+		spadas_internal::ArrayXNode<Type>& targetNode = *this->vars->accessingNode;
+		if (!__is_trivial(Type) && localIndex >= targetNode.initialized)
+		{
+			for (UInt i = targetNode.initialized; i < this->vars->segmentSize; i++)
+			{
+				new (&targetNode.buffer[i])Type();
+			}
+			targetNode.initialized = this->vars->segmentSize;
+		}
+		return targetNode.buffer[localIndex];
 	}
 
 	template<typename Type>
@@ -1803,12 +1822,8 @@ namespace spadas
 	template<typename Type>
 	void ArrayX<Type>::setSize(UInt size)
 	{
-		if (size == 0)
-		{
-			this->setVars(0, FALSE);
-			return;
-		}
-		SPADAS_ERROR_RETURN(size > ARRAYX_SIZE_LIMIT);
+		if (size == this->vars->size) return;
+		SPADAS_ERROR_RETURN(size < this->vars->size || size > ARRAYX_SIZE_LIMIT);
 		if (!this->vars)
 		{
 			Byte* newVarsRaw = new Byte[sizeof(ArrayXVars<Type>) + sizeof(Type) * 16];
@@ -1819,7 +1834,7 @@ namespace spadas
 		UInt segment = (index >> this->vars->segmentSizePower) + 1;
 		UInt localIndex = index & this->vars->segmentSizeMask;
 		this->vars->lastSegment = this->vars->accessingSegment = segment;
-		this->vars->lastData = this->vars->accessingData = getSegmentData(segment);
+		this->vars->lastNode = this->vars->accessingNode = (spadas_internal::ArrayXNode<Type>*)getSegmentNode(segment);
 		this->vars->lastNextIndex = localIndex + 1;
 		this->vars->size = size;
 	}
@@ -1838,11 +1853,21 @@ namespace spadas
 			SPADAS_ERROR_RETURN(this->vars->size >= ARRAYX_SIZE_LIMIT);
 			UInt segment = (this->vars->size >> this->vars->segmentSizePower) + 1;
 			this->vars->lastSegment = this->vars->accessingSegment = segment;
-			this->vars->lastData = this->vars->accessingData = getSegmentData(segment);
+			this->vars->lastNode = this->vars->accessingNode = (spadas_internal::ArrayXNode<Type>*)getSegmentNode(segment);
 			this->vars->lastNextIndex = 0;
 		}
-		this->vars->size++;
-		this->vars->lastData[this->vars->lastNextIndex++] = val;
+		spadas_internal::ArrayXNode<Type>& targetNode = *this->vars->lastNode;
+		if (__is_trivial(Type) || this->vars->withDefault)
+		{
+			this->vars->size++;
+			targetNode.buffer[this->vars->lastNextIndex++] = val;
+		}
+		else
+		{
+			this->vars->size++;
+			new (&targetNode.buffer[this->vars->lastNextIndex++])Type(val);
+			targetNode.initialized++;
+		}
 	}
 
 	template<typename Type>
@@ -1882,13 +1907,21 @@ namespace spadas
 			Int indexOffset = (Int)(segment - 1) * (Int)this->vars->segmentSize - (Int)firstIndex;
 			if (node)
 			{
-				for (UInt i = startIndex; i <= endIndex; i++) dst.initialize((UInt)(indexOffset + i), node->buffer[i]);
+				if (!__is_trivial(Type) && node->initialized < this->vars->segmentSize)
+				{
+					for (UInt i = startIndex; i < node->initialized; i++) dst.initialize((UInt)(indexOffset + i), node->buffer[i]);
+					for (UInt i = node->initialized; i <= endIndex; i++) dst.initialize((UInt)(indexOffset + i), Type());
+				}
+				else
+				{
+					for (UInt i = startIndex; i <= endIndex; i++) dst.initialize((UInt)(indexOffset + i), node->buffer[i]);
+				}
 			}
 			else if (this->vars->withDefault)
 			{
 				for (UInt i = startIndex; i <= endIndex; i++) dst.initialize((UInt)(indexOffset + i), this->vars->defaultValue);
 			}
-			else if (!system::isTrivialType<Type>())
+			else if (!__is_trivial(Type))
 			{
 				for (UInt i = startIndex; i <= endIndex; i++) dst.initialize((UInt)(indexOffset + i), Type());
 			}
@@ -2519,7 +2552,10 @@ namespace spadas
 	template<typename Type>
 	NumericKey<Type>::NumericKey(Type value) : val(value)
 	{
-		SPADAS_ERROR_PASS(!system::isStandardLayoutType<Type>());
+		if (!__is_standard_layout(Type))
+		{
+			SPADAS_ERROR_MSG("!__is_standard_layout(Type)");
+		}
 	}
 
 	template<typename Type>
