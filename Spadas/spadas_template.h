@@ -40,6 +40,27 @@ namespace spadas_internal
 		}
 	};
 
+	template<typename Type> struct ArrayXNode
+	{
+		Type* buffer;
+		ArrayXNode<Type>* children[2];
+		ArrayXNode(Type* bufferUninitialized, UInt bufferSize) : buffer(bufferUninitialized)
+		{
+			children[0] = 0;
+			children[1] = 0;
+			if (!system::isTrivialType<Type>())
+			{
+				for (UInt i = 0; i < bufferSize; i++) new (&buffer[i])Type();
+			}
+		}
+		ArrayXNode(Type* bufferUninitialized, UInt bufferSize, Type& defaultValue) : buffer(bufferUninitialized)
+		{
+			children[0] = 0;
+			children[1] = 0;
+			for (UInt i = 0; i < bufferSize; i++) new (&buffer[i])Type(defaultValue);
+		}
+	};
+
 	template<typename Type>
 	void sortAdjustHeap(Type *first, Long index, Long len, Type val)
 	{
@@ -164,7 +185,7 @@ namespace spadas_internal
 namespace spadas
 {
 	const UInt ARRAY_SIZE_LIMIT = 100000000;		// 一亿
-	const UInt ARRAYX_SIZE_LIMIT = 100000000;		// 一亿
+	const UInt ARRAYX_SIZE_LIMIT = 134217728;		// 一亿多(2^27)
 	const UInt ARRAYX_SEGMENT_LIMIT = 65536;
 	const UInt MAP_INDEX_LIMIT = 65536;
 
@@ -1647,43 +1668,30 @@ namespace spadas
 	public:
 		UInt size;
 		UInt segmentSize;
-		UInt segmentSizePower;
-		UInt segmentSizeMask;
-		UInt lastAccessedSegment;
-		Type *lastAccessedData;
-		TreeNode<Type*> root;
-		Type defaultValue;
 		Bool withDefault;
-		ArrayXVars(UInt segSize, UInt power) : size(0), segmentSize(segSize), segmentSizePower(power), segmentSizeMask(segSize - 1), lastAccessedSegment(1), root(new Type[segSize]), withDefault(FALSE)
-		{
-			lastAccessedData = root.value();
-		}
-		ArrayXVars(UInt segSize, UInt power, Type& defaultVal) : size(0), segmentSize(segSize), segmentSizePower(power), segmentSizeMask(segSize - 1), lastAccessedSegment(1), root(new Type[segSize]), defaultValue(defaultVal), withDefault(TRUE)
-		{
-			lastAccessedData = root.value();
-			for (UInt i = 0; i < segSize; i++) lastAccessedData[i] = defaultValue;
-		}
+		Byte segmentSizePower;
+		Word segmentSizeMask;
+		UInt accessingSegment;
+		Type* accessingData;
+		UInt lastSegment;
+		UInt lastNextIndex;
+		Type* lastData;
+		Type defaultValue;
+		spadas_internal::ArrayXNode<Type> root;
+		ArrayXVars(UInt segSize, UInt power, Type* rootBufferUninitialized) : size(0), segmentSize(segSize), withDefault(FALSE), segmentSizePower((Byte)power), segmentSizeMask((Word)(segSize - 1)), accessingSegment(1), accessingData(rootBufferUninitialized), lastSegment(1), lastNextIndex(0), lastData(rootBufferUninitialized), root(rootBufferUninitialized, segSize)
+		{ }
+		ArrayXVars(UInt segSize, UInt power, Type& defaultVal, Type* rootBufferUninitialized) : size(0), segmentSize(segSize), withDefault(TRUE), segmentSizePower((Byte)power), segmentSizeMask((Word)(segSize - 1)), accessingSegment(1), accessingData(rootBufferUninitialized), lastSegment(1), lastNextIndex(0), lastData(rootBufferUninitialized), defaultValue(defaultVal), root(rootBufferUninitialized, segSize, defaultVal)
+		{ }
 		~ArrayXVars()
 		{
-			releaseNode(root.getVars());
+			if (root.children[0]) releaseNode(root.children[0]);
+			if (root.children[1]) releaseNode(root.children[1]);
 		}
-		void releaseNode(TreeNodeVars<Type*> *nodeVars)
+		void releaseNode(spadas_internal::ArrayXNode<Type>* node)
 		{
-			delete[] nodeVars->val;
-			nodeVars->val = 0;
-			nodeVars->nLeaves = 0;
-			TreeNodeVars<Type*> *leafVars = nodeVars->leaf0Vars;
-			nodeVars->leaf0Vars = 0;
-			while (leafVars)
-			{
-				releaseNode(leafVars);
-				TreeNodeVars<Type*> *nextLeafVars = leafVars->nextVars;
-				leafVars->nextVars = 0;
-				leafVars->rootVars = 0;
-				leafVars->release();
-				nodeVars->release();
-				leafVars = nextLeafVars;
-			}
+			if (node->children[0]) releaseNode(node->children[0]);
+			if (node->children[1]) releaseNode(node->children[1]);
+			delete node;
 		}
 	};
 
@@ -1701,7 +1709,9 @@ namespace spadas
 			size *= 2;
 			power++;
 		}
-		this->setVars(new ArrayXVars<Type>(size, power), TRUE);
+		Byte* newVarsRaw = new Byte[sizeof(ArrayXVars<Type>) + sizeof(Type) * size];
+		ArrayXVars<Type>* newVars = new (newVarsRaw)ArrayXVars<Type>(size, power, (Type*)&newVarsRaw[sizeof(ArrayXVars<Type>)]);
+		this->setVars(newVars, TRUE);
 	}
 
 	template<typename Type>
@@ -1714,64 +1724,68 @@ namespace spadas
 			size *= 2;
 			power++;
 		}
-		this->setVars(new ArrayXVars<Type>(size, power, defaultValue), TRUE);
+		Byte* newVarsRaw = new Byte[sizeof(ArrayXVars<Type>) + sizeof(Type) * size];
+		ArrayXVars<Type>* newVars = new (newVarsRaw)ArrayXVars<Type>(size, power, defaultValue, (Type*)&newVarsRaw[sizeof(ArrayXVars<Type>)]);
+		this->setVars(newVars, TRUE);
 	}
 
 	template<typename Type>
 	Type* ArrayX<Type>::getSegmentData(UInt segment)
 	{
 		Int depth = (Int)math::depth(segment);
-		TreeNodeVars<Type*> *currentNodeVars = this->vars->root.getVars();
+		spadas_internal::ArrayXNode<Type>* currentNode = &this->vars->root;
+		const UInt nodeDataSize = sizeof(spadas_internal::ArrayXNode<Type>) + sizeof(Type) * this->vars->segmentSize;
 		for (Int i = depth - 1; i >= 0; i--)
 		{
-			Bool targetLeaf1 = segment & (1 << i);
-			if (currentNodeVars->nLeaves == 0)
+			if (!currentNode->children[0])
 			{
-				Type* leaf0Data = new Type[this->vars->segmentSize];
-				Type* leaf1Data = new Type[this->vars->segmentSize];
+				Byte* leaf0Data = new Byte[nodeDataSize];
+				Byte* leaf1Data = new Byte[nodeDataSize];
+				spadas_internal::ArrayXNode<Type>* leaf0Node = NULL;
+				spadas_internal::ArrayXNode<Type>* leaf1Node = NULL;
 				if (this->vars->withDefault)
 				{
-					for (UInt a = 0; a < this->vars->segmentSize; a++) leaf0Data[a] = this->vars->defaultValue;
-					for (UInt a = 0; a < this->vars->segmentSize; a++) leaf1Data[a] = this->vars->defaultValue;
+					leaf0Node = new (leaf0Data)spadas_internal::ArrayXNode<Type>((Type*)&leaf0Data[sizeof(spadas_internal::ArrayXNode<Type>)], this->vars->segmentSize, this->vars->defaultValue);
+					leaf1Node = new (leaf1Data)spadas_internal::ArrayXNode<Type>((Type*)&leaf1Data[sizeof(spadas_internal::ArrayXNode<Type>)], this->vars->segmentSize, this->vars->defaultValue);
 				}
-				TreeNode<Type*> leaf0Node(leaf0Data);
-				TreeNodeVars<Type*>* leaf0NodeVars = leaf0Node.getVars();
-				currentNodeVars->leaf0Vars = leaf0NodeVars;
-				leaf0NodeVars->retain();
-				leaf0NodeVars->rootVars = currentNodeVars;
-				currentNodeVars->retain();
-				TreeNode<Type*> leaf1Node(leaf1Data);
-				TreeNodeVars<Type*>* leaf1NodeVars = leaf1Node.getVars();
-				leaf0NodeVars->nextVars = leaf1NodeVars;
-				leaf1NodeVars->retain();
-				leaf1NodeVars->rootVars = currentNodeVars;
-				currentNodeVars->retain();
-				currentNodeVars->nLeaves = 2;
-				currentNodeVars = targetLeaf1 ? leaf1NodeVars : leaf0NodeVars;
+				else
+				{
+					leaf0Node = new (leaf0Data)spadas_internal::ArrayXNode<Type>((Type*)&leaf0Data[sizeof(spadas_internal::ArrayXNode<Type>)], this->vars->segmentSize);
+					leaf1Node = new (leaf1Data)spadas_internal::ArrayXNode<Type>((Type*)&leaf1Data[sizeof(spadas_internal::ArrayXNode<Type>)], this->vars->segmentSize);
+				}
+				currentNode->children[0] = leaf0Node;
+				currentNode->children[1] = leaf1Node;
 			}
-			else
-			{
-				currentNodeVars = currentNodeVars->leaf0Vars;
-				if (targetLeaf1) currentNodeVars = currentNodeVars->nextVars;
-			}
+			currentNode = currentNode->children[(UInt)(Bool)(segment & (1 << i))];
 		}
-		return currentNodeVars->val;
+		return currentNode->buffer;
 	}
 
 	template<typename Type>
 	Type& ArrayX<Type>::operator [](UInt index)
 	{
-		if (!this->vars) this->setVars(new ArrayXVars<Type>(16, 4), TRUE);
+		if (!this->vars)
+		{
+			Byte* newVarsRaw = new Byte[sizeof(ArrayXVars<Type>) + sizeof(Type) * 16];
+			ArrayXVars<Type>* newVars = new (newVarsRaw)ArrayXVars<Type>(16, 4, (Type*)&newVarsRaw[sizeof(ArrayXVars<Type>)]);
+			this->setVars(newVars, TRUE);
+		}
 		UInt segment = (index >> this->vars->segmentSizePower) + 1;
 		UInt localIndex = index & this->vars->segmentSizeMask;
-		if (segment != this->vars->lastAccessedSegment)
+		if (segment != this->vars->accessingSegment)
 		{
-			SPADAS_ERROR_RETURNVAL(index >= ARRAYX_SIZE_LIMIT, *(new Type))
-			this->vars->lastAccessedData = getSegmentData(segment);
-			this->vars->lastAccessedSegment = segment;
+			SPADAS_ERROR_RETURNVAL(index >= ARRAYX_SIZE_LIMIT, *(new Type));
+			this->vars->accessingSegment = segment;
+			this->vars->accessingData = getSegmentData(segment);
 		}
-		this->vars->size = math::max(this->vars->size, index + 1);
-		return this->vars->lastAccessedData[localIndex];
+		if (index >= this->vars->size)
+		{
+			this->vars->size = index + 1;
+			this->vars->lastSegment = segment;
+			this->vars->lastNextIndex = localIndex + 1;
+			this->vars->lastData = this->vars->accessingData;
+		}
+		return this->vars->accessingData[localIndex];
 	}
 
 	template<typename Type>
@@ -1794,82 +1808,49 @@ namespace spadas
 			this->setVars(0, FALSE);
 			return;
 		}
-		if (!this->vars) this->setVars(new ArrayXVars<Type>(16, 4), TRUE);
-		UInt lastIndex = size - 1;
-		if (size > this->vars->size)
+		SPADAS_ERROR_RETURN(size > ARRAYX_SIZE_LIMIT);
+		if (!this->vars)
 		{
-			operator[](lastIndex) = this->vars->withDefault ? this->vars->defaultValue : Type();
+			Byte* newVarsRaw = new Byte[sizeof(ArrayXVars<Type>) + sizeof(Type) * 16];
+			ArrayXVars<Type>* newVars = new (newVarsRaw)ArrayXVars<Type>(16, 4, (Type*)&newVarsRaw[sizeof(ArrayXVars<Type>)]);
+			this->setVars(newVars, TRUE);
 		}
-		else if (size < this->vars->size)
-		{
-			UInt lastSegment = (lastIndex >> this->vars->segmentSizePower) + 1;
-			UInt lastLocalIndex = lastIndex & this->vars->segmentSizeMask;
-			validateInSize(this->vars->root, 1, lastSegment, lastLocalIndex);
-			this->vars->size = size;
-			if (this->vars->lastAccessedSegment > lastSegment)
-			{
-				this->vars->lastAccessedSegment = 1;
-				this->vars->lastAccessedData = this->vars->root.value();
-			}
-		}
-	}
-
-	template<typename Type>
-	void ArrayX<Type>::validateInSize(TreeNode<Type*> node, UInt segment, UInt lastSegment, UInt lastLocalIndex)
-	{
-		if (segment < lastSegment)
-		{
-			if (node.nLeaves() != 0)
-			{
-				validateInSize(node.leafAt(0), segment * 2, lastSegment, lastLocalIndex);
-				validateInSize(node.leafAt(1), segment * 2 + 1, lastSegment, lastLocalIndex);
-			}
-		}
-		else /* segment >= lastSegment */
-		{
-			if (this->vars->withDefault)
-			{
-				Type* data = node.value();
-				for (UInt i = ((segment == lastSegment) ? (lastLocalIndex + 1) : 0); i < this->vars->segmentSize; i++)
-				{
-					data[i] = this->vars->defaultValue;
-				}
-			}
-			if (node.nLeaves() != 0)
-			{
-				TreeNode<Type*> leafNode = node.leafAt(1);
-				node.dropLeaf(leafNode);
-				this->vars->releaseNode(leafNode.getVars());
-				leafNode = node.leafAt(0);
-				node.dropLeaf(leafNode);
-				this->vars->releaseNode(leafNode.getVars());
-			}
-		}
+		UInt index = size - 1;
+		UInt segment = (index >> this->vars->segmentSizePower) + 1;
+		UInt localIndex = index & this->vars->segmentSizeMask;
+		this->vars->lastSegment = this->vars->accessingSegment = segment;
+		this->vars->lastData = this->vars->accessingData = getSegmentData(segment);
+		this->vars->lastNextIndex = localIndex + 1;
+		this->vars->size = size;
 	}
 
 	template<typename Type>
 	void ArrayX<Type>::append(Type val)
 	{
-		if (!this->vars) this->setVars(new ArrayXVars<Type>(16, 4), TRUE);
-		UInt segment = (this->vars->size >> this->vars->segmentSizePower) + 1;
-		UInt localIndex = this->vars->size & this->vars->segmentSizeMask;
-		if (segment != this->vars->lastAccessedSegment)
+		if (!this->vars)
+		{
+			Byte* newVarsRaw = new Byte[sizeof(ArrayXVars<Type>) + sizeof(Type) * 16];
+			ArrayXVars<Type>* newVars = new (newVarsRaw)ArrayXVars<Type>(16, 4, (Type*)&newVarsRaw[sizeof(ArrayXVars<Type>)]);
+			this->setVars(newVars, TRUE);
+		}
+		if (this->vars->lastNextIndex >= this->vars->segmentSize)
 		{
 			SPADAS_ERROR_RETURN(this->vars->size >= ARRAYX_SIZE_LIMIT);
-			this->vars->lastAccessedData = getSegmentData(segment);
-			this->vars->lastAccessedSegment = segment;
+			UInt segment = (this->vars->size >> this->vars->segmentSizePower) + 1;
+			this->vars->lastSegment = this->vars->accessingSegment = segment;
+			this->vars->lastData = this->vars->accessingData = getSegmentData(segment);
+			this->vars->lastNextIndex = 0;
 		}
 		this->vars->size++;
-		this->vars->lastAccessedData[localIndex] = val;
+		this->vars->lastData[this->vars->lastNextIndex++] = val;
 	}
 
 	template<typename Type>
 	void ArrayX<Type>::copyFromArray(Array<Type> src, Region srcRegion, UInt thisOffset)
 	{
-		if (src.isEmpty()) return;
 		UInt srcSize = src.size();
+		if (srcSize == 0) return;
 		SPADAS_ERROR_RETURN(srcRegion.offset < 0 || srcRegion.offset + srcRegion.size > srcSize);
-		if (!this->vars) this->setVars(new ArrayX<Type>(16, 4), TRUE);
 		Type *srcData = src.data();
 		for (UInt i = 0, srcI = srcRegion.offset, dstI = thisOffset; i < srcRegion.size; i++, srcI++, dstI++)
 		{
@@ -1883,41 +1864,41 @@ namespace spadas
 		if (thisRegion.size == 0) return Array<Type>();
 		SPADAS_ERROR_RETURNVAL(thisRegion.offset < 0, Array<Type>());
 		if (!this->vars) return Array<Type>();
-		Array<Type> out(thisRegion.size);
+		Array<Type> out = Array<Type>::createUninitialized(thisRegion.size);
 		UInt lastIndex = thisRegion.offset + thisRegion.size - 1;
-		copyRegion(&this->vars->root, 1, out.data(), thisRegion.offset, lastIndex, (thisRegion.offset >> this->vars->segmentSizePower) + 1, (lastIndex >> this->vars->segmentSizePower) + 1);
+		copyRegion(&this->vars->root, 1, out, thisRegion.offset, lastIndex, (thisRegion.offset >> this->vars->segmentSizePower) + 1, (lastIndex >> this->vars->segmentSizePower) + 1);
 		return out;
 	}
 
 	template<typename Type>
-	void ArrayX<Type>::copyRegion(TreeNode<Type*> *nodePtr, UInt segment, Type *dst, UInt firstIndex, UInt lastIndex, UInt firstSegment, UInt lastSegment)
+	void ArrayX<Type>::copyRegion(Pointer nodePtr, UInt segment, Array<Type>& dst, UInt firstIndex, UInt lastIndex, UInt firstSegment, UInt lastSegment)
 	{
+		spadas_internal::ArrayXNode<Type>* node = (spadas_internal::ArrayXNode<Type>*)nodePtr;
 		if (segment >= firstSegment && segment <= lastSegment)
 		{
-			UInt startIndex, endIndex;
+			UInt startIndex = 0, endIndex = this->vars->segmentSize - 1;
 			if (segment == firstSegment) startIndex = firstIndex & this->vars->segmentSizeMask;
-			else startIndex = 0;
 			if (segment == lastSegment) endIndex = lastIndex & this->vars->segmentSizeMask;
-			else endIndex = this->vars->segmentSize - 1;
-			Type *dstPtr = &dst[(Int)(segment - 1) * (Int)this->vars->segmentSize - (Int)firstIndex];
-			if (nodePtr)
+			Int indexOffset = (Int)(segment - 1) * (Int)this->vars->segmentSize - (Int)firstIndex;
+			if (node)
 			{
-				Type *srcPtr = nodePtr->value();
-				for (UInt i = startIndex; i <= endIndex; i++) dstPtr[i] = srcPtr[i];
+				for (UInt i = startIndex; i <= endIndex; i++) dst.initialize((UInt)(indexOffset + i), node->buffer[i]);
 			}
 			else if (this->vars->withDefault)
 			{
-				for (UInt i = startIndex; i <= endIndex; i++) dstPtr[i] = this->vars->defaultValue;
+				for (UInt i = startIndex; i <= endIndex; i++) dst.initialize((UInt)(indexOffset + i), this->vars->defaultValue);
+			}
+			else if (!system::isTrivialType<Type>())
+			{
+				for (UInt i = startIndex; i <= endIndex; i++) dst.initialize((UInt)(indexOffset + i), Type());
 			}
 		}
 		if (segment < lastSegment)
 		{
-			if (nodePtr && nodePtr->nLeaves() != 0)
+			if (node && node->children[0])
 			{
-				TreeNode<Type*> leafNode0 = nodePtr->leafAt(0);
-				TreeNode<Type*> leafNode1 = nodePtr->leafAt(1);
-				copyRegion(&leafNode0, segment * 2, dst, firstIndex, lastIndex, firstSegment, lastSegment);
-				copyRegion(&leafNode1, segment * 2 + 1, dst, firstIndex, lastIndex, firstSegment, lastSegment);
+				copyRegion(node->children[0], segment * 2, dst, firstIndex, lastIndex, firstSegment, lastSegment);
+				copyRegion(node->children[1], segment * 2 + 1, dst, firstIndex, lastIndex, firstSegment, lastSegment);
 			}
 			else
 			{

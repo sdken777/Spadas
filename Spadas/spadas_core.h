@@ -983,9 +983,8 @@ namespace spadas
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
-		void validateInSize(TreeNode<Type*>, UInt, UInt, UInt);
-		void copyRegion(TreeNode<Type*>*, UInt, Type*, UInt, UInt, UInt, UInt);
-		Type *getSegmentData(UInt segment);
+		void copyRegion(Pointer, UInt, Array<Type>&, UInt, UInt, UInt, UInt);
+		Type *getSegmentData(UInt);
 	};
 
 	/// spadas::List 模板类的变量数据
