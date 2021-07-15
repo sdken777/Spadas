@@ -2719,12 +2719,6 @@ namespace spadas
 	}
 
 	template <typename KeyType, typename ValueType>
-	UInt Map<KeyType, ValueType>::nKeys()
-	{
-		return this->vars->size;
-	}
-
-	template <typename KeyType, typename ValueType>
 	Array<KeyType> Map<KeyType, ValueType>::keys()
 	{
 		if (this->vars->size == 0) return Array<KeyType>();

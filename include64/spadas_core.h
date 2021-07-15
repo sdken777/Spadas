@@ -1260,9 +1260,6 @@ namespace spadas
 		/// 取得映射数目
 		UInt size();
 
-		/// 取得键的数目，与size()结果一致
-		UInt nKeys();
-
 		/// 取得所有键
 		Array<KeyType> keys();
 
@@ -2773,9 +2770,6 @@ namespace spadas
 
 		/// 获得矩阵的大小（各维的长度）
 		Array<UInt> size();
-
-		/// 获得矩阵的大小（各维的长度）
-		Array<UInt> dims();
 
 		/// 获得矩阵某个维度的长度 (维度无效时返回0)，序号从0开始
 		UInt dimAt(UInt index);

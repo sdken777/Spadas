@@ -343,16 +343,6 @@ Array<UInt> Matrix<Type>::size() \
 	return vars->dims.clone(); \
 } \
 template<> \
-Array<UInt> Matrix<Type>::dims() \
-{ \
-	if (!vars) \
-	{ \
-		SPADAS_ERROR_MSG("!vars"); \
-		return Array<UInt>(); \
-	} \
-	return vars->dims.clone(); \
-} \
-template<> \
 Bool Matrix<Type>::isSize(Array<UInt> dims) \
 { \
 	if (!vars) \
