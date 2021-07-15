@@ -91,16 +91,31 @@ String::String(Char character)
 
 String::String(WChar character)
 {
-	if (character == 0) return;
+	if ((UInt)character < 256)
+	{
+		if (character == 0) return;
 
-	const UInt dataSize = 5;
+		const UInt dataSize = 2;
 
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
+		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+		setVars(newVars, TRUE);
 
-	vars->length = math::min(vars->size - 1, wCharToUTF8(&character, 1, (Char*)vars->data, vars->size));
-	vars->data[vars->length] = 0;
+		vars->data[0] = (Byte)character;
+		vars->data[1] = 0;
+		vars->length = 1;
+	}
+	else
+	{
+		const UInt dataSize = 5;
+
+		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+		setVars(newVars, TRUE);
+
+		vars->length = math::min(vars->size - 1, wCharToUTF8(&character, 1, (Char*)vars->data, vars->size));
+		vars->data[vars->length] = 0;
+	}
 }
 
 String::String(const Char text[])
@@ -108,16 +123,31 @@ String::String(const Char text[])
 	if (text == 0) return;
 
 	UInt textLength = lengthChar(text);
-	if (textLength == 0) return;
+	if (textLength <= 1)
+	{
+		if (textLength == 0) return;
 
-	UInt dataSize = textLength * 2 + 1;
+		const UInt dataSize = 2;
 
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
+		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+		setVars(newVars, TRUE);
 
-	vars->length = math::min(vars->size - 1, charToUTF8(text, textLength, (Char*)vars->data, vars->size));
-	vars->data[vars->length] = 0;
+		vars->data[0] = (Byte)text[0];
+		vars->data[1] = 0;
+		vars->length = 1;
+	}
+	else
+	{
+		UInt dataSize = textLength * 2 + 1;
+
+		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+		setVars(newVars, TRUE);
+
+		vars->length = math::min(vars->size - 1, charToUTF8(text, textLength, (Char*)vars->data, vars->size));
+		vars->data[vars->length] = 0;
+	}
 }
 
 String::String(const WChar text[])
@@ -127,14 +157,29 @@ String::String(const WChar text[])
 	UInt textLength = lengthWChar(text);
 	if (textLength == 0) return;
 
-	UInt dataSize = textLength * 4 + 1;
+	if (textLength == 1 && (UInt)text[0] < 256)
+	{
+		const UInt dataSize = 2;
 
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
+		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+		setVars(newVars, TRUE);
 
-	vars->length = math::min(vars->size - 1, wCharToUTF8(text, textLength, (Char*)vars->data, vars->size));
-	vars->data[vars->length] = 0;
+		vars->data[0] = (Byte)text[0];
+		vars->data[1] = 0;
+		vars->length = 1;
+	}
+	else
+	{
+		UInt dataSize = textLength * 4 + 1;
+
+		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+		setVars(newVars, TRUE);
+
+		vars->length = math::min(vars->size - 1, wCharToUTF8(text, textLength, (Char*)vars->data, vars->size));
+		vars->data[vars->length] = 0;
+	}
 }
 
 String::String(Array<Char> text)
@@ -152,6 +197,7 @@ String::String(Array<Char> text)
 
 	vars->length = math::min(vars->size - 1, charToUTF8(textData, textLength, (Char*)vars->data, vars->size));
 	vars->data[vars->length] = 0;
+	vars->length = lengthChar((Char*)vars->data);
 }
 
 String::String(Array<WChar> text)
@@ -169,6 +215,7 @@ String::String(Array<WChar> text)
 
 	vars->length = math::min(vars->size - 1, wCharToUTF8(textData, textLength, (Char*)vars->data, vars->size));
 	vars->data[vars->length] = 0;
+	vars->length = lengthChar((Char*)vars->data);
 }
 
 String::String(Bool val)
