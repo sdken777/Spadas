@@ -217,6 +217,43 @@ public:
 	}
 };
 
+UInt ctrDCount = 0, ctrCCount = 0, dtrCount = 0;
+
+class AAA
+{
+public:
+	AAA()
+	{
+		ctrDCount++;
+	}
+	AAA(const AAA& a)
+	{
+		ctrCCount++;
+	}
+	~AAA()
+	{
+		dtrCount++;
+	}
+};
+
+void testFunc1(UInt n)
+{
+	ArrayX<UInt> arr;
+	for (UInt i = 0; i < n; i++)
+	{
+		arr.append(i);
+	}
+}
+
+void testFunc2(UInt n)
+{
+	std::vector<UInt> arr;
+	for (UInt i = 0; i < n; i++)
+	{
+		arr.push_back(i);
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	Test().taskTest();

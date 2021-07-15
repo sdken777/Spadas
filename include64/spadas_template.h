@@ -1705,18 +1705,19 @@ namespace spadas
 		UInt lastSegment;
 		UInt lastNextIndex;
 		spadas_internal::ArrayXNode<Type>* lastNode;
-		Type defaultValue;
+		Type* defaultValue;
 		spadas_internal::ArrayXNode<Type> root;
-		ArrayXVars(UInt segSize, UInt power, Type* rootBufferUninitialized) : size(0), segmentSize(segSize), withDefault(FALSE), segmentSizePower((Byte)power), segmentSizeMask((Word)(segSize - 1)), accessingSegment(1), lastSegment(1), lastNextIndex(0), root(rootBufferUninitialized, segSize)
+		ArrayXVars(UInt segSize, UInt power, Type* rootBufferUninitialized) : size(0), segmentSize(segSize), withDefault(FALSE), segmentSizePower((Byte)power), segmentSizeMask((Word)(segSize - 1)), accessingSegment(1), lastSegment(1), lastNextIndex(0), defaultValue(0), root(rootBufferUninitialized, segSize)
 		{
 			accessingNode = lastNode = &root;
 		}
-		ArrayXVars(UInt segSize, UInt power, Type& defaultVal, Type* rootBufferUninitialized) : size(0), segmentSize(segSize), withDefault(TRUE), segmentSizePower((Byte)power), segmentSizeMask((Word)(segSize - 1)), accessingSegment(1), lastSegment(1), lastNextIndex(0), defaultValue(defaultVal), root(rootBufferUninitialized, segSize, defaultVal)
+		ArrayXVars(UInt segSize, UInt power, Type* defaultVal, Type* rootBufferUninitialized) : size(0), segmentSize(segSize), withDefault(TRUE), segmentSizePower((Byte)power), segmentSizeMask((Word)(segSize - 1)), accessingSegment(1), lastSegment(1), lastNextIndex(0), defaultValue(defaultVal), root(rootBufferUninitialized, segSize, *defaultVal)
 		{
 			accessingNode = lastNode = &root;
 		}
 		~ArrayXVars()
 		{
+			if (withDefault) defaultValue->~Type();
 			if (root.children[0]) releaseNode(root.children[0]);
 			if (root.children[1]) releaseNode(root.children[1]);
 			root.release();
@@ -1759,8 +1760,9 @@ namespace spadas
 			size *= 2;
 			power++;
 		}
-		Byte* newVarsRaw = new Byte[sizeof(ArrayXVars<Type>) + sizeof(Type) * size];
-		ArrayXVars<Type>* newVars = new (newVarsRaw)ArrayXVars<Type>(size, power, defaultValue, (Type*)&newVarsRaw[sizeof(ArrayXVars<Type>)]);
+		Byte* newVarsRaw = new Byte[sizeof(ArrayXVars<Type>) + sizeof(Type) * (1 + size)];
+		Type* defaultVal = new (&newVarsRaw[sizeof(ArrayXVars<Type>)])Type(defaultValue);
+		ArrayXVars<Type>* newVars = new (newVarsRaw)ArrayXVars<Type>(size, power, defaultVal, (Type*)&newVarsRaw[sizeof(ArrayXVars<Type>) + sizeof(Type)]);
 		this->setVars(newVars, TRUE);
 	}
 
@@ -1780,8 +1782,8 @@ namespace spadas
 				spadas_internal::ArrayXNode<Type>* leaf1Node = NULL;
 				if (this->vars->withDefault)
 				{
-					leaf0Node = new (leaf0Data)spadas_internal::ArrayXNode<Type>((Type*)&leaf0Data[sizeof(spadas_internal::ArrayXNode<Type>)], this->vars->segmentSize, this->vars->defaultValue);
-					leaf1Node = new (leaf1Data)spadas_internal::ArrayXNode<Type>((Type*)&leaf1Data[sizeof(spadas_internal::ArrayXNode<Type>)], this->vars->segmentSize, this->vars->defaultValue);
+					leaf0Node = new (leaf0Data)spadas_internal::ArrayXNode<Type>((Type*)&leaf0Data[sizeof(spadas_internal::ArrayXNode<Type>)], this->vars->segmentSize, *this->vars->defaultValue);
+					leaf1Node = new (leaf1Data)spadas_internal::ArrayXNode<Type>((Type*)&leaf1Data[sizeof(spadas_internal::ArrayXNode<Type>)], this->vars->segmentSize, *this->vars->defaultValue);
 				}
 				else
 				{
@@ -1944,7 +1946,7 @@ namespace spadas
 			}
 			else if (this->vars->withDefault)
 			{
-				for (UInt i = startIndex; i <= endIndex; i++) dst.initialize((UInt)(indexOffset + i), this->vars->defaultValue);
+				for (UInt i = startIndex; i <= endIndex; i++) dst.initialize((UInt)(indexOffset + i), *this->vars->defaultValue);
 			}
 			else if (!__is_trivial(Type))
 			{
