@@ -1198,12 +1198,14 @@ namespace spadas
 	public:
 		Type val;
 		TreeNodeVars<Type> *rootVars;
-		TreeNodeVars<Type> *leaf0Vars;
+		TreeNodeVars<Type> *leafFirstVars;
+		TreeNodeVars<Type> *leafLastVars;
+		TreeNodeVars<Type> *prevVars;
 		TreeNodeVars<Type> *nextVars;
 		UInt nLeaves;
-		TreeNodeVars() : rootVars(0), leaf0Vars(0), nextVars(0), nLeaves(0)
+		TreeNodeVars() : rootVars(0), leafFirstVars(0), leafLastVars(0), prevVars(0), nextVars(0), nLeaves(0)
 		{ }
-		TreeNodeVars(Type& origin) : val(origin), rootVars(0), leaf0Vars(0), nextVars(0), nLeaves(0)
+		TreeNodeVars(Type& origin) : val(origin), rootVars(0), leafFirstVars(0), leafLastVars(0), prevVars(0), nextVars(0), nLeaves(0)
 		{ }
 	};
 
@@ -1242,7 +1244,7 @@ namespace spadas
 	Array<TreeNode<Type> > TreeNode<Type>::leaves()
 	{
 		Array<TreeNode<Type> > out = Array<TreeNode<Type> >::createUninitialized(this->vars->nLeaves);
-		TreeNodeVars<Type> *leafVars = this->vars->leaf0Vars;
+		TreeNodeVars<Type> *leafVars = this->vars->leafFirstVars;
 		for (UInt i = 0; i < this->vars->nLeaves; i++)
 		{
 			out.initialize(i, TreeNode<Type>(leafVars));
@@ -1255,7 +1257,7 @@ namespace spadas
 	TreeNode<Type> TreeNode<Type>::leafAt(UInt index)
 	{
 		SPADAS_ERROR_RETURNVAL(index >= this->vars->nLeaves, *this);
-		TreeNodeVars<Type>* leafVars = this->vars->leaf0Vars;
+		TreeNodeVars<Type>* leafVars = this->vars->leafFirstVars;
 		for (UInt i = 0; i < index; i++) leafVars = leafVars->nextVars;
 		return TreeNode<Type>(leafVars);
 	}
@@ -1269,7 +1271,7 @@ namespace spadas
 	template <typename Type>
 	Bool TreeNode<Type>::isLeaf(TreeNode<Type> node)
 	{
-		TreeNodeVars<Type> *leafVars = this->vars->leaf0Vars;
+		TreeNodeVars<Type> *leafVars = this->vars->leafFirstVars;
 		while (leafVars)
 		{
 			if (leafVars == node.vars) return TRUE;
@@ -1282,18 +1284,19 @@ namespace spadas
 	TreeNode<Type> TreeNode<Type>::addLeaf(Type val)
 	{
 		TreeNode<Type> leafNode(val);
-		if (this->vars->leaf0Vars == 0)
+		if (this->vars->leafFirstVars == 0)
 		{
-			this->vars->leaf0Vars = leafNode.vars;
+			this->vars->leafFirstVars = leafNode.vars;
 		}
 		else
 		{
-			TreeNodeVars<Type>* currentVars = this->vars->leaf0Vars;
-			while (currentVars->nextVars) currentVars = currentVars->nextVars;
-			currentVars->nextVars = leafNode.vars;
+			this->vars->leafLastVars->nextVars = leafNode.vars;
+			leafNode.vars->prevVars = this->vars->leafLastVars;
 		}
-		leafNode.vars->retain();
+		this->vars->leafLastVars = leafNode.vars;
 		leafNode.vars->rootVars = this->vars;
+		leafNode.vars->retain();
+		leafNode.vars->retain();
 		this->vars->retain();
 		this->vars->nLeaves++;
 		return leafNode;
@@ -1310,18 +1313,19 @@ namespace spadas
 			else currentVars = currentVars->rootVars;
 		}
 		leafNode.cutRoot();
-		if (this->vars->leaf0Vars == 0)
+		if (this->vars->leafFirstVars == 0)
 		{
-			this->vars->leaf0Vars = leafNode.vars;
+			this->vars->leafFirstVars = leafNode.vars;
 		}
 		else
 		{
-			currentVars = this->vars->leaf0Vars;
-			while (currentVars->nextVars) currentVars = currentVars->nextVars;
-			currentVars->nextVars = leafNode.vars;
+			this->vars->leafLastVars->nextVars = leafNode.vars;
+			leafNode.vars->prevVars = this->vars->leafLastVars;
 		}
-		leafNode.vars->retain();
+		this->vars->leafLastVars = leafNode.vars;
 		leafNode.vars->rootVars = this->vars;
+		leafNode.vars->retain();
+		leafNode.vars->retain();
 		this->vars->retain();
 		this->vars->nLeaves++;
 	}
@@ -1329,35 +1333,53 @@ namespace spadas
 	template <typename Type>
 	void TreeNode<Type>::dropLeaf(TreeNode<Type> leafNode)
 	{
+		if (this->vars->nLeaves == 0) return;
 		Bool found = FALSE;
-		if (this->vars->leaf0Vars == leafNode.vars)
+		TreeNodeVars<Type>* targetVars = this->vars->leafFirstVars;
+		while (TRUE)
 		{
-			this->vars->leaf0Vars = leafNode.vars->nextVars;
-			found = TRUE;
-		}
-		else
-		{
-			TreeNodeVars<Type> *previousVars = this->vars->leaf0Vars, *currentVars = previousVars->nextVars;
-			while (currentVars)
+			if (targetVars == leafNode.vars)
 			{
-				if (currentVars == leafNode.vars)
-				{
-					previousVars->nextVars = leafNode.vars->nextVars;
-					found = TRUE;
-					break;
-				}
-				previousVars = currentVars;
-				currentVars = currentVars->nextVars;
+				found = TRUE;
+				break;
+			}
+			if (!targetVars->nextVars) break;
+			targetVars = targetVars->nextVars;
+		}
+		SPADAS_ERROR_RETURN(!found);
+		if (targetVars->nextVars == 0)
+		{
+			if (targetVars->prevVars == 0)
+			{
+				this->vars->leafFirstVars = this->vars->leafLastVars = 0;
+			}
+			else //targetVars->prevVars != 0
+			{
+				this->vars->leafLastVars = targetVars->prevVars;
+				targetVars->prevVars->nextVars = 0;
+				targetVars->prevVars = 0;
 			}
 		}
-		if (found)
+		else //targetVars->nextVars != 0
 		{
-			leafNode.vars->release();
-			leafNode.vars->nextVars = 0;
-			leafNode.vars->rootVars = 0;
-			this->vars->release();
-			this->vars->nLeaves--;
+			if (this->vars->prevVars == 0)
+			{
+				this->vars->leafFirstVars = targetVars->nextVars;
+				targetVars->nextVars->prevVars = 0;
+				targetVars->nextVars = 0;
+			}
+			else //targetVars->prevVars != 0
+			{
+				targetVars->prevVars->nextVars = targetVars->nextVars;
+				targetVars->nextVars->prevVars = targetVars->prevVars;
+				targetVars->prevVars = targetVars->nextVars = 0;
+			}
 		}
+		targetVars->rootVars = 0;
+		this->vars->release();
+		targetVars->release();
+		targetVars->release();
+		this->vars->nLeaves--;
 	}
 
 	template <typename Type>
@@ -1433,24 +1455,27 @@ namespace spadas
 	void TreeNode<Type>::collapseSub()
 	{
 		if (this->vars->nLeaves == 0) return;
-		TreeNode<Type> bufNode(this->vars->leaf0Vars);
+		Array<TreeNode<Type> > leafNodes = leaves();
+		this->vars->leafFirstVars->release();
+		this->vars->leafLastVars->release();
+		this->vars->leafFirstVars = this->vars->leafLastVars = 0;
 		for (UInt i = 0; i < this->vars->nLeaves; i++)
 		{
-			TreeNode<Type> leafNode = bufNode;
+			TreeNode<Type> leafNode = leafNodes[i];
 			leafNode.collapseSub();
 			if (leafNode.vars->nextVars)
 			{
-				bufNode = TreeNode<Type>(leafNode.vars->nextVars);
+				leafNode.vars->nextVars->release();
 				leafNode.vars->nextVars = 0;
-				bufNode.vars->release();
+			}
+			if (leafNode.vars->prevVars)
+			{
+				leafNode.vars->prevVars->release();
+				leafNode.vars->prevVars = 0;
 			}
 			leafNode.vars->rootVars = 0;
 			this->vars->release();
 		}
-		TreeNode<Type> leafNode(this->vars->leaf0Vars);
-		this->vars->leaf0Vars = 0;
-		leafNode.vars->release();
-		this->vars->nLeaves = 0;
 	}
 
 	///////////////////////////////////////////////////////
