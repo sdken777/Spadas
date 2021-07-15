@@ -173,7 +173,7 @@ Bool IProcessorPluginV600::isProcessorOfflineOnly()
 void IProcessorPluginV600::setProcessorConfig(String config)
 {}
 
-void IProcessorPluginV600::setProcessorConfigX(String config, Dictionary<Path> etcRoots)
+void IProcessorPluginV600::setProcessorConfigX(String config, Bool onlineMode, Bool recordMode, Dictionary<Path> etcRoots)
 {}
 
 void IProcessorPluginV600::disableProcessor()

@@ -4988,8 +4988,10 @@ namespace spadas
 
 		/// @brief 配置数据处理及杂项数据路径表（在开始session时被调用）
 		/// @param config 配置信息，应包含是否启用功能的配置
+		/// @param onlineMode 是否为在线模式
+		/// @param recordMode 是否记录至文件（在线采集或离线生成）
 		/// @param etcRoots 杂项数据路径表，key为session ID字符串，格式为yyyyMMddHHmmss
-		virtual void setProcessorConfigX(String config, Dictionary<Path> etcRoots);
+		virtual void setProcessorConfigX(String config, Bool onlineMode, Bool recordMode, Dictionary<Path> etcRoots);
 
 		/// 函数名disable_processor: 禁用数据处理功能（在结束session时被调用）
 		virtual void disableProcessor();
