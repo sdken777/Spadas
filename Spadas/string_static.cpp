@@ -57,6 +57,8 @@ String String::createWithSize(UInt size)
 
 	Byte* newVarsRaw = new Byte[sizeof(StringVars) + size];
 	StringVars* newVars = new (newVarsRaw)StringVars(size, &newVarsRaw[sizeof(StringVars)]);
+	newVars->data[0] = 0;
+	newVars->length = 0;
 
 	String out;
 	out.setVars(newVars, TRUE);

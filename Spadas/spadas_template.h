@@ -548,7 +548,7 @@ namespace spadas
 		Byte* newVarsRaw = new Byte[sizeof(ArrayVars<Type>) + sizeof(Type) * size];
 		ArrayVars<Type>* newVars = new (newVarsRaw)ArrayVars<Type>(size, (Type*)&newVarsRaw[sizeof(ArrayVars<Type>)]);
 		Type* srcData = input.vars->data;
-		for (UInt i = 0; i < size; i++)
+		for (Int i = 0; i < size; i++)
 		{
 			new (&newVars->data[i])Type(srcData[i + startIndex]);
 		}
@@ -1771,13 +1771,12 @@ namespace spadas
 	{
 		Int depth = (Int)math::depth(segment);
 		spadas_internal::ArrayXNode<Type>* currentNode = &this->vars->root;
-		const UInt nodeDataSize = sizeof(spadas_internal::ArrayXNode<Type>) + sizeof(Type) * this->vars->segmentSize;
 		for (Int i = depth - 1; i >= 0; i--)
 		{
 			if (!currentNode->children[0])
 			{
-				Byte* leaf0Data = new Byte[nodeDataSize];
-				Byte* leaf1Data = new Byte[nodeDataSize];
+				Byte* leaf0Data = new Byte[sizeof(spadas_internal::ArrayXNode<Type>) + sizeof(Type) * this->vars->segmentSize];
+				Byte* leaf1Data = new Byte[sizeof(spadas_internal::ArrayXNode<Type>) + sizeof(Type) * this->vars->segmentSize];
 				spadas_internal::ArrayXNode<Type>* leaf0Node = NULL;
 				spadas_internal::ArrayXNode<Type>* leaf1Node = NULL;
 				if (this->vars->withDefault)
@@ -2054,7 +2053,7 @@ namespace spadas
 		ListNode<Type> origin = this->vars->origin;
 		ListNode<Type> target = origin.next();
 		ListNode<Type> next = target.next();
-		return ListElem<Type>(target, target != origin, target != origin ? 0 : UINF, origin, FALSE, next, next != origin, this->vars);
+		return ListElem<Type>(target, target != origin, target != origin ? 0 : UINF, origin, FALSE, next, next != origin, *this);
 	}
 
 	template<typename Type>
@@ -2063,7 +2062,7 @@ namespace spadas
 		ListNode<Type> origin = this->vars->origin;
 		ListNode<Type> target = origin.previous();
 		ListNode<Type> prev = target.previous();
-		return ListElem<Type>(target, target != origin, target != origin ? (this->vars->size - 1) : UINF, prev, prev != origin, origin, FALSE, this->vars);
+		return ListElem<Type>(target, target != origin, target != origin ? (this->vars->size - 1) : UINF, prev, prev != origin, origin, FALSE, *this);
 	}
 
 	template<typename Type>
