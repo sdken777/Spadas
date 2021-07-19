@@ -347,6 +347,13 @@ namespace spadas
 		}
 	}
 
+	template <typename VarsType>
+	String Object<VarsType>::toString()
+	{
+		if (vars) return ((Vars*)vars)->toString();
+		else return "(null)";
+	}
+
 	template <typename Type> class InterfaceVars : public Vars
 	{
 	public:
@@ -789,43 +796,49 @@ namespace spadas
 	}
 
 	template<typename Type>
-	ArrayElem<Type>::ArrayElem(Array<Type> arr0, UInt index0) : arr(arr0), data(arr.data()), size(arr.size()), index(index0)
+	ArrayElem<Type>::ArrayElem(Array<Type> arr0, UInt index0) : arr(arr0), data(arr.data()), size(arr.size()), idx(index0)
 	{}
 
 	template<typename Type>
-	Bool ArrayElem<Type>::isInArray()
+	Bool ArrayElem<Type>::valid()
 	{
-		return index < size;
+		return idx < size;
 	}
 
 	template<typename Type>
-	UInt ArrayElem<Type>::getIndex()
+	UInt ArrayElem<Type>::index()
 	{
-		return index;
+		return idx;
 	}
 
 	template<typename Type>
 	Type& ArrayElem<Type>::value()
 	{
-		return data[index];
+		return data[idx];
 	}
 
 	template<typename Type>
 	Type* ArrayElem<Type>::operator ->()
 	{
-		return &data[index];
+		return &data[idx];
 	}
 
 	template<typename Type>
-	void ArrayElem<Type>::goPrevious()
+	void ArrayElem<Type>::operator =(const Type& val)
 	{
-		index--;
+		data[idx] = val;
 	}
 
 	template<typename Type>
-	void ArrayElem<Type>::goNext()
+	void ArrayElem<Type>::operator --()
 	{
-		index++;
+		idx--;
+	}
+
+	template<typename Type>
+	void ArrayElem<Type>::operator ++()
+	{
+		idx++;
 	}
 
 	///////////////////////////////////////////////////////
@@ -2138,7 +2151,7 @@ namespace spadas
 	{}
 
 	template<typename Type>
-	Bool ListElem<Type>::isInList()
+	Bool ListElem<Type>::valid()
 	{
 		return this->vars->valid;
 	}
@@ -2156,7 +2169,7 @@ namespace spadas
 	}
 
 	template<typename Type>
-	UInt ListElem<Type>::getIndex()
+	UInt ListElem<Type>::index()
 	{
 		return this->vars->index;
 	}
@@ -2189,8 +2202,15 @@ namespace spadas
 		return this->vars->nextNode.value();
 	}
 
+	template <typename Type>
+	void ListElem<Type>::operator =(const Type& val)
+	{
+		SPADAS_ERROR_RETURN(!this->vars->valid);
+		this->vars->node.value() = val;
+	}
+
 	template<typename Type>
-	void ListElem<Type>::goPrevious()
+	void ListElem<Type>::operator --()
 	{
 		if (this->vars->valid)
 		{
@@ -2218,7 +2238,7 @@ namespace spadas
 	}
 
 	template<typename Type>
-	void ListElem<Type>::goNext()
+	void ListElem<Type>::operator ++()
 	{
 		if (this->vars->valid)
 		{

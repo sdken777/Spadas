@@ -425,6 +425,9 @@ namespace spadas
 		/// 获取基类类型链（用于实现类型转换）
 		virtual ListNode<String> getBaseChain();
 
+		/// 获取字符串描述
+		virtual String toString();
+
 		/// 取得存活对象数目
 		static UInt getObjectCount();
 
@@ -496,6 +499,9 @@ namespace spadas
 
 		/// [非安全操作] 转换输入并设置变量数据指针
 		void castVars(Vars* varsToCast);
+
+		/// 获取字符串描述
+		String toString();
 
 	protected:
 		/// [非安全指针] 变量数据指针
@@ -589,16 +595,16 @@ namespace spadas
 		Array<Type> arr;
 		Type *data;
 		UInt size;
-		UInt index;
+		UInt idx;
 
 		/// 初始化函数
 		ArrayElem(Array<Type> arr, UInt index);
 
 		/// 是否在数组范围内
-		Bool isInArray();
+		Bool valid();
 
 		/// 获取当前元素的序号
-		UInt getIndex();
+		UInt index();
 
 		/// [非安全操作] [可修改] 取得值的引用（需要先确保在数组范围内）
 		Type& value();
@@ -606,11 +612,14 @@ namespace spadas
 		/// [非安全操作] [可修改] 使用值的字段或方法（需要先确保在数组范围内）
 		Type* operator ->();
 
+		/// [非安全操作] 赋值给当前元素（需要先确保在数组范围内）
+		void operator =(const Type& val);
+
 		/// 移动至上个元素
-		void goPrevious();
+		void operator --();
 
 		/// 移动至下个元素
-		void goNext();
+		void operator ++();
 	};
 
 	/// spadas::Array 模板类的变量数据
@@ -1002,7 +1011,7 @@ namespace spadas
 		ListElem(ListNode<Type> node, Bool valid, UInt index, ListNode<Type> prevNode, Bool prevValid, ListNode<Type> nextNode, Bool nextValid, List<Type> list);
 
 		/// 当前元素是否在链表中
-		Bool isInList();
+		Bool valid();
 
 		/// 是否存在上一个元素
 		Bool hasPrevious();
@@ -1011,7 +1020,7 @@ namespace spadas
 		Bool hasNext();
 
 		/// 获取当前元素在链表中的序号（不在链表中则返回UINF）
-		UInt getIndex();
+		UInt index();
 
 		/// [可修改] 取得值的引用
 		Type& value();
@@ -1025,11 +1034,14 @@ namespace spadas
 		/// [可修改] 取得下一个元素值的引用
 		Type& next();
 
+		/// 赋值给当前元素
+		void operator =(const Type& val);
+
 		/// 移动至上个元素
-		void goPrevious();
+		void operator --();
 
 		/// 移动至下个元素
-		void goNext();
+		void operator ++();
 
 		/// 在当前元素前插入值
 		void insertPrevious(Type val);
@@ -3628,7 +3640,7 @@ namespace spadas
 		/// @param src 拷贝源内存起始地址
 		/// @param dst 拷贝目标内存起始地址
 		/// @param copySize 拷贝字节数
-		SPADAS_API void memoryCopy(Pointer src, Pointer dst, UInt copySize);
+		SPADAS_API void memoryCopy(const Pointer src, Pointer dst, UInt copySize);
 
 		/// [非安全操作] 值类型的强制转换（必须保证两个类型sizeof一致，结构体的话必须保证类型与顺序都一致）
 		template <typename SrcType, typename DstType>

@@ -350,7 +350,7 @@ namespace spadas
 	template <typename VarsType>
 	String Object<VarsType>::toString()
 	{
-		if (vars) return vars->toString();
+		if (vars) return ((Vars*)vars)->toString();
 		else return "(null)";
 	}
 
