@@ -44,7 +44,7 @@ endif
 ifeq ($(MODE), debug)
 	OBJ_PATH=Debug
 	OUT_PATH=../$(BIN_DIR)/debug
-	CFLAG=-g
+	CFLAG=-g -DSPADAS_DEBUG
 endif
 
 all:$(OBJS)

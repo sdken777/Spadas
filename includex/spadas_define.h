@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // system::memoryCopy参数改为const Pointer src
+// 版本定义 // SPADAS_XXX_DUMMY_BYTES增加linux版本
 #define SPADAS_VERSION_MAJOR 7
 #define SPADAS_VERSION_MINOR 1
-#define SPADAS_VERSION_BUILD 15
+#define SPADAS_VERSION_BUILD 16
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：7.1.15\n
+* 本文档对应Spadas版本：7.1.16\n
 *
 * \n
 * \section top1 基本功能概述
@@ -243,6 +243,10 @@
 #if defined(SPADAS_ENV_WINDOWS)
 #define SPADAS_BINARY_DUMMY_BYTES 16
 #define SPADAS_STRING_DUMMY_BYTES 20
+#endif
+#if defined(SPADAS_ENV_LINUX)
+#define SPADAS_BINARY_DUMMY_BYTES 12
+#define SPADAS_STRING_DUMMY_BYTES 16
 #endif
 #endif
 
