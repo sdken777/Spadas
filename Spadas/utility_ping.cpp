@@ -27,7 +27,7 @@ Bool spadas::system::ping(String ip, UInt timeout)
 	return pData.Status == 0;
 }
 
-#else
+#elif defined(SPADAS_ENV_LINUX)
 
 #include <stdio.h>
 #include <string.h>

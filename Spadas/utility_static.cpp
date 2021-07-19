@@ -57,11 +57,11 @@ void spadas::system::command(String cmd)
 }
 
 // memoryCopy
-void spadas::utility::memoryCopy(Pointer src, Pointer dst, UInt copySize)
+void spadas::utility::memoryCopy(const Pointer src, Pointer dst, UInt copySize)
 {
 	if (copySize < MEMOP_THRESH)
 	{
-		Byte* srcBytes = (Byte*)src;
+		const Byte* srcBytes = (const Byte*)src;
 		Byte* dstBytes = (Byte*)dst;
 		for (UInt i = 0; i < copySize; i++) dstBytes[i] = srcBytes[i];
 	}
@@ -186,7 +186,7 @@ void spadas::system::addEnvironmentPath(Path path)
 	if (!envComps.contain(targetFolder))
 	{
 		env += (String)":" + targetFolder;
-		setenv("PATH", env.chars().data(), 1);
+		setenv("PATH", (Char*)env.bytes(), 1);
 	}
 
 	env = getenv("LD_LIBRARY_PATH");
@@ -194,7 +194,7 @@ void spadas::system::addEnvironmentPath(Path path)
 	if (!envComps.contain(targetFolder))
 	{
 		env += (String)":" + targetFolder;
-		setenv("LD_LIBRARY_PATH", env.chars().data(), 1);
+		setenv("LD_LIBRARY_PATH", (Char*)env.bytes(), 1);
 	}
 }
 #endif

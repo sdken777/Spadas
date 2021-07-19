@@ -23,7 +23,7 @@ void leaveLock(CRITICAL_SECTION *context)
 	LeaveCriticalSection(context);
 }
 
-#else // SPADAS_ENV_LINUX
+#elif defined(SPADAS_ENV_LINUX)
 
 #include <pthread.h>
 

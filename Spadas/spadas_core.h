@@ -3628,7 +3628,7 @@ namespace spadas
 		/// @param src 拷贝源内存起始地址
 		/// @param dst 拷贝目标内存起始地址
 		/// @param copySize 拷贝字节数
-		SPADAS_API void memoryCopy(Pointer src, Pointer dst, UInt copySize);
+		SPADAS_API void memoryCopy(const Pointer src, Pointer dst, UInt copySize);
 
 		/// [非安全操作] 值类型的强制转换（必须保证两个类型sizeof一致，结构体的话必须保证类型与顺序都一致）
 		template <typename SrcType, typename DstType>

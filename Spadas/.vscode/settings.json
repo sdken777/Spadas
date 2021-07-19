@@ -21,6 +21,7 @@
         "iosfwd": "cpp",
         "thread": "cpp",
         "type_traits": "cpp",
-        "*.txx": "cpp"
+        "*.txx": "cpp",
+        "new": "cpp"
     },
 }

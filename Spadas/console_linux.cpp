@@ -185,12 +185,12 @@ using namespace string_internal;
 void console::popup(String text)
 {
 	String cmd = (String)"xmessage -center \"" + text + "\"";
-	if (::system(cmd.dataA())) {}
+	if (::system((Char*)cmd.bytes())) {}
 }
 
 void DefaultConsole::print(String text, Enum<MessageLevel> level)
 {
-	printf("%s\n", text.dataA());
+	printf("%s\n", (Char*)text.bytes());
 }
 
 String DefaultConsole::scan()

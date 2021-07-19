@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // SPADAS_ERROR/WARNING拆分为SPADAS_ERROR/WARNING_MSG/PASS/BREAK/CONTINUE/RETURN/RETURNVAL。新增Path.isFile
+// 版本定义 // system::memoryCopy参数改为const Pointer src
 #define SPADAS_VERSION_MAJOR 7
-#define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 106
+#define SPADAS_VERSION_MINOR 1
+#define SPADAS_VERSION_BUILD 15
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：7.0.106\n
+* 本文档对应Spadas版本：7.1.15\n
 *
 * \n
 * \section top1 基本功能概述
@@ -218,6 +218,9 @@
 // 支持可变参数列表
 #include <stdarg.h>
 
+// 支持指定位置构造函数
+#include <new>
+
 // 空指针
 #ifndef NULL
 #define NULL 0
@@ -234,6 +237,14 @@
 
 // 方便变量数据定义
 #define SPADAS_VARS_DEF(classType, baseVarsType) virtual String getTypeName() { return classType::TypeName; } virtual ListNode<String> getBaseChain() { return genBaseChain(baseVarsType::getTypeName(), baseVarsType::getBaseChain()); }
+
+// 调试用
+#if defined(SPADAS_DEBUG)
+#if defined(SPADAS_ENV_WINDOWS)
+#define SPADAS_BINARY_DUMMY_BYTES 16
+#define SPADAS_STRING_DUMMY_BYTES 20
+#endif
+#endif
 
 // OpenCV兼容性
 typedef struct _IplImage IplImage;

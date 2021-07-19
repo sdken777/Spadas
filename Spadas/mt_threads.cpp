@@ -197,7 +197,7 @@ void threadCreate(ThreadsVars *vars)
 
 UInt __stdcall threadFunc(Pointer param)
 
-#else // SPADAS_ENV_LINUX
+#elif defined(SPADAS_ENV_LINUX)
 
 #include <pthread.h>
 #include <unistd.h>

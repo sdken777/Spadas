@@ -190,7 +190,7 @@ void OscillatorVars::stopOscillator(UInt id)
 	timeKillEvent(id);
 }
 
-#else // SPADAS_ENV_LINUX
+#elif defined(SPADAS_ENV_LINUX)
 
 #include <pthread.h>
 #include <unistd.h>

@@ -169,7 +169,7 @@ void TimeWithMS::localTimeFromPosix(ULong posixTime)
 	tm t;
 #if defined(SPADAS_ENV_WINDOWS)
 	localtime_s(&t, &t1);
-#else
+#elif defined(SPADAS_ENV_LINUX)
 	localtime_r(&t1, &t);
 #endif
 
@@ -188,7 +188,7 @@ void TimeWithMS::utcTimeFromPosix(ULong posixTime)
 	tm t;
 #if defined(SPADAS_ENV_WINDOWS)
 	gmtime_s(&t, &t1);
-#else
+#elif defined(SPADAS_ENV_LINUX)
 	gmtime_r(&t1, &t);
 #endif
 

@@ -113,7 +113,7 @@ Pointer MemoryMap::getPointer()
 	return vars->virtualPointer;
 }
 
-#else // SPADAS_ENV_LINUX
+#elif defined(SPADAS_ENV_LINUX)
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -178,7 +178,7 @@ MemoryMap::MemoryMap(Path file, PointerInt offset, PointerInt size)
 
 	String fileFullPath = file.fullPath();
 
-	UInt fileDescriptor = (UInt)open(fileFullPath.dataA(), O_RDWR);
+	UInt fileDescriptor = (UInt)open((Char*)fileFullPath.bytes(), O_RDWR);
 	SPADAS_ERROR_RETURN(fileDescriptor == UINF);
 
 	Pointer ptr = (Byte*)mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, (off_t)offset);

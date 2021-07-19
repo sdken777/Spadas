@@ -706,6 +706,14 @@ namespace spadas
 		/// @returns 创建的数组
 		template <typename ArgType>
 		static Array<Type> create(UInt size, ArgType firstValue, ...);
+
+		/// @brief [非安全操作] 创建一个具有指定大小但未初始化的数组，需要随后调用init方法确保对每个元素都初始化了仅一次
+		/// @param size 创建数组的大小
+		/// @returns 新创建的数组
+		static Array<Type> createUninitialized(UInt size);
+
+		/// [非安全操作] 初始化元素，需要确保序号在范围内
+		void initialize(UInt index, const Type& val);
 		
 		/// @brief 合并多个数组
 		/// @param arrs 将合并的多个数组
@@ -957,7 +965,7 @@ namespace spadas
 		/// 取得大小
 		UInt size();
 		
-		/// 扩展或缩减大小至指定值
+		/// 扩展大小至指定值
 		void setSize(UInt size);
 
 		/// 在数组末尾扩展1个元素
@@ -975,9 +983,8 @@ namespace spadas
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
-		void validateInSize(TreeNode<Type*>, UInt, UInt, UInt);
-		void copyRegion(TreeNode<Type*>*, UInt, Type*, UInt, UInt, UInt, UInt);
-		Type *getSegmentData(UInt segment);
+		void copyRegion(Pointer, UInt, Array<Type>&, UInt, UInt, UInt, UInt);
+		Pointer getSegmentNode(UInt);
 	};
 
 	/// spadas::List 模板类的变量数据
@@ -987,11 +994,12 @@ namespace spadas
 	template <typename Type> class ListElemVars;
 
 	/// 链表元素遍历器
+	template <typename Type> class List;
 	template <typename Type> class ListElem : public Object<ListElemVars<Type> >
 	{
 	public:
 		/// 构造函数，由 List::head 和 List::tail 调用生成
-		ListElem(ListNode<Type> node, Bool valid, UInt index, ListNode<Type> prevNode, Bool prevValid, ListNode<Type> nextNode, Bool nextValid, ListVars<Type> *listVars);
+		ListElem(ListNode<Type> node, Bool valid, UInt index, ListNode<Type> prevNode, Bool prevValid, ListNode<Type> nextNode, Bool nextValid, List<Type> list);
 
 		/// 当前元素是否在链表中
 		Bool isInList();
@@ -1190,62 +1198,30 @@ namespace spadas
 		{ return key < target.key; }
 	};
 
-	/// 数值键
-	template <typename Type> class DecimalKey
+	/// 数值键，将标准布局类型的值转为键
+	template <typename Type> class NumericKey
 	{
 	public:
 		/// 默认构造函数
-		DecimalKey();
+		NumericKey();
 
-		/// 基于指定值创建
-		DecimalKey(Type value);
+		/// 基于指定值创建（若为非紧凑结构体，则初始化时应将所有字节置为0）
+		NumericKey(Type value);
 
 		/// 获取数值
 		Type value();
 
 		/// 是否等于
-		Bool operator ==(DecimalKey<Type> decimal);
+		Bool operator ==(NumericKey<Type> decimal);
 
 		/// 是否不等于
-		Bool operator !=(DecimalKey<Type> decimal);
+		Bool operator !=(NumericKey<Type> decimal);
 
 		/// 是否大于，需要Type支持>重载符
-		Bool operator >(DecimalKey<Type> decimal);
+		Bool operator >(NumericKey<Type> decimal);
 
 		/// 是否小于，需要Type支持<重载符
-		Bool operator <(DecimalKey<Type> decimal);
-
-		/// 获取哈希值
-		Word getHash();
-
-	private:
-		Type val;
-	};
-
-	/// 结构体键，Type需要支持toString函数以及==、!=等重载符。对于字段全部为数值的紧凑结构体，可使用 spadas::DecimalKey 以提高索引效率
-	template <typename Type> class StructureKey
-	{
-	public:
-		/// 默认构造函数
-		StructureKey();
-
-		/// 基于指定结构体数据创建
-		StructureKey(Type value);
-
-		/// 获取结构体数据
-		Type value();
-
-		/// 是否等于
-		Bool operator ==(StructureKey<Type> target);
-
-		/// 是否不等于
-		Bool operator !=(StructureKey<Type> target);
-
-		/// 是否大于，需要Type支持>重载符
-		Bool operator >(StructureKey<Type> target);
-
-		/// 是否小于，需要Type支持<重载符
-		Bool operator <(StructureKey<Type> target);
+		Bool operator <(NumericKey<Type> decimal);
 
 		/// 获取哈希值
 		Word getHash();
@@ -1283,9 +1259,6 @@ namespace spadas
 
 		/// 取得映射数目
 		UInt size();
-
-		/// 取得键的数目，与size()结果一致
-		UInt nKeys();
 
 		/// 取得所有键
 		Array<KeyType> keys();
@@ -1351,40 +1324,40 @@ namespace spadas
 	};
 
 	/// 布尔键
-	typedef DecimalKey<Bool> BoolKey;
+	typedef NumericKey<Bool> BoolKey;
 
 	/// 8位无符号整数键
-	typedef DecimalKey<Byte> ByteKey;
+	typedef NumericKey<Byte> ByteKey;
 
 	/// 16位无符号整数键
-	typedef DecimalKey<Word> WordKey;
+	typedef NumericKey<Word> WordKey;
 
 	/// 32位无符号整数键
-	typedef DecimalKey<UInt> UIntKey;
+	typedef NumericKey<UInt> UIntKey;
 
 	/// 64位无符号整数键
-	typedef DecimalKey<ULong> ULongKey;
+	typedef NumericKey<ULong> ULongKey;
 
 	/// 16位带符号整数键
-	typedef DecimalKey<Short> ShortKey;
+	typedef NumericKey<Short> ShortKey;
 
 	/// 32位带符号整数键
-	typedef DecimalKey<Int> IntKey;
+	typedef NumericKey<Int> IntKey;
 
 	/// 64位带符号整数键
-	typedef DecimalKey<Long> LongKey;
+	typedef NumericKey<Long> LongKey;
 
 	/// Char字符键
-	typedef DecimalKey<Char> CharKey;
+	typedef NumericKey<Char> CharKey;
 
 	/// WChar字符键
-	typedef DecimalKey<WChar> WCharKey;
+	typedef NumericKey<WChar> WCharKey;
 
 	/// 32位浮点数键
-	typedef DecimalKey<Float> FloatKey;
+	typedef NumericKey<Float> FloatKey;
 
 	/// 64位浮点数键
-	typedef DecimalKey<Double> DoubleKey;
+	typedef NumericKey<Double> DoubleKey;
 
 	/// 字符串键值对
 	typedef KeyValue<String, String> StringKeyValue;
@@ -1413,7 +1386,7 @@ namespace spadas
 		/// @brief 从一个 spadas::Byte 数组指针创建对象，需指定数据块大小（创建时将拷贝源数据）
 		/// @param arr 源数据数组指针
 		/// @param size 源数据数组大小（字节单位）
-		Binary(const Byte arr[], UInt size);
+		Binary(Byte *arr, UInt size);
 		
 		/// @brief 从另一个数据块的子区域拷贝并创建对象
 		/// @param input 源数据数组
@@ -1501,45 +1474,14 @@ namespace spadas
 	};
 
 #if defined(SPADAS_DEBUG)
-#if defined(SPADAS_ENV_WINDOWS)
-	class BinaryVars : public Vars
-	{
-	public:
-		UInt size;
-		Byte* data;
-		BinaryVars* binded;
-	};
-#endif
-#if defined(SPADAS_ENV_LINUX)
 	class BinaryVars
 	{
 	public:
-		Byte dummy[12];
+		Byte dummy[SPADAS_BINARY_DUMMY_BYTES];
 		UInt size;
 		Byte* data;
-		BinaryVars* binded;
 	};
 #endif
-#endif
-
-	class SPADAS_API BinaryFactory : public Object<class BinaryFactoryVars>
-	{
-	public:
-		/// 类名称
-		static const String TypeName;
-
-		/// 创建一个二进制数据块工厂，默认大小为8字节
-		BinaryFactory();
-
-		/// 创建一个可生成指定大小二进制数据块的工厂，数据块大小将被限定为4的倍数，且范围在4~4096之内
-		BinaryFactory(UInt binaryBytes);
-
-		/// 生成二进制数据块并按指定大小裁剪，数据值不进行初始化
-		Binary create(UInt trimSize = UINF);
-
-		/// 生成二进制数据块并按指定大小裁剪，并按指定值对所有字节初始化
-		Binary create(UInt trimSize, Byte origin);
-	};
 
 	// 字符串 //////////////////////////////////////////////////////////////
 
@@ -1569,8 +1511,12 @@ namespace spadas
 		/// @param text 字符数组指针（以0结尾）
 		String(const WChar text[]);
 
+		/// @brief 由 spadas::Char 字符数组初始化
+		/// @param text 字符数组（不要求以0结尾）
+		String(Array<Char> text);
+
 		/// @brief 由 spadas::WChar 字符数组初始化
-		/// @param text 字符数组
+		/// @param text 字符数组（不要求以0结尾）
 		String(Array<WChar> text);
 
 		/// @brief 由 spadas::Bool 初始化，字符串为"TRUE"或"FALSE"
@@ -1633,8 +1579,8 @@ namespace spadas
 		/// @param nDigits 保留小数位数，范围为0~20以及UINF(自适应)
 		String(Double val, UInt nDigits);
 
-		/// @brief 从UTF-8编码数据创建字符串对象
-		/// @param binary UTF-8编码数据
+		/// @brief 从UTF-8二进制数据创建字符串对象
+		/// @param binary UTF-8二进制数据（不要求以0结尾）
 		String(Binary binary);
 
 		/// @brief 从另一个字符串中的一段文本拷贝并创建字符串对象
@@ -1660,29 +1606,23 @@ namespace spadas
 		/// 克隆出一个新对象
 		String clone();
 		
-		/// 计算并更新字符串长度（在调用方括号或data方法对字符串数据进行更改后必须调用本方法）
+		/// 计算并更新字符串长度（在调用bytes方法对字符串数据进行更改后必须调用本方法）
 		void updateLength();
 
-		/// [可修改] 取得字符串中某字符值，若修改了数据则必须调用updateLength方法
-		WChar& operator [](UInt index);
+		/// [可修改] 取得字符串UTF-8数据的头指针，其中至少应有一个字节为0，若修改了数据则必须调用updateLength方法
+		Byte *bytes();
 
-		/// [可修改] 取得字符串数据的头指针，指针最后以0结尾，若修改了数据则必须调用updateLength方法
-		WChar *data();
+		/// 取得字符串UTF-8数据的字节数
+		UInt byteSize();
 
-		/// 转换为Char型字符串并取得头指针，指针最后以0结尾
-		Char *dataA();
+		/// 转换为Char数组，以0结尾（因此有效长度为数组长度-1）
+		Array<Char> chars();
 
-		/// 转换为Char型字符串并取得头指针，指针最后以0结尾。同时输出Char型字符串长度，该长度有可能与length方法获得的结果不同
-		Char *dataA(UInt& length);
+		/// 转换为WChar数组，以0结尾（因此有效长度为数组长度-1）
+		Array<WChar> wchars();
 
-		/// 以WChar定长数组取得字符串的数据，其所有元素都为有效值，不以0结尾
-		Array<WChar> dataArray();
-
-		/// 取得字符串长度 (WChar单位)
+		/// 取得字符串长度 (UTF-8字节数)
 		UInt length();
-
-		/// 取得字符串数据块的大小（字节单位），至少为sizeof(WChar)*(length()+1)
-		UInt size();
 
 		/// 是否为空字符串
 		Bool isEmpty();
@@ -1708,7 +1648,7 @@ namespace spadas
 		/// 转换为 spadas::Double 数值
 		Optional<Double> toDouble();
 		
-		/// 转换为UTF-8编码数据
+		/// 转换为UTF-8二进制数据（不以0结尾）
 		Binary toBinary();
 
 		/// 转换为全大写字符串
@@ -1791,24 +1731,13 @@ namespace spadas
 	};
 
 #if defined(SPADAS_DEBUG)
-#if defined(SPADAS_ENV_WINDOWS)
-	class StringVars : public Vars
-	{
-	public:
-		UInt dummy;
-		WChar* data;
-		UInt length;
-	};
-#endif
-#if defined(SPADAS_ENV_LINUX)
 	class StringVars
 	{
 	public:
-		Byte dummy[16];
-		WChar* data;
+		Byte dummy[SPADAS_STRING_DUMMY_BYTES];
+		Char* data; // UTF-8数据（Windows下无法查看中文）
 		UInt length;
 	};
-#endif
 #endif
 
 	// 枚举对象 //////////////////////////////////////////////////////////////
@@ -2842,9 +2771,6 @@ namespace spadas
 		/// 获得矩阵的大小（各维的长度）
 		Array<UInt> size();
 
-		/// 获得矩阵的大小（各维的长度）
-		Array<UInt> dims();
-
 		/// 获得矩阵某个维度的长度 (维度无效时返回0)，序号从0开始
 		UInt dimAt(UInt index);
 
@@ -3670,6 +3596,9 @@ namespace spadas
 		/// 检查字节序是否Big-Endian
 		SPADAS_API Bool isBigEndian();
 
+		/// 获得当前系统时间
+		SPADAS_API Time getTime();
+
 		/// 获得当前系统时间，带毫秒信息
 		SPADAS_API TimeWithMS getTimeWithMS();
 
@@ -3681,9 +3610,6 @@ namespace spadas
 
 		/// 添加环境变量
 		SPADAS_API void addEnvironmentPath(Path path);
-
-		/// 获得当前系统时间
-		SPADAS_API Time getTime();
 
 		/// Ping，超时单位为毫秒
 		SPADAS_API Bool ping(String ip, UInt timeout = 1000);
@@ -3702,7 +3628,7 @@ namespace spadas
 		/// @param src 拷贝源内存起始地址
 		/// @param dst 拷贝目标内存起始地址
 		/// @param copySize 拷贝字节数
-		SPADAS_API void memoryCopy(Pointer src, Pointer dst, UInt copySize);
+		SPADAS_API void memoryCopy(const Pointer src, Pointer dst, UInt copySize);
 
 		/// [非安全操作] 值类型的强制转换（必须保证两个类型sizeof一致，结构体的话必须保证类型与顺序都一致）
 		template <typename SrcType, typename DstType>
@@ -3714,19 +3640,11 @@ namespace spadas
 
 		/// 将数值键数组转为数值数组
 		template <typename Type>
-		Array<Type> unpackKeys(Array<DecimalKey<Type> > keys);
-
-		/// 将结构体键数组转为结构体数组
-		template <typename Type>
-		Array<Type> unpackKeys(Array<StructureKey<Type> > keys);
+		Array<Type> unpackKeys(Array<NumericKey<Type> > keys);
 
 		/// 将数值键的键值对数组转为数值的键值对数组
 		template <typename Type, typename ValueType>
-		Array<KeyValue<Type, ValueType> > unpackKeyValues(Array<KeyValue<DecimalKey<Type>, ValueType> > keyValues);
-
-		/// 将结构体键的键值对数组转为结构体的键值对数组
-		template <typename Type, typename ValueType>
-		Array<KeyValue<Type, ValueType> > unpackKeyValues(Array<KeyValue<StructureKey<Type>, ValueType> > keyValues);
+		Array<KeyValue<Type, ValueType> > unpackKeyValues(Array<KeyValue<NumericKey<Type>, ValueType> > keyValues);
 
 		/*
 		* ByteBGR: size=(height, width, 3)
@@ -5070,8 +4988,10 @@ namespace spadas
 
 		/// @brief 配置数据处理及杂项数据路径表（在开始session时被调用）
 		/// @param config 配置信息，应包含是否启用功能的配置
+		/// @param onlineMode 是否为在线模式
+		/// @param recordMode 是否记录至文件（在线采集或离线生成）
 		/// @param etcRoots 杂项数据路径表，key为session ID字符串，格式为yyyyMMddHHmmss
-		virtual void setProcessorConfigX(String config, Dictionary<Path> etcRoots);
+		virtual void setProcessorConfigX(String config, Bool onlineMode, Bool recordMode, Dictionary<Path> etcRoots);
 
 		/// 函数名disable_processor: 禁用数据处理功能（在结束session时被调用）
 		virtual void disableProcessor();

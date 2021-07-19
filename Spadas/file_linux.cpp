@@ -15,6 +15,12 @@
 #include <stdlib.h>
 #include <pwd.h>
 
+#if defined(SPADAS_ARCH_ARM)
+#define BIN_DIR_NAME "binxa"
+#else // SPADAS_ARCH_X86
+#define BIN_DIR_NAME "binx"
+#endif
+
 namespace file_internal
 {
 	using namespace spadas;
@@ -43,7 +49,7 @@ namespace file_internal
 			UInt releaseEndSlash = slashLocations[slashLocations.size() - 1];
 
 			String releaseString = String(executablePathString, Region(releaseBeginSlash + 1, releaseEndSlash - releaseBeginSlash - 1)).toLower();
-			String realFolderString = String(executablePathString, Region(0, rootSlash)) + "/binx/";
+			String realFolderString = String(executablePathString, Region(0, rootSlash)) + "/" + BIN_DIR_NAME + "/";
 			String realFileString = realFolderString + String(executablePathString, Region(releaseEndSlash + 1, UINF));
 			if (releaseString == "release" && fileExist(realFileString)) return realFolderString;
 		}
@@ -57,8 +63,8 @@ namespace file_internal
 		if (pwuid == 0) return String();
 
 		String homePath(pwuid->pw_dir);
-		String separator = getSeparatorChar();
-		if (homePath[homePath.length()-1] != separator[0]) return homePath + separator;
+		Char separator = getSeparatorChar();
+		if (homePath.bytes()[homePath.length()-1] != (Byte)separator) return homePath + separator;
 		else return homePath;
 	}
 
@@ -71,7 +77,7 @@ namespace file_internal
 
 	Pointer fileOpen(String file, Bool outputMode)
 	{
-		return (Pointer)fopen(file.dataA(), outputMode ? "w+" : "r");
+		return (Pointer)fopen((Char*)file.bytes(), outputMode ? "w+" : "r");
 	}
 
 	void fileClose(Pointer file)
@@ -81,7 +87,7 @@ namespace file_internal
 
 	void filePrint(Pointer file, String text)
 	{
-		fprintf((FILE*)file, "%s\n", text.dataA());
+		fprintf((FILE*)file, "%s\n", (Char*)text.bytes());
 	}
 
 	String fileScan(Pointer file, Char buffer[SCAN_SIZE], Bool isUtf8)
@@ -149,14 +155,14 @@ namespace file_internal
 	Bool fileExist(String file)
 	{
 		struct stat buf;
-		if (stat(file.dataA(), &buf) != 0) return FALSE;
+		if (stat((Char*)file.bytes(), &buf) != 0) return FALSE;
 		return (buf.st_mode & S_IFMT) == S_IFREG;
 	}
 
 	void fileCopy(String srcFile, String dstFile)
 	{
-		FILE *in = fopen(srcFile.dataA(), "r");
-		FILE *out = fopen(dstFile.dataA(), "w+" );
+		FILE *in = fopen((Char*)srcFile.bytes(), "r");
+		FILE *out = fopen((Char*)dstFile.bytes(), "w+" );
 		if (!in || !out) return;
 
 		fseek(in , 0 , SEEK_END);
@@ -176,39 +182,39 @@ namespace file_internal
 
 	void fileMove(String srcFile, String dstFile)
 	{
-		rename(srcFile.dataA(), dstFile.dataA());
+		rename((Char*)srcFile.bytes(), (Char*)dstFile.bytes());
 	}
 
 	void fileRemove(String file)
 	{
-		remove(file.dataA());
+		remove((Char*)file.bytes());
 	}
 
 	Bool folderExist(String folder)
 	{
 		struct stat buf;
-		if (stat(folder.dataA(), &buf) != 0) return FALSE;
+		if (stat((Char*)folder.bytes(), &buf) != 0) return FALSE;
 		return (buf.st_mode & S_IFMT) == S_IFDIR;
 	}
 
 	void folderCreate(String folder)
 	{
-		mkdir(folder.dataA(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+		mkdir((Char*)folder.bytes(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 	}
 
 	void folderMove(String srcFolder, String dstFolder)
 	{
-		rename(srcFolder.dataA(), dstFolder.dataA());
+		rename((Char*)srcFolder.bytes(), (Char*)dstFolder.bytes());
 	}
 
 	void folderRemove(String folder)
 	{
-		rmdir(folder.dataA());
+		rmdir((Char*)folder.bytes());
 	}
 
 	Array<String> folderGetContents(String targetFolder)
 	{
-		DIR *folder = opendir(targetFolder.dataA());
+		DIR *folder = opendir((Char*)targetFolder.bytes());
 		if (folder == NULL) return Array<String>();
 
 		String separator = getSeparatorChar();
