@@ -163,7 +163,7 @@ public:
 		{
 			Array<UInt> arr(ARRAY_SIZE_LIMIT);
 			timer.start();
-			for (auto elem = arr.firstElem(); elem.isInArray(); elem.goNext()) elem.value() = elem.getIndex();
+			for (auto elem = arr.firstElem(); elem.valid(); ++elem) elem = elem.index();
 		}
 		console::print(SS"Array: " + timer.check());
 
@@ -216,43 +216,6 @@ public:
 		}
 	}
 };
-
-UInt ctrDCount = 0, ctrCCount = 0, dtrCount = 0;
-
-class AAA
-{
-public:
-	AAA()
-	{
-		ctrDCount++;
-	}
-	AAA(const AAA& a)
-	{
-		ctrCCount++;
-	}
-	~AAA()
-	{
-		dtrCount++;
-	}
-};
-
-void testFunc1(UInt n)
-{
-	ArrayX<UInt> arr;
-	for (UInt i = 0; i < n; i++)
-	{
-		arr.append(i);
-	}
-}
-
-void testFunc2(UInt n)
-{
-	std::vector<UInt> arr;
-	for (UInt i = 0; i < n; i++)
-	{
-		arr.push_back(i);
-	}
-}
 
 int main(int argc, char* argv[])
 {

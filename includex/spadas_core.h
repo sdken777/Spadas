@@ -595,16 +595,16 @@ namespace spadas
 		Array<Type> arr;
 		Type *data;
 		UInt size;
-		UInt index;
+		UInt idx;
 
 		/// 初始化函数
 		ArrayElem(Array<Type> arr, UInt index);
 
 		/// 是否在数组范围内
-		Bool isInArray();
+		Bool valid();
 
 		/// 获取当前元素的序号
-		UInt getIndex();
+		UInt index();
 
 		/// [非安全操作] [可修改] 取得值的引用（需要先确保在数组范围内）
 		Type& value();
@@ -612,11 +612,14 @@ namespace spadas
 		/// [非安全操作] [可修改] 使用值的字段或方法（需要先确保在数组范围内）
 		Type* operator ->();
 
+		/// [非安全操作] 赋值给当前元素（需要先确保在数组范围内）
+		void operator =(const Type& val);
+
 		/// 移动至上个元素
-		void goPrevious();
+		void operator --();
 
 		/// 移动至下个元素
-		void goNext();
+		void operator ++();
 	};
 
 	/// spadas::Array 模板类的变量数据
@@ -1008,7 +1011,7 @@ namespace spadas
 		ListElem(ListNode<Type> node, Bool valid, UInt index, ListNode<Type> prevNode, Bool prevValid, ListNode<Type> nextNode, Bool nextValid, List<Type> list);
 
 		/// 当前元素是否在链表中
-		Bool isInList();
+		Bool valid();
 
 		/// 是否存在上一个元素
 		Bool hasPrevious();
@@ -1017,7 +1020,7 @@ namespace spadas
 		Bool hasNext();
 
 		/// 获取当前元素在链表中的序号（不在链表中则返回UINF）
-		UInt getIndex();
+		UInt index();
 
 		/// [可修改] 取得值的引用
 		Type& value();
@@ -1031,11 +1034,14 @@ namespace spadas
 		/// [可修改] 取得下一个元素值的引用
 		Type& next();
 
+		/// 赋值给当前元素
+		void operator =(const Type& val);
+
 		/// 移动至上个元素
-		void goPrevious();
+		void operator --();
 
 		/// 移动至下个元素
-		void goNext();
+		void operator ++();
 
 		/// 在当前元素前插入值
 		void insertPrevious(Type val);
