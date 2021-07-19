@@ -425,6 +425,9 @@ namespace spadas
 		/// 获取基类类型链（用于实现类型转换）
 		virtual ListNode<String> getBaseChain();
 
+		/// 获取字符串描述
+		virtual String toString();
+
 		/// 取得存活对象数目
 		static UInt getObjectCount();
 
@@ -496,6 +499,9 @@ namespace spadas
 
 		/// [非安全操作] 转换输入并设置变量数据指针
 		void castVars(Vars* varsToCast);
+
+		/// 获取字符串描述
+		String toString();
 
 	protected:
 		/// [非安全指针] 变量数据指针

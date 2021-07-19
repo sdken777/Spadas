@@ -48,3 +48,8 @@ ListNode<String> Vars::genBaseChain(String baseType, ListNode<String> baseBaseCh
 	if (!baseBaseChain->isEmpty()) return baseBaseChain.joinPrevious(baseType);
 	else return ListNode<String>(baseType);
 }
+
+String Vars::toString()
+{
+	return getTypeName() + " object";
+}

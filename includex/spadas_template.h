@@ -347,6 +347,13 @@ namespace spadas
 		}
 	}
 
+	template <typename VarsType>
+	String Object<VarsType>::toString()
+	{
+		if (vars) return vars->toString();
+		else return "(null)";
+	}
+
 	template <typename Type> class InterfaceVars : public Vars
 	{
 	public:

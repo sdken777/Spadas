@@ -20,6 +20,12 @@ namespace spadas
         {
             if (extData) delete[] extData;
         }
+
+		// to string
+		String toString()
+		{
+			return Binary(data, length);
+		}
 	};
 }
 
