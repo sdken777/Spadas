@@ -10,8 +10,11 @@ namespace spadas
 	class TimerVars : public Vars
 	{
     public:
+		SPADAS_VARS_DEF(Timer, Vars)
+
 		LARGE_INTEGER startTime;
 		LARGE_INTEGER frequency;
+
 		TimerVars()
 		{
 			startTime.QuadPart = 0;
@@ -21,6 +24,8 @@ namespace spadas
 }
 
 using namespace spadas;
+
+const String spadas::Timer::TypeName = "spadas.Timer";
 
 Timer::Timer() : Object<TimerVars>(new TimerVars(), TRUE)
 {
