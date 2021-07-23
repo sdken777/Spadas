@@ -118,6 +118,38 @@ String::String(WChar character)
 	}
 }
 
+String::String(Char text[])
+{
+	if (text == 0) return;
+
+	UInt textLength = lengthChar(text);
+	if (textLength <= 1)
+	{
+		if (textLength == 0) return;
+
+		const UInt dataSize = 2;
+
+		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+		setVars(newVars, TRUE);
+
+		vars->data[0] = (Byte)text[0];
+		vars->data[1] = 0;
+		vars->length = 1;
+	}
+	else
+	{
+		UInt dataSize = textLength * 2 + 1;
+
+		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+		setVars(newVars, TRUE);
+
+		vars->length = math::min(vars->size - 1, charToUTF8(text, textLength, (Char*)vars->data, vars->size));
+		vars->data[vars->length] = 0;
+	}
+}
+
 String::String(const Char text[])
 {
 	if (text == 0) return;
@@ -146,6 +178,38 @@ String::String(const Char text[])
 		setVars(newVars, TRUE);
 
 		vars->length = math::min(vars->size - 1, charToUTF8(text, textLength, (Char*)vars->data, vars->size));
+		vars->data[vars->length] = 0;
+	}
+}
+
+String::String(WChar text[])
+{
+	if (text == 0) return;
+
+	UInt textLength = lengthWChar(text);
+	if (textLength == 0) return;
+
+	if (textLength == 1 && (UInt)text[0] < 256)
+	{
+		const UInt dataSize = 2;
+
+		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+		setVars(newVars, TRUE);
+
+		vars->data[0] = (Byte)text[0];
+		vars->data[1] = 0;
+		vars->length = 1;
+	}
+	else
+	{
+		UInt dataSize = textLength * 4 + 1;
+
+		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+		setVars(newVars, TRUE);
+
+		vars->length = math::min(vars->size - 1, wCharToUTF8(text, textLength, (Char*)vars->data, vars->size));
 		vars->data[vars->length] = 0;
 	}
 }

@@ -202,19 +202,6 @@ public:
 
 		console::waitKey();
 	}
-
-	void licenseIndexTest()
-	{
-		Array<String> appNames = Array<String>::create(8,
-				"desktop", "aseva", "glg", "asevarts",
-				"ndsc", "ndsm", "asim", "asec");
-
-		for (UInt i = 0; i < appNames.size(); i++)
-		{
-			UInt keyIndex = appNames[i].getHash() & 0x000000ff;
-			console::print(appNames[i] + ": " + keyIndex);
-		}
-	}
 };
 
 int main(int argc, char* argv[])
@@ -222,7 +209,6 @@ int main(int argc, char* argv[])
 	Test().taskTest();
 	Test().pathTest();
 	Test().deriveTest();
-	Test().licenseIndexTest();
 	Test().arrayTest();
 
 	console::print("over");

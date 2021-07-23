@@ -1517,7 +1517,15 @@ namespace spadas
 
 		/// @brief 由 spadas::Char 字符数组指针初始化
 		/// @param text 字符数组指针（以0结尾）
+		String(Char text[]);
+
+		/// @brief 由 spadas::Char 字符数组指针初始化
+		/// @param text 字符数组指针（以0结尾）
 		String(const Char text[]);
+
+		/// @brief 由 spadas::WChar 字符数组指针初始化
+		/// @param text 字符数组指针（以0结尾）
+		String(WChar text[]);
 
 		/// @brief 由 spadas::WChar 字符数组指针初始化
 		/// @param text 字符数组指针（以0结尾）
@@ -1599,6 +1607,10 @@ namespace spadas
 		/// @param src 源字符串
 		/// @param region 拷贝区域（为 spadas::UINF 时将拷贝至末尾）
 		String(String src, Region region);
+
+		/// @brief 由任意具有toString方法的结构体或对象创建字符串对象
+		template <typename Type>
+		String(Type obj);
 
 		/// 是否等于
 		Bool operator ==(String string);
@@ -1728,14 +1740,7 @@ namespace spadas
 		/// @param separator 分隔符
 		/// @returns 按指定分隔符拼接的字符串
 		template <typename Type>
-		static String mergeWithConstructor(Array<Type> arr, String separator = "\n");
-
-		/// @brief 以Type类型的toString函数拼接数组，字符串间以指定分割符分割
-		/// @param strs 输入数组
-		/// @param separator 分隔符
-		/// @returns 按指定分隔符拼接的字符串
-		template <typename Type>
-		static String mergeWithToString(Array<Type> arr, String separator = "\n");
+		static String merge(Array<Type> arr, String separator = "\n");
 
 	private:
 		Bool isNull() { return FALSE; }

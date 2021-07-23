@@ -351,7 +351,7 @@ namespace spadas
 	String Object<VarsType>::toString()
 	{
 		if (vars) return ((Vars*)vars)->toString();
-		else return "(null)";
+		else return String();
 	}
 
 	template <typename Type> class InterfaceVars : public Vars
@@ -3061,22 +3061,18 @@ namespace spadas
 	/// 字符串模板函数实现
 	///////////////////////////////////////////////////////
 	template <typename Type>
-	String String::mergeWithConstructor(Array<Type> arr, String separator)
+	String::String(Type obj)
+	{
+		setVars(obj.toString().vars, FALSE);
+	}
+
+	template <typename Type>
+	String String::merge(Array<Type> arr, String separator)
 	{
 		if (arr.isEmpty()) return String();
 		UInt size = arr.size();
 		Array<String> strs = Array<String>::createUninitialized(size);
 		for (UInt i = 0; i < size; i++) strs.initialize(i, String(arr[i]));
-		return mergeStrings(strs, separator);
-	}
-
-	template <typename Type>
-	String String::mergeWithToString(Array<Type> arr, String separator)
-	{
-		if (arr.isEmpty()) return String();
-		UInt size = arr.size();
-		Array<String> strs = Array<String>::createUninitialized(size);
-		for (UInt i = 0; i < size; i++) strs.initialize(i, arr[i].toString());
 		return mergeStrings(strs, separator);
 	}
 
