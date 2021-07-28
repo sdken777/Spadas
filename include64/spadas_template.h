@@ -630,7 +630,17 @@ namespace spadas
 		if (this->vars && size < this->vars->size)
 		{
 			if (size == 0) this->setVars(0, FALSE);
-			else this->vars->size = size;
+			else
+			{
+				if (!__is_trivial(Type))
+				{
+					for (UInt i = size; i < this->vars->size; i++)
+					{
+						(&this->vars->data[i])->~Type();
+					}
+				}
+				this->vars->size = size;
+			}
 		}
 	}
 
@@ -3040,7 +3050,7 @@ namespace spadas
 
 	template <typename Type>
 	template <typename ArgType>
-	Dictionary<Type> Dictionary<Type>::create(UInt size, Char *firstKey, ArgType firstValue, ...)
+	Dictionary<Type> Dictionary<Type>::create(UInt size, const Char firstKey[], ArgType firstValue, ...)
 	{
 		Dictionary<Type> map;
 		if (size == 0) return map;

@@ -678,7 +678,7 @@ namespace spadas
 		/// 是否为空数组
 		Bool isEmpty();
 
-		/// 缩减数组大小
+		/// 缩减数组大小（缩减前获取的ArrayElem和子数组将不可用）
 		void trim(UInt size);
 		
 		/// 克隆出一个新对象 (所有元素调用=号拷贝)
@@ -1332,7 +1332,7 @@ namespace spadas
 		/// @param firstValue 首个值，后面参数交替为Char*和ArgType类型，总个数应为待赋值的键值个数x2
 		/// @returns 创建的字典
 		template <typename ArgType>
-		static Dictionary<Type> create(UInt size, Char *firstKey, ArgType firstValue, ...);
+		static Dictionary<Type> create(UInt size, const Char firstKey[], ArgType firstValue, ...);
 	};
 
 	/// 布尔键
