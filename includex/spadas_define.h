@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 新增String构造函数模板。合并String.mergeWithXXX至String.merge。Object.toString在对象为空时返回空字符串
+// 版本定义 // 修正Array.trim未析构问题。Dictionary.create参数改为const Char[]
 #define SPADAS_VERSION_MAJOR 7
 #define SPADAS_VERSION_MINOR 1
-#define SPADAS_VERSION_BUILD 19
+#define SPADAS_VERSION_BUILD 20
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：7.1.19\n
+* 本文档对应Spadas版本：7.1.20\n
 *
 * \n
 * \section top1 基本功能概述
