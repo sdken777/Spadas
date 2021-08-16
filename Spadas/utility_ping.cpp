@@ -5,11 +5,9 @@ using namespace spadas;
 
 #if defined(SPADAS_ENV_WINDOWS)
 
-#include <Windows.h>
-#include <Iphlpapi.h>
-#include <IcmpAPI.h>
-#pragma comment(lib, "ws2_32.lib")
-#pragma comment(lib, "iphlpapi.lib")
+#include <windows.h>
+#include <iphlpapi.h>
+#include <icmpapi.h>
 
 Bool spadas::system::ping(String ip, UInt timeout)
 {

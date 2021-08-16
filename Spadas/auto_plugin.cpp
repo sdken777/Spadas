@@ -45,8 +45,6 @@ void IPlugin::closePlugin()
 {}
 
 // 通用设备插件API 2.0
-#pragma region device-2.0
-
 void IDevicePluginV200::setDeviceConnection(String config)
 {}
 
@@ -77,11 +75,7 @@ RawDataTable IDevicePluginV200::getDeviceNewData()
 void IDevicePluginV200::useBusTransmitter(Interface<IBusRawDataTransmitter> transmitter)
 {}
 
-#pragma endregion
-
 // 总线设备插件API 2.0
-#pragma region bus-2.0
-
 Array<BusDeviceInfo> IBusPluginV200::getBusDeviceList()
 {
 	return Array<BusDeviceInfo>();
@@ -111,11 +105,7 @@ Array<BusChannelPayload> IBusPluginV200::getBusPayload()
 	return Array<BusChannelPayload>();
 }
 
-#pragma endregion
-
 // 视频设备插件API 4.0
-#pragma region video-4.0
-
 Array<VideoDeviceInfo> IVideoPluginV400::getVideoDeviceList()
 {
 	return Array<VideoDeviceInfo>();
@@ -145,11 +135,7 @@ RawDataTable IVideoPluginV400::getVideoDeviceNewData(Time session)
 void IVideoPluginV400::useVideoPreviewExpress(Interface<IVideoPreviewExpress> previewExpress)
 {}
 
-#pragma endregion
-
 // 数据处理插件API 6.0
-#pragma region proc-6.0
-
 Bool IProcessorPluginV600::isDataStreamModeSupported()
 {
 	return FALSE;
@@ -198,5 +184,3 @@ Bool IProcessorPluginV600::isStandaloneTaskModeSupported()
 
 void IProcessorPluginV600::runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
 {}
-
-#pragma endregion

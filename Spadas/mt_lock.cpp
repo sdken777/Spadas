@@ -3,7 +3,7 @@
 
 #if defined(SPADAS_ENV_WINDOWS)
 
-#include <Windows.h>
+#include <windows.h>
 
 typedef CRITICAL_SECTION LockContext;
 void initLock(CRITICAL_SECTION *context)

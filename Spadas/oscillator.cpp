@@ -155,8 +155,7 @@ void Oscillator::pulse()
 
 #if defined(SPADAS_ENV_WINDOWS)
 
-#include <Windows.h>
-#pragma comment(lib, "winmm.lib")
+#include <windows.h>
 
 void spadas_internal::sleepTime(spadas::UInt time)
 {

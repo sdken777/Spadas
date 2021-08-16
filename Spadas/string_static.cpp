@@ -1,4 +1,8 @@
 ﻿
+#if defined(SPADAS_DEBUG)
+#undef SPADAS_DEBUG
+#endif
+
 #include "spadas.h"
 
 #include "string_bz.h"

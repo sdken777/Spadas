@@ -42,7 +42,7 @@ const String spadas::TaskManager::TypeName = "spadas.TaskManager";
 #if defined(SPADAS_ENV_WINDOWS)
 
 #include <process.h>
-#include <Windows.h>
+#include <windows.h>
 #undef max
 #undef min
 

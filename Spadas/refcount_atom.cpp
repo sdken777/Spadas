@@ -22,7 +22,7 @@ void Atom::set(Int val0)
 
 #if defined(SPADAS_ENV_WINDOWS)
 
-#include <Windows.h>
+#include <windows.h>
 
 Int Atom::increase()
 {

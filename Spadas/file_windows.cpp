@@ -204,7 +204,7 @@ namespace file_internal
 		String separator = getSeparatorChar();
 		String contentsString = targetFolder + "*";
 
-		WIN32_FIND_DATA fileInfo;
+		WIN32_FIND_DATAW fileInfo;
 		HANDLE file = NULL;
 		BOOL fileExist = TRUE;
 

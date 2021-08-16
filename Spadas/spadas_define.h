@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 修正Array.trim未析构问题。Dictionary.create参数改为const Char[]
+// 版本定义 // 基于交叉编译生成库
 #define SPADAS_VERSION_MAJOR 7
-#define SPADAS_VERSION_MINOR 1
-#define SPADAS_VERSION_BUILD 20
+#define SPADAS_VERSION_MINOR 2
+#define SPADAS_VERSION_BUILD 0
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：7.1.20\n
+* 本文档对应Spadas版本：7.2.0\n
 *
 * \n
 * \section top1 基本功能概述
@@ -167,7 +167,11 @@
 
 // 用于错误提示
 #if defined(SPADAS_ENV_WINDOWS)
+#if defined(__FUNCSIG__)
 #define SPADAS_LOCATION __FUNCSIG__
+#else
+#define SPADAS_LOCATION __PRETTY_FUNCTION__
+#endif
 #endif
 #if defined(SPADAS_ENV_LINUX)
 #define SPADAS_LOCATION __PRETTY_FUNCTION__

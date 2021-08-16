@@ -5,7 +5,7 @@
 
 #if defined(SPADAS_ENV_WINDOWS)
 
-#include <Windows.h>
+#include <windows.h>
 
 namespace spadas
 {

@@ -157,7 +157,7 @@ TimeWithMS spadas::system::getTimeWithMS()
 
 // addEnvironmentPath
 #if defined(SPADAS_ENV_WINDOWS)
-#include <Windows.h>
+#include <windows.h>
 void spadas::system::addEnvironmentPath(Path path)
 {
 	SPADAS_ERROR_RETURN(path.isNull() || !path.isFolder());
