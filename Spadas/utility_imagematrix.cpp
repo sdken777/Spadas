@@ -20,21 +20,17 @@ namespace utility_internal
 	}
 
 	template<typename Type>
-	Image matrixRToImage(Matrix<Type> mat, Type lower, Type upper)
+	Image matrixRToImage(Type *matData, Type lower, Type upper, UInt matDimAt0, UInt matDimAt1)
 	{
-		SPADAS_ERROR_RETURNVAL(mat.isNull(), Image());
-		SPADAS_ERROR_RETURNVAL(mat.nDims() != 2, Image());
-		SPADAS_ERROR_RETURNVAL(lower >= upper, Image());
-
-		UInt width = mat.dimAt(1);
-		UInt height = mat.dimAt(0);
+		UInt width = matDimAt1;
+		UInt height = matDimAt0;
 		Image out(Size2D::wh(width, height), PixelFormat::FloatGray);
 
 		Float k = 1.0f / (Float)(upper - lower);
 
 		for (UInt v = 0; v < height; v++)
 		{
-			Type *srcRow = mat[v].data();
+			Type *srcRow = &matData[matDimAt1];
 			Float *dstRow = out[v].f;
 			for (UInt u = 0; u < width; u++)
 			{
@@ -297,15 +293,27 @@ Image spadas::utility::matrixFloatToImage(FloatMat matrix, Enum<PixelFormat> for
 
 Image spadas::utility::matrixRangeToImage(IntMat mat, Int lower, Int upper)
 {
-	return matrixRToImage(mat, lower, upper);
+	SPADAS_ERROR_RETURNVAL(mat.isNull(), Image());
+	SPADAS_ERROR_RETURNVAL(mat.nDims() != 2, Image());
+	SPADAS_ERROR_RETURNVAL(lower >= upper, Image());
+
+	return matrixRToImage(mat.data(), lower, upper, mat.dimAt(0), mat.dimAt(1));
 }
 
 Image spadas::utility::matrixRangeToImage(FloatMat mat, Float lower, Float upper)
 {
-	return matrixRToImage(mat, lower, upper);
+	SPADAS_ERROR_RETURNVAL(mat.isNull(), Image());
+	SPADAS_ERROR_RETURNVAL(mat.nDims() != 2, Image());
+	SPADAS_ERROR_RETURNVAL(lower >= upper, Image());
+
+	return matrixRToImage(mat.data(), lower, upper, mat.dimAt(0), mat.dimAt(1));
 }
 
 Image spadas::utility::matrixRangeToImage(DoubleMat mat, Double lower, Double upper)
 {
-	return matrixRToImage(mat, lower, upper);
+	SPADAS_ERROR_RETURNVAL(mat.isNull(), Image());
+	SPADAS_ERROR_RETURNVAL(mat.nDims() != 2, Image());
+	SPADAS_ERROR_RETURNVAL(lower >= upper, Image());
+
+	return matrixRToImage(mat.data(), lower, upper, mat.dimAt(0), mat.dimAt(1));
 }

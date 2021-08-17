@@ -44,9 +44,9 @@ namespace math_internal
 	}
 	
 	template<typename Type>
-	Bool decompose(Matrix<Type> u, Array<Type> w, Matrix<Type> v)
+	Bool decompose(Type *uData, Type *wData, Type *vData, Int uDimAt0, Int uDimAt1)
 	{
-		Int m = u.dimAt(0), n = u.dimAt(1);
+		Int m = uDimAt0, n = uDimAt1;
 		Type eps;
 		getEps(eps);
 		Bool flag;
@@ -54,9 +54,6 @@ namespace math_internal
 		Type anorm,c,f,g,h,s,scale,x,y,z;
 		Array<Type> rv1(n);
 		g = scale = anorm = 0.0;
-		Type *uData = u.data();
-		Type *vData = v.data();
-		Type *wData = w.data();
 		
 		for (i=0;i<n;i++)
 		{
@@ -170,7 +167,7 @@ namespace math_internal
 						}
 					}
 				}
-				Type *vRowI = v[i].data();
+				Type *vRowI = &vData[uDimAt1];
 				for (j=l,a=l*n+i;j<n;j++,a+=n)
 				{
 					vRowI[j]=vData[a]=0.0;
@@ -330,15 +327,12 @@ namespace math_internal
 	}
 	
 	template <typename Type>
-	void reorder(Matrix<Type> u, Array<Type> w, Matrix<Type> v){
+	void reorder(Type *uData, Type *wData, Type *vData, Int uDimAt0, Int uDimAt1){
 		
-		Int m = u.dimAt(0), n = u.dimAt(1);
+		Int m = uDimAt0, n = uDimAt1;
 		Int i,j,k,s,inc=1,a,b;
 		Type sw;
 		Array<Type>su(m), sv(n);
-		Type *uData = u.data();
-		Type *vData = v.data();
-		Type *wData = w.data();
 		
 		do
 		{
@@ -412,65 +406,6 @@ namespace math_internal
 			}
 		}
 	}
-	
-	template <typename Type>
-	void matDecomposeSVD(Matrix<Type> target, Matrix<Type>& matU, Matrix<Type>& matS, Matrix<Type>& matV)
-	{
-		SPADAS_ERROR_RETURN(target.isNull());
-		SPADAS_ERROR_RETURN(target.nDims() != 2 || target.dimAt(0) == 0 || target.dimAt(1) == 0);
-		
-		matU = target.clone();
-		matV = Matrix<Type>(target.dimAt(1), target.dimAt(1));
-		Array<Type> arrS(target.dimAt(1));
-		decompose(matU, arrS, matV);
-		reorder(matU, arrS, matV);
-		
-		matS = Matrix<Type>(target.dimAt(1), target.dimAt(1));
-		for (UInt i = 0; i < target.dimAt(1); i++)
-		{
-			matS(i, i) = arrS[i];
-		}
-	}
-	
-	template <typename Type>
-	Matrix<Type> matInverse(Matrix<Type> src)
-	{
-		SPADAS_ERROR_RETURNVAL(src.isNull(), Matrix<Type>());
-		SPADAS_ERROR_RETURNVAL(src.nDims() != 2 || src.dimAt(0) == 0 || src.dimAt(1) == 0, Matrix<Type>());
-		
-		Matrix<Type> u, s, v;
-		matDecomposeSVD(src, u, s, v);
-		
-		Type thresh = getThresh(s.data()[0]);
-		
-		UInt dim = s.dimAt(0);
-		Matrix<Type> s1(dim, dim);
-		s1.clear((Type)0);
-		for (UInt i = 0; i < dim; i++)
-		{
-			s1(i, i) = s(i, i) <= thresh ? (Type)0 : (Type)1 / s(i, i);
-		}
-		
-		return v * s1 * u.transpose();
-	}
-	
-	template <typename Type>
-	Array<Type> matSolve(Matrix<Type> a, Array<Type> b)
-	{
-		SPADAS_ERROR_RETURNVAL(a.isNull(), Array<Type>());
-		SPADAS_ERROR_RETURNVAL(a.nDims() != 2 || a.dimAt(0) == 0 || a.dimAt(1) == 0, Array<Type>());
-		SPADAS_ERROR_RETURNVAL(a.dimAt(0) != b.size(), Array<Type>());
-		
-		Matrix<Type> x = matInverse(a) * Matrix<Type>(b);
-		UInt outSize = x.dimAt(0);
-		
-		Array<Type> out(outSize);
-		for (UInt i = 0; i < outSize; i++)
-		{
-			out[i] = x.data()[i];
-		}
-		return out;
-	}
 }
 
 using namespace spadas;
@@ -478,27 +413,111 @@ using namespace math_internal;
 
 void spadas::math::decomposeSVD(FloatMat src, FloatMat& u, FloatMat& s, FloatMat& v)
 {
-	matDecomposeSVD(src, u, s, v);
+	SPADAS_ERROR_RETURN(src.isNull());
+	SPADAS_ERROR_RETURN(src.nDims() != 2 || src.dimAt(0) == 0 || src.dimAt(1) == 0);
+
+	u = src.clone();
+	v = FloatMat(src.dimAt(1), src.dimAt(1));
+	Array<Float> arrS(src.dimAt(1));
+
+	decompose(u.data(), arrS.data(), v.data(), (Int)u.dimAt(0), (Int)u.dimAt(1));
+	reorder(u.data(), arrS.data(), v.data(), (Int)u.dimAt(0), (Int)u.dimAt(1));
+	
+	s = FloatMat(src.dimAt(1), src.dimAt(1));
+	for (UInt i = 0; i < src.dimAt(1); i++)
+	{
+		s(i, i) = arrS[i];
+	}
 }
 void spadas::math::decomposeSVD(DoubleMat src, DoubleMat& u, DoubleMat& s, DoubleMat& v)
 {
-	matDecomposeSVD(src, u, s, v);
+	SPADAS_ERROR_RETURN(src.isNull());
+	SPADAS_ERROR_RETURN(src.nDims() != 2 || src.dimAt(0) == 0 || src.dimAt(1) == 0);
+
+	u = src.clone();
+	v = DoubleMat(src.dimAt(1), src.dimAt(1));
+	Array<Double> arrS(src.dimAt(1));
+
+	decompose(u.data(), arrS.data(), v.data(), (Int)u.dimAt(0), (Int)u.dimAt(1));
+	reorder(u.data(), arrS.data(), v.data(), (Int)u.dimAt(0), (Int)u.dimAt(1));
+	
+	s = DoubleMat(src.dimAt(1), src.dimAt(1));
+	for (UInt i = 0; i < src.dimAt(1); i++)
+	{
+		s(i, i) = arrS[i];
+	}
 }
 
 FloatMat spadas::math::inverse(FloatMat src)
 {
-	return matInverse(src);
+	SPADAS_ERROR_RETURNVAL(src.isNull(), FloatMat());
+	SPADAS_ERROR_RETURNVAL(src.nDims() != 2 || src.dimAt(0) == 0 || src.dimAt(1) == 0, FloatMat());
+
+	FloatMat u, s, v;
+	decomposeSVD(src, u, s, v);
+	
+	Float thresh = getThresh(s.data()[0]);
+	
+	UInt dim = s.dimAt(0);
+	FloatMat s1(dim, dim);
+	s1.clear(0);
+	for (UInt i = 0; i < dim; i++)
+	{
+		s1(i, i) = s(i, i) <= thresh ? 0 : (Float)1 / s(i, i);
+	}
+	
+	return v * s1 * u.transpose();
 }
 DoubleMat spadas::math::inverse(DoubleMat src)
 {
-	return matInverse(src);
+	SPADAS_ERROR_RETURNVAL(src.isNull(), DoubleMat());
+	SPADAS_ERROR_RETURNVAL(src.nDims() != 2 || src.dimAt(0) == 0 || src.dimAt(1) == 0, DoubleMat());
+
+	DoubleMat u, s, v;
+	decomposeSVD(src, u, s, v);
+	
+	Double thresh = getThresh(s.data()[0]);
+	
+	UInt dim = s.dimAt(0);
+	DoubleMat s1(dim, dim);
+	s1.clear(0);
+	for (UInt i = 0; i < dim; i++)
+	{
+		s1(i, i) = s(i, i) <= thresh ? 0 : (Double)1 / s(i, i);
+	}
+	
+	return v * s1 * u.transpose();
 }
 
 Array<Float> spadas::math::solve(FloatMat a, Array<Float> b)
 {
-	return matSolve(a, b);
+	SPADAS_ERROR_RETURNVAL(a.isNull(), Array<Float>());
+	SPADAS_ERROR_RETURNVAL(a.nDims() != 2 || a.dimAt(0) == 0 || a.dimAt(1) == 0, Array<Float>());
+	SPADAS_ERROR_RETURNVAL(a.dimAt(0) != b.size(), Array<Float>());
+
+	FloatMat x = inverse(a) * FloatMat(b);
+	UInt outSize = x.dimAt(0);
+	
+	Array<Float> out(outSize);
+	for (UInt i = 0; i < outSize; i++)
+	{
+		out[i] = x.data()[i];
+	}
+	return out;
 }
 Array<Double> spadas::math::solve(DoubleMat a, Array<Double> b)
 {
-	return matSolve(a, b);
+	SPADAS_ERROR_RETURNVAL(a.isNull(), Array<Double>());
+	SPADAS_ERROR_RETURNVAL(a.nDims() != 2 || a.dimAt(0) == 0 || a.dimAt(1) == 0, Array<Double>());
+	SPADAS_ERROR_RETURNVAL(a.dimAt(0) != b.size(), Array<Double>());
+
+	DoubleMat x = inverse(a) * DoubleMat(b);
+	UInt outSize = x.dimAt(0);
+	
+	Array<Double> out(outSize);
+	for (UInt i = 0; i < outSize; i++)
+	{
+		out[i] = x.data()[i];
+	}
+	return out;
 }

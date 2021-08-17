@@ -29,62 +29,6 @@ struct CvMat
 	int cols;
 };
 
-namespace matrix_internal
-{
-	using namespace spadas;
-
-	void updateCVMat(Int *data, CvMat *mat)
-	{
-		mat->type = 0x42424004;
-		mat->data.i = data;
-	}
-
-	void updateCVMat(Float *data, CvMat *mat)
-	{
-		mat->type = 0x42424005;
-		mat->data.fl = data;
-	}
-
-	void updateCVMat(Double *data, CvMat *mat)
-	{
-		mat->type = 0x42424006;
-		mat->data.db = data;
-	}
-
-	Byte getTypeID(IntMat mat)
-	{
-		return 1;
-	}
-
-	Byte getTypeID(FloatMat mat)
-	{
-		return 2;
-	}
-
-	Byte getTypeID(DoubleMat mat)
-	{
-		return 3;
-	}
-
-	template<typename SrcType, typename DstType>
-	void matrixConvert(Matrix<SrcType> src, Matrix<DstType>& dst)
-	{
-		SPADAS_ERROR_RETURN(src.isNull());
-
-		Array<UInt> size = src.size();
-		dst = Matrix<DstType>(size);
-		
-		UInt nElems = src.nElems();
-
-		SrcType *srcData = src.data();
-		DstType *dstData = dst.data();
-		for (UInt i = 0; i < nElems; i++)
-		{
-			dstData[i] = (DstType)srcData[i];
-		}
-	}
-}
-
 namespace spadas
 {
     const ULong MAX_NELEMS = 100000000;
@@ -127,11 +71,74 @@ namespace spadas
 		// 用于 operator[]
 		MatrixVars(Array<Type> data00, UInt nDims) : dims(Array<UInt>(nDims)), data0(data00), cvMat(NULL)
 		{ }
+
         ~MatrixVars()
         {
             if (cvMat) delete cvMat;
         }
 	};
+
+	class IntMatVars : public MatrixVars<Int>
+	{
+	public:
+		IntMatVars() : MatrixVars<Int>(Array<UInt>())
+		{}
+
+		IntMatVars(Array<UInt> dims0) : MatrixVars<Int>(dims0)
+		{}
+
+		IntMatVars(Array<Int> data00, UInt nDims) : MatrixVars<Int>(data00, nDims)
+		{}
+	};
+
+	class FloatMatVars : public MatrixVars<Float>
+	{
+	public:
+		FloatMatVars() : MatrixVars<Float>(Array<UInt>())
+		{}
+
+		FloatMatVars(Array<UInt> dims0) : MatrixVars<Float>(dims0)
+		{}
+
+		FloatMatVars(Array<Float> data00, UInt nDims) : MatrixVars<Float>(data00, nDims)
+		{}
+	};
+
+	class DoubleMatVars : public MatrixVars<Double>
+	{
+	public:
+		DoubleMatVars() : MatrixVars<Double>(Array<UInt>())
+		{}
+
+		DoubleMatVars(Array<UInt> dims0) : MatrixVars<Double>(dims0)
+		{}
+
+		DoubleMatVars(Array<Double> data00, UInt nDims) : MatrixVars<Double>(data00, nDims)
+		{}
+	};
+}
+
+namespace matrix_internal
+{
+	using namespace spadas;
+
+	void updateCVMat(Int *data, CvMat *mat)
+	{
+		mat->type = 0x42424004;
+		mat->data.i = data;
+	}
+
+	void updateCVMat(Float *data, CvMat *mat)
+	{
+		mat->type = 0x42424005;
+		mat->data.fl = data;
+	}
+
+	void updateCVMat(Double *data, CvMat *mat)
+	{
+		mat->type = 0x42424006;
+		mat->data.db = data;
+	}
 }
 
 using namespace spadas;
@@ -139,38 +146,33 @@ using namespace spadas::console;
 using namespace spadas_internal;
 using namespace matrix_internal;
 
-#define INSTANTIATE_NELEMS(Type) \
-template<> \
-Matrix<Type>::Matrix() \
+#define INSTANTIATE_MATRIX(Type) \
+Type##Mat::Type##Mat() \
 { \
 } \
-template<> \
-Matrix<Type>::Matrix(UInt nRows, UInt nCols) \
+Type##Mat::Type##Mat(UInt nRows, UInt nCols) \
 { \
     nRows += (nRows == 0); \
     nCols += (nCols == 0); \
     Array<UInt> dims(2); \
     dims[0] = nRows; dims[1] = nCols; \
-	setVars(new MatrixVars<Type>(dims), TRUE); \
+	setVars(new Type##MatVars(dims), TRUE); \
 } \
-template<> \
-Matrix<Type>::Matrix(UInt nRows, UInt nCols, UInt nDepths) \
+Type##Mat::Type##Mat(UInt nRows, UInt nCols, UInt nDepths) \
 { \
     nRows += (nRows == 0); \
     nCols += (nCols == 0); \
     nDepths += (nDepths == 0); \
 	Array<UInt> dims(3); \
 	dims[0] = nRows; dims[1] = nCols; dims[2] = nDepths; \
-	setVars(new MatrixVars<Type>(dims), TRUE); \
+	setVars(new Type##MatVars(dims), TRUE); \
 } \
-template<> \
-Matrix<Type>::Matrix(Array<UInt> dims) \
+Type##Mat::Type##Mat(Array<UInt> dims) \
 { \
 	if (dims.isEmpty()) dims = Array<UInt>::scalar(1); \
-	setVars(new MatrixVars<Type>(dims), TRUE); \
+	setVars(new Type##MatVars(dims), TRUE); \
 } \
-template<> \
-Matrix<Type>::Matrix(Array<UInt> dims, Pointer raw) \
+Type##Mat::Type##Mat(Array<UInt> dims, Pointer raw) \
 { \
 	if (dims.isEmpty() || !raw) \
 	{ \
@@ -185,11 +187,10 @@ Matrix<Type>::Matrix(Array<UInt> dims, Pointer raw) \
 			return; \
 		} \
 	} \
-	setVars(new MatrixVars<Type>(dims), TRUE); \
+	setVars(new Type##MatVars(dims), TRUE); \
     utility::memoryCopy(raw, vars->data, vars->nElems * sizeof(Type)); \
 } \
-template<> \
-Matrix<Type>::Matrix(Array<Type> arr, UInt nDims) \
+Type##Mat::Type##Mat(Array<Type> arr, UInt nDims) \
 { \
     if (nDims == 0 || arr.size() == 0) \
     { \
@@ -198,11 +199,10 @@ Matrix<Type>::Matrix(Array<Type> arr, UInt nDims) \
     } \
 	Array<UInt> dims(nDims, 1); \
 	dims[0] = arr.size(); \
-	setVars(new MatrixVars<Type>(dims), TRUE); \
+	setVars(new Type##MatVars(dims), TRUE); \
     utility::memoryCopy(arr.data(), vars->data, vars->nElems * sizeof(Type)); \
 } \
-template<> \
-UInt Matrix<Type>::dimAt(UInt index) \
+UInt Type##Mat::dimAt(UInt index) \
 { \
 	if (!vars) \
 	{ \
@@ -217,8 +217,7 @@ UInt Matrix<Type>::dimAt(UInt index) \
 	} \
 	return vars->dims[index]; \
 } \
-template<> \
-UInt Matrix<Type>::nDims() \
+UInt Type##Mat::nDims() \
 { \
 	if (!vars) \
 	{ \
@@ -227,8 +226,7 @@ UInt Matrix<Type>::nDims() \
 	} \
 	return vars->dims.size(); \
 } \
-template<> \
-Type& Matrix<Type>::operator ()(UInt i, UInt j) \
+Type& Type##Mat::operator ()(UInt i, UInt j) \
 { \
 	if (!vars) \
 	{ \
@@ -248,8 +246,7 @@ Type& Matrix<Type>::operator ()(UInt i, UInt j) \
 	} \
 	return vars->data[i * dimsData[1] + j]; \
 } \
-template<> \
-Type& Matrix<Type>::operator ()(UInt i, UInt j, UInt k) \
+Type& Type##Mat::operator ()(UInt i, UInt j, UInt k) \
 { \
 	if (!vars) \
 	{ \
@@ -269,8 +266,7 @@ Type& Matrix<Type>::operator ()(UInt i, UInt j, UInt k) \
 	} \
 	return vars->data[(i * dimsData[1] + j) * dimsData[2] + k]; \
 } \
-template<> \
-Matrix<Type>::Matrix(Matrix<Type> src, Region2D srcRegion) \
+Type##Mat::Type##Mat(Type##Mat src, Region2D srcRegion) \
 { \
     srcRegion.dim0 = math::max(srcRegion.dim0, 1u); \
     srcRegion.dim1 = math::max(srcRegion.dim1, 1u); \
@@ -286,7 +282,7 @@ Matrix<Type>::Matrix(Matrix<Type> src, Region2D srcRegion) \
     } \
 	Array<UInt> dims(2); \
 	dims[0] = srcRegion.dim0; dims[1] = srcRegion.dim1; \
-	setVars(new MatrixVars<Type>(dims), TRUE); \
+	setVars(new Type##MatVars(dims), TRUE); \
     UInt srcDim1 = src.dimAt(1); \
     Type *srcData = &src(srcRegion.offsetI, srcRegion.offsetJ); \
     for (UInt i = 0; i < srcRegion.dim0; i++) \
@@ -299,8 +295,7 @@ Matrix<Type>::Matrix(Matrix<Type> src, Region2D srcRegion) \
         } \
     } \
 } \
-template<> \
-Matrix<Type>::Matrix(Matrix<Type> src, Region3D srcRegion) \
+Type##Mat::Type##Mat(Type##Mat src, Region3D srcRegion) \
 { \
     srcRegion.dim0 = math::max(srcRegion.dim0, 1u); \
     srcRegion.dim1 = math::max(srcRegion.dim1, 1u); \
@@ -317,7 +312,7 @@ Matrix<Type>::Matrix(Matrix<Type> src, Region3D srcRegion) \
     } \
 	Array<UInt> dims(3); \
 	dims[0] = srcRegion.dim0; dims[1] = srcRegion.dim1; dims[2] = srcRegion.dim2; \
-	setVars(new MatrixVars<Type>(dims), TRUE); \
+	setVars(new Type##MatVars(dims), TRUE); \
     UInt srcDim1 = src.dimAt(1); \
     UInt srcDim2 = src.dimAt(2); \
     Type *srcData = &src(srcRegion.offsetI, srcRegion.offsetJ, srcRegion.offsetK); \
@@ -336,8 +331,7 @@ Matrix<Type>::Matrix(Matrix<Type> src, Region3D srcRegion) \
         } \
     } \
 } \
-template<> \
-Array<UInt> Matrix<Type>::size() \
+Array<UInt> Type##Mat::size() \
 { \
 	if (!vars) \
 	{ \
@@ -346,8 +340,7 @@ Array<UInt> Matrix<Type>::size() \
 	} \
 	return vars->dims.clone(); \
 } \
-template<> \
-Bool Matrix<Type>::isSize(Array<UInt> dims) \
+Bool Type##Mat::isSize(Array<UInt> dims) \
 { \
 	if (!vars) \
 	{ \
@@ -362,8 +355,7 @@ Bool Matrix<Type>::isSize(Array<UInt> dims) \
 	} \
 	return TRUE; \
 } \
-template<> \
-Type *Matrix<Type>::data() \
+Type *Type##Mat::data() \
 { \
 	if (!vars) \
 	{ \
@@ -372,20 +364,18 @@ Type *Matrix<Type>::data() \
 	} \
 	return vars->data; \
 } \
-template<> \
-Matrix<Type> Matrix<Type>::clone() \
+Type##Mat Type##Mat::clone() \
 { \
 	if (!vars) \
 	{ \
 		SPADAS_ERROR_MSG("!vars"); \
-		return Matrix<Type>(); \
+		return Type##Mat(); \
 	} \
-	Matrix<Type> out(vars->dims); \
+	Type##Mat out(vars->dims); \
 	utility::memoryCopy(vars->data, out.vars->data, vars->nElems * sizeof(Type)); \
 	return out; \
 } \
-template<> \
-void Matrix<Type>::copy(Matrix<Type> src, Region2D srcRegion, CoordInt2D thisOffset) \
+void Type##Mat::copy(Type##Mat src, Region2D srcRegion, CoordInt2D thisOffset) \
 { \
 	if (!vars) \
 	{ \
@@ -423,8 +413,7 @@ void Matrix<Type>::copy(Matrix<Type> src, Region2D srcRegion, CoordInt2D thisOff
         } \
     } \
 } \
-template<> \
-void Matrix<Type>::copy(Matrix<Type> src, Region3D srcRegion, CoordInt3D thisOffset) \
+void Type##Mat::copy(Type##Mat src, Region3D srcRegion, CoordInt3D thisOffset) \
 { \
 	if (!vars) \
 	{ \
@@ -470,8 +459,7 @@ void Matrix<Type>::copy(Matrix<Type> src, Region3D srcRegion, CoordInt3D thisOff
         } \
     } \
 } \
-template<> \
-void Matrix<Type>::clear(Type value) \
+void Type##Mat::clear(Type value) \
 { \
 	if (!vars) \
 	{ \
@@ -484,8 +472,7 @@ void Matrix<Type>::clear(Type value) \
 		data0[i] = value; \
 	} \
 } \
-template<> \
-UInt Matrix<Type>::nElems() \
+UInt Type##Mat::nElems() \
 { \
 	if (!vars) \
 	{ \
@@ -494,8 +481,7 @@ UInt Matrix<Type>::nElems() \
 	} \
 	return vars->nElems; \
 } \
-template<> \
-Bool Matrix<Type>::isSize(Size2D size2D) \
+Bool Type##Mat::isSize(Size2D size2D) \
 { \
 	if (!vars) \
 	{ \
@@ -508,8 +494,7 @@ Bool Matrix<Type>::isSize(Size2D size2D) \
 	} \
 	return vars->dims[0] == size2D.height && vars->dims[1] == size2D.width; \
 } \
-template<> \
-Bool Matrix<Type>::isSize(Size3D size3D) \
+Bool Type##Mat::isSize(Size3D size3D) \
 { \
 	if (!vars) \
 	{ \
@@ -522,8 +507,7 @@ Bool Matrix<Type>::isSize(Size3D size3D) \
 	} \
 	return vars->dims[0] == size3D.height && vars->dims[1] == size3D.width && vars->dims[2] == size3D.depth; \
 } \
-template<> \
-CvMat *Matrix<Type>::cvMat() \
+CvMat *Type##Mat::cvMat() \
 { \
 	if (!vars) \
 	{ \
@@ -544,13 +528,12 @@ CvMat *Matrix<Type>::cvMat() \
 	vars->cvMat->hdr_refcount = 0; \
 	return vars->cvMat; \
 } \
-template<> \
-Matrix<Type> Matrix<Type>::operator [](UInt i) \
+Type##Mat Type##Mat::operator [](UInt i) \
 { \
 	if (!vars) \
 	{ \
 		SPADAS_ERROR_MSG("!vars"); \
-		return Matrix<Type>(); \
+		return Type##Mat(); \
 	} \
 	UInt nDims = vars->dims.size(); \
 	if (nDims == 0) \
@@ -563,7 +546,7 @@ Matrix<Type> Matrix<Type>::operator [](UInt i) \
 		SPADAS_ERROR_MSG("i >= vars->dims[0]"); \
 		i = 0; \
 	} \
-	MatrixVars<Type> *newVars = new MatrixVars<Type>(vars->data0, nDims - 1); \
+	Type##MatVars *newVars = new Type##MatVars(vars->data0, nDims - 1); \
 	UInt newVarsNDims = newVars->dims.size(); \
 	for (UInt j = 0; j < newVarsNDims; j++) \
 	{ \
@@ -571,12 +554,11 @@ Matrix<Type> Matrix<Type>::operator [](UInt i) \
 	} \
     newVars->nElems = vars->nElems / vars->dims[0]; \
     newVars->data = &vars->data[i * newVars->nElems]; \
-	Matrix<Type> out; \
+	Type##Mat out; \
 	out.setVars(newVars, TRUE); \
     return out; \
 } \
-template<> \
-Type& Matrix<Type>::operator ()(UInt i) \
+Type& Type##Mat::operator ()(UInt i) \
 { \
 	if (!vars) \
 		{ \
@@ -595,20 +577,19 @@ Type& Matrix<Type>::operator ()(UInt i) \
 	} \
 	return vars->data[i]; \
 } \
-template<> \
-Matrix<Type> Matrix<Type>::operator +(Matrix<Type> matrix) \
+Type##Mat Type##Mat::operator +(Type##Mat matrix) \
 { \
 	if (!vars || !matrix.vars) \
 	{ \
 		SPADAS_ERROR_MSG("!vars || !matrix.vars"); \
-		return Matrix<Type>(); \
+		return Type##Mat(); \
 	} \
 	if (!isSize(matrix.size())) \
 	{ \
 		SPADAS_ERROR_MSG("!isSize(matrix.size())"); \
 		return *this; \
 	} \
-	Matrix<Type> out(vars->dims); \
+	Type##Mat out(vars->dims); \
 	Type *src1 = vars->data; \
 	Type *src2 = matrix.vars->data; \
 	Type *dst = out.vars->data; \
@@ -618,20 +599,19 @@ Matrix<Type> Matrix<Type>::operator +(Matrix<Type> matrix) \
 	} \
 	return out; \
 } \
-template<> \
-Matrix<Type> Matrix<Type>::operator -(Matrix<Type> matrix) \
+Type##Mat Type##Mat::operator -(Type##Mat matrix) \
 { \
 	if (!vars || !matrix.vars) \
 	{ \
 		SPADAS_ERROR_MSG("!vars || !matrix.vars"); \
-		return Matrix<Type>(); \
+		return Type##Mat(); \
 	} \
 	if (!isSize(matrix.size())) \
 	{ \
 		SPADAS_ERROR_MSG("!isSize(matrix.size())"); \
 		return *this; \
 	} \
-	Matrix<Type> out(vars->dims); \
+	Type##Mat out(vars->dims); \
 	Type *src1 = vars->data; \
 	Type *src2 = matrix.vars->data; \
 	Type *dst = out.vars->data; \
@@ -641,15 +621,14 @@ Matrix<Type> Matrix<Type>::operator -(Matrix<Type> matrix) \
 	} \
 	return out; \
 } \
-template<> \
-Matrix<Type> Matrix<Type>::operator *(Type scale) \
+Type##Mat Type##Mat::operator *(Type scale) \
 { \
 	if (!vars) \
 	{ \
 		SPADAS_ERROR_MSG("!vars"); \
-		return Matrix<Type>(); \
+		return Type##Mat(); \
 	} \
-	Matrix<Type> out(vars->dims); \
+	Type##Mat out(vars->dims); \
 	Type *src = vars->data; \
 	Type *dst = out.vars->data; \
 	for (UInt i = 0; i < vars->nElems; i++) \
@@ -658,13 +637,12 @@ Matrix<Type> Matrix<Type>::operator *(Type scale) \
 	} \
 	return out; \
 } \
-template<> \
-Matrix<Type> Matrix<Type>::operator *(Matrix<Type> matrix) \
+Type##Mat Type##Mat::operator *(Type##Mat matrix) \
 { \
 	if (!vars || !matrix.vars) \
 	{ \
 		SPADAS_ERROR_MSG("!vars || !matrix.vars"); \
-		return Matrix<Type>(); \
+		return Type##Mat(); \
 	} \
 	if (vars->dims.size() != 2 || matrix.vars->dims.size() != 2) \
 	{ \
@@ -677,7 +655,7 @@ Matrix<Type> Matrix<Type>::operator *(Matrix<Type> matrix) \
 		return *this; \
 	} \
 	UInt outRows = vars->dims[0], outCols = matrix.vars->dims[1]; \
-	Matrix<Type> out(outRows, outCols); \
+	Type##Mat out(outRows, outCols); \
 	Type *selfRow = vars->data; \
 	Type *inData = matrix.vars->data; \
 	Type *outRow = out.vars->data; \
@@ -703,13 +681,12 @@ Matrix<Type> Matrix<Type>::operator *(Matrix<Type> matrix) \
 	} \
 	return out; \
 } \
-template<> \
-Matrix<Type> Matrix<Type>::transpose() \
+Type##Mat Type##Mat::transpose() \
 { \
 	if (!vars) \
 	{ \
 		SPADAS_ERROR_MSG("!vars"); \
-		return Matrix<Type>(); \
+		return Type##Mat(); \
 	} \
 	if (vars->dims.size() != 2) \
 	{ \
@@ -718,7 +695,7 @@ Matrix<Type> Matrix<Type>::transpose() \
 	} \
 	UInt nRows = vars->dims[0]; \
 	UInt nCols = vars->dims[1]; \
-	Matrix<Type> out(nCols, nRows); \
+	Type##Mat out(nCols, nRows); \
 	for (UInt i = 0; i < nCols; i++) \
 	{ \
 		Type *outRow = &out.vars->data[i * nRows]; \
@@ -730,23 +707,7 @@ Matrix<Type> Matrix<Type>::transpose() \
 	} \
 	return out; \
 } \
-template<> \
-void Matrix<Type>::convertTo(IntMat& dst) \
-{ \
-	matrixConvert<Type, Int>(*this, dst); \
-} \
-template<> \
-void Matrix<Type>::convertTo(FloatMat& dst) \
-{ \
-	matrixConvert<Type, Float>(*this, dst); \
-} \
-template<> \
-void Matrix<Type>::convertTo(DoubleMat& dst) \
-{ \
-	matrixConvert<Type, Double>(*this, dst); \
-} \
-template<> \
-String Matrix<Type>::toString(UInt nDigits) \
+String Type##Mat::toString(UInt nDigits) \
 { \
 	if (!vars) \
 	{ \
@@ -786,8 +747,7 @@ String Matrix<Type>::toString(UInt nDigits) \
     outString.updateLength(); \
     return outString; \
 } \
-template<> \
-void Matrix<Type>::save(Path filePath, UInt nDigits) \
+void Type##Mat::save(Path filePath, UInt nDigits) \
 { \
 	if (!vars) \
 	{ \
@@ -825,8 +785,7 @@ void Matrix<Type>::save(Path filePath, UInt nDigits) \
         file.print(rowString); \
     } \
 } \
-template<> \
-Matrix<Type>::Matrix(Path filePath) \
+Type##Mat::Type##Mat(Path filePath) \
 { \
 	if (filePath.isNull() || !filePath.exist()) \
 	{ \
@@ -860,7 +819,7 @@ Matrix<Type>::Matrix(Path filePath) \
 		SPADAS_ERROR_MSG("nCols == 0"); \
 		return; \
 	} \
-	Matrix<Type> out(nRows, nCols); \
+	Type##Mat out(nRows, nCols); \
 	Type *outData = out.vars->data; \
 	Array<UInt> startIndices(nCols); \
 	Double val; \
@@ -891,8 +850,7 @@ Matrix<Type>::Matrix(Path filePath) \
 	} \
 	operator =(out); \
 } \
-template<> \
-Matrix<Type>::Matrix(CvMat *cvmat) \
+Type##Mat::Type##Mat(CvMat *cvmat) \
 { \
 	if (cvmat == NULL) \
 	{ \
@@ -904,7 +862,7 @@ Matrix<Type>::Matrix(CvMat *cvmat) \
 		SPADAS_ERROR_MSG("cvmat->type != 0x42424004 && cvmat->type != 0x42424005 && cvmat->type != 0x42424006"); \
 		return; \
 	} \
-	Matrix<Type> out(cvmat->rows, cvmat->cols); \
+	Type##Mat out(cvmat->rows, cvmat->cols); \
 	Type *dstData = out.vars->data; \
 	UInt nElems0 = out.nElems(); \
 	switch (cvmat->type) \
@@ -940,9 +898,114 @@ Matrix<Type>::Matrix(CvMat *cvmat) \
 	operator =(out); \
 }
 
-namespace spadas
+INSTANTIATE_MATRIX(Int)
+INSTANTIATE_MATRIX(Float)
+INSTANTIATE_MATRIX(Double)
+
+FloatMat IntMat::convertToFloatMat()
 {
-	INSTANTIATE_NELEMS(Int)
-	INSTANTIATE_NELEMS(Float)
-	INSTANTIATE_NELEMS(Double)
+	SPADAS_ERROR_RETURNVAL(!vars, FloatMat());
+
+	FloatMat dst(vars->dims);
+
+	UInt nElements = nElems();
+
+	Int *srcData = vars->data;
+	Float *dstData = dst.data();
+	for (UInt i = 0; i < nElements; i++)
+	{
+		dstData[i] = (Float)srcData[i];
+	}
+
+	return dst;
+}
+
+DoubleMat IntMat::convertToDoubleMat()
+{
+	SPADAS_ERROR_RETURNVAL(!vars, DoubleMat());
+
+	DoubleMat dst(vars->dims);
+
+	UInt nElements = nElems();
+
+	Int *srcData = vars->data;
+	Double *dstData = dst.data();
+	for (UInt i = 0; i < nElements; i++)
+	{
+		dstData[i] = (Double)srcData[i];
+	}
+
+	return dst;
+}
+
+IntMat FloatMat::convertToIntMat()
+{
+	SPADAS_ERROR_RETURNVAL(!vars, IntMat());
+
+	IntMat dst(vars->dims);
+
+	UInt nElements = nElems();
+
+	Float *srcData = vars->data;
+	Int *dstData = dst.data();
+	for (UInt i = 0; i < nElements; i++)
+	{
+		dstData[i] = (Int)srcData[i];
+	}
+
+	return dst;
+}
+
+DoubleMat FloatMat::convertToDoubleMat()
+{
+	SPADAS_ERROR_RETURNVAL(!vars, DoubleMat());
+
+	DoubleMat dst(vars->dims);
+
+	UInt nElements = nElems();
+
+	Float *srcData = vars->data;
+	Double *dstData = dst.data();
+	for (UInt i = 0; i < nElements; i++)
+	{
+		dstData[i] = (Double)srcData[i];
+	}
+
+	return dst;
+}
+
+IntMat DoubleMat::convertToIntMat()
+{
+	SPADAS_ERROR_RETURNVAL(!vars, IntMat());
+
+	IntMat dst(vars->dims);
+
+	UInt nElements = nElems();
+
+	Double *srcData = vars->data;
+	Int *dstData = dst.data();
+	for (UInt i = 0; i < nElements; i++)
+	{
+		dstData[i] = (Int)srcData[i];
+	}
+
+	return dst;
+}
+
+FloatMat DoubleMat::convertToFloatMat()
+{
+	SPADAS_ERROR_RETURNVAL(!vars, FloatMat());
+
+	FloatMat dst(vars->dims);
+
+	UInt nElements = nElems();
+
+	Double *srcData = vars->data;
+	Float *dstData = dst.data();
+	for (UInt i = 0; i < nElements; i++)
+	{
+		dstData[i] = (Float)srcData[i];
+	}
+
+	return dst;
 }

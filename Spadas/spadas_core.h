@@ -82,6 +82,15 @@ namespace spadas
 	// 链表节点（前置声明）
 	template <typename Type> class ListNode;
 
+	// Int矩阵（前置声明）
+	class SPADAS_API IntMat;
+
+	// Float矩阵（前置声明）
+	class SPADAS_API FloatMat;
+
+	// Double矩阵（前置声明）
+	class SPADAS_API DoubleMat;
+
 	// 标志位（前置声明）
 	class SPADAS_API Flag;
 	
@@ -2736,54 +2745,57 @@ namespace spadas
 		Bool isValid() { return FALSE; }
 	};
 
-	/// spadas::Matrix 模板类的变量数据
-	template <typename Type> class MatrixVars;
-
-	/// 矩阵模板类
-	template <typename Type> class SPADAS_API Matrix : public Object<MatrixVars<Type> >
+	/// Int型矩阵
+	class SPADAS_API IntMat : public Object<class IntMatVars>
 	{
 	public:
 		/// 无效对象
-		Matrix();
+		IntMat();
 
 		/// 创建一个2维矩阵
-		Matrix(UInt dim0, UInt dim1);
+		IntMat(UInt dim0, UInt dim1);
 
 		/// 创建一个3维矩阵
-		Matrix(UInt dim0, UInt dim1, UInt dim2);
+		IntMat(UInt dim0, UInt dim1, UInt dim2);
 
 		/// 创建一个N维矩阵 (N至少为1)
-		Matrix(Array<UInt> dims);
+		IntMat(Array<UInt> dims);
 
 		/// 创建一个N维矩阵并从指定数据源拷贝
-		Matrix(Array<UInt> dims, Pointer raw);
+		IntMat(Array<UInt> dims, Pointer raw);
 
 		/// 由数组创建矩阵 (矩阵大小为N x 1 x 1...，维数由参数指定)
-		Matrix(Array<Type> arr, UInt nDims = 2);
+		IntMat(Array<Int> arr, UInt nDims = 2);
 
 		/// 从另一个矩阵的子区域拷贝并创建矩阵，src应为2维矩阵
-		Matrix(Matrix<Type> src, Region2D srcRegion);
+		IntMat(IntMat src, Region2D srcRegion);
 
 		/// 从另一个矩阵的子区域拷贝并创建矩阵，src应为3维矩阵
-		Matrix(Matrix<Type> src, Region3D srcRegion);
+		IntMat(IntMat src, Region3D srcRegion);
 
 		/// 从文件读取矩阵数据并创建（由Matrix::save方法创建的文件）
-		Matrix(Path filePath);
+		IntMat(Path filePath);
 
 		/// 由CvMat创建矩阵，并拷贝数据
-		Matrix(CvMat *cvmat);
+		IntMat(CvMat *cvmat);
 
 		/// 克隆出一个新对象
-		Matrix<Type> clone();
+		IntMat clone();
+
+		/// 矩阵数据类型转换
+		FloatMat convertToFloatMat();
+
+		/// 矩阵数据类型转换
+		DoubleMat convertToDoubleMat();
 
 		/// 从另一个矩阵的某个子区域拷贝数据到本矩阵的某个位置（通过thisOffset指定），源矩阵和本矩阵都应为2维矩阵
-		void copy(Matrix<Type> src, Region2D srcRegion, CoordInt2D thisOffset);
+		void copy(IntMat src, Region2D srcRegion, CoordInt2D thisOffset);
 
 		/// 从另一个矩阵的某个子区域拷贝数据到本矩阵的某个位置（通过thisOffset指定），源矩阵和本矩阵都应为3维矩阵
-		void copy(Matrix<Type> src, Region3D srcRegion, CoordInt3D thisOffset);
+		void copy(IntMat src, Region3D srcRegion, CoordInt3D thisOffset);
 
 		/// 重置所有元素的值
-		void clear(Type value);
+		void clear(Int value);
 
 		/// 获得矩阵的大小（各维的长度）
 		Array<UInt> size();
@@ -2807,46 +2819,37 @@ namespace spadas
 		Bool isSize(Array<UInt> dims);
 
 		/// [非安全指针][可修改] 取得数据指针
-		Type *data();
+		Int *data();
 
 		/// [非安全指针][可修改] 包装成CvMat的形式，数据将绑定至本矩阵
 		CvMat *cvMat();
 
 		/// [可修改] 取得第i个子矩阵，该子矩阵维数减1，数据绑定至本矩阵，序号从0开始
-		Matrix<Type> operator [](UInt i);
+		IntMat operator [](UInt i);
 
 		/// [可修改] 通过圆括号获得某个元素的引用，面向1维矩阵 (标量)
-		Type& operator ()(UInt i);
+		Int& operator ()(UInt i);
 
 		/// [可修改] 通过圆括号获得某个元素的引用，面向2维矩阵 (标量)
-		Type& operator ()(UInt i, UInt j);
+		Int& operator ()(UInt i, UInt j);
 
 		/// [可修改] 通过圆括号获得某个元素的引用，面向3维矩阵 (标量)
-		Type& operator ()(UInt i, UInt j, UInt k);
+		Int& operator ()(UInt i, UInt j, UInt k);
 
 		/// 矩阵加法: output = this + matrix
-		Matrix<Type> operator +(Matrix<Type> matrix);
+		IntMat operator +(IntMat matrix);
 
 		/// 矩阵减法: output = this - matrix
-		Matrix<Type> operator -(Matrix<Type> matrix);
+		IntMat operator -(IntMat matrix);
 
 		/// 矩阵乘以标量: output = this * scale
-		Matrix<Type> operator *(Type scale);
+		IntMat operator *(Int scale);
 
 		/// 矩阵相乘: output = this * matrix (仅支持2维矩阵)
-		Matrix<Type> operator *(Matrix<Type> matrix);
+		IntMat operator *(IntMat matrix);
 
 		/// 矩阵转置 (仅支持2维矩阵)
-		Matrix<Type> transpose();
-
-		/// 矩阵数据类型转换
-		void convertTo(Matrix<Int>& dst);
-
-		/// 矩阵数据类型转换
-		void convertTo(Matrix<Float>& dst);
-
-		/// 矩阵数据类型转换
-		void convertTo(Matrix<Double>& dst);
+		IntMat transpose();
 
 		/// 用字符串表示矩阵数据 (仅支持2维矩阵)
 		String toString(UInt nDigits = 1);
@@ -2855,14 +2858,231 @@ namespace spadas
 		void save(Path filePath, UInt nDigits = 1);
 	};
 
-	/// 支持的矩阵类型：Int型矩阵
-	typedef Matrix<Int> IntMat;
+	/// Float型矩阵
+	class SPADAS_API FloatMat : public Object<class FloatMatVars>
+	{
+	public:
+		/// 无效对象
+		FloatMat();
 
-	/// 支持的矩阵类型：Float型矩阵
-	typedef Matrix<Float> FloatMat;
+		/// 创建一个2维矩阵
+		FloatMat(UInt dim0, UInt dim1);
+
+		/// 创建一个3维矩阵
+		FloatMat(UInt dim0, UInt dim1, UInt dim2);
+
+		/// 创建一个N维矩阵 (N至少为1)
+		FloatMat(Array<UInt> dims);
+
+		/// 创建一个N维矩阵并从指定数据源拷贝
+		FloatMat(Array<UInt> dims, Pointer raw);
+
+		/// 由数组创建矩阵 (矩阵大小为N x 1 x 1...，维数由参数指定)
+		FloatMat(Array<Float> arr, UInt nDims = 2);
+
+		/// 从另一个矩阵的子区域拷贝并创建矩阵，src应为2维矩阵
+		FloatMat(FloatMat src, Region2D srcRegion);
+
+		/// 从另一个矩阵的子区域拷贝并创建矩阵，src应为3维矩阵
+		FloatMat(FloatMat src, Region3D srcRegion);
+
+		/// 从文件读取矩阵数据并创建（由Matrix::save方法创建的文件）
+		FloatMat(Path filePath);
+
+		/// 由CvMat创建矩阵，并拷贝数据
+		FloatMat(CvMat *cvmat);
+
+		/// 克隆出一个新对象
+		FloatMat clone();
+
+		/// 矩阵数据类型转换
+		IntMat convertToIntMat();
+
+		/// 矩阵数据类型转换
+		DoubleMat convertToDoubleMat();
+
+		/// 从另一个矩阵的某个子区域拷贝数据到本矩阵的某个位置（通过thisOffset指定），源矩阵和本矩阵都应为2维矩阵
+		void copy(FloatMat src, Region2D srcRegion, CoordInt2D thisOffset);
+
+		/// 从另一个矩阵的某个子区域拷贝数据到本矩阵的某个位置（通过thisOffset指定），源矩阵和本矩阵都应为3维矩阵
+		void copy(FloatMat src, Region3D srcRegion, CoordInt3D thisOffset);
+
+		/// 重置所有元素的值
+		void clear(Float value);
+
+		/// 获得矩阵的大小（各维的长度）
+		Array<UInt> size();
+
+		/// 获得矩阵某个维度的长度 (维度无效时返回0)，序号从0开始
+		UInt dimAt(UInt index);
+
+		/// 获得矩阵维数
+		UInt nDims();
+
+		/// 获得矩阵的总元素个数
+		UInt nElems();
+
+		/// 判断矩阵是否为指定大小
+		Bool isSize(Size2D size);
+
+		/// 判断矩阵是否为指定大小
+		Bool isSize(Size3D size);
+
+		/// 判断矩阵是否为指定大小
+		Bool isSize(Array<UInt> dims);
+
+		/// [非安全指针][可修改] 取得数据指针
+		Float *data();
+
+		/// [非安全指针][可修改] 包装成CvMat的形式，数据将绑定至本矩阵
+		CvMat *cvMat();
+
+		/// [可修改] 取得第i个子矩阵，该子矩阵维数减1，数据绑定至本矩阵，序号从0开始
+		FloatMat operator [](UInt i);
+
+		/// [可修改] 通过圆括号获得某个元素的引用，面向1维矩阵 (标量)
+		Float& operator ()(UInt i);
+
+		/// [可修改] 通过圆括号获得某个元素的引用，面向2维矩阵 (标量)
+		Float& operator ()(UInt i, UInt j);
+
+		/// [可修改] 通过圆括号获得某个元素的引用，面向3维矩阵 (标量)
+		Float& operator ()(UInt i, UInt j, UInt k);
+
+		/// 矩阵加法: output = this + matrix
+		FloatMat operator +(FloatMat matrix);
+
+		/// 矩阵减法: output = this - matrix
+		FloatMat operator -(FloatMat matrix);
+
+		/// 矩阵乘以标量: output = this * scale
+		FloatMat operator *(Float scale);
+
+		/// 矩阵相乘: output = this * matrix (仅支持2维矩阵)
+		FloatMat operator *(FloatMat matrix);
+
+		/// 矩阵转置 (仅支持2维矩阵)
+		FloatMat transpose();
+
+		/// 用字符串表示矩阵数据 (仅支持2维矩阵)
+		String toString(UInt nDigits = 1);
+
+		/// 保存矩阵数据至文本文件 (仅支持2维矩阵)
+		void save(Path filePath, UInt nDigits = 1);
+	};
 
 	/// 支持的矩阵类型：Double型矩阵
-	typedef Matrix<Double> DoubleMat;
+	class SPADAS_API DoubleMat : public Object<class DoubleMatVars>
+	{
+	public:
+		/// 无效对象
+		DoubleMat();
+
+		/// 创建一个2维矩阵
+		DoubleMat(UInt dim0, UInt dim1);
+
+		/// 创建一个3维矩阵
+		DoubleMat(UInt dim0, UInt dim1, UInt dim2);
+
+		/// 创建一个N维矩阵 (N至少为1)
+		DoubleMat(Array<UInt> dims);
+
+		/// 创建一个N维矩阵并从指定数据源拷贝
+		DoubleMat(Array<UInt> dims, Pointer raw);
+
+		/// 由数组创建矩阵 (矩阵大小为N x 1 x 1...，维数由参数指定)
+		DoubleMat(Array<Double> arr, UInt nDims = 2);
+
+		/// 从另一个矩阵的子区域拷贝并创建矩阵，src应为2维矩阵
+		DoubleMat(DoubleMat src, Region2D srcRegion);
+
+		/// 从另一个矩阵的子区域拷贝并创建矩阵，src应为3维矩阵
+		DoubleMat(DoubleMat src, Region3D srcRegion);
+
+		/// 从文件读取矩阵数据并创建（由Matrix::save方法创建的文件）
+		DoubleMat(Path filePath);
+
+		/// 由CvMat创建矩阵，并拷贝数据
+		DoubleMat(CvMat *cvmat);
+
+		/// 克隆出一个新对象
+		DoubleMat clone();
+
+		/// 矩阵数据类型转换
+		IntMat convertToIntMat();
+
+		/// 矩阵数据类型转换
+		FloatMat convertToFloatMat();
+
+		/// 从另一个矩阵的某个子区域拷贝数据到本矩阵的某个位置（通过thisOffset指定），源矩阵和本矩阵都应为2维矩阵
+		void copy(DoubleMat src, Region2D srcRegion, CoordInt2D thisOffset);
+
+		/// 从另一个矩阵的某个子区域拷贝数据到本矩阵的某个位置（通过thisOffset指定），源矩阵和本矩阵都应为3维矩阵
+		void copy(DoubleMat src, Region3D srcRegion, CoordInt3D thisOffset);
+
+		/// 重置所有元素的值
+		void clear(Double value);
+
+		/// 获得矩阵的大小（各维的长度）
+		Array<UInt> size();
+
+		/// 获得矩阵某个维度的长度 (维度无效时返回0)，序号从0开始
+		UInt dimAt(UInt index);
+
+		/// 获得矩阵维数
+		UInt nDims();
+
+		/// 获得矩阵的总元素个数
+		UInt nElems();
+
+		/// 判断矩阵是否为指定大小
+		Bool isSize(Size2D size);
+
+		/// 判断矩阵是否为指定大小
+		Bool isSize(Size3D size);
+
+		/// 判断矩阵是否为指定大小
+		Bool isSize(Array<UInt> dims);
+
+		/// [非安全指针][可修改] 取得数据指针
+		Double *data();
+
+		/// [非安全指针][可修改] 包装成CvMat的形式，数据将绑定至本矩阵
+		CvMat *cvMat();
+
+		/// [可修改] 取得第i个子矩阵，该子矩阵维数减1，数据绑定至本矩阵，序号从0开始
+		DoubleMat operator [](UInt i);
+
+		/// [可修改] 通过圆括号获得某个元素的引用，面向1维矩阵 (标量)
+		Double& operator ()(UInt i);
+
+		/// [可修改] 通过圆括号获得某个元素的引用，面向2维矩阵 (标量)
+		Double& operator ()(UInt i, UInt j);
+
+		/// [可修改] 通过圆括号获得某个元素的引用，面向3维矩阵 (标量)
+		Double& operator ()(UInt i, UInt j, UInt k);
+
+		/// 矩阵加法: output = this + matrix
+		DoubleMat operator +(DoubleMat matrix);
+
+		/// 矩阵减法: output = this - matrix
+		DoubleMat operator -(DoubleMat matrix);
+
+		/// 矩阵乘以标量: output = this * scale
+		DoubleMat operator *(Double scale);
+
+		/// 矩阵相乘: output = this * matrix (仅支持2维矩阵)
+		DoubleMat operator *(DoubleMat matrix);
+
+		/// 矩阵转置 (仅支持2维矩阵)
+		DoubleMat transpose();
+
+		/// 用字符串表示矩阵数据 (仅支持2维矩阵)
+		String toString(UInt nDigits = 1);
+
+		/// 保存矩阵数据至文本文件 (仅支持2维矩阵)
+		void save(Path filePath, UInt nDigits = 1);
+	};
 
 	/// 数学函数命名空间
 	namespace math
