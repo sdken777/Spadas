@@ -21,7 +21,7 @@
         },
         {
             "type": "shell",
-            "label": "(internal)发布构建(X86-Linux交叉编译X86-Ubuntu1804)",
+            "label": "(internal)发布构建(X86-Linux编译X86-Ubuntu1804)",
             "command": "/usr/bin/make",
             "args": [
                 "-j4",
@@ -30,7 +30,7 @@
                 "PLATFORM=linux",
                 "COMPILE=cross",
                 "TARGET=spadas",
-                "TARGET_VERSION=7",
+                "TARGET_VERSION=8",
                 "DEPENDS=pthread",
             ],
             "dependsOn": [
@@ -40,7 +40,7 @@
         },
         {
             "type": "shell",
-            "label": "(internal)发布构建(X86-Linux交叉编译Arm-Ubuntu1604)",
+            "label": "(internal)发布构建(X86-Linux编译Arm-Ubuntu1604)",
             "command": "/usr/bin/make",
             "args": [
                 "-j4",
@@ -49,7 +49,7 @@
                 "PLATFORM=linuxarm",
                 "COMPILE=cross",
                 "TARGET=spadas",
-                "TARGET_VERSION=7",
+                "TARGET_VERSION=8",
                 "DEPENDS=pthread",
             ],
             "dependsOn": [
@@ -59,7 +59,7 @@
         },
         {
             "type": "shell",
-            "label": "(internal)发布构建(X86-Linux交叉编译X86-Windows)",
+            "label": "(internal)发布构建(X86-Linux编译X86-Windows)",
             "command": "/usr/bin/make",
             "args": [
                 "-j4",
@@ -68,7 +68,7 @@
                 "PLATFORM=windows",
                 "COMPILE=cross",
                 "TARGET=spadas",
-                "TARGET_VERSION=7",
+                "TARGET_VERSION=8",
                 "DEPENDS=winmm ws2_32 iphlpapi",
                 "MACRO_DEFINE=SPADAS_EXPORTS",
             ],
@@ -79,16 +79,16 @@
         },
         {
             "type": "shell",
-            "label": "调试构建(X86-Ubuntu1804本机编译)",
+            "label": "调试构建(X86-Linux编译X86-Ubuntu1804)",
             "command": "/usr/bin/make",
             "args": [
                 "-j4",
                 "TYPE=lib",
                 "MODE=debug",
                 "PLATFORM=linux",
-                "COMPILE=local",
+                "COMPILE=cross",
                 "TARGET=spadas",
-                "TARGET_VERSION=7",
+                "TARGET_VERSION=8",
                 "DEPENDS=pthread",
             ],
             "dependsOn": [
@@ -98,7 +98,7 @@
         },
         {
             "type": "shell",
-            "label": "发布构建(X86-Linux交叉编译全平台)",
+            "label": "发布构建(X86-Linux编译全平台)",
             "command": "cp",
             "args": [
                 "-vf",
@@ -107,9 +107,9 @@
             ],
             "dependsOrder": "sequence",
             "dependsOn": [
-                "(internal)发布构建(X86-Linux交叉编译X86-Ubuntu1804)",
-                "(internal)发布构建(X86-Linux交叉编译Arm-Ubuntu1604)",
-                "(internal)发布构建(X86-Linux交叉编译X86-Windows)",
+                "(internal)发布构建(X86-Linux编译X86-Ubuntu1804)",
+                "(internal)发布构建(X86-Linux编译Arm-Ubuntu1604)",
+                "(internal)发布构建(X86-Linux编译X86-Windows)",
                 "(internal)创建include文件夹",
             ],
             "problemMatcher":[],

@@ -1752,7 +1752,7 @@ namespace spadas
 	{
 	public:
 		Byte dummy[SPADAS_STRING_DUMMY_BYTES];
-		Char* data; // UTF-8数据（Windows下无法查看中文）
+		Char* data;
 		UInt length;
 	};
 #endif

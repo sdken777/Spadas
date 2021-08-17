@@ -11,8 +11,8 @@
     },
     "C_Cpp.default.defines": [
         "SPADAS_ENV_LINUX",
+        "SPADAS_ARCH_X86",
         // "SPADAS_ENV_WINDOWS",
-        // "SPADAS_ARCH_X86",
         // "SPADAS_ARCH_ARM",
         // "SPADAS_EXPORTS",
     ],
@@ -23,15 +23,4 @@
         // "../include64",
         // "/opt/x-tools/x86-windows/x86_64-w64-mingw32/sysroot/mingw/include",
     ],
-    "files.associations": {
-        "*.ipp": "cpp",
-        "*.tcc": "cpp",
-        "fstream": "cpp",
-        "iosfwd": "cpp",
-        "thread": "cpp",
-        "type_traits": "cpp",
-        "*.txx": "cpp",
-        "new": "cpp",
-        "unordered_map": "cpp"
-    },
 }

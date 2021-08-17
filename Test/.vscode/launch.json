@@ -3,7 +3,7 @@
 
     "configurations": [
         {
-            "name": "调试运行(Linux-X86本机)",
+            "name": "调试运行(X86-Linux编译X86-Ubuntu1804)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/../binx/debug/test",
@@ -13,7 +13,7 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
-            "preLaunchTask": "调试构建(Linux-X86本机)",
+            "preLaunchTask": "调试构建(X86-Linux编译X86-Ubuntu1804)",
             "setupCommands": [
                 {
                     "description": "为 gdb 启用整齐打印",
@@ -23,7 +23,7 @@
             ]
         },
         {
-            "name": "发布运行(Linux-X86本机)",
+            "name": "发布运行(X86-Linux编译全平台)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/../binx/test",
@@ -32,39 +32,7 @@
             "cwd": "${workspaceFolder}/../binx/",
             "environment": [],
             "externalConsole": false,
-            "preLaunchTask": "发布构建(Linux-X86本机)",
-        },
-        {
-            "name": "调试运行(Linux-Arm本机)",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/../binxa/debug/test",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/../binxa/debug/",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "preLaunchTask": "调试构建(Linux-Arm本机)",
-            "setupCommands": [
-                {
-                    "description": "为 gdb 启用整齐打印",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
-            "name": "发布运行(Linux-Arm本机)",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/../binxa/test",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/../binxa/",
-            "environment": [],
-            "externalConsole": false,
-            "preLaunchTask": "发布构建(Linux-Arm本机)",
+            "preLaunchTask": "发布构建(X86-Linux编译全平台)",
         },
     ]
 }

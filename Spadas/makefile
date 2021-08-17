@@ -120,19 +120,27 @@ WL_OPTION=
 PRELIB_COMMAND=
 POSTLIB_COMMAND=
 ifeq ($(TYPE), lib)
-	PRELIB_COMMAND=mkdir -p $(LIB_PATH)
+	ifeq ($(MODE), release)
+		PRELIB_COMMAND=mkdir -p $(LIB_PATH)
+	endif
 	ifeq ($(PLATFORM), linux)
 		ifneq ($(BIN_EXT), $(LIB_EXT))
 			WL_OPTION=-Wl,-soname,$(OUT_NAME)
 		endif
-		POSTLIB_COMMAND=cp -vf $(OUT_PATH)/$(OUT_NAME) -T $(LIB_PATH)/$(LIB_NAME)
+		ifeq ($(MODE), release)
+			POSTLIB_COMMAND=cp -vf $(OUT_PATH)/$(OUT_NAME) -T $(LIB_PATH)/$(LIB_NAME)
+		endif
 	else ifeq ($(PLATFORM), linuxarm)
 		ifneq ($(BIN_EXT), $(LIB_EXT))
 			WL_OPTION=-Wl,-soname,$(OUT_NAME)
 		endif
-		POSTLIB_COMMAND=cp -vf $(OUT_PATH)/$(OUT_NAME) -T $(LIB_PATH)/$(LIB_NAME)
+		ifeq ($(MODE), release)
+			POSTLIB_COMMAND=cp -vf $(OUT_PATH)/$(OUT_NAME) -T $(LIB_PATH)/$(LIB_NAME)
+		endif
 	else ifeq ($(PLATFORM), windows)
-		WL_OPTION=-Wl,--out-implib,$(LIB_PATH)/$(LIB_NAME)
+		ifeq ($(MODE), release)
+			WL_OPTION=-Wl,--out-implib,$(LIB_PATH)/$(LIB_NAME)
+		endif
 	endif
 endif
 

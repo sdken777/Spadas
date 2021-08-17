@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 基于交叉编译生成库
-#define SPADAS_VERSION_MAJOR 7
-#define SPADAS_VERSION_MINOR 2
+// 版本定义 // 更新版本号（mingw和vc++不兼容）。移除SPADAS_LOCATION，pragma comment，以及windows下的SPADAS_DEBUG
+#define SPADAS_VERSION_MAJOR 8
+#define SPADAS_VERSION_MINOR 0
 #define SPADAS_VERSION_BUILD 0
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：7.2.0\n
+* 本文档对应Spadas版本：8.0.0\n
 *
 * \n
 * \section top1 基本功能概述
@@ -166,30 +166,19 @@
 #endif
 
 // 用于错误提示
-#if defined(SPADAS_ENV_WINDOWS)
-#if defined(__FUNCSIG__)
-#define SPADAS_LOCATION __FUNCSIG__
-#else
-#define SPADAS_LOCATION __PRETTY_FUNCTION__
-#endif
-#endif
-#if defined(SPADAS_ENV_LINUX)
-#define SPADAS_LOCATION __PRETTY_FUNCTION__
-#endif
+#define SPADAS_ERROR_MSG(msg) spadas::console::print((spadas::String)"[SPADAS ERROR @ " + __PRETTY_FUNCTION__ + "] " + msg)
+#define SPADAS_ERROR_PASS(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS ERROR @ " + __PRETTY_FUNCTION__ + "] "#condition); }
+#define SPADAS_ERROR_BREAK(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS ERROR @ " + __PRETTY_FUNCTION__ + "] "#condition); break; }
+#define SPADAS_ERROR_CONTINUE(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS ERROR @ " + __PRETTY_FUNCTION__ + "] "#condition); continue; }
+#define SPADAS_ERROR_RETURN(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS ERROR @ " + __PRETTY_FUNCTION__ + "] "#condition); return; }
+#define SPADAS_ERROR_RETURNVAL(condition, returnVal) if (condition) { spadas::console::print((spadas::String)"[SPADAS ERROR @ " + __PRETTY_FUNCTION__ + "] "#condition); return (returnVal); }
 
-#define SPADAS_ERROR_MSG(msg) spadas::console::print((spadas::String)"[SPADAS ERROR @ " + SPADAS_LOCATION + "] " + msg)
-#define SPADAS_ERROR_PASS(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS ERROR @ " + SPADAS_LOCATION + "] "#condition); }
-#define SPADAS_ERROR_BREAK(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS ERROR @ " + SPADAS_LOCATION + "] "#condition); break; }
-#define SPADAS_ERROR_CONTINUE(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS ERROR @ " + SPADAS_LOCATION + "] "#condition); continue; }
-#define SPADAS_ERROR_RETURN(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS ERROR @ " + SPADAS_LOCATION + "] "#condition); return; }
-#define SPADAS_ERROR_RETURNVAL(condition, returnVal) if (condition) { spadas::console::print((spadas::String)"[SPADAS ERROR @ " + SPADAS_LOCATION + "] "#condition); return (returnVal); }
-
-#define SPADAS_WARNING_MSG(msg) spadas::console::print((spadas::String)"[SPADAS WARNING @ " + SPADAS_LOCATION + "] " + msg)
-#define SPADAS_WARNING_PASS(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + SPADAS_LOCATION + "] "#condition); }
-#define SPADAS_WARNING_BREAK(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + SPADAS_LOCATION + "] "#condition); break; }
-#define SPADAS_WARNING_CONTINUE(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + SPADAS_LOCATION + "] "#condition); continue; }
-#define SPADAS_WARNING_RETURN(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + SPADAS_LOCATION + "] "#condition); return; }
-#define SPADAS_WARNING_RETURNVAL(condition, returnVal) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + SPADAS_LOCATION + "] "#condition); return (returnVal); }
+#define SPADAS_WARNING_MSG(msg) spadas::console::print((spadas::String)"[SPADAS WARNING @ " + __PRETTY_FUNCTION__ + "] " + msg)
+#define SPADAS_WARNING_PASS(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + __PRETTY_FUNCTION__ + "] "#condition); }
+#define SPADAS_WARNING_BREAK(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + __PRETTY_FUNCTION__ + "] "#condition); break; }
+#define SPADAS_WARNING_CONTINUE(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + __PRETTY_FUNCTION__ + "] "#condition); continue; }
+#define SPADAS_WARNING_RETURN(condition) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + __PRETTY_FUNCTION__ + "] "#condition); return; }
+#define SPADAS_WARNING_RETURNVAL(condition, returnVal) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + __PRETTY_FUNCTION__ + "] "#condition); return (returnVal); }
 
 // 避免宏定义冲突
 #if defined(TRUE)
@@ -214,7 +203,6 @@
 // Spadas类库I/O
 #if defined(SPADAS_ENV_WINDOWS) && !defined(SPADAS_EXPORTS)
 #define SPADAS_API SPADAS_WINDOWS_DLLIMPORT
-#pragma comment(lib, "Spadas.lib")
 #else
 #define SPADAS_API SPADAS_DEFAULT_API
 #endif
@@ -244,14 +232,8 @@
 
 // 调试用
 #if defined(SPADAS_DEBUG)
-#if defined(SPADAS_ENV_WINDOWS)
-#define SPADAS_BINARY_DUMMY_BYTES 16
-#define SPADAS_STRING_DUMMY_BYTES 20
-#endif
-#if defined(SPADAS_ENV_LINUX)
 #define SPADAS_BINARY_DUMMY_BYTES 12
 #define SPADAS_STRING_DUMMY_BYTES 16
-#endif
 #endif
 
 // OpenCV兼容性
