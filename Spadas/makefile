@@ -39,7 +39,8 @@ ifeq ($(PLATFORM), linux)
 	EXE_EXT=
 	ENV_DEFINE=SPADAS_ENV_LINUX
 	ARCH_DEFINE=SPADAS_ARCH_X86
-else ifeq ($(PLATFORM), linuxarm)
+endif
+ifeq ($(PLATFORM), linuxarm)
 	INCLUDE_DIR=includexa
 	LIB_DIR=libxa
 	BIN_DIR=binxa
@@ -53,7 +54,8 @@ else ifeq ($(PLATFORM), linuxarm)
 	EXE_EXT=
 	ENV_DEFINE=SPADAS_ENV_LINUX
 	ARCH_DEFINE=SPADAS_ARCH_ARM
-else ifeq ($(PLATFORM), windows)
+endif
+ifeq ($(PLATFORM), windows)
 	INCLUDE_DIR=include64
 	LIB_DIR=lib64
 	BIN_DIR=bin64
@@ -68,7 +70,8 @@ endif
 ifeq ($(TYPE), lib)
 	OUT_NAME=$(LIB_PREFIX)$(TARGET)$(BIN_EXT)
 	LDFLAG=-shared
-else ifeq ($(TYPE), exe)
+endif
+ifeq ($(TYPE), exe)
 	OUT_NAME=$(TARGET)$(EXE_EXT)
 	LDFLAG=
 endif
@@ -77,7 +80,8 @@ ifeq ($(MODE), release)
 	OBJ_PATH=Release
 	OUT_PATH=../$(BIN_DIR)
 	CFLAG=-O3
-else ifeq ($(MODE), debug)
+endif
+ifeq ($(MODE), debug)
 	OBJ_PATH=Debug
 	OUT_PATH=../$(BIN_DIR)/debug
 	CFLAG=-g -DSPADAS_DEBUG
@@ -91,24 +95,28 @@ ifeq ($(COMPILE), local)
 		GCC_EXE=gcc
 		GPP_EXE=g++
 		STRIP_EXE=strip
-	else ifeq ($(PLATFORM), linuxarm)
+	endif
+	ifeq ($(PLATFORM), linuxarm)
 		GCC_EXE=gcc
 		GPP_EXE=g++
 		STRIP_EXE=strip
 	endif
 	SYSROOT_OPTION=
-else ifeq($(COMPILE), cross)
+endif
+ifeq ($(COMPILE), cross)
 	ifeq ($(PLATFORM), linux)
 		GCC_EXE=/opt/x-tools/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-gcc
 		GPP_EXE=/opt/x-tools/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-g++
 		STRIP_EXE=/opt/x-tools/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-strip
 		SYSROOT_OPTION=--sysroot=/opt/x-tools/x86-ubuntu1804/x86_64-ubuntu18.04-linux-gnu/sysroot
-	else ifeq ($(PLATFORM), linuxarm)
+	endif
+	ifeq ($(PLATFORM), linuxarm)
 		GCC_EXE=/opt/x-tools/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-gcc
 		GPP_EXE=/opt/x-tools/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-g++
 		STRIP_EXE=/opt/x-tools/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-strip
 		SYSROOT_OPTION=--sysroot=/opt/x-tools/arm-ubuntu1604/aarch64-ubuntu16.04-linux-gnu/sysroot
-	else ifeq ($(PLATFORM), windows)
+	endif
+	ifeq ($(PLATFORM), windows)
 		GCC_EXE=/opt/x-tools/x86-windows/bin/x86_64-w64-mingw32-gcc
 		GPP_EXE=/opt/x-tools/x86-windows/bin/x86_64-w64-mingw32-g++
 		STRIP_EXE=/opt/x-tools/x86-windows/bin/x86_64-w64-mingw32-strip
@@ -130,14 +138,16 @@ ifeq ($(TYPE), lib)
 		ifeq ($(MODE), release)
 			POSTLIB_COMMAND=cp -vf $(OUT_PATH)/$(OUT_NAME) -T $(LIB_PATH)/$(LIB_NAME)
 		endif
-	else ifeq ($(PLATFORM), linuxarm)
+	endif
+	ifeq ($(PLATFORM), linuxarm)
 		ifneq ($(BIN_EXT), $(LIB_EXT))
 			WL_OPTION=-Wl,-soname,$(OUT_NAME)
 		endif
 		ifeq ($(MODE), release)
 			POSTLIB_COMMAND=cp -vf $(OUT_PATH)/$(OUT_NAME) -T $(LIB_PATH)/$(LIB_NAME)
 		endif
-	else ifeq ($(PLATFORM), windows)
+	endif
+	ifeq ($(PLATFORM), windows)
 		ifeq ($(MODE), release)
 			WL_OPTION=-Wl,--out-implib,$(LIB_PATH)/$(LIB_NAME)
 		endif
@@ -146,7 +156,8 @@ endif
 
 ifeq ($(MODE), release)
 	STRIP_COMMAND=$(STRIP_EXE) $(OUT_PATH)/$(OUT_NAME)
-else ifeq ($(MODE), debug)
+endif
+ifeq ($(MODE), debug)
 	STRIP_COMMAND=
 endif
 

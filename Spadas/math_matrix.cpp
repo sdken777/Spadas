@@ -167,7 +167,7 @@ namespace math_internal
 						}
 					}
 				}
-				Type *vRowI = &vData[uDimAt1];
+				Type *vRowI = &vData[i * uDimAt1];
 				for (j=l,a=l*n+i;j<n;j++,a+=n)
 				{
 					vRowI[j]=vData[a]=0.0;

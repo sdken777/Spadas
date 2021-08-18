@@ -15,6 +15,7 @@ void exampleMap();
 void exampleTrim();
 void exampleFile();
 void exampleTask();
+void exampleMatrix();
 
 void runExamples()
 {
@@ -53,4 +54,7 @@ void runExamples()
 
     print("\n-- Example: Task --");
     exampleTask();
+
+    print("\n-- Example: Matrix --");
+    exampleMatrix();
 }
