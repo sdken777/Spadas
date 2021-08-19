@@ -10,8 +10,6 @@ bin*/output
 *.metagen
 *.config
 *.vshost.*
-bin*/Test*.exe
-binx/Test
 .vs
 *.iobj
 *.ipdb

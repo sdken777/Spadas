@@ -12,10 +12,18 @@ void exampleString()
 	console::print("- 1 -");
 
 	String str = "Hello天气不错";
-	printf("%s\n", (Char*)str.bytes()); // UTF8字符在Windows下按ANSI打印为乱码，Linux下按UTF8打印正常
-	printf("%s\n", str.chars().data()); // Windows下按ANSI打印，Linux下按UTF8打印
-	wprintf(L"%s\n", str.wchars().data()); // Windows下按UTF16打印，Linux下按UTF32打印
-	console::print(str); // Spadas打印无需考虑字符编码问题
+
+	Byte *strBytes = str.bytes(); // 任何平台都为UTF8
+	console::print(SS"bytes: " + String::merge(Array<Byte>(strBytes, str.byteSize()), ","));
+
+	Array<Char> strChars = str.chars(); // Windows下为ANSI，Linux下为UTF8
+	console::print(SS"chars: " + String::merge(Array<Byte>((Byte*)strChars.data(), strChars.size()), ","));
+
+	Array<WChar> strWChars = str.wchars(); // Windows下为UTF16，Linux下为UTF32
+	if (sizeof(WChar) == 4) console::print(SS"wchars: " + String::merge(Array<UInt>((UInt*)strWChars.data(), strWChars.size()), ","));
+	else if (sizeof(WChar) == 2) console::print(SS"wchars: " + String::merge(Array<Word>((Word*)strWChars.data(), strWChars.size()), ","));
+	
+	console::print(SS"console::print: " + str); // Spadas打印无需考虑字符编码问题
 
 	// 部分结构体和所有类实现toString函数
 	console::print("- 2 -");
