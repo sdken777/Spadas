@@ -95,6 +95,9 @@ endif
 LIB_NAME=$(LIB_PREFIX)$(TARGET)$(LIB_EXT)
 LIB_PATH=../$(LIB_DIR)
 
+# 交叉编译工具链路径
+XTOOLS_PATH = $(shell if [ -d "/c/x-tools" ]; then echo "/c/x-tools"; else echo "/opt/x-tools"; fi;)
+
 # 编译工具链相关
 ifeq ($(COMPILE), local)
 	ifeq ($(PLATFORM), linux)
@@ -111,22 +114,22 @@ ifeq ($(COMPILE), local)
 endif
 ifeq ($(COMPILE), cross)
 	ifeq ($(PLATFORM), linux)
-		GCC_EXE=/opt/x-tools/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-gcc
-		GPP_EXE=/opt/x-tools/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-g++
-		STRIP_EXE=/opt/x-tools/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-strip
-		SYSROOT_OPTION=--sysroot=/opt/x-tools/x86-ubuntu1804/x86_64-ubuntu18.04-linux-gnu/sysroot
+		GCC_EXE=$(XTOOLS_PATH)/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-gcc
+		GPP_EXE=$(XTOOLS_PATH)/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-g++
+		STRIP_EXE=$(XTOOLS_PATH)/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-strip
+		SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/x86-ubuntu1804/x86_64-ubuntu18.04-linux-gnu/sysroot
 	endif
 	ifeq ($(PLATFORM), linuxarm)
-		GCC_EXE=/opt/x-tools/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-gcc
-		GPP_EXE=/opt/x-tools/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-g++
-		STRIP_EXE=/opt/x-tools/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-strip
-		SYSROOT_OPTION=--sysroot=/opt/x-tools/arm-ubuntu1604/aarch64-ubuntu16.04-linux-gnu/sysroot
+		GCC_EXE=$(XTOOLS_PATH)/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-gcc
+		GPP_EXE=$(XTOOLS_PATH)/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-g++
+		STRIP_EXE=$(XTOOLS_PATH)/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-strip
+		SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/arm-ubuntu1604/aarch64-ubuntu16.04-linux-gnu/sysroot
 	endif
 	ifeq ($(PLATFORM), windows)
-		GCC_EXE=/opt/x-tools/x86-windows/bin/x86_64-w64-mingw32-gcc
-		GPP_EXE=/opt/x-tools/x86-windows/bin/x86_64-w64-mingw32-g++
-		STRIP_EXE=/opt/x-tools/x86-windows/bin/x86_64-w64-mingw32-strip
-		SYSROOT_OPTION=--sysroot=/opt/x-tools/x86-windows/x86_64-w64-mingw32/sysroot
+		GCC_EXE=$(XTOOLS_PATH)/x86-windows/bin/x86_64-w64-mingw32-gcc
+		GPP_EXE=$(XTOOLS_PATH)/x86-windows/bin/x86_64-w64-mingw32-g++
+		STRIP_EXE=$(XTOOLS_PATH)/x86-windows/bin/x86_64-w64-mingw32-strip
+		SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/x86-windows/x86_64-w64-mingw32/sysroot
 	endif
 endif
 
@@ -172,7 +175,7 @@ endif
 # 字符集选项
 CHARSET_OPTION=
 ifeq ($(PLATFORM), windows)
-	CHARSET_OPTION=-fexec-charset=GBK -fwide-exec-charset=UTF-16
+	CHARSET_OPTION=-fexec-charset=GBK
 endif
 
 # 编译流程

@@ -2,5 +2,65 @@
     "version": "0.2.0",
 
     "configurations": [
+        {
+            "name": "调试运行(X86-Linux)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/../binx/debug/test",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/../binx/debug/",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "preLaunchTask": "调试构建(交叉编译X86-Ubuntu1804)",
+            "setupCommands": [
+                {
+                    "description": "为 gdb 启用整齐打印",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "调试运行(Arm-Linux)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/../binxa/debug/test",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/../binxa/debug/",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "preLaunchTask": "调试构建(交叉编译Arm-Ubuntu1604)",
+            "setupCommands": [
+                {
+                    "description": "为 gdb 启用整齐打印",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "调试运行(X86-Windows)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/../bin64/debug/test",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/../bin64/debug/",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "preLaunchTask": "调试构建(交叉编译X86-Windows)",
+            "setupCommands": [
+                {
+                    "description": "为 gdb 启用整齐打印",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
     ]
 }

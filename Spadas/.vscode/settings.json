@@ -9,26 +9,13 @@
         "*.vcxproj.user": true,
         "*.vcxproj.filters": true,
     },
-    "C_Cpp.default.defines": [
-        "SPADAS_ENV_LINUX",
-        "SPADAS_ARCH_X86",
-        // "SPADAS_ENV_WINDOWS",
-        // "SPADAS_ARCH_ARM",
-        // "SPADAS_EXPORTS",
-    ],
-    "C_Cpp.default.includePath": [
-        "../include",
-        "../includex",
-        // "../includexa",
-        // "../include64",
-        // "/opt/x-tools/x86-windows/x86_64-w64-mingw32/sysroot/mingw/include",
-    ],
     "files.associations": {
         "array": "cpp",
         "string": "cpp",
         "string_view": "cpp",
         "bitset": "cpp",
         "initializer_list": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "new": "cpp"
     },
 }

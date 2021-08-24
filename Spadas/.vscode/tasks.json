@@ -1,16 +1,16 @@
 {
     "tasks": [
         {
-            "type": "shell",
+            "type": "process",
             "label": "(internal)清理",
-            "command": "/usr/bin/make",
+            "command": "make",
             "args": [
                 "clean",
             ],
-            "problemMatcher":"$gcc",
+            "problemMatcher":[],
         },
         {
-            "type": "shell",
+            "type": "process",
             "label": "(internal)创建include文件夹",
             "command": "mkdir",
             "args": [
@@ -20,9 +20,9 @@
             "problemMatcher":[],
         },
         {
-            "type": "shell",
-            "label": "(internal)发布构建(X86-Linux编译X86-Ubuntu1804)",
-            "command": "/usr/bin/make",
+            "type": "process",
+            "label": "(internal)发布构建(交叉编译X86-Ubuntu1804)",
+            "command": "make",
             "args": [
                 "-j4",
                 "TYPE=lib",
@@ -39,9 +39,9 @@
             "problemMatcher":"$gcc",
         },
         {
-            "type": "shell",
-            "label": "(internal)发布构建(X86-Linux编译Arm-Ubuntu1604)",
-            "command": "/usr/bin/make",
+            "type": "process",
+            "label": "(internal)发布构建(交叉编译Arm-Ubuntu1604)",
+            "command": "make",
             "args": [
                 "-j4",
                 "TYPE=lib",
@@ -58,9 +58,9 @@
             "problemMatcher":"$gcc",
         },
         {
-            "type": "shell",
-            "label": "(internal)发布构建(X86-Linux编译X86-Windows)",
-            "command": "/usr/bin/make",
+            "type": "process",
+            "label": "(internal)发布构建(交叉编译X86-Windows)",
+            "command": "make",
             "args": [
                 "-j4",
                 "TYPE=lib",
@@ -78,9 +78,9 @@
             "problemMatcher":"$gcc",
         },
         {
-            "type": "shell",
-            "label": "调试构建(X86-Linux编译X86-Ubuntu1804)",
-            "command": "/usr/bin/make",
+            "type": "process",
+            "label": "调试构建(交叉编译X86-Ubuntu1804)",
+            "command": "make",
             "args": [
                 "-j4",
                 "TYPE=lib",
@@ -97,19 +97,85 @@
             "problemMatcher":"$gcc",
         },
         {
-            "type": "shell",
-            "label": "发布构建(X86-Linux编译全平台)",
-            "command": "cp",
+            "type": "process",
+            "label": "调试构建(交叉编译Arm-Ubuntu1604)",
+            "command": "make",
             "args": [
-                "-vf",
-                "spadas*.h",
-                "../include/",
+                "-j4",
+                "TYPE=lib",
+                "MODE=debug",
+                "PLATFORM=linuxarm",
+                "COMPILE=cross",
+                "TARGET=spadas",
+                "TARGET_VERSION=8",
+                "DEPENDS=pthread",
+            ],
+            "dependsOn": [
+                "(internal)清理",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
+            "label": "调试构建(交叉编译X86-Windows)",
+            "command": "make",
+            "args": [
+                "-j4",
+                "TYPE=lib",
+                "MODE=debug",
+                "PLATFORM=windows",
+                "COMPILE=cross",
+                "TARGET=spadas",
+                "TARGET_VERSION=8",
+                "DEPENDS=winmm ws2_32 iphlpapi",
+                "MACRO_DEFINE=SPADAS_EXPORTS",
+            ],
+            "dependsOn": [
+                "(internal)清理",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
+            "label": "(internal)发布构建(交叉编译全平台)",
+            "command": "echo",
+            "args": [
+                "Done.",
             ],
             "dependsOrder": "sequence",
             "dependsOn": [
-                "(internal)发布构建(X86-Linux编译X86-Ubuntu1804)",
-                "(internal)发布构建(X86-Linux编译Arm-Ubuntu1604)",
-                "(internal)发布构建(X86-Linux编译X86-Windows)",
+                "(internal)发布构建(交叉编译X86-Ubuntu1804)",
+                "(internal)发布构建(交叉编译Arm-Ubuntu1604)",
+                "(internal)发布构建(交叉编译X86-Windows)",
+            ],
+            "problemMatcher":[],
+        },
+        {
+            "type": "process",
+            "label": "发布构建并拷贝头文件(process)",
+            "command": "cp",
+            "args": [
+                "-vf",
+                "./spadas*.h",
+                "../include/",
+            ],
+            "dependsOn": [
+                "(internal)发布构建(交叉编译全平台)",
+                "(internal)创建include文件夹",
+            ],
+            "problemMatcher":[],
+        },
+        {
+            "type": "shell",
+            "label": "发布构建并拷贝头文件(shell)",
+            "command": "cp",
+            "args": [
+                "-vf",
+                "./spadas*.h",
+                "../include/",
+            ],
+            "dependsOn": [
+                "(internal)发布构建(交叉编译全平台)",
                 "(internal)创建include文件夹",
             ],
             "problemMatcher":[],

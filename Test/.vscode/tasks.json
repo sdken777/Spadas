@@ -1,18 +1,18 @@
 {
     "tasks": [
         {
-            "type": "shell",
+            "type": "process",
             "label": "(internal)清理",
-            "command": "/usr/bin/make",
+            "command": "make",
             "args": [
                 "clean",
             ],
-            "problemMatcher":"$gcc",
+            "problemMatcher":[],
         },
         {
-            "type": "shell",
-            "label": "(internal)发布构建(X86-Linux编译X86-Ubuntu1804)",
-            "command": "/usr/bin/make",
+            "type": "process",
+            "label": "(internal)发布构建(交叉编译X86-Ubuntu1804)",
+            "command": "make",
             "args": [
                 "-j4",
                 "TYPE=exe",
@@ -28,9 +28,9 @@
             "problemMatcher":"$gcc",
         },
         {
-            "type": "shell",
-            "label": "(internal)发布构建(X86-Linux编译Arm-Ubuntu1604)",
-            "command": "/usr/bin/make",
+            "type": "process",
+            "label": "(internal)发布构建(交叉编译Arm-Ubuntu1604)",
+            "command": "make",
             "args": [
                 "-j4",
                 "TYPE=exe",
@@ -46,9 +46,9 @@
             "problemMatcher":"$gcc",
         },
         {
-            "type": "shell",
-            "label": "(internal)发布构建(X86-Linux编译X86-Windows)",
-            "command": "/usr/bin/make",
+            "type": "process",
+            "label": "(internal)发布构建(交叉编译X86-Windows)",
+            "command": "make",
             "args": [
                 "-j4",
                 "TYPE=exe",
@@ -64,9 +64,9 @@
             "problemMatcher":"$gcc",
         },
         {
-            "type": "shell",
-            "label": "调试构建(X86-Linux编译X86-Ubuntu1804)",
-            "command": "/usr/bin/make",
+            "type": "process",
+            "label": "调试构建(交叉编译X86-Ubuntu1804)",
+            "command": "make",
             "args": [
                 "-j4",
                 "TYPE=exe",
@@ -82,17 +82,53 @@
             "problemMatcher":"$gcc",
         },
         {
-            "type": "shell",
-            "label": "发布构建(X86-Linux编译全平台)",
+            "type": "process",
+            "label": "调试构建(交叉编译Arm-Ubuntu1604)",
+            "command": "make",
+            "args": [
+                "-j4",
+                "TYPE=exe",
+                "MODE=debug",
+                "PLATFORM=linuxarm",
+                "COMPILE=cross",
+                "TARGET=test",
+                "DEPENDS=spadas",
+            ],
+            "dependsOn": [
+                "(internal)清理",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
+            "label": "调试构建(交叉编译X86-Windows)",
+            "command": "make",
+            "args": [
+                "-j4",
+                "TYPE=exe",
+                "MODE=debug",
+                "PLATFORM=windows",
+                "COMPILE=cross",
+                "TARGET=test",
+                "DEPENDS=spadas",
+            ],
+            "dependsOn": [
+                "(internal)清理",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
+            "label": "发布构建(交叉编译全平台)",
             "command": "echo",
             "args": [
                 "Done.",
             ],
             "dependsOrder": "sequence",
             "dependsOn": [
-                "(internal)发布构建(X86-Linux编译X86-Ubuntu1804)",
-                "(internal)发布构建(X86-Linux编译Arm-Ubuntu1604)",
-                "(internal)发布构建(X86-Linux编译X86-Windows)",
+                "(internal)发布构建(交叉编译X86-Ubuntu1804)",
+                "(internal)发布构建(交叉编译Arm-Ubuntu1604)",
+                "(internal)发布构建(交叉编译X86-Windows)",
             ],
             "problemMatcher":[],
         },

@@ -10,5 +10,6 @@ int main(int argc, char* argv[])
 	runExamples();
 
 	console::print("over");
+	console::waitKey();
 	return 0;
 }

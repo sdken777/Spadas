@@ -13,6 +13,7 @@ void examplePointTo();
 void exampleEqual();
 void exampleMap();
 void exampleTrim();
+void exampleConsole();
 void exampleFile();
 void exampleTask();
 void exampleMatrix();
@@ -35,7 +36,7 @@ void runExamples()
     exampleForElement();
 
     print("\n-- Example: ArrayX --");
-    exampleArrayX();
+    exampleArrayX(); // GDB调试时析构可能耗时特别长
 
     print("\n-- Example: Point To --");
     examplePointTo();
@@ -48,6 +49,9 @@ void runExamples()
 
     print("\n-- Example: Trim --");
     exampleTrim();
+
+    print("\n-- Example: Console --");
+    exampleConsole(); // 需要控制台输入
 
     print("\n-- Example: File --");
     exampleFile();

@@ -9,6 +9,8 @@
 #include <conio.h>
 #include <wchar.h>
 #include <locale.h>
+#include <fcntl.h>
+#include <io.h>
 #include <windows.h>
 
 namespace console_internal
@@ -28,6 +30,9 @@ void spadas::console::popup(String text)
 
 DefaultConsole::DefaultConsole() : Object<Vars>(new Vars(), TRUE)
 {
+	_setmode(_fileno(stdin), _O_U8TEXT);
+	_setmode(_fileno(stdout), _O_U8TEXT);
+
 	char *newLocale = setlocale(LC_ALL, "chs");
 	if (newLocale == 0 || newLocale[0] == 0)
 	{
