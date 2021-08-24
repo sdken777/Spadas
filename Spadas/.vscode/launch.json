@@ -51,7 +51,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/../bin64/debug/",
             "environment": [],
-            "externalConsole": false,
+            "externalConsole": true,
             "MIMode": "gdb",
             "preLaunchTask": "调试构建(交叉编译X86-Windows)",
             "setupCommands": [

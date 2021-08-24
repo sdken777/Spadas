@@ -7,7 +7,9 @@ void exampleConsole()
 {
 	// 从控制台输入文本并弹出对话框显示
 	console::print("Input some text.");
-	console::popup(console::scan());
+
+	String text = console::scan();
+	console::popup(text);
 
 	// 按键检测，输入Q推出
 	console::print("Press keys, Q to break.");

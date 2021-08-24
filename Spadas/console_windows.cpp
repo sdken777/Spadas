@@ -30,7 +30,6 @@ void spadas::console::popup(String text)
 
 DefaultConsole::DefaultConsole() : Object<Vars>(new Vars(), TRUE)
 {
-	_setmode(_fileno(stdin), _O_U8TEXT);
 	_setmode(_fileno(stdout), _O_U8TEXT);
 
 	char *newLocale = setlocale(LC_ALL, "chs");
