@@ -11,43 +11,7 @@
         },
         {
             "type": "process",
-            "label": "(internal)发布构建(交叉编译X86-Ubuntu1804)",
-            "command": "make",
-            "args": [
-                "-j4",
-                "TYPE=exe",
-                "MODE=release",
-                "PLATFORM=linux",
-                "COMPILE=cross",
-                "TARGET=test",
-                "DEPENDS=spadas",
-            ],
-            "dependsOn": [
-                "(internal)清理",
-            ],
-            "problemMatcher":"$gcc",
-        },
-        {
-            "type": "process",
-            "label": "(internal)发布构建(交叉编译Arm-Ubuntu1604)",
-            "command": "make",
-            "args": [
-                "-j4",
-                "TYPE=exe",
-                "MODE=release",
-                "PLATFORM=linuxarm",
-                "COMPILE=cross",
-                "TARGET=test",
-                "DEPENDS=spadas",
-            ],
-            "dependsOn": [
-                "(internal)清理",
-            ],
-            "problemMatcher":"$gcc",
-        },
-        {
-            "type": "process",
-            "label": "(internal)发布构建(交叉编译X86-Windows)",
+            "label": "(internal)发布构建(X86-Windows)",
             "command": "make",
             "args": [
                 "-j4",
@@ -65,12 +29,12 @@
         },
         {
             "type": "process",
-            "label": "调试构建(交叉编译X86-Ubuntu1804)",
+            "label": "(internal)发布构建(X86-Ubuntu1804)",
             "command": "make",
             "args": [
                 "-j4",
                 "TYPE=exe",
-                "MODE=debug",
+                "MODE=release",
                 "PLATFORM=linux",
                 "COMPILE=cross",
                 "TARGET=test",
@@ -83,12 +47,12 @@
         },
         {
             "type": "process",
-            "label": "调试构建(交叉编译Arm-Ubuntu1604)",
+            "label": "(internal)发布构建(Arm-Ubuntu1604)",
             "command": "make",
             "args": [
                 "-j4",
                 "TYPE=exe",
-                "MODE=debug",
+                "MODE=release",
                 "PLATFORM=linuxarm",
                 "COMPILE=cross",
                 "TARGET=test",
@@ -101,7 +65,7 @@
         },
         {
             "type": "process",
-            "label": "调试构建(交叉编译X86-Windows)",
+            "label": "调试构建(X86-Windows)",
             "command": "make",
             "args": [
                 "-j4",
@@ -119,16 +83,52 @@
         },
         {
             "type": "process",
-            "label": "发布构建(交叉编译全平台)",
+            "label": "调试构建(X86-Ubuntu1804)",
+            "command": "make",
+            "args": [
+                "-j4",
+                "TYPE=exe",
+                "MODE=debug",
+                "PLATFORM=linux",
+                "COMPILE=cross",
+                "TARGET=test",
+                "DEPENDS=spadas",
+            ],
+            "dependsOn": [
+                "(internal)清理",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
+            "label": "调试构建(Arm-Ubuntu1604)",
+            "command": "make",
+            "args": [
+                "-j4",
+                "TYPE=exe",
+                "MODE=debug",
+                "PLATFORM=linuxarm",
+                "COMPILE=cross",
+                "TARGET=test",
+                "DEPENDS=spadas",
+            ],
+            "dependsOn": [
+                "(internal)清理",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
+            "label": "发布构建(全平台)",
             "command": "echo",
             "args": [
                 "Done.",
             ],
             "dependsOrder": "sequence",
             "dependsOn": [
-                "(internal)发布构建(交叉编译X86-Ubuntu1804)",
-                "(internal)发布构建(交叉编译Arm-Ubuntu1604)",
-                "(internal)发布构建(交叉编译X86-Windows)",
+                "(internal)发布构建(X86-Windows)",
+                "(internal)发布构建(X86-Ubuntu1804)",
+                "(internal)发布构建(Arm-Ubuntu1604)",
             ],
             "problemMatcher":[],
         },

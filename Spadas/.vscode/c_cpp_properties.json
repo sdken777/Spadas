@@ -1,6 +1,22 @@
 {
     "configurations": [
         {
+            "name": "X86-Windows",
+            "includePath": [
+                "../include",
+                // "../include64",
+                "C:\\x-tools\\x86-windows\\x86_64-w64-mingw32\\sysroot\\mingw\\include",
+                "C:\\x-tools\\x86-windows\\lib\\gcc\\x86_64-w64-mingw32\\8.3.0\\include",
+                "C:\\x-tools\\x86-windows\\x86_64-w64-mingw32\\include\\c++\\8.3.0"
+            ],
+            "defines": [
+                "SPADAS_EXPORTS", // 仅此工程
+                "SPADAS_ENV_WINDOWS",
+                "SPADAS_ARCH_X86"
+            ],
+            "intelliSenseMode": "windows-msvc-x64"
+        },
+        {
             "name": "X86-Linux",
             "includePath": [
                 "../include",
@@ -29,22 +45,6 @@
                 "SPADAS_ARCH_ARM"
             ],
             "intelliSenseMode": "linux-gcc-arm64"
-        },
-        {
-            "name": "X86-Windows",
-            "includePath": [
-                "../include",
-                // "../include64",
-                "C:\\x-tools\\x86-windows\\x86_64-w64-mingw32\\sysroot\\mingw\\include",
-                "C:\\x-tools\\x86-windows\\lib\\gcc\\x86_64-w64-mingw32\\8.3.0\\include",
-                "C:\\x-tools\\x86-windows\\x86_64-w64-mingw32\\include\\c++\\8.3.0"
-            ],
-            "defines": [
-                "SPADAS_EXPORTS", // 仅此工程
-                "SPADAS_ENV_WINDOWS",
-                "SPADAS_ARCH_X86"
-            ],
-            "intelliSenseMode": "windows-msvc-x64"
         }
 
     ],

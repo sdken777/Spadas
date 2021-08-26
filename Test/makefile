@@ -134,16 +134,17 @@ ifeq ($(COMPILE), cross)
 endif
 
 # 输出lib与bin选项
-WL_OPTION=
+WL_OPTION=-Wl,-rpath,./
 PRELIB_COMMAND=
 POSTLIB_COMMAND=
 ifeq ($(TYPE), lib)
+	WL_OPTION:=$(WL_OPTION),-rpath-link,$(LIB_PATH)/
 	ifeq ($(MODE), release)
 		PRELIB_COMMAND=mkdir -p $(LIB_PATH)
 	endif
 	ifeq ($(PLATFORM), linux)
 		ifneq ($(BIN_EXT), $(LIB_EXT))
-			WL_OPTION=-Wl,-soname,$(OUT_NAME)
+			WL_OPTION:=$(WL_OPTION),-soname,$(OUT_NAME)
 		endif
 		ifeq ($(MODE), release)
 			POSTLIB_COMMAND=cp -vf $(OUT_PATH)/$(OUT_NAME) -T $(LIB_PATH)/$(LIB_NAME)
@@ -151,7 +152,7 @@ ifeq ($(TYPE), lib)
 	endif
 	ifeq ($(PLATFORM), linuxarm)
 		ifneq ($(BIN_EXT), $(LIB_EXT))
-			WL_OPTION=-Wl,-soname,$(OUT_NAME)
+			WL_OPTION:=$(WL_OPTION),-soname,$(OUT_NAME)
 		endif
 		ifeq ($(MODE), release)
 			POSTLIB_COMMAND=cp -vf $(OUT_PATH)/$(OUT_NAME) -T $(LIB_PATH)/$(LIB_NAME)
@@ -159,7 +160,7 @@ ifeq ($(TYPE), lib)
 	endif
 	ifeq ($(PLATFORM), windows)
 		ifeq ($(MODE), release)
-			WL_OPTION=-Wl,--out-implib,$(LIB_PATH)/$(LIB_NAME)
+			WL_OPTION:=$(WL_OPTION),--out-implib,$(LIB_PATH)/$(LIB_NAME)
 		endif
 	endif
 endif
@@ -183,7 +184,7 @@ all:$(OBJS)
 	$(PREBUILD_COMMAND)
 	$(PRELIB_COMMAND)
 	mkdir -p $(OUT_PATH)
-	$(GPP_EXE) $(WL_OPTION) $(SYSROOT_OPTION) $(CHARSET_OPTION) -L../$(LIB_DIR) -Wl,-rpath,./,-rpath-link,$(OUT_PATH)/ $(LDFLAG) -o $(OUT_PATH)/$(OUT_NAME) $(addprefix $(OBJ_PATH)/, $(OBJS)) $(addprefix -l, $(DEPENDS)) $(addprefix -L, $(SEARCH_LIB))
+	$(GPP_EXE) $(SYSROOT_OPTION) $(CHARSET_OPTION) -L../$(LIB_DIR) $(WL_OPTION) $(LDFLAG) -o $(OUT_PATH)/$(OUT_NAME) $(addprefix $(OBJ_PATH)/, $(OBJS)) $(addprefix -l, $(DEPENDS)) $(addprefix -L, $(SEARCH_LIB))
 	$(STRIP_COMMAND)
 	$(POSTLIB_COMMAND)
 	$(POSTBUILD_COMMAND)
