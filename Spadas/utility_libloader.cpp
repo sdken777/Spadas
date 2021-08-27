@@ -40,8 +40,13 @@ Bool LibraryLoader::openWithName(Path libDir, String libName, String libVersion)
 Bool LibraryLoader::openWithPath(Path libPath)
 {
 	SPADAS_ERROR_RETURNVAL(libPath.isNull() || !libPath.isFile(), FALSE);
-	SPADAS_ERROR_RETURNVAL(!libPath.exist(), FALSE);
 	SPADAS_ERROR_RETURNVAL(vars->module != NULL, FALSE);
+
+	if (!libPath.exist())
+	{
+		SPADAS_ERROR_MSG(SS"!libPath.exist() (" + libPath.fullPath() + ")");
+		return FALSE;
+	}
 
 	vars->module = LoadLibraryW(libPath.fullPath().wchars().data());
 	SPADAS_ERROR_PASS(vars->module == NULL);
@@ -102,8 +107,13 @@ Bool LibraryLoader::openWithName(Path libDir, String libName, String libVersion)
 Bool LibraryLoader::openWithPath(Path libPath)
 {
 	SPADAS_ERROR_RETURNVAL(libPath.isNull() || !libPath.isFile(), FALSE);
-	SPADAS_ERROR_RETURNVAL(!libPath.exist(), FALSE);
 	SPADAS_ERROR_RETURNVAL(vars->handle != NULL, FALSE);
+
+	if (!libPath.exist())
+	{
+		SPADAS_ERROR_MSG(SS"!libPath.exist() (" + libPath.fullPath() + ")");
+		return FALSE;
+	}
 
 	vars->handle = (Pointer)dlopen((Char*)libPath.fullPath().bytes(), RTLD_NOW | RTLD_GLOBAL);
     if (vars->handle == NULL)
