@@ -3786,6 +3786,10 @@ namespace spadas
 
 		/// 接收所有收到的数据
         Array<Binary> receive();
+
+	private:
+		Bool isNull() { return FALSE; }
+		Bool isValid() { return FALSE; }
 	};
 
 	/// Magic：四字符标识构成一个32位整型数字
@@ -3815,6 +3819,33 @@ namespace spadas
 
 		/// 四字符转换为字符串
 		String toString();
+
+	private:
+		Bool isNull() { return FALSE; }
+		Bool isValid() { return FALSE; }
+	};
+
+	/// 动态库加载器
+	class SPADAS_API LibraryLoader : public Object<class LibraryLoaderVars>
+	{
+	public:
+		/// 类名称
+		static const String TypeName;
+
+		/// 创建动态库加载器
+		LibraryLoader();
+
+		/// 使用指定文件夹下的库名称打开动态库（无需添加lib等前缀或后缀名），libVersion用于指定so等动态库的后缀版本号（如"1.0"）
+		Bool openWithName(Path libDir, String libName, String libVersion = String());
+
+		/// 使用库文件路径打开动态库
+		Bool openWithPath(Path libPath);
+
+		/// 关闭动态库（一般不执行）
+		void close();
+
+		/// 获取符号地址
+		Pointer getSymbol(String symbol);
 
 	private:
 		Bool isNull() { return FALSE; }

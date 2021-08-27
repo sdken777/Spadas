@@ -51,7 +51,7 @@
                 "COMPILE=cross",
                 "TARGET=spadas",
                 "TARGET_VERSION=8",
-                "DEPENDS=pthread",
+                "DEPENDS=pthread dl",
             ],
             "dependsOn": [
                 "(internal)清理",
@@ -70,7 +70,7 @@
                 "COMPILE=cross",
                 "TARGET=spadas",
                 "TARGET_VERSION=8",
-                "DEPENDS=pthread",
+                "DEPENDS=pthread dl",
             ],
             "dependsOn": [
                 "(internal)清理",
@@ -109,7 +109,7 @@
                 "COMPILE=cross",
                 "TARGET=spadas",
                 "TARGET_VERSION=8",
-                "DEPENDS=pthread",
+                "DEPENDS=pthread dl",
             ],
             "dependsOn": [
                 "(internal)清理",
@@ -128,7 +128,7 @@
                 "COMPILE=cross",
                 "TARGET=spadas",
                 "TARGET_VERSION=8",
-                "DEPENDS=pthread",
+                "DEPENDS=pthread dl",
             ],
             "dependsOn": [
                 "(internal)清理",
