@@ -3292,7 +3292,7 @@ namespace spadas
 	class SPADAS_API LockProxy
 	{
 	public:
-		/// 绑定县城锁 (将自动调用lock.enter)
+		/// 绑定线程锁 (将自动调用lock.enter)
 		LockProxy(Lock lock);
 
 		/// 析构函数 (将自动调用lock.leave)
