@@ -2,7 +2,13 @@ SPADAS_VERSION=8
 
 CUR_DIR=$(dirname "$0")
 CUR_DATE=`date +%Y%m%d`
-TARGET_DIR=~/Desktop/$CUR_DATE-SpadasSDK
+
+if [ -z "$1" ]; then
+    TARGET_DIR=~/Desktop/$CUR_DATE-SpadasSDK
+    GEN_DESKTOP_ZIP=yes
+else
+    TARGET_DIR="$1"
+fi
 
 mkdir -vp $TARGET_DIR/include
 cp -vf $CUR_DIR/include/spadas* $TARGET_DIR/include/
@@ -36,8 +42,10 @@ cp -vf $CUR_DIR/binxa/libspadas.so.$SPADAS_VERSION $TARGET_DIR/binxa/
 mkdir -vp $TARGET_DIR/binxa/debug
 cp -vf $CUR_DIR/binxa/libspadas.so.$SPADAS_VERSION $TARGET_DIR/binxa/debug/
 
-cd ~/Desktop
-zip -r $CUR_DATE-SpadasSDK.zip ./$CUR_DATE-SpadasSDK/
-rm -r ./$CUR_DATE-SpadasSDK/
+if [ ! -z $GEN_DESKTOP_ZIP ]; then
+    cd ~/Desktop
+    zip -r $CUR_DATE-SpadasSDK.zip ./$CUR_DATE-SpadasSDK/
+    rm -r ./$CUR_DATE-SpadasSDK/
+fi
 
 sleep 3
