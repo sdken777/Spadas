@@ -1,4 +1,6 @@
-cd doc
+CUR_DIR=$(dirname "$0")
+
+cd $CUR_DIR/doc
 doxygen Doxyfile-Spadas
 cp -vf ./index.html ~/Desktop/D02006_SpadasDoc/
 
