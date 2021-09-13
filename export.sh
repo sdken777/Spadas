@@ -1,4 +1,5 @@
 SPADAS_VERSION=8
+TARGET_NAME=SpadasSDK
 
 CUR_DIR=$(dirname "$0")
 CUR_DATE=`date +%Y%m%d`
@@ -6,7 +7,7 @@ CUR_DATE=`date +%Y%m%d`
 EXPORT_DEVELOPER=y
 EXPORT_RUNTIME_DEBUG=y
 if [ "$1" == "" ]; then
-    TARGET_DIR=~/Desktop/$CUR_DATE-SpadasSDK
+    TARGET_DIR=~/Desktop/$CUR_DATE-$TARGET_NAME
     GEN_DESKTOP_ZIP=y
 else
     TARGET_DIR="$1"
@@ -57,8 +58,8 @@ fi
 
 if [ "$GEN_DESKTOP_ZIP" == "y" ]; then
     cd ~/Desktop
-    zip -r $CUR_DATE-SpadasSDK.zip ./$CUR_DATE-SpadasSDK/
-    rm -r ./$CUR_DATE-SpadasSDK/
+    zip -r $CUR_DATE-$TARGET_NAME.zip ./$CUR_DATE-$TARGET_NAME/
+    rm -r ./$CUR_DATE-$TARGET_NAME/
 fi
 
 sleep 3
