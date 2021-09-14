@@ -134,11 +134,10 @@ ifeq ($(COMPILE), cross)
 endif
 
 # 输出lib与bin选项
-WL_OPTION=-Wl,-rpath,./
+WL_OPTION=-Wl,-rpath,./,-rpath-link,$(LIB_PATH)/
 PRELIB_COMMAND=
 POSTLIB_COMMAND=
 ifeq ($(TYPE), lib)
-	WL_OPTION:=$(WL_OPTION),-rpath-link,$(LIB_PATH)/
 	ifeq ($(MODE), release)
 		PRELIB_COMMAND=mkdir -p $(LIB_PATH)
 	endif
