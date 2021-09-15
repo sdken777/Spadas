@@ -3,7 +3,7 @@
 
     "configurations": [
         {
-            "name": "调试运行(X86-Windows)",
+            "name": "调试运行(X86-Windows主机)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/../bin64/debug/test",
@@ -13,7 +13,7 @@
             "environment": [],
             "externalConsole": true,
             "MIMode": "gdb",
-            "preLaunchTask": "调试构建(X86-Windows)",
+            "preLaunchTask": "调试构建(X86-Windows目标)",
             "setupCommands": [
                 {
                     "description": "为 gdb 启用整齐打印",
@@ -23,7 +23,7 @@
             ]
         },
         {
-            "name": "调试运行(X86-Linux)",
+            "name": "调试运行(X86-Linux主机)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/../binx/debug/test",
@@ -33,7 +33,7 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
-            "preLaunchTask": "调试构建(X86-Ubuntu1804)",
+            "preLaunchTask": "调试构建(X86-Ubuntu1804目标)",
             "setupCommands": [
                 {
                     "description": "为 gdb 启用整齐打印",
@@ -43,7 +43,7 @@
             ]
         },
         {
-            "name": "调试运行(Arm-Linux)",
+            "name": "调试运行(Arm-Linux主机)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/../binxa/debug/test",
@@ -53,7 +53,7 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
-            "preLaunchTask": "调试构建(Arm-Ubuntu1604)",
+            "preLaunchTask": "调试构建(Arm-Ubuntu1604目标)",
             "setupCommands": [
                 {
                     "description": "为 gdb 启用整齐打印",

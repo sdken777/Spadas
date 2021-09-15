@@ -3,7 +3,7 @@
 
     "configurations": [
         {
-            "name": "调试运行(X86-Windows)",
+            "name": "调试运行(X86-Windows主机)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/../bin64/debug/test",
@@ -13,7 +13,7 @@
             "environment": [],
             "externalConsole": true,
             "MIMode": "gdb",
-            "preLaunchTask": "调试构建(X86-Windows)",
+            "preLaunchTask": "调试构建(X86-Windows目标)",
             "setupCommands": [
                 {
                     "description": "为 gdb 启用整齐打印",
@@ -23,7 +23,7 @@
             ]
         },
         {
-            "name": "调试运行(X86-Linux)",
+            "name": "调试运行(X86-Linux主机)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/../binx/debug/test",
@@ -38,7 +38,7 @@
             ],
             "externalConsole": false,
             "MIMode": "gdb",
-            "preLaunchTask": "调试构建(X86-Ubuntu1804)",
+            "preLaunchTask": "调试构建(X86-Ubuntu1804目标)",
             "setupCommands": [
                 {
                     "description": "为 gdb 启用整齐打印",
@@ -48,7 +48,7 @@
             ]
         },
         {
-            "name": "调试运行(Arm-Linux)",
+            "name": "调试运行(Arm-Linux主机)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/../binxa/debug/test",
@@ -63,7 +63,7 @@
             ],
             "externalConsole": false,
             "MIMode": "gdb",
-            "preLaunchTask": "调试构建(Arm-Ubuntu1604)",
+            "preLaunchTask": "调试构建(Arm-Ubuntu1604目标)",
             "setupCommands": [
                 {
                     "description": "为 gdb 启用整齐打印",
@@ -73,7 +73,7 @@
             ]
         },
         {
-            "name": "发布运行(X86-Windows)",
+            "name": "发布运行(X86-Windows主机)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/../bin64/test",
@@ -82,10 +82,10 @@
             "cwd": "${workspaceFolder}/../bin64/",
             "environment": [],
             "externalConsole": true,
-            "preLaunchTask": "发布构建(全平台)",
+            "preLaunchTask": "发布构建(全平台目标)",
         },
         {
-            "name": "发布运行(X86-Linux)",
+            "name": "发布运行(X86-Linux主机)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/../binx/test",
@@ -99,10 +99,10 @@
                 }
             ],
             "externalConsole": false,
-            "preLaunchTask": "发布构建(全平台)",
+            "preLaunchTask": "发布构建(全平台目标)",
         },
         {
-            "name": "发布运行(Arm-Linux)",
+            "name": "发布运行(Arm-Linux主机)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/../binxa/test",
@@ -116,7 +116,7 @@
                 }
             ],
             "externalConsole": false,
-            "preLaunchTask": "发布构建(全平台)",
+            "preLaunchTask": "发布构建(全平台目标)",
         },
     ]
 }

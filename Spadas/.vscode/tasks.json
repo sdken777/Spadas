@@ -21,7 +21,7 @@
         },
         {
             "type": "process",
-            "label": "(internal)发布构建(X86-Windows)",
+            "label": "(internal)发布构建(X86-Windows目标)",
             "command": "make",
             "args": [
                 "-j4",
@@ -41,7 +41,7 @@
         },
         {
             "type": "process",
-            "label": "(internal)发布构建(X86-Ubuntu1804)",
+            "label": "(internal)发布构建(X86-Ubuntu1804目标)",
             "command": "make",
             "args": [
                 "-j4",
@@ -60,7 +60,7 @@
         },
         {
             "type": "process",
-            "label": "(internal)发布构建(Arm-Ubuntu1604)",
+            "label": "(internal)发布构建(Arm-Ubuntu1604目标)",
             "command": "make",
             "args": [
                 "-j4",
@@ -79,7 +79,7 @@
         },
         {
             "type": "process",
-            "label": "调试构建(X86-Windows)",
+            "label": "调试构建(X86-Windows目标)",
             "command": "make",
             "args": [
                 "-j4",
@@ -99,7 +99,7 @@
         },
         {
             "type": "process",
-            "label": "调试构建(X86-Ubuntu1804)",
+            "label": "调试构建(X86-Ubuntu1804目标)",
             "command": "make",
             "args": [
                 "-j4",
@@ -118,7 +118,7 @@
         },
         {
             "type": "process",
-            "label": "调试构建(Arm-Ubuntu1604)",
+            "label": "调试构建(Arm-Ubuntu1604目标)",
             "command": "make",
             "args": [
                 "-j4",
@@ -137,22 +137,22 @@
         },
         {
             "type": "process",
-            "label": "(internal)发布构建(全平台)",
+            "label": "(internal)发布构建(全平台目标)",
             "command": "echo",
             "args": [
                 "Done.",
             ],
             "dependsOrder": "sequence",
             "dependsOn": [
-                "(internal)发布构建(X86-Windows)",
-                "(internal)发布构建(X86-Ubuntu1804)",
-                "(internal)发布构建(Arm-Ubuntu1604)",
+                "(internal)发布构建(X86-Windows目标)",
+                "(internal)发布构建(X86-Ubuntu1804目标)",
+                "(internal)发布构建(Arm-Ubuntu1604目标)",
             ],
             "problemMatcher":[],
         },
         {
             "type": "process",
-            "label": "发布构建(全平台)并拷贝头文件(process)",
+            "label": "发布构建(全平台目标)并拷贝头文件(process)",
             "command": "cp",
             "args": [
                 "-vf",
@@ -160,14 +160,14 @@
                 "../include/",
             ],
             "dependsOn": [
-                "(internal)发布构建(全平台)",
+                "(internal)发布构建(全平台目标)",
                 "(internal)创建include文件夹",
             ],
             "problemMatcher":[],
         },
         {
             "type": "shell",
-            "label": "发布构建(全平台)并拷贝头文件(shell)",
+            "label": "发布构建(全平台目标)并拷贝头文件(shell)",
             "command": "cp",
             "args": [
                 "-vf",
@@ -175,7 +175,7 @@
                 "../include/",
             ],
             "dependsOn": [
-                "(internal)发布构建(全平台)",
+                "(internal)发布构建(全平台目标)",
                 "(internal)创建include文件夹",
             ],
             "problemMatcher":[],
