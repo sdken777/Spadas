@@ -100,16 +100,9 @@ XTOOLS_PATH = $(shell if [ -d "/c/x-tools" ]; then echo "/c/x-tools"; else echo 
 
 # 编译工具链相关
 ifeq ($(COMPILE), local)
-	ifeq ($(PLATFORM), linux)
-		GCC_EXE=gcc
-		GPP_EXE=g++
-		STRIP_EXE=strip
-	endif
-	ifeq ($(PLATFORM), linuxarm)
-		GCC_EXE=gcc
-		GPP_EXE=g++
-		STRIP_EXE=strip
-	endif
+	GCC_EXE=gcc
+	GPP_EXE=g++
+	STRIP_EXE=strip
 	SYSROOT_OPTION=
 endif
 ifeq ($(COMPILE), cross)

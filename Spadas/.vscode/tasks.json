@@ -152,26 +152,14 @@
         },
         {
             "type": "process",
-            "label": "发布构建(全平台目标)并拷贝头文件(process)",
+            "label": "发布构建(全平台目标)并拷贝头文件",
             "command": "cp",
             "args": [
                 "-vf",
-                "./spadas*.h",
-                "../include/",
-            ],
-            "dependsOn": [
-                "(internal)发布构建(全平台目标)",
-                "(internal)创建include文件夹",
-            ],
-            "problemMatcher":[],
-        },
-        {
-            "type": "shell",
-            "label": "发布构建(全平台目标)并拷贝头文件(shell)",
-            "command": "cp",
-            "args": [
-                "-vf",
-                "./spadas*.h",
+                "./spadas.h",
+                "./spadas_core.h",
+                "./spadas_define.h",
+                "./spadas_template.h",
                 "../include/",
             ],
             "dependsOn": [
