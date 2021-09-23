@@ -9,4 +9,5 @@ chmod -v +x $CUR_DIR/binx/test
 
 chmod -v +x $CUR_DIR/binxa/test
 
-sleep 3
+echo "Done. (Spadas/init_exe.sh)"
+sleep 1
