@@ -94,8 +94,10 @@ Bool IBusPluginV200::receiveBusMessage(BusRawData& rxData)
 	return FALSE;
 }
 
-void IBusPluginV200::transmitBusMessage(BusRawData txData)
-{}
+Bool IBusPluginV200::transmitBusMessage(BusRawData txData)
+{
+	return FALSE;
+}
 
 void IBusPluginV200::setBusExtraConfig(String extra)
 {}

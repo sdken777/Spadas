@@ -4662,33 +4662,6 @@ namespace spadas
 		SPADAS_API Bool isSignOptional();
 	};
 
-	/// 总线信号协议
-	struct BusSignalProtocol
-	{
-		String name;
-		Int sb; // big-endian:msb, little-endian:lsb
-		Int length; // bit数
-		Bool bigEndian;
-		Bool isSigned;
-		Double factor;
-		Double offset;
-		Double maxValue;
-		Double minValue;
-		String unit;
-		Bool multiplex; // 是否为multiplex信号
-		OptionalInt multiplexValue; // multiplex值，无效表示为multiplexor
-
-	};
-
-	/// 总线报文协议
-	struct BusMessageProtocol
-	{
-		UInt localID;
-		String name;
-		UInt length; // 字节数
-		Array<BusSignalProtocol> signals;
-	};
-
 	/// 样本状态
 	enum class SampleState
 	{
@@ -5177,12 +5150,13 @@ namespace spadas
 
 		/// @brief 获取一帧数据
 		/// @param rxData 输出一帧数据（若有）
-		/// @returns 返回是否成功输出一帧数据
+		/// @returns 返回是否成功获取一帧数据
 		virtual Bool receiveBusMessage(BusRawData& rxData);
 
 		/// @brief [可选] 传送一帧数据
 		/// @param txData 希望传送的数据
-		virtual void transmitBusMessage(BusRawData txData);
+		/// @returns 返回是否成功传送一帧数据
+		virtual Bool transmitBusMessage(BusRawData txData);
 
 		/// @brief [可选] 对总线设备进行额外设置（在open_bus_device前被调用）
 		/// @param extra 配置信息
