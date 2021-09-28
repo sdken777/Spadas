@@ -75,7 +75,9 @@ namespace file_internal
 
 	String fileScan(Pointer file, Char buffer[SCAN_SIZE], Bool isUtf8)
 	{
+		ULong p1 = filePos(file);
 		Char *buf = fgets(buffer, SCAN_SIZE, (FILE*)file);
+		ULong p2 = filePos(file);
 
 		String out;
 		if (buf)
@@ -83,6 +85,8 @@ namespace file_internal
 			buf[SCAN_SIZE - 1] = 0;
 			UInt len = (UInt)strlen(buf);
 			UInt lenDec = 0;
+
+			if (p1 + len < p2) fileSeek(file, p1 + len); // maybe 1 byte difference
 
             // remove LF, CR or CRLF
 			if (len >= 1)
