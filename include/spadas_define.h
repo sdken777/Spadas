@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 修正windows下fgets可能多读1字节问题
+// 版本定义 // 视频通道扩展至24路
 #define SPADAS_VERSION_MAJOR 8
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 7
+#define SPADAS_VERSION_BUILD 8
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.0.7\n
+* 本文档对应Spadas版本：8.0.8\n
 *
 * \n
 * \section top1 基本功能概述

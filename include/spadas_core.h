@@ -4766,7 +4766,7 @@ namespace spadas
 		/// 本地posix时间(一般为基于本地NTP服务器同步后的时间)，单位毫秒，0表示无效
 		ULong posixLocal;
 
-		/// 视频通道，0~11，对应A~L
+		/// 视频通道，0~23，对应A~X
 		UInt ch;
 
 		/// 视频数据流输入模式
@@ -4819,7 +4819,7 @@ namespace spadas
 		/// 视频设备ID
 		VideoDeviceID id;
 
-		/// 软件通道映射，0~11，对应A~L
+		/// 软件通道映射，0~23，对应A~X
 		UInt mapChannel;
 
 		/// 该通道的视频数据流输入模式
@@ -4839,7 +4839,7 @@ namespace spadas
 		/// 时间戳
 		GlobalTimestamp timestamp;
 
-		/// 软件通道，0~11，对应A~L
+		/// 软件通道，0~23，对应A~X
 		UInt ch;
 
 		/// 用于数据处理的图像数据
@@ -4862,12 +4862,11 @@ namespace spadas
 		/// 所有视频数据的时间原点
 		Time base;
 
-		/// 各个通道的视频数据，共12个通道
+		/// 各个通道的视频数据，共24个通道
 		Array<Array<VideoRawData> > channelDatas;
 
 		/// 默认构造函数
-		VideoRawDataTable() : channelDatas(12)
-		{}
+		SPADAS_API VideoRawDataTable();
 
 		/// 清空所有数据
 		SPADAS_API void clear();
@@ -4879,12 +4878,11 @@ namespace spadas
 	/// 用于数据处理的视频数据表
 	struct VideoProcDataTable
 	{
-		/// 各个通道的视频数据，共12个通道，对应A~L
+		/// 各个通道的视频数据，共24个通道，对应A~L
 		Array<Array<VideoProcData> > channelDatas;
 
 		/// 默认构造函数
-		VideoProcDataTable() : channelDatas(12)
-		{}
+		SPADAS_API VideoProcDataTable();
 
 		/// 清空所有数据
 		SPADAS_API void clear();
@@ -4899,7 +4897,7 @@ namespace spadas
 
 		/// @brief 输出预览图像
 		/// @param ts 视频帧的时间偏置，单位秒
-		/// @param ch 视频通道，0~11，对应A~L
+		/// @param ch 视频通道，0~23，对应A~X
 		/// @param preview 预览图像，640x(360-480)分辨率的BGR图像
 		virtual void outputPreview(Double ts, UInt ch, ImagePointer preview);
 	};

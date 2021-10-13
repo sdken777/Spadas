@@ -3,6 +3,9 @@
 
 using namespace spadas;
 
+VideoRawDataTable::VideoRawDataTable() : channelDatas(24)
+{}
+
 void VideoRawDataTable::clear()
 {
 	base = Time();
@@ -17,6 +20,9 @@ Bool VideoRawDataTable::isEmpty()
 	}
 	return TRUE;
 }
+
+VideoProcDataTable::VideoProcDataTable() : channelDatas(24)
+{}
 
 void VideoProcDataTable::clear()
 {
