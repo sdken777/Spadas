@@ -75,54 +75,52 @@ namespace file_internal
 
 	String fileScan(Pointer file, Char buffer[SCAN_SIZE], Bool isUtf8)
 	{
-		ULong p1 = filePos(file);
-		Char *buf = fgets(buffer, SCAN_SIZE, (FILE*)file);
-		ULong p2 = filePos(file);
+		const UInt SCAN_READ_SIZE = 64;
+		const UInt SCAN_READ_TIME = SCAN_SIZE >> 6;
 
-		String out;
-		if (buf)
+		ULong originPos = filePos(file);
+
+		Int textBytes = -1;
+		for (UInt i = 0; i < SCAN_READ_TIME; i++)
 		{
-			buf[SCAN_SIZE - 1] = 0;
-			UInt len = (UInt)strlen(buf);
-			UInt lenDec = 0;
+			UInt startIndex = i * SCAN_READ_SIZE;
+			UInt readBytes = (UInt)fread(&buffer[startIndex], 1, SCAN_READ_SIZE, (FILE*)file);
 
-			if (p1 + len < p2) fileSeek(file, p1 + len); // maybe 1 byte difference
-
-            // remove LF, CR or CRLF
-			if (len >= 1)
+			Bool finish = FALSE;
+			for (UInt n = 0; n < readBytes; n++)
 			{
-				if (buf[len - 1] == 10)
+				Char c = buffer[startIndex + n];
+				Bool isEnter = c == 13 || c == 10;
+				if (textBytes < 0)
 				{
-					if (len >= 2 && buf[len - 2] == 13)
-					{
-						buf[len - 2] = 0;
-						lenDec = 2;
-					}
-					else
-					{
-						buf[len - 1] = 0;
-						lenDec = 1;
-					}
-
+					if (isEnter) textBytes = startIndex + n;
 				}
-				else if (buf[len - 1] == 13)
+				else if (!isEnter)
 				{
-					buf[len - 1] = 0;
-					lenDec = 1;
+					fileSeek(file, originPos + startIndex + n);
+					finish = TRUE;
+					break;
 				}
 			}
+			if (finish) break;
 
-			if (isUtf8)
+			if (readBytes < SCAN_READ_SIZE)
 			{
-				out = Binary((Byte*)buf, len - lenDec);
-			}
-			else
-			{
-				out = buf;
+				if (textBytes < 0) textBytes = startIndex + readBytes;
+				break;
 			}
 		}
+		if (textBytes < 0) textBytes = SCAN_READ_TIME * SCAN_READ_SIZE;
 
-		return out;
+		if (isUtf8)
+		{
+			return Binary((Byte*)buffer, textBytes);
+		}
+		else
+		{
+			buffer[math::min((UInt)textBytes, SCAN_SIZE - 1)] = 0;
+			return String(buffer);
+		}
 	}
 
 	Binary fileInput(Pointer file, UInt size, ULong fileSize, ULong filePos)
