@@ -4090,7 +4090,7 @@ namespace spadas
 		/// Session ID
 		SessionID base;
 
-		/// 时间偏置，单位秒
+		/// 时间偏置，单位秒，大于零有效
 		Double offset;
 
 		/// 默认构造函数，时间为1900年1月1日0时0分0秒0毫秒
@@ -4432,7 +4432,7 @@ namespace spadas
 	/// 总线原始报文信息
 	struct BusRawData
 	{
-		/// 报文时间偏置，单位秒
+		/// 报文时间偏置，单位秒，大于零有效
 		Double ts;
 
 		/// 总线通道，1~16
@@ -4626,7 +4626,7 @@ namespace spadas
 	/// 视频原始帧信息
 	struct VideoRawData
 	{
-		/// 视频原始帧的时间偏置，单位秒
+		/// 视频原始帧的时间偏置，单位秒，大于零有效
 		Double ts;
 
 		/// UTC posix时间，单位毫秒，0表示无效
@@ -4765,7 +4765,7 @@ namespace spadas
 		virtual ~IVideoPreviewExpress() {};
 
 		/// @brief 输出预览图像
-		/// @param ts 视频帧的时间偏置，单位秒
+		/// @param ts 视频帧的时间偏置，单位秒，大于零有效
 		/// @param ch 视频通道，0~23，对应A~X
 		/// @param preview 预览图像，640x(360-480)分辨率的BGR图像
 		virtual void outputPreview(Double ts, UInt ch, ImagePointer preview);
@@ -5134,6 +5134,29 @@ namespace spadas
 		static Optional<Range> getTimeRange(Path path, Interface<ITimestampSearch> searcher);
 	};
 
+	/// 视频文件读取信息
+	struct VideoReadInfo
+	{
+		/// 视频模式
+		VideoInputMode mode;
+
+		/// 视频帧率
+		UInt fps;
+	};
+
+	/// 视频文件写入信息
+	struct VideoWriteInfo
+	{
+		/// 视频模式
+		VideoInputMode mode;
+
+		/// 视频帧率
+		UInt fps;
+
+		/// 实际帧率是否按视频帧率对齐
+		Bool fpsAligned;
+	};
+
 	// 插件API（旧） /////////////////////////////////////////////////////////
 	class SPADAS_API IDevicePluginV200
 	{
@@ -5406,26 +5429,35 @@ namespace spadas
 	public:
 		virtual ~IFilePluginV100() {};
 
+		/// @brief [可选] 获取适用于指定读取器的所有文件的最大时长
+		/// @param readerName 读取器名称
+		/// @param inputRoot Session的input文件夹路径
+		/// @param generationRoots Session的所有generation文件夹路径
+		/// @returns 所有文件的最大时长，单位秒
+		virtual Double getFilesDuration(String readerName, Path inputRoot, Array<Path> generationRoots);
+
 		/// @brief [可选] 初始化读取原始数据文件（在开始session时被调用）
 		/// @param readerName 读取器名称
 		/// @param inputRoot Session的input文件夹路径
 		/// @param timeOffset 跳转至该时间戳开始读取
+		/// @param password 用于读取加密数据的密码
 		/// @param filters 读取数据筛选
 		/// @param busInfo 各总线通道的相关信息，若无总线数据输出可不赋值
 		/// @param videoInfo 各视频通道的相关信息，若无视频数据输出可不赋值
 		/// @returns 返回是否成功初始化，无数据文件的情况也返回FALSE
-		virtual Bool openReadRawFiles(String readerName, Path inputRoot, Double timeOffset, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoInputMode>& videoInfo);
+		virtual Bool openReadRawFiles(String readerName, Path inputRoot, Double timeOffset, String password, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoReadInfo>& videoInfo);
 
 		/// @brief [可选] 初始化读取generation数据文件（在开始session时被调用）
 		/// @param readerName 读取器名称
 		/// @param generationRoot Generation的文件夹路径
 		/// @param timeOffset 跳转至该时间戳开始读取
+		/// @param password 用于读取加密数据的密码
 		/// @returns 返回是否成功初始化，无数据文件的情况也返回FALSE
-		virtual Bool openReadGenerationFiles(String readerName, Path generationRoot, Double timeOffset);
+		virtual Bool openReadGenerationFiles(String readerName, Path generationRoot, Double timeOffset, String password);
 
 		/// @brief [可选] 读取文件数据
 		/// @param readerName 读取器名称
-		/// @param inputs 输入数据表，读取的数据写入该表
+		/// @param inputs 输入数据表，读取的数据写入该表（其中视频首帧图像的所有依赖帧时间戳为0）
 		/// @param targetTime 读取的目标时间戳，单位秒
 		/// @param shouldEnd 读取是否应该中止
 		/// @returns 返回读取到的所有数据里最大的时间戳值，单位秒，若无数据则返回无效对象
@@ -5439,12 +5471,13 @@ namespace spadas
 		/// @param writerName 写入器名称
 		/// @param inputRoot Session的input文件夹路径
 		/// @param generationRoot Generation的文件夹路径
+		/// @param password 用于写入加密数据的密码
 		/// @param filters 写入数据筛选
 		/// @param busInfo 各总线通道的相关信息
 		/// @param videoInfo 各视频通道的相关信息
 		/// @param busMessageNameTable 总线报文名称表，键为报文ID字符串
 		/// @returns 返回是否成功初始化
-		virtual Bool openWriteFiles(String writerName, Path inputRoot, Path generationRoot, Array<FileIOFilter> filters, Array<BusChannelType> busInfo, Array<VideoInputMode> videoInfo, Dictionary<String> busMessageNameTable);
+		virtual Bool openWriteFiles(String writerName, Path inputRoot, Path generationRoot, String password, Array<FileIOFilter> filters, Array<BusChannelType> busInfo, Array<VideoWriteInfo> videoInfo, Dictionary<String> busMessageNameTable);
 
 		/// @brief [可选] 写入文件数据
 		/// @param writerName 写入器名称
@@ -5458,11 +5491,11 @@ namespace spadas
 		/// @param writerName 写入器名称
 		virtual void closeWriteFiles(String writerName);
 
-		/// @brief [可选] 获取是否有适用于数据截取器的数据
+		/// @brief [可选] 获取是否有适用于数据截取器的数据文件
 		/// @param pickerName 数据截取器名称
 		/// @param srcInputRoot 源session的input文件夹
 		/// @param srcSession 源session ID
-		/// @returns 是否有适用于数据截取器的数据
+		/// @returns 是否有适用于数据截取器的数据文件
 		virtual Bool hasDataFiles(String pickerName, Path srcInputRoot, SessionID srcSession);
 
 		/// @brief [可选] 离线截取数据，在数据截取独立任务中被调用

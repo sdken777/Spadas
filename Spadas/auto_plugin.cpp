@@ -286,12 +286,12 @@ void IProcessorPluginV601::runStandaloneTask(String taskName, String config, Fla
 {}
 
 // 文件读写插件API 1.0
-Bool IFilePluginV100::openReadRawFiles(String readerName, Path inputRoot, Double timeOffset, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoInputMode>& videoInfo)
+Bool IFilePluginV100::openReadRawFiles(String readerName, Path inputRoot, Double timeOffset, String password, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoReadInfo>& videoInfo)
 {
 	return FALSE;
 }
 
-Bool IFilePluginV100::openReadGenerationFiles(String readerName, Path generationRoot, Double timeOffset)
+Bool IFilePluginV100::openReadGenerationFiles(String readerName, Path generationRoot, Double timeOffset, String password)
 {
 	return FALSE;
 }
@@ -304,7 +304,7 @@ OptionalDouble IFilePluginV100::readFilesData(String readerName, InputTables inp
 void IFilePluginV100::closeReadFiles(String readerName)
 {}
 
-Bool IFilePluginV100::openWriteFiles(String writerName, Path inputRoot, Path generationRoot, Array<FileIOFilter> filters, Array<BusChannelType> busInfo, Array<VideoInputMode> videoInfo, Dictionary<String> busMessageNameTable)
+Bool IFilePluginV100::openWriteFiles(String writerName, Path inputRoot, Path generationRoot, String password, Array<FileIOFilter> filters, Array<BusChannelType> busInfo, Array<VideoWriteInfo> videoInfo, Dictionary<String> busMessageNameTable)
 {
 	return FALSE;
 }
