@@ -66,6 +66,29 @@ Bool Time::operator !=(Time time)
 	return !operator ==(time);
 }
 
+Bool Time::operator >(Time time)
+{
+	ULong t1 = ((ULong)this->year << 40) + ((ULong)this->month << 32) + ((ULong)this->day << 24) + 
+		((ULong)this->hour << 16) + ((ULong)this->minute << 8) + (ULong)this->second;
+	ULong t2 = ((ULong)time.year << 40) + ((ULong)time.month << 32) + ((ULong)time.day << 24) + 
+		((ULong)time.hour << 16) + ((ULong)time.minute << 8) + (ULong)time.second;
+	return t1 > t2;
+}
+
+Bool Time::operator <(Time time)
+{
+	ULong t1 = ((ULong)this->year << 40) + ((ULong)this->month << 32) + ((ULong)this->day << 24) + 
+		((ULong)this->hour << 16) + ((ULong)this->minute << 8) + (ULong)this->second;
+	ULong t2 = ((ULong)time.year << 40) + ((ULong)time.month << 32) + ((ULong)time.day << 24) + 
+		((ULong)time.hour << 16) + ((ULong)time.minute << 8) + (ULong)time.second;
+	return t1 < t2;
+}
+
+Word Time::getHash()
+{
+	return (Word)((((((UInt)second * 3 + (UInt)minute) * 3 + (UInt)hour) * 3 + (UInt)day) * 3 + (UInt)month) * 3 + (UInt)year);
+}
+
 String Time::dateString(String separator)
 {
 	return String(this->year, 4) + separator + String(this->month, 2) + separator + String(this->day, 2);

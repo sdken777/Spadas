@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // windows下的fileScan改为使用fread读数据
+// 版本定义 // 新增IFilePluginV100支持标准数据文件读写。新增IDevicePluginV201，IProcessorPluginV601支持设备自定义数据文件读写。新增Time::<, >, getHash，新增SessionID类型定义。
 #define SPADAS_VERSION_MAJOR 8
-#define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 9
+#define SPADAS_VERSION_MINOR 1
+#define SPADAS_VERSION_BUILD 0
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.0.9\n
+* 本文档对应Spadas版本：8.1.0\n
 *
 * \n
 * \section top1 基本功能概述
@@ -80,39 +80,41 @@
 *
 * \subsection p3 3. 数据处理插件定义
 * 数据处理插件的DLL文件名需要以"proc_"开头。\n
-* 数据处理插件对应的全局函数格式为 spadas::GetProcessorPluginV600 \n
+* 数据处理插件对应的全局函数格式为 spadas::GetProcessorPluginV601 \n
 * 此类插件可支持数据流模式、独立任务模式、或两种同时支持。\n\n
 *
 * 数据流模式下，所有数据处理都在session中进行，需要实现以下接口函数：
-*   - spadas::IProcessorPluginV600::isDataStreamModeSupported （返回TRUE）
-*   - spadas::IProcessorPluginV600::isUsingSetProcessorConfigX
-*   - spadas::IProcessorPluginV600::setProcessorConfig 或 spadas::IProcessorPluginV600::setProcessorConfigX
-*   - spadas::IProcessorPluginV600::disableProcessor
-*   - spadas::IProcessorPluginV600::processData
+*   - spadas::IProcessorPluginV601::isDataStreamModeSupported （返回TRUE）
+*   - spadas::IProcessorPluginV601::isUsingSetProcessorConfigX
+*   - spadas::IProcessorPluginV601::setProcessorConfig 或 spadas::IProcessorPluginV601::setProcessorConfigX
+*   - spadas::IProcessorPluginV601::disableProcessor
+*   - spadas::IProcessorPluginV601::processData
 *
-* 以下接口函数可根据实际需要选择是否实现：
-*   - spadas::IProcessorPluginV600::updateStartTimeLocal
-*   - spadas::IProcessorPluginV600::updateStartTimeUTC
-*   - spadas::IProcessorPluginV600::useBusTransmitter
+* 数据流模式下，以下接口函数可根据实际需要选择是否实现：
+*   - spadas::IProcessorPluginV601::updateStartTimeLocal
+*   - spadas::IProcessorPluginV601::updateStartTimeUTC
+*   - spadas::IProcessorPluginV601::useBusTransmitter
 *
 * 独立任务模式下，数据处理在非session时段进行，需要实现以下接口函数：
-*   - spadas::IProcessorPluginV600::isStandaloneTaskModeSupported （返回TRUE）
-*   - spadas::IProcessorPluginV600::runStandaloneTask
+*   - spadas::IProcessorPluginV601::isStandaloneTaskModeSupported （返回TRUE）
+*   - spadas::IProcessorPluginV601::runStandaloneTask
 *
 * \subsection p4 4. 通用设备插件定义
 * 通用设备插件的DLL文件名需要以"dev_"开头。\n
-* 通用设备插件对应的全局函数格式为 spadas::GetDevicePluginV200 \n
+* 通用设备插件对应的全局函数格式为 spadas::GetDevicePluginV201 \n
 * 通用设备插件需要实现以下接口函数：
-*   - spadas::IDevicePluginV200::setDeviceConnection
-*   - spadas::IDevicePluginV200::disconnectDevice
-*   - spadas::IDevicePluginV200::getDeviceStatus
-*   - spadas::IDevicePluginV200::resetDeviceDataStream
-*   - spadas::IDevicePluginV200::closeDeviceDataStream
-*   - spadas::IDevicePluginV200::getDeviceNewData
+*   - spadas::IDevicePluginV201::setDeviceConnection
+*   - spadas::IDevicePluginV201::disconnectDevice
+*   - spadas::IDevicePluginV201::getDeviceStatus
+*   - spadas::IDevicePluginV201::resetDeviceDataStream
+*   - spadas::IDevicePluginV201::closeDeviceDataStream
+*   - spadas::IDevicePluginV201::getDeviceNewData
 *
 * 以下接口函数可根据实际需要选择是否实现：
-*   - spadas::IDevicePluginV200::getChildDeviceStatus
-*   - spadas::IDevicePluginV200::useBusTransmitter
+*   - spadas::IDevicePluginV201::getChildDeviceStatus
+*   - spadas::IDevicePluginV201::useBusTransmitter
+*   - spadas::IDevicePluginV201::clearBufferFiles
+*   - spadas::IDevicePluginV201::pickEvent
 *
 * \subsection p5 5. 总线设备插件定义
 * 总线设备插件的DLL文件名需要以"bus_"开头。\n
@@ -141,6 +143,28 @@
 *   - spadas::IVideoPluginV400::setVideoExtraConfig
 *   - spadas::IVideoPluginV400::getVideoDeviceNewData
 *   - spadas::IVideoPluginV400::useVideoPreviewExpress
+*
+* \subsection p7 7. 文件读写插件定义
+* 文件读写插件的DLL文件名需要以"file_"开头。\n
+* 文件读写插件对应的全局函数格式为 spadas::GetFilePluginV100 \n
+* 此类插件可支持文件读取、文件写入、以及文件截取。\n\n
+*
+* 文件读取需要实现以下接口函数：
+*   - spadas::IFilePluginV100::openReadRawFiles 和 spadas::IFilePluginV100::openReadGenerationFiles 至少实现一个
+*   - spadas::IFilePluginV100::readFilesData
+*   - spadas::IFilePluginV100::closeReadFiles
+*
+* 文件写入需要实现以下接口函数：
+*   - spadas::IFilePluginV100::openWriteFiles
+*   - spadas::IFilePluginV100::writeFilesData
+*   - spadas::IFilePluginV100::closeWriteFiles
+*
+* 文件截取需要实现以下接口函数：
+*   - spadas::IFilePluginV100::hasDataFiles
+*   - spadas::IFilePluginV100::pickSession
+*
+* 以下接口函数可根据实际需要选择是否实现：
+*   - spadas::IFilePluginV100::setFileExtraConfig
 */
 
 // CPU架构检查

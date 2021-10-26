@@ -5,6 +5,12 @@ using namespace spadas;
 
 // 插件版本接口
 
+SPADAS_DEFAULT_API void get_native_plugin_api_version(UInt& major, UInt& minor)
+{
+	major = 1;
+	minor = 0;
+}
+
 SPADAS_DEFAULT_API void get_bus_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 2;
@@ -20,17 +26,22 @@ SPADAS_DEFAULT_API void get_video_plugin_api_version(UInt& major, UInt& minor)
 SPADAS_DEFAULT_API void get_dev_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 2;
-	minor = 0;
+	minor = 1;
 }
 
 SPADAS_DEFAULT_API void get_proc_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 6;
+	minor = 1;
+}
+
+SPADAS_DEFAULT_API void get_file_plugin_api_version(UInt& major, UInt& minor)
+{
+	major = 1;
 	minor = 0;
 }
 
-// 公共API
-
+// 一般插件API 1.0
 String IPlugin::getPluginType()
 {
 	return String();
@@ -61,7 +72,7 @@ Array<GeneralDeviceStatus> IDevicePluginV200::getChildDeviceStatus()
 	return Array<GeneralDeviceStatus>();
 }
 
-void IDevicePluginV200::resetDeviceDataStream(Time session, Timer sync, String etcRoot)
+void IDevicePluginV200::resetDeviceDataStream(SessionID session, Timer sync, String etcRoot)
 {}
 
 void IDevicePluginV200::closeDeviceDataStream()
@@ -73,6 +84,43 @@ RawDataTable IDevicePluginV200::getDeviceNewData()
 }
 
 void IDevicePluginV200::useBusTransmitter(Interface<IBusRawDataTransmitter> transmitter)
+{}
+
+// 通用设备插件API 2.1
+void IDevicePluginV201::setDeviceConnection(String config)
+{}
+
+void IDevicePluginV201::disconnectDevice()
+{}
+
+GeneralDeviceStatus IDevicePluginV201::getDeviceStatus(String& info)
+{
+	return GeneralDeviceStatus::NotConnect;
+}
+
+Array<GeneralDeviceStatus> IDevicePluginV201::getChildDeviceStatus()
+{
+	return Array<GeneralDeviceStatus>();
+}
+
+void IDevicePluginV201::resetDeviceDataStream(SessionID session, Timer sync, Path inputRoot, Bool eventMode)
+{}
+
+void IDevicePluginV201::closeDeviceDataStream()
+{}
+
+RawDataTable IDevicePluginV201::getDeviceNewData()
+{
+	return RawDataTable();
+}
+
+void IDevicePluginV201::useBusTransmitter(Interface<IBusRawDataTransmitter> transmitter)
+{}
+
+void IDevicePluginV201::clearBufferFiles(SessionID session, Double freeTime)
+{}
+
+void IDevicePluginV201::pickEvent(SessionID srcSession, PickConfig pick, Interface<IStandaloneTaskCallback> callback)
 {}
 
 // 总线设备插件API 2.0
@@ -129,7 +177,7 @@ Bool IVideoPluginV400::queryVideoFrame(VideoRawData& frame)
 void IVideoPluginV400::setVideoExtraConfig(String extra)
 {}
 
-RawDataTable IVideoPluginV400::getVideoDeviceNewData(Time session)
+RawDataTable IVideoPluginV400::getVideoDeviceNewData(SessionID session)
 {
 	return RawDataTable();
 }
@@ -173,10 +221,10 @@ void IProcessorPluginV600::processData(InputTables inputs, SampleBufferTable sam
 void IProcessorPluginV600::useBusTransmitter(Interface<IBusRawDataTransmitter> transmitter)
 {}
 
-void IProcessorPluginV600::updateStartTimeLocal(Time session, ULong posixTime, Double timeRatio)
+void IProcessorPluginV600::updateStartTimeLocal(SessionID session, ULong posixTime, Double timeRatio)
 {}
 
-void IProcessorPluginV600::updateStartTimeUTC(Time session, ULong posixTime, Double timeRatio)
+void IProcessorPluginV600::updateStartTimeUTC(SessionID session, ULong posixTime, Double timeRatio)
 {}
 
 Bool IProcessorPluginV600::isStandaloneTaskModeSupported()
@@ -185,4 +233,97 @@ Bool IProcessorPluginV600::isStandaloneTaskModeSupported()
 }
 
 void IProcessorPluginV600::runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
+{}
+
+// 数据处理插件API 6.1
+Bool IProcessorPluginV601::isDataStreamModeSupported()
+{
+	return FALSE;
+}
+
+Bool IProcessorPluginV601::isUsingSetProcessorConfigX()
+{
+	return FALSE;
+}
+
+Bool IProcessorPluginV601::isProcessorOnlineOnly()
+{
+	return FALSE;
+}
+
+Bool IProcessorPluginV601::isProcessorOfflineOnly()
+{
+	return FALSE;
+}
+
+void IProcessorPluginV601::setProcessorConfig(String config)
+{}
+
+void IProcessorPluginV601::setProcessorConfigX(String config, Bool onlineMode, Bool recordMode, Map<SessionID, Path> inputRoots)
+{}
+
+void IProcessorPluginV601::disableProcessor()
+{}
+
+void IProcessorPluginV601::processData(InputTables inputs, SampleBufferTable sampleBuffers, OutputTables outputs)
+{}
+
+void IProcessorPluginV601::useBusTransmitter(Interface<IBusRawDataTransmitter> transmitter)
+{}
+
+void IProcessorPluginV601::updateStartTimeLocal(SessionID session, ULong posixTime, Double timeRatio)
+{}
+
+void IProcessorPluginV601::updateStartTimeUTC(SessionID session, ULong posixTime, Double timeRatio)
+{}
+
+Bool IProcessorPluginV601::isStandaloneTaskModeSupported()
+{
+	return FALSE;
+}
+
+void IProcessorPluginV601::runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
+{}
+
+// 文件读写插件API 1.0
+Bool IFilePluginV100::openReadRawFiles(String readerName, Path inputRoot, Double timeOffset, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoInputMode>& videoInfo)
+{
+	return FALSE;
+}
+
+Bool IFilePluginV100::openReadGenerationFiles(String readerName, Path generationRoot, Double timeOffset)
+{
+	return FALSE;
+}
+
+OptionalDouble IFilePluginV100::readFilesData(String readerName, InputTables inputs, Double targetTime, Flag shouldEnd)
+{
+	return OptionalDouble();
+}
+
+void IFilePluginV100::closeReadFiles(String readerName)
+{}
+
+Bool IFilePluginV100::openWriteFiles(String writerName, Path inputRoot, Path generationRoot, Array<FileIOFilter> filters, Array<BusChannelType> busInfo, Array<VideoInputMode> videoInfo, Dictionary<String> busMessageNameTable)
+{
+	return FALSE;
+}
+
+OptionalDouble IFilePluginV100::writeFilesData(String writerName, InputTables inputs, Array<BusRawData> busMessages, Flag shouldEnd)
+{
+	return OptionalDouble();
+}
+
+void IFilePluginV100::closeWriteFiles(String writerName)
+{}
+
+Bool IFilePluginV100::hasDataFiles(String pickerName, Path srcInputRoot, SessionID srcSession)
+{
+	return FALSE;
+}
+
+void IFilePluginV100::pickSession(String pickerName, Path srcInputRoot, SessionID srcSession, PickConfig pick, Array<FileIOFilter> filters, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
+{}
+
+void IFilePluginV100::setFileExtraConfig(String extra)
 {}

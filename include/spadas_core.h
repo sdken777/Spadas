@@ -3592,6 +3592,15 @@ namespace spadas
 		/// 是否不等于
 		SPADAS_API Bool operator !=(Time time);
 
+		/// 是否大于
+		SPADAS_API Bool operator >(Time time);
+
+		/// 是否小于
+		SPADAS_API Bool operator <(Time time);
+
+		/// 获取哈希值
+		SPADAS_API Word getHash();
+
 		/// 基于指定分隔符创建日期(年月日)字符串
 		SPADAS_API String dateString(String separator = "/");
 
@@ -3955,7 +3964,7 @@ namespace spadas
 		SPADAS_API Image matrixRangeToImage(DoubleMat mat, Double lower, Double upper);
 	}
 
-	// 值类型 //////////////////////////////////////////////////////////////
+	// 插件相关类型定义 //////////////////////////////////////////////////////////////
 
 	/// 代替Bool类型Optional
 	struct GeneralElement;
@@ -4072,42 +4081,14 @@ namespace spadas
 		SPADAS_API String toString();
 	};
 
-	/// 带符号OptionalDouble
-	struct OptionalSignedDouble
-	{
-		/// 符号位
-		Bool positive;
-
-		/// 正浮点值（含0）
-		Double value;
-
-		/// 符号位是否有效
-		Bool signValid;
-
-		/// 正浮点值是否有效
-		Bool valueValid;
-
-		/// 默认构造函数，初始化为无效值
-		OptionalSignedDouble() : positive(TRUE), value(0), signValid(FALSE), valueValid(FALSE)
-		{}
-
-		/// 设置正浮点值
-		SPADAS_API void setValue(Double value);
-
-		/// 设置符号位
-		SPADAS_API void setSign(Bool positive);
-
-		/// @brief 转为 spadas::OptionalDouble 类型
-		/// @param signOptional 符号位是否可选，若为FALSE则符号位必需有效才能返回有效值
-		/// @returns 返回的 spadas::OptionalDouble 类型数值
-		SPADAS_API OptionalDouble toOptionalDouble(Bool signOptional);
-	};
+	/// Session ID
+	typedef Time SessionID;
 
 	/// 全局时间戳
 	struct GlobalTimestamp
 	{
-		/// 时间原点，也可作为session ID
-		Time base;
+		/// Session ID
+		SessionID base;
 
 		/// 时间偏置，单位秒
 		Double offset;
@@ -4117,7 +4098,7 @@ namespace spadas
 		{}
 
 		/// 基于时间原点和偏置初始化
-		GlobalTimestamp(Time base, Double offset) : base(base), offset(offset)
+		GlobalTimestamp(SessionID base, Double offset) : base(base), offset(offset)
 		{}
 
 		/// 是否相等
@@ -4151,8 +4132,6 @@ namespace spadas
 	/// 信号数据表，key为信号ID，格式为"大类:小类:信号名称"。其中总线信号的情况下，大类为协议文件名，如vehicle.dbc；小类为报文本通道ID，如123
 	typedef Dictionary<Array<Signal> > SignalTable;
 
-	// 通用设备与内部处理相关 //////////////////////////////////////////////////////////////
-
 	/// 通用原始数据
 	struct GeneralRawData
 	{
@@ -4176,19 +4155,6 @@ namespace spadas
 
 	/// 原始数据表，key为原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
 	typedef Dictionary<Array<GeneralRawData> > RawDataTable;
-
-	/// 通用原始数据输出接口
-	class SPADAS_API IGeneralRawDataOutput
-	{
-	public:
-		/// 析构函数
-		virtual ~IGeneralRawDataOutput() {};
-
-		/// @brief 输出通用原始数据
-		/// @param protocol 原始数据协议
-		/// @param data 原始数据
-		virtual void outputGeneralRawData(String protocol, GeneralRawData data);
-	};
 
 	/// 通用样本元素
 	struct GeneralElement
@@ -4311,7 +4277,7 @@ namespace spadas
 		UInt getSampleCount();
 
 		/// 获取当前session ID
-		Time getCurrentSession();
+		SessionID getCurrentSession();
 
 		/// @brief 获取最早样本
 		/// @param sampleEarliest 输出最早样本
@@ -4409,8 +4375,6 @@ namespace spadas
 		Warning = 3,
 	};
 
-	// 总线设备相关 //////////////////////////////////////////////////////////////
-
 	/// 总线通道类型
 	enum class BusChannelType
 	{
@@ -4492,8 +4456,8 @@ namespace spadas
 	/// 总线原始报文数据表
 	struct BusRawDataTable
 	{
-		/// 所有报文的时间原点
-		Time base;
+		/// 所有报文的Session ID
+		SessionID base;
 
 		/// 各个通道的报文数据，共16个通道
 		Array<Array<BusRawData> > channelDatas;
@@ -4622,101 +4586,6 @@ namespace spadas
 
 	/// 总线报文数据表，key为报文全局ID，格式为"协议文件名:本通道ID"，如vehicle.dbc:123
 	typedef Dictionary<Array<BusMessage> > BusMessageTable;
-
-	/// 总线协议ID (形如XXX.dbc)
-	typedef String BusProtocolID;
-
-	/// 总线报文ID
-	struct BusMessageID
-	{
-		BusProtocolID protocol;
-		UInt message; // local ID
-		String text;
-
-		SPADAS_API BusMessageID();
-		SPADAS_API BusMessageID(BusProtocolID dbc, UInt message);
-		SPADAS_API BusMessageID(String text);
-	};
-
-	/// 总线信号ID
-	struct BusSignalID
-	{
-		BusProtocolID protocol;
-		UInt message; // local ID
-		String signal;
-		String text;
-
-		SPADAS_API BusSignalID();
-		SPADAS_API BusSignalID(BusProtocolID dbc, UInt message, String signal);
-		SPADAS_API BusSignalID(String text);
-	};
-
-	/// 带符号位信号配置
-	struct BusSignedSignalConfig
-	{
-		String valueSignalID;
-		String signSignalID;
-		Bool positiveAsZero;
-
-		SPADAS_API BusSignedSignalConfig();
-		SPADAS_API Bool isSignOptional();
-	};
-
-	/// 样本状态
-	enum class SampleState
-	{
-		/// 未生成任何样本
-		None, 
-
-		/// 已生成一个样本，不使用
-		First, 
-
-		/// 已生成至少两个样本，使用中
-		Normal, 
-	};
-
-	/// 总线数据时序整理
-	class SPADAS_API BusDataSorter : public Object<class BusDataSorterVars>
-	{
-	public:
-		/// 类名称
-		static const String TypeName;
-
-		/// 创建总线数据时序整理对象
-		BusDataSorter();
-
-		/// 排序后对象
-		struct SortedObject
-		{
-			Bool signal;
-			Int id;
-			Int index;
-		};
-
-		/// 添加信号，返回识别号(id)
-		Int addSignals(Array<Signal> signals);
-
-		/// 添加总线报文，返回识别号(id)
-		Int addBusMessages(Array<BusMessage> messages);
-
-		/// 处理已添加对象
-		Bool process(Array<SortedObject>& sorted);
-
-		/// 获取信号
-		Bool getSignal(SortedObject obj, Signal& signal);
-
-		/// 获取总线报文
-		Bool getMessage(SortedObject obj, BusMessage& message);
-
-		/// 重置
-		void reset();
-
-	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
-	};
-
-	// 视频设备相关 //////////////////////////////////////////////////////////////
 
 	/// 视频数据流编码方式
 	enum class VideoDataCodec
@@ -4859,8 +4728,8 @@ namespace spadas
 	/// 视频原始数据表
 	struct VideoRawDataTable
 	{
-		/// 所有视频数据的时间原点
-		Time base;
+		/// 所有视频数据的Session ID
+		SessionID base;
 
 		/// 各个通道的视频数据，共24个通道
 		Array<Array<VideoRawData> > channelDatas;
@@ -4901,8 +4770,6 @@ namespace spadas
 		/// @param preview 预览图像，640x(360-480)分辨率的BGR图像
 		virtual void outputPreview(Double ts, UInt ch, ImagePointer preview);
 	};
-
-	// 内部处理插件接口 //////////////////////////////////////////////////////////////
 
 	/// 所有输入数据表
 	struct InputTables
@@ -5010,7 +4877,206 @@ namespace spadas
 		virtual void setTaskReturnValue(String value);
 	};
 
-	// 实用功能 //////////////////////////////////////////////////////////////
+	/// 数据截取任务参数
+	struct PickConfig
+	{
+		/// 截取源session的时间范围
+		Range srcRange;
+
+		/// 目标session的input文件夹路径
+		Path dstInputRoot;
+
+		/// 目标session ID
+		SessionID dstSession;
+	};
+
+	/// 文件读写筛选
+	enum class FileIOFilter
+	{
+		/// 信号数据
+		Signal = 1,
+
+		/// 样本数据
+		Sample = 2,
+
+		/// 矩阵数据
+		Matrix = 3,
+
+		/// 总线通道1数据，通道2等数据依次从101往上加
+		BusCH1 = 100,
+
+		/// 视频通道A数据，通道B等数据依次从201往上加
+		VideoChannelA = 200,
+	};
+
+	// 插件相关实用功能 //////////////////////////////////////////////////////////////
+
+	/// 总线协议ID (形如XXX.dbc)
+	typedef String BusProtocolID;
+
+	/// 总线报文ID
+	struct BusMessageID
+	{
+		/// 总线协议ID
+		BusProtocolID protocol;
+
+		/// 本通道报文ID
+		UInt message;
+
+		/// 总线报文ID字符串
+		String text;
+
+		/// 默认构造函数
+		SPADAS_API BusMessageID();
+
+		/// 按总线协议ID和本通道报文ID初始化
+		SPADAS_API BusMessageID(BusProtocolID dbc, UInt message);
+
+		/// 按总线报文ID字符串初始化
+		SPADAS_API BusMessageID(String text);
+	};
+
+	/// 总线信号ID
+	struct BusSignalID
+	{
+		/// 总线协议ID
+		BusProtocolID protocol;
+
+		/// 本通道报文ID
+		UInt message;
+
+		/// 信号名称
+		String signal;
+
+		/// 总线信号ID字符串
+		String text;
+
+		/// 默认构造函数
+		SPADAS_API BusSignalID();
+
+		/// 按总线协议ID，本通道报文ID，以及信号名称初始化
+		SPADAS_API BusSignalID(BusProtocolID dbc, UInt message, String signal);
+
+		/// 按总线信号ID字符串初始化
+		SPADAS_API BusSignalID(String text);
+	};
+
+	/// 带符号位信号配置
+	struct BusSignedSignalConfig
+	{
+		/// 数值信号ID字符串
+		String valueSignalID;
+
+		/// 符号位信号ID字符串
+		String signSignalID;
+
+		/// 符号位信号值为0时是否表示正值
+		Bool positiveAsZero;
+
+		/// 默认构造函数
+		SPADAS_API BusSignedSignalConfig();
+
+		/// 符号位信号配置是否有效
+		SPADAS_API Bool isSignOptional();
+	};
+
+	/// 带符号OptionalDouble
+	struct OptionalSignedDouble
+	{
+		/// 符号位
+		Bool positive;
+
+		/// 正浮点值（含0）
+		Double value;
+
+		/// 符号位是否有效
+		Bool signValid;
+
+		/// 正浮点值是否有效
+		Bool valueValid;
+
+		/// 默认构造函数，初始化为无效值
+		OptionalSignedDouble() : positive(TRUE), value(0), signValid(FALSE), valueValid(FALSE)
+		{}
+
+		/// 设置正浮点值
+		SPADAS_API void setValue(Double value);
+
+		/// 设置符号位
+		SPADAS_API void setSign(Bool positive);
+
+		/// @brief 转为 spadas::OptionalDouble 类型
+		/// @param signOptional 符号位是否可选，若为FALSE则符号位必需有效才能返回有效值
+		/// @returns 返回的 spadas::OptionalDouble 类型数值
+		SPADAS_API OptionalDouble toOptionalDouble(Bool signOptional);
+	};
+
+	/// 通用原始数据输出接口
+	class SPADAS_API IGeneralRawDataOutput
+	{
+	public:
+		/// 析构函数
+		virtual ~IGeneralRawDataOutput() {};
+
+		/// @brief 输出通用原始数据
+		/// @param protocol 原始数据协议
+		/// @param data 原始数据
+		virtual void outputGeneralRawData(String protocol, GeneralRawData data);
+	};
+
+	/// 样本状态
+	enum class SampleState
+	{
+		/// 未生成任何样本
+		None, 
+
+		/// 已生成一个样本，不使用
+		First, 
+
+		/// 已生成至少两个样本，使用中
+		Normal, 
+	};
+
+	/// 总线数据时序整理
+	class SPADAS_API BusDataSorter : public Object<class BusDataSorterVars>
+	{
+	public:
+		/// 类名称
+		static const String TypeName;
+
+		/// 创建总线数据时序整理对象
+		BusDataSorter();
+
+		/// 排序后对象
+		struct SortedObject
+		{
+			Bool signal;
+			Int id;
+			Int index;
+		};
+
+		/// 添加信号，返回识别号(id)
+		Int addSignals(Array<Signal> signals);
+
+		/// 添加总线报文，返回识别号(id)
+		Int addBusMessages(Array<BusMessage> messages);
+
+		/// 处理已添加对象
+		Bool process(Array<SortedObject>& sorted);
+
+		/// 获取信号
+		Bool getSignal(SortedObject obj, Signal& signal);
+
+		/// 获取总线报文
+		Bool getMessage(SortedObject obj, BusMessage& message);
+
+		/// 重置
+		void reset();
+
+	private:
+		Bool isNull() { return FALSE; }
+		Bool isValid() { return FALSE; }
+	};
 
 	/// 触发信号过滤器
 	class SPADAS_API TriggerFilter : public Object<class TriggerFilterVars>
@@ -5068,9 +5134,45 @@ namespace spadas
 		static Optional<Range> getTimeRange(Path path, Interface<ITimestampSearch> searcher);
 	};
 
+	// 插件API（旧） /////////////////////////////////////////////////////////
+	class SPADAS_API IDevicePluginV200
+	{
+	public:
+		virtual ~IDevicePluginV200() {};
+		virtual void setDeviceConnection(String config);
+		virtual void disconnectDevice();
+		virtual GeneralDeviceStatus getDeviceStatus(String& info);
+		virtual Array<GeneralDeviceStatus> getChildDeviceStatus();
+		virtual void resetDeviceDataStream(SessionID session, Timer sync, String etcRoot);
+		virtual void closeDeviceDataStream();
+		virtual RawDataTable getDeviceNewData();
+		virtual void useBusTransmitter(Interface<IBusRawDataTransmitter> transmitter);
+	};
+	typedef Interface<IDevicePluginV200>(*GetDevicePluginV200)();
+
+	class SPADAS_API IProcessorPluginV600
+	{
+	public:
+		virtual ~IProcessorPluginV600() {};
+		virtual Bool isDataStreamModeSupported();
+		virtual Bool isUsingSetProcessorConfigX();
+		virtual Bool isProcessorOnlineOnly();
+		virtual Bool isProcessorOfflineOnly();
+		virtual void setProcessorConfig(String config);
+		virtual void setProcessorConfigX(String config, Bool onlineMode, Bool recordMode, Dictionary<Path> etcRoots);
+		virtual void disableProcessor();
+		virtual void processData(InputTables inputs, SampleBufferTable sampleBuffers, OutputTables outputs);
+		virtual void useBusTransmitter(Interface<IBusRawDataTransmitter> transmitter);
+		virtual void updateStartTimeLocal(SessionID session, ULong posixTime, Double timeRatio);
+		virtual void updateStartTimeUTC(SessionID session, ULong posixTime, Double timeRatio);
+		virtual Bool isStandaloneTaskModeSupported();
+		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
+	};
+	typedef Interface<IProcessorPluginV600>(*GetProcessorPluginV600)();
+
 	// 插件API //////////////////////////////////////////////////////////////
 
-	/// 插件通用API
+	/// 一般插件API 1.0
 	class SPADAS_API IPlugin
 	{
 	public:
@@ -5088,11 +5190,14 @@ namespace spadas
 		virtual void closePlugin();
 	};
 
-	/// 通用设备插件API 2.0
-	class SPADAS_API IDevicePluginV200
+	/// 获取插件通用接口，函数名应为get_plugin
+	typedef Interface<IPlugin>(*GetPlugin)();
+
+	/// 通用设备插件API 2.1
+	class SPADAS_API IDevicePluginV201
 	{
 	public:
-		virtual ~IDevicePluginV200() {};
+		virtual ~IDevicePluginV201() {};
 
 		/// @brief 配置设备，在函数内部根据配置实现连接、断开、或重连（仅在非session时段被调用）
 		/// @param config 配置信息，应包含是否连接设备的配置
@@ -5113,8 +5218,9 @@ namespace spadas
 		/// @brief 重置设备输出数据流（在开始session时被调用）
 		/// @param session 当前session ID
 		/// @param sync 当前session的同步计时器
-		/// @param etcRoot 当前session的杂项数据保存根目录
-		virtual void resetDeviceDataStream(Time session, Timer sync, String etcRoot);
+		/// @param inputRoot 当前session的input文件夹路径（若不采集则为无效对象），用于采集设备自定义数据
+		/// @param eventMode FALSE为连续采集模式，TRUE为事件采集模式（若不支持不写文件即可）
+		virtual void resetDeviceDataStream(SessionID session, Timer sync, Path inputRoot, Bool eventMode);
 
 		/// 关闭设备输出数据流（在结束session时被调用）
 		virtual void closeDeviceDataStream();
@@ -5126,7 +5232,21 @@ namespace spadas
 		/// @brief [可选] 设置使用指定的总线报文发送器
 		/// @param transmitter 总线报文发送器接口
 		virtual void useBusTransmitter(Interface<IBusRawDataTransmitter> transmitter);
+
+		/// @brief [可选] 清除用于事件采集模式的缓存文件
+		/// @param session Session ID，可不为当前采集中的session
+		/// @param freeTime 整体小于此时间的缓存文件可清除，单位秒，DINF表示整个session的缓存文件都可清除
+		virtual void clearBufferFiles(SessionID session, Double freeTime);
+
+		/// @brief [可选] 在事件采集模式下截取设备自定义数据（边采边截取）
+		/// @param srcSession 源session ID，可不为当前采集中的session
+		/// @param pick 截取任务参数
+		/// @param callback 任务的反馈接口，主要用于通知任务进度
+		virtual void pickEvent(SessionID srcSession, PickConfig pick, Interface<IStandaloneTaskCallback> callback);
 	};
+
+	/// 获取通用设备插件接口，函数名应为get_device_plugin_v201
+	typedef Interface<IDevicePluginV201>(*GetDevicePluginV201)();
 
 	/// 总线设备插件API 2.0
 	class SPADAS_API IBusPluginV200
@@ -5165,6 +5285,9 @@ namespace spadas
 		virtual Array<BusChannelPayload> getBusPayload();
 	};
 
+	/// 获取总线设备插件接口，函数名应为get_bus_plugin_v200
+	typedef Interface<IBusPluginV200>(*GetBusPluginV200)();
+
 	/// 视频设备插件API 4.0
 	class SPADAS_API IVideoPluginV400
 	{
@@ -5195,18 +5318,21 @@ namespace spadas
 		/// @brief [可选] 获取视频设备新原始数据
 		/// @param session 当前session ID，生成 spadas::GeneralRawData 时需要
 		/// @returns 返回原始数据表，存储新获取的数据
-		virtual RawDataTable getVideoDeviceNewData(Time session);
+		virtual RawDataTable getVideoDeviceNewData(SessionID session);
 
 		/// @brief [可选] 设置使用指定的视频预览图像的快速输出接口
 		/// @param previewExpress 视频预览图像的快速输出接口
 		virtual void useVideoPreviewExpress(Interface<IVideoPreviewExpress> previewExpress);
 	};
 
-	/// 数据处理插件API 6.0
-	class SPADAS_API IProcessorPluginV600
+	/// 获取视频设备插件接口，函数名应为get_video_plugin_v400
+	typedef Interface<IVideoPluginV400>(*GetVideoPluginV400)();
+
+	/// 数据处理插件API 6.1
+	class SPADAS_API IProcessorPluginV601
 	{
 	public:
-		virtual ~IProcessorPluginV600() {};
+		virtual ~IProcessorPluginV601() {};
 
 		// 数据流模式
 
@@ -5230,8 +5356,8 @@ namespace spadas
 		/// @param config 配置信息，应包含是否启用功能的配置
 		/// @param onlineMode 是否为在线模式
 		/// @param recordMode 是否记录至文件（在线采集或离线生成）
-		/// @param etcRoots 杂项数据路径表，key为session ID字符串，格式为yyyyMMddHHmmss
-		virtual void setProcessorConfigX(String config, Bool onlineMode, Bool recordMode, Dictionary<Path> etcRoots);
+		/// @param inputRoots 各session对应的input文件夹路径，可用于读取设备自定义数据
+		virtual void setProcessorConfigX(String config, Bool onlineMode, Bool recordMode, Map<SessionID, Path> inputRoots);
 
 		/// 函数名disable_processor: 禁用数据处理功能（在结束session时被调用）
 		virtual void disableProcessor();
@@ -5250,13 +5376,13 @@ namespace spadas
 		/// @param session 当前session ID
 		/// @param posixTime 该session的本地开始时间(posix)
 		/// @param timeRatio 相对时间(时间偏置)向本地时间的转换比例
-		virtual void updateStartTimeLocal(Time session, ULong posixTime, Double timeRatio);
+		virtual void updateStartTimeLocal(SessionID session, ULong posixTime, Double timeRatio);
 
 		/// @brief [可选] 更新指定session的UTC开始时间(posix)用于GNSS同步
 		/// @param session 当前session ID
 		/// @param posixTime 该session的UTC开始时间(posix)
 		/// @param timeRatio 相对时间(时间偏置)向UTC时间的转换比例
-		virtual void updateStartTimeUTC(Time session, ULong posixTime, Double timeRatio);
+		virtual void updateStartTimeUTC(SessionID session, ULong posixTime, Double timeRatio);
 
 		// 独立任务模式
 
@@ -5271,20 +5397,91 @@ namespace spadas
 		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
 	};
 
-	/// 获取插件通用接口，函数名应为get_plugin
-	typedef Interface<IPlugin>(*GetPlugin)();
+	/// 获取数据处理插件接口，函数名应为get_processor_plugin_v601
+	typedef Interface<IProcessorPluginV601>(*GetProcessorPluginV601)();
 
-	/// 获取通用设备插件接口，函数名应为get_device_plugin_v200
-	typedef Interface<IDevicePluginV200>(*GetDevicePluginV200)();
+	/// 文件读写插件API 1.0
+	class SPADAS_API IFilePluginV100
+	{
+	public:
+		virtual ~IFilePluginV100() {};
 
-	/// 获取总线设备插件接口，函数名应为get_bus_plugin_v200
-	typedef Interface<IBusPluginV200>(*GetBusPluginV200)();
+		/// @brief [可选] 初始化读取原始数据文件（在开始session时被调用）
+		/// @param readerName 读取器名称
+		/// @param inputRoot Session的input文件夹路径
+		/// @param timeOffset 跳转至该时间戳开始读取
+		/// @param filters 读取数据筛选
+		/// @param busInfo 各总线通道的相关信息，若无总线数据输出可不赋值
+		/// @param videoInfo 各视频通道的相关信息，若无视频数据输出可不赋值
+		/// @returns 返回是否成功初始化，无数据文件的情况也返回FALSE
+		virtual Bool openReadRawFiles(String readerName, Path inputRoot, Double timeOffset, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoInputMode>& videoInfo);
 
-	/// 获取视频设备插件接口，函数名应为get_video_plugin_v400
-	typedef Interface<IVideoPluginV400>(*GetVideoPluginV400)();
+		/// @brief [可选] 初始化读取generation数据文件（在开始session时被调用）
+		/// @param readerName 读取器名称
+		/// @param generationRoot Generation的文件夹路径
+		/// @param timeOffset 跳转至该时间戳开始读取
+		/// @returns 返回是否成功初始化，无数据文件的情况也返回FALSE
+		virtual Bool openReadGenerationFiles(String readerName, Path generationRoot, Double timeOffset);
 
-	/// 获取数据处理插件接口，函数名应为get_processor_plugin_v600
-	typedef Interface<IProcessorPluginV600>(*GetProcessorPluginV600)();
+		/// @brief [可选] 读取文件数据
+		/// @param readerName 读取器名称
+		/// @param inputs 输入数据表，读取的数据写入该表
+		/// @param targetTime 读取的目标时间戳，单位秒
+		/// @param shouldEnd 读取是否应该中止
+		/// @returns 返回读取到的所有数据里最大的时间戳值，单位秒，若无数据则返回无效对象
+		virtual OptionalDouble readFilesData(String readerName, InputTables inputs, Double targetTime, Flag shouldEnd);
+
+		/// @brief [可选] 关闭读取文件
+		/// @param readerName 读取器名称
+		virtual void closeReadFiles(String readerName);
+
+		/// @brief [可选] 初始化写入数据文件
+		/// @param writerName 写入器名称
+		/// @param inputRoot Session的input文件夹路径
+		/// @param generationRoot Generation的文件夹路径
+		/// @param filters 写入数据筛选
+		/// @param busInfo 各总线通道的相关信息
+		/// @param videoInfo 各视频通道的相关信息
+		/// @param busMessageNameTable 总线报文名称表，键为报文ID字符串
+		/// @returns 返回是否成功初始化
+		virtual Bool openWriteFiles(String writerName, Path inputRoot, Path generationRoot, Array<FileIOFilter> filters, Array<BusChannelType> busInfo, Array<VideoInputMode> videoInfo, Dictionary<String> busMessageNameTable);
+
+		/// @brief [可选] 写入文件数据
+		/// @param writerName 写入器名称
+		/// @param inputs 输入数据表，从表中获取数据写入文件
+		/// @param busMessages 按时间戳排序的所有通道总线数据
+		/// @param shouldEnd 写入是否应该中止。若输入数据表中的数据未写完，则应缓存下来并在下次被调用时继续写入
+		/// @returns 返回写入文件中的所有数据里最大的时间戳值，单位秒，若无数据则返回无效对象
+		virtual OptionalDouble writeFilesData(String writerName, InputTables inputs, Array<BusRawData> busMessages, Flag shouldEnd);
+
+		/// @brief [可选] 关闭写入文件
+		/// @param writerName 写入器名称
+		virtual void closeWriteFiles(String writerName);
+
+		/// @brief [可选] 获取是否有适用于数据截取器的数据
+		/// @param pickerName 数据截取器名称
+		/// @param srcInputRoot 源session的input文件夹
+		/// @param srcSession 源session ID
+		/// @returns 是否有适用于数据截取器的数据
+		virtual Bool hasDataFiles(String pickerName, Path srcInputRoot, SessionID srcSession);
+
+		/// @brief [可选] 离线截取数据，在数据截取独立任务中被调用
+		/// @param pickerName 数据截取器名称
+		/// @param srcInputRoot 源session的input文件夹
+		/// @param srcSession 源session ID
+		/// @param pick 截取任务参数
+		/// @param filters 截取数据筛选
+		/// @param shouldEnd 是否已被取消
+		/// @param callback 任务的反馈接口，主要用于通知任务进度
+		virtual void pickSession(String pickerName, Path srcInputRoot, SessionID srcSession, PickConfig pick, Array<FileIOFilter> filters, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
+
+		/// @brief [可选] 对文件读写进行额外设置（在各openXXXFiles函数前被调用）
+		/// @param extra 配置信息
+		virtual void setFileExtraConfig(String extra);
+	};
+
+	/// 获取文件读写插件接口，函数名应为get_file_plugin_v100
+	typedef Interface<IFilePluginV100>(*GetFilePluginV100)();
 }
 
 #endif
