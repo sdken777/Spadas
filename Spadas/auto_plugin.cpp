@@ -291,6 +291,11 @@ void IProcessorPluginV601::runStandaloneTask(String taskName, String config, Fla
 {}
 
 // 文件读写插件API 1.0
+Double IFilePluginV100::getFilesDuration(String readerName, Path inputRoot, Array<Path> generationRoots)
+{
+	return 0;
+}
+
 Bool IFilePluginV100::openReadFiles(String readerName, Path inputRoot, Path generationRoot, SessionID session, Double timeOffset, String password, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoReadInfo>& videoInfo)
 {
 	return FALSE;

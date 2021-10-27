@@ -5437,7 +5437,7 @@ namespace spadas
 		/// @param readerName 读取器名称
 		/// @param inputRoot Session的input文件夹路径
 		/// @param generationRoots Session的所有generation文件夹路径
-		/// @returns 所有文件的最大时长，单位秒
+		/// @returns 所有文件的最大时长，单位秒，若无文件或无数据则返回0
 		virtual Double getFilesDuration(String readerName, Path inputRoot, Array<Path> generationRoots);
 
 		/// @brief [可选] 初始化读取原始数据文件（在开始session时被调用）
