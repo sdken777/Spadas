@@ -5443,7 +5443,7 @@ namespace spadas
 		/// @brief [可选] 初始化读取原始数据文件（在开始session时被调用）
 		/// @param readerName 读取器名称
 		/// @param inputRoot Session的input文件夹路径
-		/// @param generationRoot Generation的文件夹路径，若有效表示为从generation回放模式，否则为只从input回放模式
+		/// @param generationRoot Generation的文件夹路径，若有效表示为从generation回放模式，否则为从原始数据回放模式
 		/// @param session Session ID
 		/// @param timeOffset 跳转至该时间戳开始读取
 		/// @param password 用于读取加密数据的密码
@@ -5466,7 +5466,7 @@ namespace spadas
 
 		/// @brief [可选] 初始化写入数据文件
 		/// @param writerName 写入器名称
-		/// @param inputRoot Session的input文件夹路径
+		/// @param inputRoot Session的input文件夹路径，若有效表示为在线采集模式，否则为离线处理模式
 		/// @param generationRoot Generation的文件夹路径
 		/// @param password 用于写入加密数据的密码，若不加密则为空
 		/// @param filters 写入数据筛选
