@@ -5256,6 +5256,10 @@ namespace spadas
 		/// @param transmitter 总线报文发送器接口
 		virtual void useBusTransmitter(Interface<IBusRawDataTransmitter> transmitter);
 
+		/// @brief [可选] 获取用于事件采集模式的缓存文件已存储的数据中最大时间戳
+		/// @returns 已存储数据中的最大时间戳，单位秒，若不支持则返回无效对象
+		virtual OptionalDouble getBufferFilesLatestTime(SessionID session);
+
 		/// @brief [可选] 清除用于事件采集模式的缓存文件
 		/// @param session Session ID，可不为当前采集中的session
 		/// @param freeTime 整体小于此时间的缓存文件可清除，单位秒，DINF表示整个session的缓存文件都可清除
@@ -5451,7 +5455,7 @@ namespace spadas
 		/// @param readerName 读取器名称
 		/// @param generationRoot Generation的文件夹路径
 		/// @param timeOffset 跳转至该时间戳开始读取
-		/// @param password 用于读取加密数据的密码
+		/// @param password 用于读取加密数据的密码，若无密码则为空
 		/// @returns 返回是否成功初始化，无数据文件的情况也返回FALSE
 		virtual Bool openReadGenerationFiles(String readerName, Path generationRoot, Double timeOffset, String password);
 
@@ -5459,9 +5463,8 @@ namespace spadas
 		/// @param readerName 读取器名称
 		/// @param inputs 输入数据表，读取的数据写入该表（其中视频首帧图像的所有依赖帧时间戳为0）
 		/// @param targetTime 读取的目标时间戳，单位秒
-		/// @param shouldEnd 读取是否应该中止
-		/// @returns 返回读取到的所有数据里最大的时间戳值，单位秒，若无数据则返回无效对象
-		virtual OptionalDouble readFilesData(String readerName, InputTables inputs, Double targetTime, Flag shouldEnd);
+		/// @returns 后续是否还有数据，若所有文件已读取至末尾则返回FALSE
+		virtual Bool readFilesData(String readerName, InputTables inputs, Double targetTime);
 
 		/// @brief [可选] 关闭读取文件
 		/// @param readerName 读取器名称
@@ -5471,7 +5474,7 @@ namespace spadas
 		/// @param writerName 写入器名称
 		/// @param inputRoot Session的input文件夹路径
 		/// @param generationRoot Generation的文件夹路径
-		/// @param password 用于写入加密数据的密码
+		/// @param password 用于写入加密数据的密码，若不加密则为空
 		/// @param filters 写入数据筛选
 		/// @param busInfo 各总线通道的相关信息
 		/// @param videoInfo 各视频通道的相关信息
@@ -5483,9 +5486,7 @@ namespace spadas
 		/// @param writerName 写入器名称
 		/// @param inputs 输入数据表，从表中获取数据写入文件
 		/// @param busMessages 按时间戳排序的所有通道总线数据
-		/// @param shouldEnd 写入是否应该中止。若输入数据表中的数据未写完，则应缓存下来并在下次被调用时继续写入
-		/// @returns 返回写入文件中的所有数据里最大的时间戳值，单位秒，若无数据则返回无效对象
-		virtual OptionalDouble writeFilesData(String writerName, InputTables inputs, Array<BusRawData> busMessages, Flag shouldEnd);
+		virtual void writeFilesData(String writerName, InputTables inputs, Array<BusRawData> busMessages);
 
 		/// @brief [可选] 关闭写入文件
 		/// @param writerName 写入器名称

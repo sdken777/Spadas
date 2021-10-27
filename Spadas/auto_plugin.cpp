@@ -117,6 +117,11 @@ RawDataTable IDevicePluginV201::getDeviceNewData()
 void IDevicePluginV201::useBusTransmitter(Interface<IBusRawDataTransmitter> transmitter)
 {}
 
+OptionalDouble IDevicePluginV201::getBufferFilesLatestTime(SessionID session)
+{
+	return 0;
+}
+
 void IDevicePluginV201::clearBufferFiles(SessionID session, Double freeTime)
 {}
 
@@ -296,9 +301,9 @@ Bool IFilePluginV100::openReadGenerationFiles(String readerName, Path generation
 	return FALSE;
 }
 
-OptionalDouble IFilePluginV100::readFilesData(String readerName, InputTables inputs, Double targetTime, Flag shouldEnd)
+Bool IFilePluginV100::readFilesData(String readerName, InputTables inputs, Double targetTime)
 {
-	return OptionalDouble();
+	return FALSE;
 }
 
 void IFilePluginV100::closeReadFiles(String readerName)
@@ -309,10 +314,8 @@ Bool IFilePluginV100::openWriteFiles(String writerName, Path inputRoot, Path gen
 	return FALSE;
 }
 
-OptionalDouble IFilePluginV100::writeFilesData(String writerName, InputTables inputs, Array<BusRawData> busMessages, Flag shouldEnd)
-{
-	return OptionalDouble();
-}
+void IFilePluginV100::writeFilesData(String writerName, InputTables inputs, Array<BusRawData> busMessages)
+{}
 
 void IFilePluginV100::closeWriteFiles(String writerName)
 {}

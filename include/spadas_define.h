@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 新增IFilePluginV100.getFilesDuration。IFilePluginV100.openRead/Write增加password参数，并丰富videoInfo参数
+// 版本定义 // 新增IFilePluginV100.read/write移除shouldEnd参数和返回时间戳，read返回值改为是否后续还有数据。增加IDevicePluginV201.getBufferFilesLatestTime
 #define SPADAS_VERSION_MAJOR 8
 #define SPADAS_VERSION_MINOR 1
-#define SPADAS_VERSION_BUILD 1
+#define SPADAS_VERSION_BUILD 2
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.1.1\n
+* 本文档对应Spadas版本：8.1.2\n
 *
 * \n
 * \section top1 基本功能概述
