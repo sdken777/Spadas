@@ -113,6 +113,7 @@
 * 以下接口函数可根据实际需要选择是否实现：
 *   - spadas::IDevicePluginV201::getChildDeviceStatus
 *   - spadas::IDevicePluginV201::useBusTransmitter
+*   - spadas::IDevicePluginV201::getBufferFilesLatestTime
 *   - spadas::IDevicePluginV201::clearBufferFiles
 *   - spadas::IDevicePluginV201::pickEvent
 *
