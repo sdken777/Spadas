@@ -5443,21 +5443,23 @@ namespace spadas
 		/// @brief [可选] 初始化读取原始数据文件（在开始session时被调用）
 		/// @param readerName 读取器名称
 		/// @param inputRoot Session的input文件夹路径
+		/// @param session Session ID
 		/// @param timeOffset 跳转至该时间戳开始读取
 		/// @param password 用于读取加密数据的密码
 		/// @param filters 读取数据筛选
 		/// @param busInfo 各总线通道的相关信息，若无总线数据输出可不赋值
 		/// @param videoInfo 各视频通道的相关信息，若无视频数据输出可不赋值
 		/// @returns 返回是否成功初始化，无数据文件的情况也返回FALSE
-		virtual Bool openReadRawFiles(String readerName, Path inputRoot, Double timeOffset, String password, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoReadInfo>& videoInfo);
+		virtual Bool openReadRawFiles(String readerName, Path inputRoot, SessionID session, Double timeOffset, String password, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoReadInfo>& videoInfo);
 
 		/// @brief [可选] 初始化读取generation数据文件（在开始session时被调用）
 		/// @param readerName 读取器名称
 		/// @param generationRoot Generation的文件夹路径
+		/// @param session Session ID
 		/// @param timeOffset 跳转至该时间戳开始读取
 		/// @param password 用于读取加密数据的密码，若无密码则为空
 		/// @returns 返回是否成功初始化，无数据文件的情况也返回FALSE
-		virtual Bool openReadGenerationFiles(String readerName, Path generationRoot, Double timeOffset, String password);
+		virtual Bool openReadGenerationFiles(String readerName, Path generationRoot, SessionID session, Double timeOffset, String password);
 
 		/// @brief [可选] 读取文件数据
 		/// @param readerName 读取器名称

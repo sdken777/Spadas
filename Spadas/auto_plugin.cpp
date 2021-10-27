@@ -291,12 +291,12 @@ void IProcessorPluginV601::runStandaloneTask(String taskName, String config, Fla
 {}
 
 // 文件读写插件API 1.0
-Bool IFilePluginV100::openReadRawFiles(String readerName, Path inputRoot, Double timeOffset, String password, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoReadInfo>& videoInfo)
+Bool IFilePluginV100::openReadRawFiles(String readerName, Path inputRoot, SessionID session, Double timeOffset, String password, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoReadInfo>& videoInfo)
 {
 	return FALSE;
 }
 
-Bool IFilePluginV100::openReadGenerationFiles(String readerName, Path generationRoot, Double timeOffset, String password)
+Bool IFilePluginV100::openReadGenerationFiles(String readerName, Path generationRoot, SessionID session, Double timeOffset, String password)
 {
 	return FALSE;
 }
