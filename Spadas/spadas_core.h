@@ -5447,7 +5447,7 @@ namespace spadas
 		/// @param session Session ID
 		/// @param timeOffset 跳转至该时间戳开始读取
 		/// @param password 用于读取加密数据的密码
-		/// @param filters 读取数据筛选
+		/// @param filters 读取数据筛选，若为空表示不进行筛选
 		/// @param busInfo 各总线通道的相关信息，若无总线数据输出可不赋值
 		/// @param videoInfo 各视频通道的相关信息，若无视频数据输出可不赋值
 		/// @returns 返回是否成功初始化，无数据文件的情况也返回FALSE
@@ -5469,7 +5469,7 @@ namespace spadas
 		/// @param inputRoot Session的input文件夹路径，若有效表示为在线采集模式，否则为离线处理模式
 		/// @param generationRoot Generation的文件夹路径
 		/// @param password 用于写入加密数据的密码，若不加密则为空
-		/// @param filters 写入数据筛选
+		/// @param filters 写入数据筛选，若为空表示不进行筛选
 		/// @param busInfo 各总线通道的相关信息
 		/// @param videoInfo 各视频通道的相关信息
 		/// @param busMessageNameTable 总线报文名称表，键为报文ID字符串
@@ -5498,7 +5498,7 @@ namespace spadas
 		/// @param srcInputRoot 源session的input文件夹
 		/// @param srcSession 源session ID
 		/// @param pick 截取任务参数
-		/// @param filters 截取数据筛选
+		/// @param filters 截取数据筛选，若为空表示不进行筛选
 		/// @param shouldEnd 是否已被取消
 		/// @param callback 任务的反馈接口，主要用于通知任务进度
 		virtual void pickSession(String pickerName, Path srcInputRoot, SessionID srcSession, PickConfig pick, Array<FileIOFilter> filters, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
