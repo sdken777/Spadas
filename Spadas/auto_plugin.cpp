@@ -296,7 +296,7 @@ Double IFilePluginV100::getFilesDuration(String readerName, Path inputRoot, Arra
 	return 0;
 }
 
-Bool IFilePluginV100::openReadFiles(String readerName, Path inputRoot, Path generationRoot, SessionID session, Double timeOffset, String password, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoReadInfo>& videoInfo)
+Bool IFilePluginV100::openReadFiles(String readerName, Path inputRoot, Path generationRoot, SessionID session, Double timeOffset, String password, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoReadInfo>& videoInfo, Dictionary<String>& sampleTitles)
 {
 	return FALSE;
 }
@@ -309,7 +309,7 @@ Bool IFilePluginV100::readFilesData(String readerName, InputTables inputs, Doubl
 void IFilePluginV100::closeReadFiles(String readerName)
 {}
 
-Bool IFilePluginV100::openWriteFiles(String writerName, Path inputRoot, Path generationRoot, String password, Array<FileIOFilter> filters, Array<BusChannelType> busInfo, Array<VideoWriteInfo> videoInfo, Dictionary<String> busMessageNameTable)
+Bool IFilePluginV100::openWriteFiles(String writerName, Path inputRoot, Path generationRoot, String password, Array<FileIOFilter> filters, Array<BusChannelType> busInfo, Array<VideoWriteInfo> videoInfo, Dictionary<String> sampleTitles, Dictionary<String> busMessageNameTable)
 {
 	return FALSE;
 }
@@ -329,4 +329,10 @@ void IFilePluginV100::pickSession(String pickerName, Path srcInputRoot, SessionI
 {}
 
 void IFilePluginV100::setFileExtraConfig(String extra)
+{}
+
+void IFilePluginV100::updateStartTimeLocal(ULong posixTime, Double timeRatio)
+{}
+
+void IFilePluginV100::updateStartTimeUTC(ULong posixTime, Double timeRatio)
 {}

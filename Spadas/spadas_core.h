@@ -5450,8 +5450,9 @@ namespace spadas
 		/// @param filters 读取数据筛选，若为空表示不进行筛选
 		/// @param busInfo 各总线通道的相关信息，若无总线数据输出可不赋值
 		/// @param videoInfo 各视频通道的相关信息，若无视频数据输出可不赋值
+		/// @param sampleTitles 各样本通道的标题信息，若无样本数据输出可不赋值
 		/// @returns 返回是否成功初始化，无数据文件的情况也返回FALSE
-		virtual Bool openReadFiles(String readerName, Path inputRoot, Path generationRoot, SessionID session, Double timeOffset, String password, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoReadInfo>& videoInfo);
+		virtual Bool openReadFiles(String readerName, Path inputRoot, Path generationRoot, SessionID session, Double timeOffset, String password, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoReadInfo>& videoInfo, Dictionary<String>& sampleTitles);
 
 		/// @brief [可选] 读取文件数据
 		/// @param readerName 读取器名称
@@ -5472,9 +5473,10 @@ namespace spadas
 		/// @param filters 写入数据筛选，若为空表示不进行筛选
 		/// @param busInfo 各总线通道的相关信息
 		/// @param videoInfo 各视频通道的相关信息
+		/// @param sampleTitles 各样本通道的标题信息
 		/// @param busMessageNameTable 总线报文名称表，键为报文ID字符串
 		/// @returns 返回是否成功初始化
-		virtual Bool openWriteFiles(String writerName, Path inputRoot, Path generationRoot, String password, Array<FileIOFilter> filters, Array<BusChannelType> busInfo, Array<VideoWriteInfo> videoInfo, Dictionary<String> busMessageNameTable);
+		virtual Bool openWriteFiles(String writerName, Path inputRoot, Path generationRoot, String password, Array<FileIOFilter> filters, Array<BusChannelType> busInfo, Array<VideoWriteInfo> videoInfo, Dictionary<String> sampleTitles, Dictionary<String> busMessageNameTable);
 
 		/// @brief [可选] 写入文件数据
 		/// @param writerName 写入器名称
@@ -5506,6 +5508,16 @@ namespace spadas
 		/// @brief [可选] 对文件读写进行额外设置（在各openXXXFiles函数前被调用）
 		/// @param extra 配置信息
 		virtual void setFileExtraConfig(String extra);
+
+		/// @brief [可选] 更新本地开始时间(posix)用于写入NTP同步时间戳
+		/// @param posixTime 当前session的本地开始时间(posix)
+		/// @param timeRatio 相对时间(时间偏置)向本地时间的转换比例
+		virtual void updateStartTimeLocal(ULong posixTime, Double timeRatio);
+
+		/// @brief [可选] 更新UTC开始时间(posix)用于写入GNSS同步时间戳
+		/// @param posixTime 当前session的UTC开始时间(posix)
+		/// @param timeRatio 相对时间(时间偏置)向UTC时间的转换比例
+		virtual void updateStartTimeUTC(ULong posixTime, Double timeRatio);
 	};
 
 	/// 获取文件读写插件接口，函数名应为get_file_plugin_v100
