@@ -4883,11 +4883,14 @@ namespace spadas
 		/// 截取源session的时间范围
 		Range srcRange;
 
-		/// 目标session的input文件夹路径
-		Path dstInputRoot;
-
 		/// 目标session ID
 		SessionID dstSession;
+
+		/// 目标session的input文件夹路径，可为空
+		Path dstInputRoot;
+
+		/// 目标session的generation文件夹路径，可为空
+		Path dstGenerationRoot;
 	};
 
 	/// 文件读写筛选
@@ -4907,6 +4910,41 @@ namespace spadas
 
 		/// 视频通道A数据，通道B等数据依次从201往上加
 		VideoChannelA = 200,
+	};
+
+	/// 文件读写基本信息
+	struct FileIOBasicInfo
+	{
+		/// Session ID
+		SessionID session;
+
+		/// 筛选项，空表示不进行筛选
+		Array<FileIOFilter> filter;
+
+		/// 数据密码（非加密文件无需使用）
+		String password;
+	};
+
+	/// 文件读写扩展信息
+	struct FileIOExtInfo
+	{
+		/// 各总线通道类型，空表示无总线数据读写
+		Array<BusChannelType> busChannelTypes;
+
+		/// 总线报文名称表，key为总线报文ID字符串
+		Dictionary<String> busMessageNameTable;
+
+		/// 各视频通道输入模式，空表示无视频数据读写
+		Array<VideoInputMode> videoChannelModes;
+
+		/// 各视频通道写入文件的帧率，空表示不考虑帧率
+		Array<UInt> videoChannelFPS;
+
+		/// 各视频通道是否按写入文件帧率对齐实际帧率（仅用于写入），空表示不对齐
+		Array<Bool> videoChannelFPSAligned;
+
+		/// 样本标题表，key为样本协议ID
+		Dictionary<String> sampleTitles;
 	};
 
 	// 插件相关实用功能 //////////////////////////////////////////////////////////////
@@ -5132,29 +5170,6 @@ namespace spadas
 		/// @param searcher 搜索接口
 		/// @returns 时间戳范围
 		static Optional<Range> getTimeRange(Path path, Interface<ITimestampSearch> searcher);
-	};
-
-	/// 视频文件读取信息
-	struct VideoReadInfo
-	{
-		/// 视频模式
-		VideoInputMode mode;
-
-		/// 视频帧率
-		UInt fps;
-	};
-
-	/// 视频文件写入信息
-	struct VideoWriteInfo
-	{
-		/// 视频模式
-		VideoInputMode mode;
-
-		/// 视频帧率
-		UInt fps;
-
-		/// 实际帧率是否按视频帧率对齐
-		Bool fpsAligned;
 	};
 
 	// 插件API（旧） /////////////////////////////////////////////////////////
@@ -5437,22 +5452,19 @@ namespace spadas
 		/// @param readerName 读取器名称
 		/// @param inputRoot Session的input文件夹路径
 		/// @param generationRoots Session的所有generation文件夹路径
+		/// @param basicInfo 文件读写基本信息
 		/// @returns 所有文件的最大时长，单位秒，若无文件或无数据则返回0
-		virtual Double getFilesDuration(String readerName, Path inputRoot, Array<Path> generationRoots);
+		virtual Double getFilesDuration(String readerName, Path inputRoot, Array<Path> generationRoots, FileIOBasicInfo basicInfo);
 
 		/// @brief [可选] 初始化读取原始数据文件（在开始session时被调用）
 		/// @param readerName 读取器名称
-		/// @param inputRoot Session的input文件夹路径
-		/// @param generationRoot Generation的文件夹路径，若有效表示为从generation回放模式，否则为从原始数据回放模式
-		/// @param session Session ID
+		/// @param inputRoot Session的input文件夹路径，可为空
+		/// @param generationRoot Generation的文件夹路径，可为空
 		/// @param timeOffset 跳转至该时间戳开始读取
-		/// @param password 用于读取加密数据的密码
-		/// @param filters 读取数据筛选，若为空表示不进行筛选
-		/// @param busInfo 各总线通道的相关信息，若无总线数据输出可不赋值
-		/// @param videoInfo 各视频通道的相关信息，若无视频数据输出可不赋值
-		/// @param sampleTitles 各样本通道的标题信息，若无样本数据输出可不赋值
+		/// @param basicInfo 文件读写基本信息
+		/// @param extInfo 输出文件扩展信息
 		/// @returns 返回是否成功初始化，无数据文件的情况也返回FALSE
-		virtual Bool openReadFiles(String readerName, Path inputRoot, Path generationRoot, SessionID session, Double timeOffset, String password, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoReadInfo>& videoInfo, Dictionary<String>& sampleTitles);
+		virtual Bool openReadFiles(String readerName, Path inputRoot, Path generationRoot, Double timeOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo);
 
 		/// @brief [可选] 读取文件数据
 		/// @param readerName 读取器名称
@@ -5467,16 +5479,12 @@ namespace spadas
 
 		/// @brief [可选] 初始化写入数据文件
 		/// @param writerName 写入器名称
-		/// @param inputRoot Session的input文件夹路径，若有效表示为在线采集模式，否则为离线处理模式
-		/// @param generationRoot Generation的文件夹路径
-		/// @param password 用于写入加密数据的密码，若不加密则为空
-		/// @param filters 写入数据筛选，若为空表示不进行筛选
-		/// @param busInfo 各总线通道的相关信息
-		/// @param videoInfo 各视频通道的相关信息
-		/// @param sampleTitles 各样本通道的标题信息
-		/// @param busMessageNameTable 总线报文名称表，键为报文ID字符串
+		/// @param inputRoot Session的input文件夹路径，可为空
+		/// @param generationRoot Generation的文件夹路径，可为空
+		/// @param basicInfo 文件读写基本信息
+		/// @param extInfo 文件扩展信息
 		/// @returns 返回是否成功初始化
-		virtual Bool openWriteFiles(String writerName, Path inputRoot, Path generationRoot, String password, Array<FileIOFilter> filters, Array<BusChannelType> busInfo, Array<VideoWriteInfo> videoInfo, Dictionary<String> sampleTitles, Dictionary<String> busMessageNameTable);
+		virtual Bool openWriteFiles(String writerName, Path inputRoot, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo);
 
 		/// @brief [可选] 写入文件数据
 		/// @param writerName 写入器名称
@@ -5490,20 +5498,21 @@ namespace spadas
 
 		/// @brief [可选] 获取是否有适用于数据截取器的数据文件
 		/// @param pickerName 数据截取器名称
-		/// @param srcInputRoot 源session的input文件夹
-		/// @param srcSession 源session ID
+		/// @param inputRoot 源session的input文件夹，可为空
+		/// @param generationRoot 源session的generation文件夹，可为空
+		/// @param basicInfo 文件读写基本信息
 		/// @returns 是否有适用于数据截取器的数据文件
-		virtual Bool hasDataFiles(String pickerName, Path srcInputRoot, SessionID srcSession);
+		virtual Bool hasDataFiles(String pickerName, Path inputRoot, Path generationRoot, FileIOBasicInfo basicInfo);
 
 		/// @brief [可选] 离线截取数据，在数据截取独立任务中被调用
 		/// @param pickerName 数据截取器名称
-		/// @param srcInputRoot 源session的input文件夹
-		/// @param srcSession 源session ID
+		/// @param inputRoot 源session的input文件夹，可为空
+		/// @param generationRoot 源session的generation文件夹，可为空
 		/// @param pick 截取任务参数
-		/// @param filters 截取数据筛选，若为空表示不进行筛选
+		/// @param basicInfo 文件读写基本信息
 		/// @param shouldEnd 是否已被取消
 		/// @param callback 任务的反馈接口，主要用于通知任务进度
-		virtual void pickSession(String pickerName, Path srcInputRoot, SessionID srcSession, PickConfig pick, Array<FileIOFilter> filters, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
+		virtual void pickSession(String pickerName, Path inputRoot, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
 
 		/// @brief [可选] 对文件读写进行额外设置（在各openXXXFiles函数前被调用）
 		/// @param extra 配置信息

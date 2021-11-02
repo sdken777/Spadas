@@ -291,12 +291,12 @@ void IProcessorPluginV601::runStandaloneTask(String taskName, String config, Fla
 {}
 
 // 文件读写插件API 1.0
-Double IFilePluginV100::getFilesDuration(String readerName, Path inputRoot, Array<Path> generationRoots)
+Double IFilePluginV100::getFilesDuration(String readerName, Path inputRoot, Array<Path> generationRoots, FileIOBasicInfo basicInfo)
 {
 	return 0;
 }
 
-Bool IFilePluginV100::openReadFiles(String readerName, Path inputRoot, Path generationRoot, SessionID session, Double timeOffset, String password, Array<FileIOFilter> filters, Array<BusChannelType>& busInfo, Array<VideoReadInfo>& videoInfo, Dictionary<String>& sampleTitles)
+Bool IFilePluginV100::openReadFiles(String readerName, Path inputRoot, Path generationRoot, Double timeOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo)
 {
 	return FALSE;
 }
@@ -309,7 +309,7 @@ Bool IFilePluginV100::readFilesData(String readerName, InputTables inputs, Doubl
 void IFilePluginV100::closeReadFiles(String readerName)
 {}
 
-Bool IFilePluginV100::openWriteFiles(String writerName, Path inputRoot, Path generationRoot, String password, Array<FileIOFilter> filters, Array<BusChannelType> busInfo, Array<VideoWriteInfo> videoInfo, Dictionary<String> sampleTitles, Dictionary<String> busMessageNameTable)
+Bool IFilePluginV100::openWriteFiles(String writerName, Path inputRoot, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo)
 {
 	return FALSE;
 }
@@ -320,12 +320,12 @@ void IFilePluginV100::writeFilesData(String writerName, InputTables inputs, Arra
 void IFilePluginV100::closeWriteFiles(String writerName)
 {}
 
-Bool IFilePluginV100::hasDataFiles(String pickerName, Path srcInputRoot, SessionID srcSession)
+Bool IFilePluginV100::hasDataFiles(String pickerName, Path inputRoot, Path generationRoot, FileIOBasicInfo basicInfo)
 {
 	return FALSE;
 }
 
-void IFilePluginV100::pickSession(String pickerName, Path srcInputRoot, SessionID srcSession, PickConfig pick, Array<FileIOFilter> filters, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
+void IFilePluginV100::pickSession(String pickerName, Path inputRoot, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
 {}
 
 void IFilePluginV100::setFileExtraConfig(String extra)
