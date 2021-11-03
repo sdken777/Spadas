@@ -4893,6 +4893,35 @@ namespace spadas
 		Path dstGenerationRoot;
 	};
 
+	/// 文件写入模式
+	enum class FileWriteMode
+	{
+		/// 无特殊模式
+		Normal = 0,
+
+		/// 在线采集模式
+		OnlineMode = 1,
+
+		/// 离线处理模式
+		OfflineMode = 2,
+	};
+
+	/// 文件读取模式
+	enum class FileReadMode
+	{
+		/// 无特殊模式
+		Normal = 0,
+
+		/// 离线处理或离线回放模式下，从原始数据读取
+		FromRaw = 1,
+
+		/// 离线处理模式下，从generation读取
+		OfflineModeFromGeneration = 2,
+
+		/// 离线回放模式下，从generation读取
+		ReplayModeFromGeneration = 3,
+	};
+
 	/// 文件读写筛选
 	enum class FileIOFilter
 	{
@@ -4921,8 +4950,18 @@ namespace spadas
 		/// 筛选项，空表示不进行筛选
 		Array<FileIOFilter> filter;
 
+		/// 文件写入模式
+		FileWriteMode writeMode;
+
+		/// 文件读取模式
+		FileReadMode readMode;
+
 		/// 数据密码（非加密文件无需使用）
 		String password;
+
+		/// 默认构造函数
+		FileIOBasicInfo() : writeMode(FileWriteMode::Normal), readMode(FileReadMode::Normal)
+		{}
 	};
 
 	/// 文件读写扩展信息
@@ -5396,7 +5435,7 @@ namespace spadas
 
 		/// @brief 配置数据处理及杂项数据路径表（在开始session时被调用）
 		/// @param config 配置信息，应包含是否启用功能的配置
-		/// @param onlineMode 是否为在线模式
+		/// @param onlineMode 是否为在线模式，否则为离线模式或回放模式
 		/// @param recordMode 是否记录至文件（在线采集或离线生成）
 		/// @param inputRoots 各session对应的input文件夹路径，可用于读取设备自定义数据
 		virtual void setProcessorConfigX(String config, Bool onlineMode, Bool recordMode, Map<SessionID, Path> inputRoots);
