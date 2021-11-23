@@ -31,7 +31,7 @@
                 "COMPILE=cross",
                 "TARGET=spadas",
                 "TARGET_VERSION=8",
-                "DEPENDS=winmm ws2_32 iphlpapi",
+                "DEPENDS=spadasupport winmm ws2_32 iphlpapi",
                 "MACRO_DEFINE=SPADAS_EXPORTS",
             ],
             "dependsOn": [
@@ -89,7 +89,7 @@
                 "COMPILE=cross",
                 "TARGET=spadas",
                 "TARGET_VERSION=8",
-                "DEPENDS=winmm ws2_32 iphlpapi",
+                "DEPENDS=spadasupport winmm ws2_32 iphlpapi",
                 "MACRO_DEFINE=SPADAS_EXPORTS",
             ],
             "dependsOn": [

@@ -5,14 +5,13 @@
 
 #if defined(SPADAS_ENV_WINDOWS)
 
-#include <stdio.h>
-#include <wchar.h>
 #include <windows.h>
-
 #undef TRUE
 #undef FALSE
 #undef min
 #undef max
+
+#include "spadas_support.h"
 
 namespace file_internal
 {
@@ -57,105 +56,103 @@ namespace file_internal
 	// file I/O operations
 	Pointer fileOpen(String fileName, Bool outputMode)
 	{
-		FILE *file;
-		_wfopen_s(&file, fileName.wchars().data(), outputMode ? L"wb+" : L"rb");
-		return (Pointer)file;
+		return msvc_fopen(fileName.wchars().data(), outputMode ? L"wb+" : L"rb");
 	}
 
 	void fileClose(Pointer file)
 	{
-		fclose((FILE*)file);
+		msvc_fclose(file);
 	}
 
 	void filePrint(Pointer file, String text)
 	{
 		fileOutput(file, text.toBinary());
-		fprintf((FILE*)file, "\n");
+
+		const unsigned char enter = '\n';
+		msvc_fwrite(file, &enter, 1);
 	}
 
-	String fileScan(Pointer file, Char buffer[SCAN_SIZE], Bool isUtf8)
+	String fileScan(Pointer file, Char buf[SCAN_SIZE], Bool isUtf8)
 	{
-		const UInt SCAN_READ_SIZE = 64;
-		const UInt SCAN_READ_TIME = SCAN_SIZE >> 6;
+		Bool ok = msvc_fgets(file, buf, SCAN_SIZE);
 
-		ULong originPos = filePos(file);
-
-		Int textBytes = -1;
-		for (UInt i = 0; i < SCAN_READ_TIME; i++)
+		String out;
+		if (ok)
 		{
-			UInt startIndex = i * SCAN_READ_SIZE;
-			UInt readBytes = (UInt)fread(&buffer[startIndex], 1, SCAN_READ_SIZE, (FILE*)file);
+			buf[SCAN_SIZE - 1] = 0;
+			UInt len = (UInt)strlen(buf);
+			UInt lenDec = 0;
 
-			Bool finish = FALSE;
-			for (UInt n = 0; n < readBytes; n++)
+            // remove LF, CR or CRLF
+			if (len >= 1)
 			{
-				Char c = buffer[startIndex + n];
-				Bool isEnter = c == 13 || c == 10;
-				if (textBytes < 0)
+				if (buf[len - 1] == 10)
 				{
-					if (isEnter) textBytes = startIndex + n;
+					if (len >= 2 && buf[len - 2] == 13)
+					{
+						buf[len - 2] = 0;
+						lenDec = 2;
+					}
+					else
+					{
+						buf[len - 1] = 0;
+						lenDec = 1;
+					}
+
 				}
-				else if (!isEnter)
+				else if (buf[len - 1] == 13)
 				{
-					fileSeek(file, originPos + startIndex + n);
-					finish = TRUE;
-					break;
+					buf[len - 1] = 0;
+					lenDec = 1;
 				}
 			}
-			if (finish) break;
 
-			if (readBytes < SCAN_READ_SIZE)
+			if (isUtf8)
 			{
-				if (textBytes < 0) textBytes = startIndex + readBytes;
-				break;
+				out = Binary((Byte*)buf, len - lenDec);
+			}
+			else
+			{
+				out = buf;
 			}
 		}
-		if (textBytes < 0) textBytes = SCAN_READ_TIME * SCAN_READ_SIZE;
 
-		if (isUtf8)
-		{
-			return Binary((Byte*)buffer, textBytes);
-		}
-		else
-		{
-			buffer[math::min((UInt)textBytes, SCAN_SIZE - 1)] = 0;
-			return String(buffer);
-		}
+		return out;
 	}
 
 	Binary fileInput(Pointer file, UInt size, ULong fileSize, ULong filePos)
 	{
 		if (filePos >= fileSize) return Binary();
 		Binary out((UInt)math::min((ULong)size, fileSize - filePos));
-		fread(out.data(), 1, out.size(), (FILE*)file);
+		msvc_fread(file, out.data(), out.size());
 		return out;
 	}
 
 	void fileOutput(Pointer file, Binary data)
 	{
-		fwrite(data.data(), 1, data.size(), (FILE*)file);
+		msvc_fwrite(file, data.data(), data.size());
 	}
 
 	void fileFlush(Pointer file)
 	{
-		fflush((FILE*)file);
+		msvc_fflush(file);
 	}
 	
 	ULong fileGetSize(Pointer file)
 	{
-		_fseeki64((FILE*)file, 0, SEEK_END);
-		return (ULong)_ftelli64((FILE*)file);
+		msvc_fseek(file, 0, 2);
+		return msvc_ftell(file);
 	}
 
 	ULong filePos(Pointer file)
 	{
-		return (ULong)_ftelli64((FILE*)file);
+		return msvc_ftell(file);
 	}
 	
 	ULong fileSeek(Pointer file, ULong pos)
 	{
-		_fseeki64((FILE*)file, pos, SEEK_SET);
-		return (ULong)_ftelli64((FILE*)file);
+		msvc_fseek(file, pos, 0);
+		return msvc_ftell(file);
 	}
 
 	// file operations

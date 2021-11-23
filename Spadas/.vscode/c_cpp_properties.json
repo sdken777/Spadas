@@ -5,7 +5,7 @@
             "compilerPath": "C:\\x-tools\\x86-windows\\bin\\x86_64-w64-mingw32-g++.exe",
             "includePath": [
                 "..\\include",
-                // "..\\include64",
+                "..\\include64",
                 "C:\\x-tools-headers\\x86-windows\\lib\\gcc\\x86_64-w64-mingw32\\8.3.0\\include",
                 "C:\\x-tools-headers\\x86-windows\\x86_64-w64-mingw32\\include\\c++\\8.3.0",
                 "C:\\x-tools-headers\\x86-windows\\x86_64-w64-mingw32\\include\\c++\\8.3.0\\x86_64-w64-mingw32",

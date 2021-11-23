@@ -22,6 +22,7 @@ fi
 
 mkdir -vp $TARGET_DIR/bin64
 cp -vf "$CUR_DIR"/bin64/spadas.dll $TARGET_DIR/bin64/
+cp -vf "$CUR_DIR"/bin64/spadasupport.dll $TARGET_DIR/bin64/
 cp -vf "$CUR_DIR"/3party/windows/* $TARGET_DIR/bin64/
 
 mkdir -vp $TARGET_DIR/binx
@@ -47,6 +48,7 @@ fi
 if [ "$EXPORT_RUNTIME_DEBUG" = "y" ]; then
     mkdir -vp $TARGET_DIR/bin64/debug
     cp -vf "$CUR_DIR"/bin64/spadas.dll $TARGET_DIR/bin64/debug/
+    cp -vf "$CUR_DIR"/bin64/spadasupport.dll $TARGET_DIR/bin64/debug/
     cp -vf "$CUR_DIR"/3party/windows/* $TARGET_DIR/bin64/debug/
 
     mkdir -vp $TARGET_DIR/binx/debug
