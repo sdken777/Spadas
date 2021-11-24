@@ -35,7 +35,7 @@
 *   - spadas::Binary : 二进制数据块
 *   - spadas::String : 字符串
 *   - spadas::XML : XML
-*   - spadas::Matrix : 矩阵
+*   - spadas::DoubleMat : 矩阵
 *
 * \subsection f4 4. 控制台
 * 控制台功能包括文字打印、文字和按键获取、弹出信息窗口等。具体请参考命名空间 spadas::console \n
@@ -147,28 +147,28 @@
 *
 * \subsection p7 7. 文件读写插件定义
 * 文件读写插件的DLL文件名需要以"file_"开头。\n
-* 文件读写插件对应的全局函数格式为 spadas::GetFilePluginV100 \n
+* 文件读写插件对应的全局函数格式为 spadas::GetFilePluginV101 \n
 * 此类插件可支持文件读取、文件写入、以及文件截取。\n\n
 *
 * 文件读取需要实现以下接口函数：
-*   - spadas::IFilePluginV100::getFilesDuration
-*   - spadas::IFilePluginV100::openReadFiles
-*   - spadas::IFilePluginV100::readFilesData
-*   - spadas::IFilePluginV100::closeReadFiles
+*   - spadas::IFilePluginV101::getFilesDuration
+*   - spadas::IFilePluginV101::openReadFiles
+*   - spadas::IFilePluginV101::readFilesData
+*   - spadas::IFilePluginV101::closeReadFiles
 *
 * 文件写入需要实现以下接口函数：
-*   - spadas::IFilePluginV100::openWriteFiles
-*   - spadas::IFilePluginV100::writeFilesData
-*   - spadas::IFilePluginV100::closeWriteFiles
+*   - spadas::IFilePluginV101::openWriteFiles
+*   - spadas::IFilePluginV101::writeFilesData
+*   - spadas::IFilePluginV101::closeWriteFiles
 *
 * 文件截取需要实现以下接口函数：
-*   - spadas::IFilePluginV100::hasDataFiles
-*   - spadas::IFilePluginV100::pickSession
+*   - spadas::IFilePluginV101::hasDataFiles
+*   - spadas::IFilePluginV101::pickSession
 *
 * 以下接口函数可根据实际需要选择是否实现：
-*   - spadas::IFilePluginV100::setFileExtraConfig
-*   - spadas::IFilePluginV100::updateStartTimeLocal
-*   - spadas::IFilePluginV100::updateStartTimeUTC
+*   - spadas::IFilePluginV101::setFileExtraConfig
+*   - spadas::IFilePluginV101::updateStartTimeLocal
+*   - spadas::IFilePluginV101::updateStartTimeUTC
 */
 
 // CPU架构检查
