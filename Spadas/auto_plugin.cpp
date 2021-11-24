@@ -38,7 +38,7 @@ SPADAS_DEFAULT_API void get_proc_plugin_api_version(UInt& major, UInt& minor)
 SPADAS_DEFAULT_API void get_file_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 1;
-	minor = 0;
+	minor = 1;
 }
 
 // 一般插件API 1.0
@@ -335,4 +335,51 @@ void IFilePluginV100::updateStartTimeLocal(ULong posixTime, Double timeRatio)
 {}
 
 void IFilePluginV100::updateStartTimeUTC(ULong posixTime, Double timeRatio)
+{}
+
+// 文件读写插件API 1.1
+Double IFilePluginV101::getFilesDuration(String readerName, Path inputRoot, Array<Path> generationRoots, FileIOBasicInfo basicInfo)
+{
+	return 0;
+}
+
+Bool IFilePluginV101::openReadFiles(String readerName, Path inputRoot, Path generationRoot, Double timeOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo)
+{
+	return FALSE;
+}
+
+Bool IFilePluginV101::readFilesData(String readerName, InputTables inputs, Double targetTime, Flag shouldEnd)
+{
+	return FALSE;
+}
+
+void IFilePluginV101::closeReadFiles(String readerName)
+{}
+
+Bool IFilePluginV101::openWriteFiles(String writerName, Path inputRoot, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo)
+{
+	return FALSE;
+}
+
+void IFilePluginV101::writeFilesData(String writerName, InputTables inputs, Array<BusRawData> busMessages, Flag shouldEnd)
+{}
+
+void IFilePluginV101::closeWriteFiles(String writerName)
+{}
+
+Bool IFilePluginV101::hasDataFiles(String pickerName, Path inputRoot, Path generationRoot, FileIOBasicInfo basicInfo)
+{
+	return FALSE;
+}
+
+void IFilePluginV101::pickSession(String pickerName, Path inputRoot, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
+{}
+
+void IFilePluginV101::setFileExtraConfig(String extra)
+{}
+
+void IFilePluginV101::updateStartTimeLocal(ULong posixTime, Double timeRatio)
+{}
+
+void IFilePluginV101::updateStartTimeUTC(ULong posixTime, Double timeRatio)
 {}

@@ -5247,6 +5247,25 @@ namespace spadas
 	};
 	typedef Interface<IProcessorPluginV600>(*GetProcessorPluginV600)();
 
+	class SPADAS_API IFilePluginV100
+	{
+	public:
+		virtual ~IFilePluginV100() {};
+		virtual Double getFilesDuration(String readerName, Path inputRoot, Array<Path> generationRoots, FileIOBasicInfo basicInfo);
+		virtual Bool openReadFiles(String readerName, Path inputRoot, Path generationRoot, Double timeOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo);
+		virtual Bool readFilesData(String readerName, InputTables inputs, Double targetTime);
+		virtual void closeReadFiles(String readerName);
+		virtual Bool openWriteFiles(String writerName, Path inputRoot, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo);
+		virtual void writeFilesData(String writerName, InputTables inputs, Array<BusRawData> busMessages);
+		virtual void closeWriteFiles(String writerName);
+		virtual Bool hasDataFiles(String pickerName, Path inputRoot, Path generationRoot, FileIOBasicInfo basicInfo);
+		virtual void pickSession(String pickerName, Path inputRoot, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
+		virtual void setFileExtraConfig(String extra);
+		virtual void updateStartTimeLocal(ULong posixTime, Double timeRatio);
+		virtual void updateStartTimeUTC(ULong posixTime, Double timeRatio);
+	};
+	typedef Interface<IFilePluginV100>(*GetFilePluginV100)();
+
 	// 插件API //////////////////////////////////////////////////////////////
 
 	/// 一般插件API 1.0
@@ -5481,11 +5500,11 @@ namespace spadas
 	/// 获取数据处理插件接口，函数名应为get_processor_plugin_v601
 	typedef Interface<IProcessorPluginV601>(*GetProcessorPluginV601)();
 
-	/// 文件读写插件API 1.0
-	class SPADAS_API IFilePluginV100
+	/// 文件读写插件API 1.1
+	class SPADAS_API IFilePluginV101
 	{
 	public:
-		virtual ~IFilePluginV100() {};
+		virtual ~IFilePluginV101() {};
 
 		/// @brief [可选] 获取适用于指定读取器的所有文件的最大时长
 		/// @param readerName 读取器名称
@@ -5509,8 +5528,9 @@ namespace spadas
 		/// @param readerName 读取器名称
 		/// @param inputs 输入数据表，读取的数据写入该表（其中视频首帧图像的所有依赖帧时间戳为0）
 		/// @param targetTime 读取的目标时间戳，单位秒
+		/// @param shouldEnd 是否准备关闭
 		/// @returns 后续是否还有数据，若所有文件已读取至末尾则返回FALSE
-		virtual Bool readFilesData(String readerName, InputTables inputs, Double targetTime);
+		virtual Bool readFilesData(String readerName, InputTables inputs, Double targetTime, Flag shouldEnd);
 
 		/// @brief [可选] 关闭读取文件
 		/// @param readerName 读取器名称
@@ -5529,7 +5549,8 @@ namespace spadas
 		/// @param writerName 写入器名称
 		/// @param inputs 输入数据表，从表中获取数据写入文件
 		/// @param busMessages 按时间戳排序的所有通道总线数据
-		virtual void writeFilesData(String writerName, InputTables inputs, Array<BusRawData> busMessages);
+		/// @param shouldEnd 是否准备关闭
+		virtual void writeFilesData(String writerName, InputTables inputs, Array<BusRawData> busMessages, Flag shouldEnd);
 
 		/// @brief [可选] 关闭写入文件
 		/// @param writerName 写入器名称
@@ -5568,8 +5589,8 @@ namespace spadas
 		virtual void updateStartTimeUTC(ULong posixTime, Double timeRatio);
 	};
 
-	/// 获取文件读写插件接口，函数名应为get_file_plugin_v100
-	typedef Interface<IFilePluginV100>(*GetFilePluginV100)();
+	/// 获取文件读写插件接口，函数名应为get_file_plugin_v101
+	typedef Interface<IFilePluginV101>(*GetFilePluginV101)();
 }
 
 #endif

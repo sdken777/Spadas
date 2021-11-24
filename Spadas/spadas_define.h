@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // Windows下的文件IO通过spadasupport使用msvc api
+// 版本定义 // 文件IO插件接口版本更新至1.1
 #define SPADAS_VERSION_MAJOR 8
 #define SPADAS_VERSION_MINOR 1
-#define SPADAS_VERSION_BUILD 8
+#define SPADAS_VERSION_BUILD 9
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.1.8\n
+* 本文档对应Spadas版本：8.1.9\n
 *
 * \n
 * \section top1 基本功能概述
