@@ -5,7 +5,7 @@
 # [必需] PLATFORM : 目标运行平台（linux：Linux-64位X86，linuxarm：Linux-64位Arm，windows：Windows-64位X86，macos：MacOS-64位X86）
 # [必需] COMPILE : 编译工具链（local：本机编译，cross：交叉编译）
 # [必需] TARGET : 输出目标名称，前后缀不用加
-# [可选] TARGET_VERSION : 输出目标版本号，仅针对.so库文件
+# [可选] TARGET_VERSION : 输出目标版本号，仅针对.so和.dylib库文件
 # [可选] DEPENDS : 依赖库，前后缀不用加，以空格分隔
 # [可选] MACRO_DEFINE : 额外的宏定义，以空格分隔
 # [可选] SEARCH_INCLUDE : 额外的头文件搜索路径，以空格分隔
@@ -15,6 +15,8 @@
 # [可选] FILTEROUT_CPP : 不编译的.cpp文件，需要加后缀，以空格分隔
 # [可选] FILTEROUT_CC : 不编译的.cc文件，需要加后缀，以空格分隔
 # [可选] FILTEROUT_C :不编译的.c文件，需要加后缀，以空格分隔
+# [可选] FILTEROUT_H : 不依赖的.h文件，需要加后缀，以空格分隔
+# [可选] FILTEROUT_HPP : 不依赖的.hpp文件，需要加后缀，以空格分隔
 
 .DEFAULT:all
 .PHONY:clean
@@ -231,6 +233,17 @@ ifeq ($(TYPE), lib)
 		ifeq ($(MODE), release)
 			POSTLIB_COMMAND=cp -vf $(OUT_PATH)/$(OUT_NAME) $(LIB_PATH)/$(LIB_NAME)
 		endif
+	endif
+endif
+ifeq ($(TYPE), exe)
+	ifeq ($(PLATFORM), linux)
+		WL_OPTION:=$(WL_OPTION),-rpath-link,$(LIB_PATH)/
+	endif
+	ifeq ($(PLATFORM), linuxarm)
+		WL_OPTION:=$(WL_OPTION),-rpath-link,$(LIB_PATH)/
+	endif
+	ifeq ($(PLATFORM), windows)
+		WL_OPTION:=$(WL_OPTION),-rpath-link,$(LIB_PATH)/
 	endif
 endif
 
