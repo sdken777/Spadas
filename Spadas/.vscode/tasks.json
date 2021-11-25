@@ -2,7 +2,7 @@
     "tasks": [
         {
             "type": "process",
-            "label": "(internal)清理",
+            "label": "清理",
             "command": "make",
             "args": [
                 "clean",
@@ -34,9 +34,6 @@
                 "DEPENDS=spadasupport winmm ws2_32 iphlpapi",
                 "MACRO_DEFINE=SPADAS_EXPORTS",
             ],
-            "dependsOn": [
-                "(internal)清理",
-            ],
             "problemMatcher":"$gcc",
         },
         {
@@ -53,9 +50,6 @@
                 "TARGET_VERSION=8",
                 "DEPENDS=pthread dl",
             ],
-            "dependsOn": [
-                "(internal)清理",
-            ],
             "problemMatcher":"$gcc",
         },
         {
@@ -71,9 +65,6 @@
                 "TARGET=spadas",
                 "TARGET_VERSION=8",
                 "DEPENDS=pthread dl",
-            ],
-            "dependsOn": [
-                "(internal)清理",
             ],
             "problemMatcher":"$gcc",
         },
@@ -92,9 +83,6 @@
                 "DEPENDS=spadasupport winmm ws2_32 iphlpapi",
                 "MACRO_DEFINE=SPADAS_EXPORTS",
             ],
-            "dependsOn": [
-                "(internal)清理",
-            ],
             "problemMatcher":"$gcc",
         },
         {
@@ -111,9 +99,6 @@
                 "TARGET_VERSION=8",
                 "DEPENDS=pthread dl",
             ],
-            "dependsOn": [
-                "(internal)清理",
-            ],
             "problemMatcher":"$gcc",
         },
         {
@@ -129,9 +114,6 @@
                 "TARGET=spadas",
                 "TARGET_VERSION=8",
                 "DEPENDS=pthread dl",
-            ],
-            "dependsOn": [
-                "(internal)清理",
             ],
             "problemMatcher":"$gcc",
         },

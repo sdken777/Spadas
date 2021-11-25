@@ -18,9 +18,11 @@
 
 .DEFAULT:all
 .PHONY:clean
-.SUFFIXES:.c .cpp .cc .o
+.SUFFIXES:.c .cpp .cc .o .h .hpp
 
 # 获取源文件集
+HEADERS_H=$(filter-out $(FILTEROUT_H), $(wildcard *.h **/*.h))
+HEADERS_HPP=$(filter-out $(FILTEROUT_HPP), $(wildcard *.hpp **/*.hpp))
 SRCS_C=$(filter-out $(FILTEROUT_C), $(wildcard *.c **/*.c))
 SRCS_CPP=$(filter-out $(FILTEROUT_CPP), $(wildcard *.cpp **/*.cpp))
 SRCS_CC=$(filter-out $(FILTEROUT_CC), $(wildcard *.cc **/*.cc))
@@ -96,15 +98,16 @@ endif
 
 # 编译模式相关
 ifeq ($(MODE), release)
-	OBJ_PATH=Release
+	OBJ_PATH=Release/$(PLATFORM)
 	OUT_PATH=../$(BIN_DIR)
 	CFLAG=-O3
 endif
 ifeq ($(MODE), debug)
-	OBJ_PATH=Debug
+	OBJ_PATH=Debug/$(PLATFORM)
 	OUT_PATH=../$(BIN_DIR)/debug
 	CFLAG=-g -DSPADAS_DEBUG
 endif
+OBJS:=$(addprefix $(OBJ_PATH)/, $(OBJS))
 
 # lib名称与输出路径
 LIB_NAME=$(LIB_PREFIX)$(TARGET)$(LIB_EXT)
@@ -251,23 +254,23 @@ endif
 
 # 编译流程
 all:pre $(OBJS)
-	$(COMPILER_CPP_EXE) $(SYSROOT_OPTION) $(CHARSET_OPTION) -L../$(LIB_DIR) $(WL_OPTION) $(LDFLAG) -o $(OUT_PATH)/$(OUT_NAME) $(addprefix $(OBJ_PATH)/, $(OBJS)) $(addprefix -l, $(DEPENDS)) $(addprefix -L, $(SEARCH_LIB))
+	$(COMPILER_CPP_EXE) $(SYSROOT_OPTION) $(CHARSET_OPTION) -L../$(LIB_DIR) $(WL_OPTION) $(LDFLAG) -o $(OUT_PATH)/$(OUT_NAME) $(OBJS) $(addprefix -l, $(DEPENDS)) $(addprefix -L, $(SEARCH_LIB))
 	$(STRIP_COMMAND)
 	$(POSTLIB_COMMAND)
 	$(POSTBUILD_COMMAND)
 	@echo '---------------OK---------------'
 
-%.o:%.c
-	mkdir -p `dirname $(OBJ_PATH)/$@`
-	$(COMPILER_C_EXE) -Wall $(SYSROOT_OPTION) $(CHARSET_OPTION) -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -fmessage-length=0 -fvisibility=hidden -fPIC $(CFLAG) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $(OBJ_PATH)/$@ -c $<
+$(OBJ_PATH)/%.o:%.c $(HEADERS_H) $(HEADERS_HPP)
+	mkdir -p `dirname $@`
+	$(COMPILER_C_EXE) -Wall $(SYSROOT_OPTION) $(CHARSET_OPTION) -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -fmessage-length=0 -fvisibility=hidden -fPIC $(CFLAG) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 
-%.o:%.cpp
-	mkdir -p `dirname $(OBJ_PATH)/$@`
-	$(COMPILER_CPP_EXE) -Wall $(SYSROOT_OPTION) $(CHARSET_OPTION) -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -fmessage-length=0 -fvisibility=hidden -fPIC -std=c++11 $(CFLAG) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $(OBJ_PATH)/$@ -c $<
+$(OBJ_PATH)/%.o:%.cpp $(HEADERS_H) $(HEADERS_HPP)
+	mkdir -p `dirname $@`
+	$(COMPILER_CPP_EXE) -Wall $(SYSROOT_OPTION) $(CHARSET_OPTION) -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -fmessage-length=0 -fvisibility=hidden -fPIC -std=c++11 $(CFLAG) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 
-%.o:%.cc
-	mkdir -p `dirname $(OBJ_PATH)/$@`
-	$(COMPILER_CPP_EXE) -Wall $(SYSROOT_OPTION) $(CHARSET_OPTION) -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -fmessage-length=0 -fvisibility=hidden -fPIC -std=c++11 $(CFLAG) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $(OBJ_PATH)/$@ -c $<
+$(OBJ_PATH)/%.o:%.cc $(HEADERS_H) $(HEADERS_HPP)
+	mkdir -p `dirname $@`
+	$(COMPILER_CPP_EXE) -Wall $(SYSROOT_OPTION) $(CHARSET_OPTION) -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -fmessage-length=0 -fvisibility=hidden -fPIC -std=c++11 $(CFLAG) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 
 pre:
 	$(PREBUILD_COMMAND)

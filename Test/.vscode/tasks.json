@@ -2,7 +2,7 @@
     "tasks": [
         {
             "type": "process",
-            "label": "(internal)清理",
+            "label": "清理",
             "command": "make",
             "args": [
                 "clean",
@@ -22,9 +22,6 @@
                 "TARGET=test",
                 "DEPENDS=spadas",
             ],
-            "dependsOn": [
-                "(internal)清理",
-            ],
             "problemMatcher":"$gcc",
         },
         {
@@ -39,9 +36,6 @@
                 "COMPILE=cross",
                 "TARGET=test",
                 "DEPENDS=spadas",
-            ],
-            "dependsOn": [
-                "(internal)清理",
             ],
             "problemMatcher":"$gcc",
         },
@@ -58,9 +52,6 @@
                 "TARGET=test",
                 "DEPENDS=spadas",
             ],
-            "dependsOn": [
-                "(internal)清理",
-            ],
             "problemMatcher":"$gcc",
         },
         {
@@ -75,9 +66,6 @@
                 "COMPILE=cross",
                 "TARGET=test",
                 "DEPENDS=spadas",
-            ],
-            "dependsOn": [
-                "(internal)清理",
             ],
             "problemMatcher":"$gcc",
         },
@@ -94,9 +82,6 @@
                 "TARGET=test",
                 "DEPENDS=spadas",
             ],
-            "dependsOn": [
-                "(internal)清理",
-            ],
             "problemMatcher":"$gcc",
         },
         {
@@ -111,9 +96,6 @@
                 "COMPILE=cross",
                 "TARGET=test",
                 "DEPENDS=spadas",
-            ],
-            "dependsOn": [
-                "(internal)清理",
             ],
             "problemMatcher":"$gcc",
         },

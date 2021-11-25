@@ -55,11 +55,29 @@
             "cppStandard": "c++11"
         },
         {
+            "name": "Windows主机/X86-MacOS1010目标",
+            "compilerPath": "C:\\x-tools\\x86-macos1010\\target\\bin2\\x86_64-apple-darwin14-clang++.exe",
+            "compilerArgs": [ "-foc-compiler-path=C:\\x-tools\\x86-macos1010\\llvm-8\\bin" ],
+            "includePath": [
+                "..\\include",
+                // "..\\includem",
+                "C:\\x-tools-headers\\x86-macos1010\\llvm-8\\lib\\clang\\8.0.0\\include",
+                "C:\\x-tools-headers\\x86-macos1010\\target\\SDK\\MacOSX10.10.sdk\\usr\\include\\c++\\4.2.1",
+                "C:\\x-tools-headers\\x86-macos1010\\target\\SDK\\MacOSX10.10.sdk\\usr\\include"
+            ],
+            "defines": [
+                "SPADAS_ENV_MACOS",
+                "SPADAS_ARCH_X86"
+            ],
+            "intelliSenseMode": "clang-x64",
+            "cppStandard": "c++11"
+        },
+        {
             "name": "Linux主机/X86-Windows目标",
             "compilerPath": "/opt/x-tools/x86-windows/bin/x86_64-w64-mingw32-g++",
             "includePath": [
                 "../include",
-                // "../include64",
+                "../include64",
                 "/opt/x-tools/x86-windows/lib/gcc/x86_64-w64-mingw32/8.3.0/include",
                 "/opt/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0",
                 "/opt/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0/x86_64-w64-mingw32",
@@ -115,8 +133,9 @@
             "includePath": [
                 "../include",
                 // "../includem",
-                "/opt/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include",
-                "/opt/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/4.2.1"
+                "/opt/x-tools/x86-macos1010/llvm-8/lib/clang/8.0.0/include",
+                "/opt/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/4.2.1",
+                "/opt/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include"
             ],
             "defines": [
                 "SPADAS_ENV_MACOS",
@@ -130,7 +149,7 @@
             "compilerPath": "/Volumes/x-tools/x86-windows/bin/x86_64-w64-mingw32-g++",
             "includePath": [
                 "../include",
-                // "../include64",
+                "../include64",
                 "/Volumes/x-tools/x86-windows/lib/gcc/x86_64-w64-mingw32/8.3.0/include",
                 "/Volumes/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0",
                 "/Volumes/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0/x86_64-w64-mingw32",
@@ -186,8 +205,9 @@
             "includePath": [
                 "../include",
                 // "../includem",
-                "/Volumes/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include",
-                "/Volumes/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/4.2.1"
+                "/Volumes/x-tools/x86-macos1010/llvm-8/lib/clang/8.0.0/include",
+                "/Volumes/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/4.2.1",
+                "/Volumes/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include"
             ],
             "defines": [
                 "SPADAS_ENV_MACOS",
