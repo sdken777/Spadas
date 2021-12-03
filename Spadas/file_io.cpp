@@ -62,10 +62,12 @@ File::File()
 
 File File::openBinary(Path filePath)
 {
-	SPADAS_ERROR_RETURNVAL(filePath.isNull() || filePath.isFolder() || !filePath.exist(), File());
+	SPADAS_ERROR_RETURNVAL(filePath.isNull(), File());
+	SPADAS_ERROR_RETURNVAL_MSG(filePath.isFolder(), filePath.fullPath(), File());
+	SPADAS_ERROR_RETURNVAL_MSG(!filePath.exist(), filePath.fullPath(), File());
 
 	Pointer filePtr = fileOpen(filePath.fullPath(), FALSE);
-	SPADAS_ERROR_RETURNVAL(!filePtr, File());
+	SPADAS_ERROR_RETURNVAL_MSG(!filePtr, filePath.fullPath(), File());
 
 	ULong fileSize = fileGetSize(filePtr);
 	fileSeek(filePtr, 0);
@@ -77,10 +79,12 @@ File File::openBinary(Path filePath)
 
 File File::openText(Path filePath)
 {
-	SPADAS_ERROR_RETURNVAL(filePath.isNull() || filePath.isFolder() || !filePath.exist(), File());
+	SPADAS_ERROR_RETURNVAL(filePath.isNull(), File());
+	SPADAS_ERROR_RETURNVAL_MSG(filePath.isFolder(), filePath.fullPath(), File());
+	SPADAS_ERROR_RETURNVAL_MSG(!filePath.exist(), filePath.fullPath(), File());
 
 	Pointer filePtr = fileOpen(filePath.fullPath(), FALSE);
-	SPADAS_ERROR_RETURNVAL(!filePtr, File());
+	SPADAS_ERROR_RETURNVAL_MSG(!filePtr, filePath.fullPath(), File());
 
 	ULong fileSize = fileGetSize(filePtr);
 	fileSeek(filePtr, 0);
@@ -105,7 +109,8 @@ File File::openText(Path filePath)
 
 File File::createBinary(Path filePath)
 {
-	SPADAS_ERROR_RETURNVAL(filePath.isNull() || filePath.isFolder(), File());
+	SPADAS_ERROR_RETURNVAL(filePath.isNull(), File());
+	SPADAS_ERROR_RETURNVAL_MSG(filePath.isFolder(), filePath.fullPath(), File());
 
 	String fileFullPath = filePath.fullPath();
 	if (filePath.exist())
@@ -117,7 +122,7 @@ File File::createBinary(Path filePath)
 	if (!parent.exist()) parent.folderMake();
 
 	Pointer filePtr = fileOpen(fileFullPath, TRUE);
-	SPADAS_ERROR_RETURNVAL(!filePtr, File());
+	SPADAS_ERROR_RETURNVAL_MSG(!filePtr, filePath.fullPath(), File());
 
 	File file;
 	file.setVars(new FileVars(filePath, filePtr, FileMode::CreateBinary, 0, 0), TRUE);
@@ -126,7 +131,8 @@ File File::createBinary(Path filePath)
 
 File File::createText(Path filePath)
 {
-	SPADAS_ERROR_RETURNVAL(filePath.isNull() || filePath.isFolder(), File());
+	SPADAS_ERROR_RETURNVAL(filePath.isNull(), File());
+	SPADAS_ERROR_RETURNVAL_MSG(filePath.isFolder(), filePath.fullPath(), File());
 
 	String fileFullPath = filePath.fullPath();
 	if (filePath.exist())
@@ -138,7 +144,7 @@ File File::createText(Path filePath)
 	if (!parent.exist()) parent.folderMake();
 
 	Pointer filePtr = fileOpen(fileFullPath, TRUE);
-	SPADAS_ERROR_RETURNVAL(!filePtr, File());
+	SPADAS_ERROR_RETURNVAL_MSG(!filePtr, filePath.fullPath(), File());
 
 	fileOutput(filePtr, Binary::create(3, 0xEF, 0xBB, 0xBF));
 

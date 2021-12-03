@@ -41,17 +41,12 @@ Bool LibraryLoader::openWithPath(Path libPath)
 {
 	SPADAS_ERROR_RETURNVAL(libPath.isNull() || !libPath.isFile(), FALSE);
 	SPADAS_ERROR_RETURNVAL(vars->module != NULL, FALSE);
-
-	if (!libPath.exist())
-	{
-		SPADAS_ERROR_MSG(SS"!libPath.exist() (" + libPath.fullPath() + ")");
-		return FALSE;
-	}
+	SPADAS_ERROR_RETURNVAL_MSG(!libPath.exist(), libPath.fullPath(), FALSE);
 
 	vars->module = LoadLibraryW(libPath.fullPath().wchars().data());
-	SPADAS_ERROR_PASS(vars->module == NULL);
+	SPADAS_ERROR_RETURNVAL_MSG(vars->module == NULL, SS"LoadLibrary failed: " + libPath.fullPath(), FALSE);
     
-	return vars->module != NULL;
+	return TRUE;
 }
 
 void LibraryLoader::close()
@@ -108,21 +103,12 @@ Bool LibraryLoader::openWithPath(Path libPath)
 {
 	SPADAS_ERROR_RETURNVAL(libPath.isNull() || !libPath.isFile(), FALSE);
 	SPADAS_ERROR_RETURNVAL(vars->handle != NULL, FALSE);
-
-	if (!libPath.exist())
-	{
-		SPADAS_ERROR_MSG(SS"!libPath.exist() (" + libPath.fullPath() + ")");
-		return FALSE;
-	}
+	SPADAS_ERROR_RETURNVAL_MSG(!libPath.exist(), libPath.fullPath(), FALSE);
 
 	vars->handle = (Pointer)dlopen((Char*)libPath.fullPath().bytes(), RTLD_NOW | RTLD_GLOBAL);
-    if (vars->handle == NULL)
-    {
-		SPADAS_ERROR_MSG(SS"vars->handle == NULL (" + dlerror() + ")");
-        return FALSE;
-    }
-    
-	return vars->handle != NULL;
+	SPADAS_ERROR_RETURNVAL_MSG(vars->handle == NULL, SS"dlopen failed: " + libPath.fullPath() + ". " + dlerror(), FALSE);
+
+	return TRUE;
 }
 
 void LibraryLoader::close()

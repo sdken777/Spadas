@@ -5547,7 +5547,7 @@ namespace spadas
 
 		/// @brief [可选] 写入文件数据
 		/// @param writerName 写入器名称
-		/// @param inputs 输入数据表，从表中获取数据写入文件
+		/// @param inputs 输入数据表，从表中获取数据写入文件（其中视频首帧图像的所有依赖帧时间戳为0）
 		/// @param busMessages 按时间戳排序的所有通道总线数据
 		/// @param shouldEnd 是否准备关闭
 		virtual void writeFilesData(String writerName, InputTables inputs, Array<BusRawData> busMessages, Flag shouldEnd);
