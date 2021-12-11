@@ -113,7 +113,7 @@ Pointer MemoryMap::getPointer()
 	return vars->virtualPointer;
 }
 
-#elif defined(SPADAS_ENV_LINUX)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include <unistd.h>
 #include <fcntl.h>

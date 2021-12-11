@@ -7,6 +7,7 @@
 # [必需] TARGET : 输出目标名称，前后缀不用加
 # [可选] TARGET_VERSION : 输出目标版本号，仅针对.so和.dylib库文件
 # [可选] DEPENDS : 依赖库，前后缀不用加，以空格分隔
+# [可选] FRAMEWORKS : 依赖MacOS框架，前后缀不用加，以空格分隔
 # [可选] MACRO_DEFINE : 额外的宏定义，以空格分隔
 # [可选] SEARCH_INCLUDE : 额外的头文件搜索路径，以空格分隔
 # [可选] SEARCH_LIB : 额外的库文件搜索路径，以空格分隔
@@ -136,6 +137,7 @@ ifeq ($(HOST_OS), macos)
 endif
 
 # 编译工具链相关
+LINK_OPTION=
 ifeq ($(COMPILE), local)
 	ifeq ($(PLATFORM), linux)
 		COMPILER_C_EXE=gcc
@@ -182,6 +184,7 @@ ifeq ($(COMPILE), cross)
 		SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/x86-windows/x86_64-w64-mingw32/sysroot
 	endif
 	ifeq ($(PLATFORM), macos)
+		LINK_OPTION:=$(LINK_OPTION) -lgcc_s.10.5
 		PATH:=$(XTOOLS_PATH)/x86-macos1010/target/bin:$(XTOOLS_PATH)/x86-macos1010/llvm-8/bin:$(PATH)
 		COMPILER_C_EXE=$(XTOOLS_PATH)/x86-macos1010/target/bin/x86_64-apple-darwin14-clang
 		COMPILER_CPP_EXE=$(XTOOLS_PATH)/x86-macos1010/target/bin/x86_64-apple-darwin14-clang++
@@ -267,7 +270,7 @@ endif
 
 # 编译流程
 all:pre $(OBJS)
-	$(COMPILER_CPP_EXE) $(SYSROOT_OPTION) $(CHARSET_OPTION) -L../$(LIB_DIR) $(WL_OPTION) $(LDFLAG) -o $(OUT_PATH)/$(OUT_NAME) $(OBJS) $(addprefix -l, $(DEPENDS)) $(addprefix -L, $(SEARCH_LIB))
+	$(COMPILER_CPP_EXE) $(SYSROOT_OPTION) $(CHARSET_OPTION) $(LINK_OPTION) -L../$(LIB_DIR) $(WL_OPTION) $(LDFLAG) -o $(OUT_PATH)/$(OUT_NAME) $(OBJS) $(addprefix -l, $(DEPENDS)) $(addprefix -L, $(SEARCH_LIB)) $(addprefix -framework , $(FRAMEWORKS))
 	$(STRIP_COMMAND)
 	$(POSTLIB_COMMAND)
 	$(POSTBUILD_COMMAND)

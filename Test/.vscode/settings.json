@@ -7,6 +7,6 @@
         ".settings": true,
         "*.vcxproj": true,
         "*.vcxproj.user": true,
-        "*.vcxproj.filters": true,
-    },
+        "*.vcxproj.filters": true
+    }
 }

@@ -126,6 +126,7 @@ namespace file_internal
 
 	PathesInfo::PathesInfo()
 	{
+		executableFolderPath = getExecutableFolderPathString();
 		workPath = getWorkPathString();
 		homePath = getHomePathString();
 		spadasFilesPath = getSpadasFilesPathString();
@@ -646,6 +647,12 @@ Path Path::workPath()
 {
 	if (pathesInfo.workPath.isEmpty()) return Path();
 	else return Path(pathesInfo.workPath);
+}
+
+Path Path::executableFolderPath()
+{
+	if (pathesInfo.executableFolderPath.isEmpty()) return Path();
+	else return Path(pathesInfo.executableFolderPath);
 }
 
 Path Path::homePath()

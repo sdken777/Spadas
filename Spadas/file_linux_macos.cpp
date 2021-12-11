@@ -3,7 +3,7 @@
 
 #include "file.h"
 
-#if defined(SPADAS_ENV_LINUX)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include <memory.h>
 #include <sys/stat.h>
@@ -15,10 +15,8 @@
 #include <stdlib.h>
 #include <pwd.h>
 
-#if defined(SPADAS_ARCH_ARM)
-#define BIN_DIR_NAME "binxa"
-#else // SPADAS_ARCH_X86
-#define BIN_DIR_NAME "binx"
+#if defined(SPADAS_ENV_MACOS)
+#include <CoreFoundation/CoreFoundation.h>
 #endif
 
 namespace file_internal
@@ -30,7 +28,8 @@ namespace file_internal
 		return '/';
 	}
 
-	String getWorkPathString()
+#if defined(SPADAS_ENV_LINUX)
+	String getExecutableFolderPathString()
 	{
 		Char procname[FILENAME_MAX];
 		int len = readlink("/proc/self/exe", procname, FILENAME_MAX - 1);
@@ -42,19 +41,12 @@ namespace file_internal
 		Array<UInt> slashLocations = executablePathString.search('/');
 		if (slashLocations.isEmpty()) return String();
 
-		if (slashLocations.size() >= 4) // 调试时判定
-		{
-			UInt rootSlash = slashLocations[slashLocations.size() - 3];
-			UInt releaseBeginSlash = slashLocations[slashLocations.size() - 2];
-			UInt releaseEndSlash = slashLocations[slashLocations.size() - 1];
-
-			String releaseString = String(executablePathString, Region(releaseBeginSlash + 1, releaseEndSlash - releaseBeginSlash - 1)).toLower();
-			String realFolderString = String(executablePathString, Region(0, rootSlash)) + "/" + BIN_DIR_NAME + "/";
-			String realFileString = realFolderString + String(executablePathString, Region(releaseEndSlash + 1, UINF));
-			if (releaseString == "release" && fileExist(realFileString)) return realFolderString;
-		}
-
 		return String(executablePathString, Region(0, slashLocations.last() + 1));
+	}
+
+	String getWorkPathString()
+	{
+		return getExecutableFolderPathString();
 	}
 
 	String getHomePathString()
@@ -67,6 +59,62 @@ namespace file_internal
 		if (homePath.bytes()[homePath.length()-1] != (Byte)separator) return homePath + separator;
 		else return homePath;
 	}
+#endif
+#if defined(SPADAS_ENV_MACOS)
+	String getExecutableFolderPathString()
+	{
+		CFBundleRef mainBundle = CFBundleGetMainBundle();
+		CFURLRef url = CFBundleCopyExecutableURL(mainBundle);
+
+		CFStringRef filePathString = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
+		CFRelease(url);
+
+		char buffer[1024];
+		bool ok = CFStringGetCString(filePathString, buffer, 1024, kCFStringEncodingUTF8);
+		CFRelease(filePathString);
+
+		if (!ok) return String();
+
+		String executablePathString(buffer);
+		Array<UInt> slashLocations = executablePathString.search('/');
+		if (slashLocations.isEmpty()) return String();
+
+		return String(executablePathString, Region(0, slashLocations.last() + 1));
+	}
+
+	String getWorkPathString()
+	{
+		CFBundleRef mainBundle = CFBundleGetMainBundle();
+		CFURLRef url = CFBundleCopyBundleURL(mainBundle);
+
+		CFStringRef filePathString = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
+		CFRelease(url);
+
+		char buffer[1024];
+		bool ok = CFStringGetCString(filePathString, buffer, 1024, kCFStringEncodingUTF8);
+		CFRelease(filePathString);
+
+		if (!ok) return String();
+		
+		String bundlePathString(buffer);
+		if (bundlePathString.endsWith(".app"))
+		{
+			Array<UInt> slashLocations = bundlePathString.search('/');
+			if (slashLocations.isEmpty()) return String();
+
+			return String(bundlePathString, Region(0, slashLocations.last() + 1));
+		}
+		else
+		{
+			return bundlePathString + "/";
+		}
+	}
+
+	String getHomePathString()
+	{
+		return String(getenv("HOME")) + "/";
+	}
+#endif
 
 	String getSpadasFilesPathString()
 	{

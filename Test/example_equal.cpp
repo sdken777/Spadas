@@ -22,6 +22,6 @@ void exampleEqual()
 	auto strings = Array<String>::create(3, "abc", "def", "xyz");
 	console::print(SS"strings contains 'def': " + strings.contain("def"));
 
-	auto timers = Array<Timer>::create(3, Timer(), Timer(), Timer());
+	Array<Timer> timers(3);
 	console::print(SS"timers contains Timer(): " + timers.contain(Timer()));
 }

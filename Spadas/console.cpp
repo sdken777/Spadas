@@ -135,7 +135,7 @@ void IConsole::print(String text, Enum<MessageLevel> level)
 {
 #if defined(SPADAS_ENV_WINDOWS)
 	wprintf_s(L"[SPADAS IConsole::print] Unimplemented method called. (Maybe the interface is invalid)\n");
-#elif defined(SPADAS_ENV_LINUX)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
     printf("[SPADAS IConsole::print] Unimplemented method called. (Maybe the interface is invalid)\n");
 #endif
 }

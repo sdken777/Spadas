@@ -47,8 +47,6 @@ void exampleBaseObject()
 	objs[1] = Timer().as<BaseObject>();
 	objs[2] = MyObject(100).as<BaseObject>();
 
-	//auto objs = Array<BaseObject>::create(3, String("Hello world"), Timer(), MyObject(100)); // 也可用create创建
-
 	console::print(String::merge(objs, ", "));
 
 	// 转换回MyObject

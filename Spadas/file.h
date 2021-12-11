@@ -9,6 +9,7 @@ namespace file_internal
 	public:
 		String workPath;
 		ListNode<String> workPathComponents;
+		String executableFolderPath;
 		String homePath;
 		String spadasFilesPath;
 		PathesInfo();
@@ -18,6 +19,7 @@ namespace file_internal
 	extern PathesInfo pathesInfo;
 
 	String getWorkPathString();
+	String getExecutableFolderPathString();
 	String getHomePathString();
 	String getSpadasFilesPathString();
 	Char getSeparatorChar();

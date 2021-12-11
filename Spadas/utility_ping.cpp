@@ -59,4 +59,37 @@ Bool spadas::system::ping(String ip, UInt timeout)
 	return FALSE;
 }
 
+#elif defined(SPADAS_ENV_MACOS)
+
+#include <stdio.h>
+#include <string.h>
+
+Bool spadas::system::ping(String ip, UInt timeout)
+{
+	if (ip.isEmpty()) return FALSE;
+
+	String command = (String)"ping -c 1 -W " + timeout + " " + ip;
+
+	FILE *pf = popen((Char*)command.bytes(), "r");
+	if (pf == NULL) return FALSE;
+
+	char result[2048] = {0};
+	char buffer[1024] = {0};
+	while(fgets(buffer, 1024, pf) != NULL)
+	{
+		strcat(result, buffer);
+		if(strlen(result) > 1024) break;
+	}
+
+	pclose(pf);
+
+	Array<String> comps = String(result).split("\n");
+	for (UInt i = 0; i < comps.size(); i++)
+	{
+		if (!comps[i].search(" 0.0\% packet loss").isEmpty()) return TRUE;
+	}
+
+	return FALSE;
+}
+
 #endif

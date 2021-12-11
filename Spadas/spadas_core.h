@@ -2044,6 +2044,9 @@ namespace spadas
 		/// 获得工作目录
 		static Path workPath();
 
+		/// 获得可执行程序所在目录
+		static Path executableFolderPath();
+
 		/// 获得用户根目录
 		static Path homePath();
 
@@ -3552,6 +3555,7 @@ namespace spadas
 	public:
 		static const Int Unknown = 0;
 		static const Int Linux = 3;
+		static const Int MacOS = 4;
 		static const Int Windows = 6;
 
 		static Bool isValid(Int val);
@@ -3728,7 +3732,7 @@ namespace spadas
 		/// 无效对象
 		MemoryMap();
 
-		/// 创建内存映射对象，指定映射文件路径(必须事先创建且文件大小不小于offset+size)，映射起点偏移以及映射区域大小。注意，映射起点偏移值应为以下N值的倍数：N = 4096 @ Linux，N = 65536 @ Windows
+		/// 创建内存映射对象，指定映射文件路径(必须事先创建且文件大小不小于offset+size)，映射起点偏移以及映射区域大小。注意，映射起点偏移值应为以下N值的倍数：N = 4096 @ Linux/MacOS，N = 65536 @ Windows
 		MemoryMap(Path file, PointerInt offset, PointerInt size);
 
 		/// 解除映射

@@ -56,11 +56,14 @@ void taskThreadCreate(TaskManagerVars *vars)
 
 UInt __stdcall taskThreadFunc(Pointer param)
 
-#elif defined(SPADAS_ENV_LINUX)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include <pthread.h>
 #include <unistd.h>
+
+#if defined(SPADAS_ENV_LINUX)
 #include <linux/unistd.h>
+#endif
 
 Pointer taskThreadFunc(Pointer param);
 void taskThreadCreate(TaskManagerVars *vars)

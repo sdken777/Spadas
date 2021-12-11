@@ -18,7 +18,7 @@ namespace file_internal
 	using namespace spadas;
 
 	// pathes
-	String getWorkPathString()
+	String getExecutableFolderPathString()
 	{
 		WChar buffer[1024];
 		GetModuleFileNameW(NULL, buffer, 1024);
@@ -28,6 +28,10 @@ namespace file_internal
 		
 		if (slashLocations.isEmpty()) return String();
 		else return String(bufferString, Region(0, slashLocations.last() + 1));
+	}
+	String getWorkPathString()
+	{
+		return getExecutableFolderPathString();
 	}
 	String getHomePathString()
 	{

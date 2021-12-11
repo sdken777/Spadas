@@ -4,7 +4,7 @@
 #include "console.h"
 #include "string_encoding.h"
 
-#if defined(SPADAS_ENV_LINUX)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include <stdio.h>
 #include <wchar.h>
@@ -12,6 +12,10 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <termios.h>
+
+#if defined(SPADAS_ENV_MACOS)
+#include <CoreFoundation/CoreFoundation.h>
+#endif
 
 namespace console_internal
 {
@@ -63,6 +67,7 @@ namespace console_internal
 		endConioMode(oldTermios);
 		return keyIn == 0 ? FALSE : TRUE;
 	}
+
 	Int intToKey(int key)
 	{
 		switch (key)
@@ -84,10 +89,18 @@ namespace console_internal
 
 			case 27:
 			{
+#if defined(SPADAS_ENV_LINUX)
 				if (stdin->_IO_read_ptr == stdin->_IO_read_end)
 				{
 					return Key::Esc;
 				}
+#endif
+#if defined(SPADAS_ENV_MACOS)
+				if (stdin->_r <= 0)
+				{
+					return Key::Esc;
+				}
+#endif
 				switch (getch())
 				{
 					case 79:
@@ -182,11 +195,21 @@ using namespace spadas_internal;
 using namespace console_internal;
 using namespace string_internal;
 
+#if defined(SPADAS_ENV_LINUX)
 void console::popup(String text)
 {
 	String cmd = (String)"xmessage -center \"" + text + "\"";
 	if (::system((Char*)cmd.bytes())) {}
 }
+#endif
+#if defined(SPADAS_ENV_MACOS)
+void console::popup(String text)
+{
+	CFStringRef cfString = CFStringCreateWithBytes(NULL, (UInt8*)text.bytes(), text.length(), kCFStringEncodingUTF8, false);
+	CFUserNotificationDisplayAlert(0, kCFUserNotificationNoteAlertLevel, NULL, NULL, NULL, CFSTR(""), cfString, NULL, NULL, NULL, NULL);
+	CFRelease(cfString);
+}
+#endif
 
 void DefaultConsole::print(String text, Enum<MessageLevel> level)
 {
@@ -206,6 +229,14 @@ String DefaultConsole::scan()
 
 DefaultConsole::DefaultConsole() : Object<Vars>(new Vars(), TRUE)
 {
+#if defined(SPADAS_ENV_MACOS)
+	char *newLocale = setlocale(LC_ALL, "en_US.UTF-8");
+	if (newLocale == 0 || newLocale[0] == 0)
+	{
+		setlocale(LC_ALL, "C");
+		printf("\n%s\n", "Console: Locale initialization failed. The default console may be unavailable.");
+	}
+#endif
 }
 
 Bool DefaultConsole::supportScan()

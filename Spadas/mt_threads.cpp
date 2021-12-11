@@ -197,16 +197,24 @@ void threadCreate(ThreadsVars *vars)
 
 UInt __stdcall threadFunc(Pointer param)
 
-#elif defined(SPADAS_ENV_LINUX)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include <pthread.h>
 #include <unistd.h>
-#include <linux/unistd.h>
 
+#if defined(SPADAS_ENV_LINUX)
+#include <linux/unistd.h>
 UInt Threads::getCurrentThreadID()
 {
 	return syscall(__NR_gettid);
 }
+#endif
+#if defined(SPADAS_ENV_MACOS)
+UInt Threads::getCurrentThreadID()
+{
+	return (UInt)pthread_mach_thread_np(pthread_self());
+}
+#endif
 
 Pointer threadFunc(Pointer param);
 void threadCreate(ThreadsVars *vars)

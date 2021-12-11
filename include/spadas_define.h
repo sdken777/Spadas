@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 错误/警告提示可附带消息，并应用于文件打开和库文件加载
+// 版本定义 // 支持MacOS。新增Path::executableFolderPath
 #define SPADAS_VERSION_MAJOR 8
-#define SPADAS_VERSION_MINOR 1
-#define SPADAS_VERSION_BUILD 10
+#define SPADAS_VERSION_MINOR 2
+#define SPADAS_VERSION_BUILD 0
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.1.10\n
+* 本文档对应Spadas版本：8.2.0\n
 *
 * \n
 * \section top1 基本功能概述
@@ -189,7 +189,7 @@
 #define SPADAS_DEFAULT_API __declspec(dllexport)
 #define SPADAS_WINDOWS_DLLIMPORT __declspec(dllimport)
 #endif
-#if defined(SPADAS_ENV_LINUX)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 #define SPADAS_DEFAULT_API __attribute__ ((visibility("default")))
 #endif
 

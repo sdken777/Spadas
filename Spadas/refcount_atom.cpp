@@ -46,3 +46,19 @@ Int Atom::decrease()
 	return __sync_sub_and_fetch((volatile int *)&val, 1);
 }
 #endif
+
+#if defined(SPADAS_ENV_MACOS)
+
+#include <libkern/OSAtomic.h>
+
+Int Atom::increase()
+{
+	return (Int)OSAtomicIncrement32((volatile int32_t *)&val);
+}
+
+Int Atom::decrease()
+{
+	return (Int)OSAtomicDecrement32((volatile int32_t *)&val);
+}
+
+#endif

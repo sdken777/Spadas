@@ -70,6 +70,23 @@
         },
         {
             "type": "process",
+            "label": "(internal)发布构建(X86-MacOS1010目标)",
+            "command": "make",
+            "args": [
+                "-j4",
+                "TYPE=lib",
+                "MODE=release",
+                "PLATFORM=macos",
+                "COMPILE=cross",
+                "TARGET=spadas",
+                "TARGET_VERSION=8",
+                "DEPENDS=pthread dl",
+                "FRAMEWORKS=CoreServices"
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
             "label": "调试构建(X86-Windows目标)",
             "command": "make",
             "args": [
@@ -119,6 +136,23 @@
         },
         {
             "type": "process",
+            "label": "调试构建(X86-MacOS1010目标)",
+            "command": "make",
+            "args": [
+                "-j4",
+                "TYPE=lib",
+                "MODE=debug",
+                "PLATFORM=macos",
+                "COMPILE=cross",
+                "TARGET=spadas",
+                "TARGET_VERSION=8",
+                "DEPENDS=pthread dl",
+                "FRAMEWORKS=CoreServices"
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
             "label": "(internal)发布构建(全平台目标)",
             "command": "echo",
             "args": [
@@ -129,6 +163,7 @@
                 "(internal)发布构建(X86-Windows目标)",
                 "(internal)发布构建(X86-Ubuntu1804目标)",
                 "(internal)发布构建(Arm-Ubuntu1604目标)",
+                "(internal)发布构建(X86-MacOS1010目标)",
             ],
             "problemMatcher":[],
         },

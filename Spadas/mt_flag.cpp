@@ -55,7 +55,7 @@ Bool Flag::waitReset(UInt waitTime)
 	return WaitForSingleObject(vars->hEventReset, waitTime) != WAIT_TIMEOUT;
 }
 
-#elif defined(SPADAS_ENV_LINUX)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include <errno.h>
 #include <pthread.h>

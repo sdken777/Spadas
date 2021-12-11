@@ -21,6 +21,8 @@ String Environment::toString(Int val)
             return "Linux";
         case Environment::Windows:
             return "Windows";
+		case Environment::MacOS:
+			return "MacOS";
         default:
 			return String();
     }
@@ -192,7 +194,7 @@ void TimeWithMS::localTimeFromPosix(ULong posixTime)
 	tm t;
 #if defined(SPADAS_ENV_WINDOWS)
 	localtime_s(&t, &t1);
-#elif defined(SPADAS_ENV_LINUX)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 	localtime_r(&t1, &t);
 #endif
 
@@ -211,7 +213,7 @@ void TimeWithMS::utcTimeFromPosix(ULong posixTime)
 	tm t;
 #if defined(SPADAS_ENV_WINDOWS)
 	gmtime_s(&t, &t1);
-#elif defined(SPADAS_ENV_LINUX)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 	gmtime_r(&t1, &t);
 #endif
 

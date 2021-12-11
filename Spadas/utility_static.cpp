@@ -45,6 +45,8 @@ Enum<Environment> spadas::system::getEnv()
 	return Environment::Linux;
 #elif defined(SPADAS_ENV_WINDOWS)
 	return Environment::Windows;
+#elif defined(SPADAS_ENV_MACOS)
+	return Environment::MacOS;
 #else
 	return Environment::Unknown;
 #endif
@@ -69,7 +71,7 @@ void spadas::utility::memoryCopy(const Pointer src, Pointer dst, UInt copySize)
 	{
 #if defined(SPADAS_ENV_WINDOWS)
 		memcpy_s(dst, (rsize_t)copySize, src, (rsize_t)copySize);
-#elif defined(SPADAS_ENV_LINUX)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 		memcpy(dst, src, (size_t)copySize);
 #endif
 	}
@@ -94,7 +96,7 @@ Time spadas::system::getTime()
 
 	return out;
 }
-#elif defined(SPADAS_ENV_LINUX)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 Time spadas::system::getTime()
 {
 	time_t longTime;
@@ -134,7 +136,7 @@ TimeWithMS spadas::system::getTimeWithMS()
 
 	return out;
 }
-#elif defined(SPADAS_ENV_LINUX)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 TimeWithMS spadas::system::getTimeWithMS()
 {
 	timeb nowTime;
@@ -195,6 +197,30 @@ void spadas::system::addEnvironmentPath(Path path)
 	{
 		env += (String)":" + targetFolder;
 		setenv("LD_LIBRARY_PATH", (Char*)env.bytes(), 1);
+	}
+}
+#elif defined(SPADAS_ENV_MACOS)
+void spadas::system::addEnvironmentPath(Path path)
+{
+	SPADAS_ERROR_RETURN(path.isNull() || !path.isFolder());
+
+	String targetFolder = path.fullPath();
+	targetFolder = String(targetFolder, Region(0, targetFolder.length() - 1));
+
+	String env = getenv("PATH");
+	Array<String> envComps = env.split(":");
+	if (!envComps.contain(targetFolder))
+	{
+		env += (String)":" + targetFolder;
+		setenv("PATH", (Char*)env.bytes(), 1);
+	}
+
+	env = getenv("DYLD_LIBRARY_PATH");
+	envComps = env.split(":");
+	if (!envComps.contain(targetFolder))
+	{
+		env += (String)":" + targetFolder;
+		setenv("DYLD_LIBRARY_PATH", (Char*)env.bytes(), 1);
 	}
 }
 #endif

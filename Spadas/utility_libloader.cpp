@@ -64,7 +64,7 @@ Pointer LibraryLoader::getSymbol(String symbol)
 	return (Pointer)GetProcAddress(vars->module, symbol.chars().data());
 }
 
-#elif defined(SPADAS_ENV_LINUX)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include <dlfcn.h>
 
@@ -96,7 +96,13 @@ Bool LibraryLoader::openWithName(Path libDir, String libName, String libVersion)
 	SPADAS_ERROR_RETURNVAL(libName.isEmpty(), FALSE);
 
 	String versionPostfix = String(libVersion.isEmpty() ? "" : ".") + libVersion;
+
+#if defined(SPADAS_ENV_LINUX)
 	return openWithPath(libDir.childFile(SS"lib" + libName + ".so" + versionPostfix));
+#endif
+#if defined(SPADAS_ENV_MACOS)
+	return openWithPath(libDir.childFile(SS"lib" + libName + versionPostfix + ".dylib"));
+#endif
 }
 
 Bool LibraryLoader::openWithPath(Path libPath)

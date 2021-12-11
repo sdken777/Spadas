@@ -104,3 +104,53 @@ Double Timer::getStartTime()
 }
 
 #endif
+
+#if defined(SPADAS_ENV_MACOS)
+
+#include <mach/mach_time.h>
+
+namespace spadas
+{
+	class TimerVars : public Vars
+	{
+    public:
+		SPADAS_VARS_DEF(Timer, Vars)
+
+		Double conversion;
+		ULong startTime;
+
+        TimerVars()
+        {
+            mach_timebase_info_data_t info;
+            mach_timebase_info(&info);
+            conversion = 1e-6 * (Double)info.numer / (Double)info.denom;
+        }
+	};
+}
+
+using namespace spadas;
+
+const String spadas::Timer::TypeName = "spadas.Timer";
+
+Timer::Timer() : Object<class TimerVars>(new TimerVars(), TRUE)
+{
+	start();
+}
+
+void Timer::start()
+{
+	vars->startTime = mach_absolute_time();
+}
+
+Double Timer::check()
+{
+	ULong endTime = mach_absolute_time();
+	return vars->conversion * ((Double)endTime - (Double)vars->startTime);
+}
+
+Double Timer::getStartTime()
+{
+	return vars->conversion * (Double)vars->startTime;
+}
+
+#endif

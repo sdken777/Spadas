@@ -8,7 +8,7 @@
 #include "string_bz.h"
 #include "string_encoding.h"
 
-#if defined(SPADAS_ENV_LINUX)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include <stdio.h>
 #include <string.h>
