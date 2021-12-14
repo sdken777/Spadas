@@ -4,8 +4,11 @@
 #endif
 
 #include "spadas.h"
-
 #include "binary.h"
+
+#if defined(SPADAS_ENV_MACOS)
+#pragma clang diagnostic ignored "-Wvarargs"
+#endif
 
 using namespace spadas;
 

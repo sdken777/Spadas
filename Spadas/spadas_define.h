@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 支持MacOS。新增Path::executableFolderPath
+// 版本定义 // 视频插件API更新至4.1
 #define SPADAS_VERSION_MAJOR 8
 #define SPADAS_VERSION_MINOR 2
-#define SPADAS_VERSION_BUILD 0
+#define SPADAS_VERSION_BUILD 1
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.2.0\n
+* 本文档对应Spadas版本：8.2.1\n
 *
 * \n
 * \section top1 基本功能概述
@@ -133,17 +133,18 @@
 *
 * \subsection p6 6. 视频设备插件定义
 * 视频设备插件的DLL文件名需要以"video_"开头。\n
-* 视频设备插件对应的全局函数格式为 spadas::GetVideoPluginV400 \n
+* 视频设备插件对应的全局函数格式为 spadas::GetVideoPluginV401 \n
 * 视频设备插件需要实现以下接口函数：
-*   - spadas::IVideoPluginV400::getVideoDeviceList
-*   - spadas::IVideoPluginV400::openVideoDevice
-*   - spadas::IVideoPluginV400::closeVideoDevice
-*   - spadas::IVideoPluginV400::queryVideoFrame
+*   - spadas::IVideoPluginV401::getVideoDeviceList
+*   - spadas::IVideoPluginV401::openVideoDevice
+*   - spadas::IVideoPluginV401::closeVideoDevice
+*   - spadas::IVideoPluginV401::queryVideoFrame
 *
 * 以下接口函数可根据实际需要选择是否实现：
-*   - spadas::IVideoPluginV400::setVideoExtraConfig
-*   - spadas::IVideoPluginV400::getVideoDeviceNewData
-*   - spadas::IVideoPluginV400::useVideoPreviewExpress
+*   - spadas::IVideoPluginV401::setVideoExtraConfig
+*   - spadas::IVideoPluginV401::getVideoDeviceNewData
+*   - spadas::IVideoPluginV401::useVideoPreviewExpress
+*   - spadas::IVideoPluginV401::getExclusiveKeywords
 *
 * \subsection p7 7. 文件读写插件定义
 * 文件读写插件的DLL文件名需要以"file_"开头。\n

@@ -190,6 +190,41 @@ RawDataTable IVideoPluginV400::getVideoDeviceNewData(SessionID session)
 void IVideoPluginV400::useVideoPreviewExpress(Interface<IVideoPreviewExpress> previewExpress)
 {}
 
+// 视频设备插件API 4.1
+Array<VideoDeviceInfo> IVideoPluginV401::getVideoDeviceList()
+{
+	return Array<VideoDeviceInfo>();
+}
+
+Bool IVideoPluginV401::openVideoDevice(Array<VideoDeviceConfig> configs, Timer sync)
+{
+	return FALSE;
+}
+
+void IVideoPluginV401::closeVideoDevice()
+{}
+
+Bool IVideoPluginV401::queryVideoFrame(VideoRawData& frame)
+{
+	return FALSE;
+}
+
+void IVideoPluginV401::setVideoExtraConfig(String extra)
+{}
+
+RawDataTable IVideoPluginV401::getVideoDeviceNewData(SessionID session)
+{
+	return RawDataTable();
+}
+
+void IVideoPluginV401::useVideoPreviewExpress(Interface<IVideoPreviewExpress> previewExpress)
+{}
+
+Array<String> IVideoPluginV401::getExclusiveKeywords()
+{
+	return Array<String>();
+}
+
 // 数据处理插件API 6.0
 Bool IProcessorPluginV600::isDataStreamModeSupported()
 {

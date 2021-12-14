@@ -5270,6 +5270,20 @@ namespace spadas
 	};
 	typedef Interface<IFilePluginV100>(*GetFilePluginV100)();
 
+	class SPADAS_API IVideoPluginV400
+	{
+	public:
+		virtual ~IVideoPluginV400() {};
+		virtual Array<VideoDeviceInfo> getVideoDeviceList();
+		virtual Bool openVideoDevice(Array<VideoDeviceConfig> configs, Timer sync);
+		virtual void closeVideoDevice();
+		virtual Bool queryVideoFrame(VideoRawData& frame);
+		virtual void setVideoExtraConfig(String extra);
+		virtual RawDataTable getVideoDeviceNewData(SessionID session);
+		virtual void useVideoPreviewExpress(Interface<IVideoPreviewExpress> previewExpress);
+	};
+	typedef Interface<IVideoPluginV400>(*GetVideoPluginV400)();
+
 	// 插件API //////////////////////////////////////////////////////////////
 
 	/// 一般插件API 1.0
@@ -5392,11 +5406,11 @@ namespace spadas
 	/// 获取总线设备插件接口，函数名应为get_bus_plugin_v200
 	typedef Interface<IBusPluginV200>(*GetBusPluginV200)();
 
-	/// 视频设备插件API 4.0
-	class SPADAS_API IVideoPluginV400
+	/// 视频设备插件API 4.1
+	class SPADAS_API IVideoPluginV401
 	{
 	public:
-		virtual ~IVideoPluginV400() {};
+		virtual ~IVideoPluginV401() {};
 
 		/// @brief 获取视频设备列表
 		/// @returns 视频设备列表
@@ -5427,10 +5441,14 @@ namespace spadas
 		/// @brief [可选] 设置使用指定的视频预览图像的快速输出接口
 		/// @param previewExpress 视频预览图像的快速输出接口
 		virtual void useVideoPreviewExpress(Interface<IVideoPreviewExpress> previewExpress);
+
+		/// @brief [可选] 获取视频设备独占关键字，其他插件匹配此关键字的视频设备将被禁用
+		/// @returns 返回视频设备独占关键字
+		virtual Array<String> getExclusiveKeywords();
 	};
 
-	/// 获取视频设备插件接口，函数名应为get_video_plugin_v400
-	typedef Interface<IVideoPluginV400>(*GetVideoPluginV400)();
+	/// 获取视频设备插件接口，函数名应为get_video_plugin_v401
+	typedef Interface<IVideoPluginV401>(*GetVideoPluginV401)();
 
 	/// 数据处理插件API 6.1
 	class SPADAS_API IProcessorPluginV601
