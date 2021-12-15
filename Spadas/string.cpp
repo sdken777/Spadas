@@ -17,58 +17,78 @@ Bool spadas_internal::doubleToPrettyString(Double val, Char output[48], Int& len
 {
 	if (val > 1000000000000000000.0 || val < -1000000000000000000.0) return FALSE;
 
-	Long valInt = (Long)val;
-	if (val == valInt)
+	Int len = printToString(output, 48, "%.16f", val);
+	if (len <= 0) return FALSE;
+
+	Int dotIndex = -1;
+	for (Int i = 0; i < len; i++)
 	{
-		int len = spadas_internal::printToString(output, 48, "%lld", valInt);
+		if (output[i] == '.')
+		{
+			dotIndex = i;
+			break;
+		}
+	}
+
+	Int firstTargetIndex = -1;
+	Bool targetNine = FALSE;
+	if (dotIndex > 0)
+	{
+		Int notZeroIndex = -1;
+		for (Int i = dotIndex + 1; i < len; i++)
+		{
+			if (output[i] > '0')
+			{
+				notZeroIndex = i;
+				break;
+			}
+		}
+		if (notZeroIndex < 0)
+		{
+			firstTargetIndex = dotIndex + 1;
+		}
+		else
+		{
+			for (Int i = notZeroIndex; i <= len - 4; i++)
+			{
+				if (output[i] == '0' && output[i + 1] == '0' && output[i + 2] == '0' && output[i + 3] == '0')
+				{
+					firstTargetIndex = i;
+					break;
+				}
+				else if (output[i] == '9' && output[i + 1] == '9' && output[i + 2] == '9' && output[i + 3] == '9')
+				{
+					firstTargetIndex = i;
+					targetNine = TRUE;
+					break;
+				}
+			}
+		}
+	}
+
+	if (firstTargetIndex <= dotIndex)
+	{
 		length = len;
-		return TRUE;
 	}
-
-	int len = spadas_internal::printToString(output, 48, "%.16f", val);
-
-	if (output[len - 1] == '0')
+	else if (firstTargetIndex == dotIndex + 1)
 	{
-		len--;
-		for (Int i = len - 1; i >= 0; i--)
+		if (targetNine)
 		{
-			if (output[i] != '0') break;
-			len--;
+			Long valInt = (Long)val + 1;
+			length = printToString(output, 48, "%lld", valInt);
 		}
-		if (output[len - 1] == '.')
+		else
 		{
-			len--;
+			output[dotIndex] = 0;
+			length = dotIndex;
 		}
 	}
-
-	if (output[len - 1] == '9')
+	else
 	{
-		UInt nineCount = 1;
-		for (Int i = len - 2; i >= 0; i--)
-		{
-			if (output[i] != '9') break;
-			nineCount++;
-		}
-		if (nineCount > 3) len -= (Int)(nineCount - 3);
+		output[firstTargetIndex] = 0;
+		output[firstTargetIndex - 1] += (Char)targetNine;
+		length = firstTargetIndex;
 	}
-	else if (output[len - 1] == '1')
-	{
-		UInt zeroCount = 0;
-		for (Int i = len - 2; i >= 0; i--)
-		{
-			if (output[i] != '0') break;
-			zeroCount++;
-		}
-		if (zeroCount > 3) len -= (Int)(zeroCount + 1);
-		if (output[len - 1] == '.')
-		{
-			len--;
-		}
-	}
-
-	if (len < 0) len = 0;
-	output[len] = 0;
-	length = len;
 
 	return TRUE;
 }
