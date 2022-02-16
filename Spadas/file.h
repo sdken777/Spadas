@@ -14,6 +14,7 @@ namespace file_internal
 		String spadasFilesPath;
 		PathesInfo();
 		void setWorkPath(String path);
+		void setExecutableFolderPath(String path);
 		~PathesInfo();
 	};
 	extern PathesInfo pathesInfo;

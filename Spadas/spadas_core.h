@@ -2055,6 +2055,9 @@ namespace spadas
 
 		/// 设置工作目录 (注意应以路径分隔符/或\结尾)
 		static void setWorkPath(String pathString);
+
+		/// 设置可执行程序所在目录 (注意应以路径分隔符/或\结尾)
+		static void setExecutableFolderPath(String pathString);
 	};
 
 	/// 文件数据I/O

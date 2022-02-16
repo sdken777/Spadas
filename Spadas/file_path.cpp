@@ -139,6 +139,10 @@ namespace file_internal
 		workPath = path;
 		if (!workPath.isEmpty()) workPathComponents = parseWorkPath(workPath);
 	}
+	void PathesInfo::setExecutableFolderPath(String path)
+	{
+		executableFolderPath = path;
+	}
 	PathesInfo::~PathesInfo()
 	{
 		workPathComponents.collapse();
@@ -671,4 +675,10 @@ void Path::setWorkPath(String pathString)
 {
 	String separator = Path::separator();
 	if (!pathString.isEmpty() && pathString.endsWith(separator)) pathesInfo.setWorkPath(pathString);
+}
+
+void Path::setExecutableFolderPath(String pathString)
+{
+	String separator = Path::separator();
+	if (!pathString.isEmpty() && pathString.endsWith(separator)) pathesInfo.setExecutableFolderPath(pathString);
 }
