@@ -43,6 +43,8 @@ Bool LibraryLoader::openWithPath(Path libPath)
 	SPADAS_ERROR_RETURNVAL(vars->module != NULL, FALSE);
 	SPADAS_ERROR_RETURNVAL_MSG(!libPath.exist(), libPath.fullPath(), FALSE);
 
+	system::addEnvironmentPath(libPath.parentFolder());
+
 	vars->module = LoadLibraryW(libPath.fullPath().wchars().data());
 	SPADAS_ERROR_RETURNVAL_MSG(vars->module == NULL, SS"LoadLibrary failed: " + libPath.fullPath(), FALSE);
     
@@ -110,6 +112,8 @@ Bool LibraryLoader::openWithPath(Path libPath)
 	SPADAS_ERROR_RETURNVAL(libPath.isNull() || !libPath.isFile(), FALSE);
 	SPADAS_ERROR_RETURNVAL(vars->handle != NULL, FALSE);
 	SPADAS_ERROR_RETURNVAL_MSG(!libPath.exist(), libPath.fullPath(), FALSE);
+
+	system::addEnvironmentPath(libPath.parentFolder());
 
 	vars->handle = (Pointer)dlopen((Char*)libPath.fullPath().bytes(), RTLD_NOW | RTLD_GLOBAL);
 	SPADAS_ERROR_RETURNVAL_MSG(vars->handle == NULL, SS"dlopen failed: " + libPath.fullPath() + ". " + dlerror(), FALSE);
