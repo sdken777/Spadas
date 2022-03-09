@@ -4893,10 +4893,10 @@ namespace spadas
 		/// 目标session ID
 		SessionID dstSession;
 
-		/// 目标session的input文件夹路径，可为空
+		/// 目标session的input文件夹路径
 		Path dstInputRoot;
 
-		/// 目标session的generation文件夹路径，可为空
+		/// 目标session的generation文件夹路径
 		Path dstGenerationRoot;
 	};
 
@@ -5273,6 +5273,25 @@ namespace spadas
 	};
 	typedef Interface<IFilePluginV100>(*GetFilePluginV100)();
 
+	class SPADAS_API IFilePluginV101
+	{
+	public:
+		virtual ~IFilePluginV101() {};
+		virtual Double getFilesDuration(String readerName, Path inputRoot, Array<Path> generationRoots, FileIOBasicInfo basicInfo);
+		virtual Bool openReadFiles(String readerName, Path inputRoot, Path generationRoot, Double timeOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo);
+		virtual Bool readFilesData(String readerName, InputTables inputs, Double targetTime, Flag shouldEnd);
+		virtual void closeReadFiles(String readerName);
+		virtual Bool openWriteFiles(String writerName, Path inputRoot, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo);
+		virtual void writeFilesData(String writerName, InputTables inputs, Array<BusRawData> busMessages, Flag shouldEnd);
+		virtual void closeWriteFiles(String writerName);
+		virtual Bool hasDataFiles(String pickerName, Path inputRoot, Path generationRoot, FileIOBasicInfo basicInfo);
+		virtual void pickSession(String pickerName, Path inputRoot, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
+		virtual void setFileExtraConfig(String extra);
+		virtual void updateStartTimeLocal(ULong posixTime, Double timeRatio);
+		virtual void updateStartTimeUTC(ULong posixTime, Double timeRatio);
+	};
+	typedef Interface<IFilePluginV101>(*GetFilePluginV101)();
+
 	class SPADAS_API IVideoPluginV400
 	{
 	public:
@@ -5525,29 +5544,31 @@ namespace spadas
 	/// 获取数据处理插件接口，函数名应为get_processor_plugin_v601
 	typedef Interface<IProcessorPluginV601>(*GetProcessorPluginV601)();
 
-	/// 文件读写插件API 1.1
-	class SPADAS_API IFilePluginV101
+	/// 文件读写插件API 1.2
+	class SPADAS_API IFilePluginV102
 	{
 	public:
-		virtual ~IFilePluginV101() {};
+		virtual ~IFilePluginV102() {};
 
 		/// @brief [可选] 获取适用于指定读取器的所有文件的最大时长
 		/// @param readerName 读取器名称
 		/// @param inputRoot Session的input文件夹路径
+		/// @param subInputRoots Session的input子文件夹路径
 		/// @param generationRoots Session的所有generation文件夹路径
 		/// @param basicInfo 文件读写基本信息
 		/// @returns 所有文件的最大时长，单位秒，若无文件或无数据则返回0
-		virtual Double getFilesDuration(String readerName, Path inputRoot, Array<Path> generationRoots, FileIOBasicInfo basicInfo);
+		virtual Double getFilesDuration(String readerName, Path inputRoot, Array<Path> subInputRoots, Array<Path> generationRoots, FileIOBasicInfo basicInfo);
 
 		/// @brief [可选] 初始化读取原始数据文件（在开始session时被调用）
 		/// @param readerName 读取器名称
-		/// @param inputRoot Session的input文件夹路径，可为空
-		/// @param generationRoot Generation的文件夹路径，可为空
+		/// @param inputRoot Session的input文件夹路径
+		/// @param subInputRoots Session的input子文件夹路径
+		/// @param generationRoot Generation的文件夹路径
 		/// @param timeOffset 跳转至该时间戳开始读取
 		/// @param basicInfo 文件读写基本信息
 		/// @param extInfo 输出文件扩展信息
 		/// @returns 返回是否成功初始化，无数据文件的情况也返回FALSE
-		virtual Bool openReadFiles(String readerName, Path inputRoot, Path generationRoot, Double timeOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo);
+		virtual Bool openReadFiles(String readerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Double timeOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo);
 
 		/// @brief [可选] 读取文件数据
 		/// @param readerName 读取器名称
@@ -5563,12 +5584,13 @@ namespace spadas
 
 		/// @brief [可选] 初始化写入数据文件
 		/// @param writerName 写入器名称
-		/// @param inputRoot Session的input文件夹路径，可为空
-		/// @param generationRoot Generation的文件夹路径，可为空
+		/// @param inputRoot Session的input文件夹路径
+		/// @param subInputRoots Session的input子文件夹路径
+		/// @param generationRoot Generation的文件夹路径
 		/// @param basicInfo 文件读写基本信息
 		/// @param extInfo 文件扩展信息
 		/// @returns 返回是否成功初始化
-		virtual Bool openWriteFiles(String writerName, Path inputRoot, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo);
+		virtual Bool openWriteFiles(String writerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo);
 
 		/// @brief [可选] 写入文件数据
 		/// @param writerName 写入器名称
@@ -5583,21 +5605,23 @@ namespace spadas
 
 		/// @brief [可选] 获取是否有适用于数据截取器的数据文件
 		/// @param pickerName 数据截取器名称
-		/// @param inputRoot 源session的input文件夹，可为空
-		/// @param generationRoot 源session的generation文件夹，可为空
+		/// @param inputRoot 源session的input文件夹
+		/// @param subInputRoots 源session的input子文件夹路径
+		/// @param generationRoot 源session的generation文件夹
 		/// @param basicInfo 文件读写基本信息
 		/// @returns 是否有适用于数据截取器的数据文件
-		virtual Bool hasDataFiles(String pickerName, Path inputRoot, Path generationRoot, FileIOBasicInfo basicInfo);
+		virtual Bool hasDataFiles(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo);
 
 		/// @brief [可选] 离线截取数据，在数据截取独立任务中被调用
 		/// @param pickerName 数据截取器名称
-		/// @param inputRoot 源session的input文件夹，可为空
-		/// @param generationRoot 源session的generation文件夹，可为空
+		/// @param inputRoot 源session的input文件夹
+		/// @param subInputRoots 源session的input子文件夹路径
+		/// @param generationRoot 源session的generation文件夹
 		/// @param pick 截取任务参数
 		/// @param basicInfo 文件读写基本信息
 		/// @param shouldEnd 是否已被取消
 		/// @param callback 任务的反馈接口，主要用于通知任务进度
-		virtual void pickSession(String pickerName, Path inputRoot, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
+		virtual void pickSession(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
 
 		/// @brief [可选] 对文件读写进行额外设置（在各openXXXFiles函数前被调用）
 		/// @param extra 配置信息
@@ -5614,8 +5638,8 @@ namespace spadas
 		virtual void updateStartTimeUTC(ULong posixTime, Double timeRatio);
 	};
 
-	/// 获取文件读写插件接口，函数名应为get_file_plugin_v101
-	typedef Interface<IFilePluginV101>(*GetFilePluginV101)();
+	/// 获取文件读写插件接口，函数名应为get_file_plugin_v102
+	typedef Interface<IFilePluginV102>(*GetFilePluginV102)();
 }
 
 #endif

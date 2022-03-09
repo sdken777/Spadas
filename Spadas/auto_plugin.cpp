@@ -38,7 +38,7 @@ SPADAS_DEFAULT_API void get_proc_plugin_api_version(UInt& major, UInt& minor)
 SPADAS_DEFAULT_API void get_file_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 1;
-	minor = 1;
+	minor = 2;
 }
 
 // 一般插件API 1.0
@@ -417,4 +417,51 @@ void IFilePluginV101::updateStartTimeLocal(ULong posixTime, Double timeRatio)
 {}
 
 void IFilePluginV101::updateStartTimeUTC(ULong posixTime, Double timeRatio)
+{}
+
+// 文件读写插件API 1.2
+Double IFilePluginV102::getFilesDuration(String readerName, Path inputRoot, Array<Path> subInputRoots, Array<Path> generationRoots, FileIOBasicInfo basicInfo)
+{
+	return 0;
+}
+
+Bool IFilePluginV102::openReadFiles(String readerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Double timeOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo)
+{
+	return FALSE;
+}
+
+Bool IFilePluginV102::readFilesData(String readerName, InputTables inputs, Double targetTime, Flag shouldEnd)
+{
+	return FALSE;
+}
+
+void IFilePluginV102::closeReadFiles(String readerName)
+{}
+
+Bool IFilePluginV102::openWriteFiles(String writerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo)
+{
+	return FALSE;
+}
+
+void IFilePluginV102::writeFilesData(String writerName, InputTables inputs, Array<BusRawData> busMessages, Flag shouldEnd)
+{}
+
+void IFilePluginV102::closeWriteFiles(String writerName)
+{}
+
+Bool IFilePluginV102::hasDataFiles(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo)
+{
+	return FALSE;
+}
+
+void IFilePluginV102::pickSession(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
+{}
+
+void IFilePluginV102::setFileExtraConfig(String extra)
+{}
+
+void IFilePluginV102::updateStartTimeLocal(ULong posixTime, Double timeRatio)
+{}
+
+void IFilePluginV102::updateStartTimeUTC(ULong posixTime, Double timeRatio)
 {}
