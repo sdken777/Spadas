@@ -62,5 +62,18 @@
                 }
             ]
         },
+        {
+            "name": "调试运行(X86-MacOS主机)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/../binm/debug/test",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/../binm/debug/",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "lldb",
+            "preLaunchTask": "调试构建(X86-MacOS1010目标)",
+        },
     ]
 }

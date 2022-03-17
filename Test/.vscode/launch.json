@@ -30,12 +30,7 @@
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/../binx/debug/",
-            "environment": [
-                {
-                    "name" : "LD_LIBRARY_PATH",
-                    "value" : "::",
-                }
-            ],
+            "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
             "preLaunchTask": "调试构建(X86-Ubuntu1804目标)",
@@ -55,12 +50,7 @@
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/../binxa/debug/",
-            "environment": [
-                {
-                    "name" : "LD_LIBRARY_PATH",
-                    "value" : "::",
-                }
-            ],
+            "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
             "preLaunchTask": "调试构建(Arm-Ubuntu1604目标)",
@@ -105,12 +95,7 @@
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/../binx/",
-            "environment": [
-                {
-                    "name" : "LD_LIBRARY_PATH",
-                    "value" : "::",
-                }
-            ],
+            "environment": [],
             "externalConsole": false,
             "preLaunchTask": "发布构建(全平台目标)",
         },
@@ -122,12 +107,7 @@
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/../binxa/",
-            "environment": [
-                {
-                    "name" : "LD_LIBRARY_PATH",
-                    "value" : "::",
-                }
-            ],
+            "environment": [],
             "externalConsole": false,
             "preLaunchTask": "发布构建(全平台目标)",
         },
