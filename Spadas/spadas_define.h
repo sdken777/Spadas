@@ -148,28 +148,28 @@
 *
 * \subsection p7 7. 文件读写插件定义
 * 文件读写插件的DLL文件名需要以"file_"开头。\n
-* 文件读写插件对应的全局函数格式为 spadas::GetFilePluginV101 \n
+* 文件读写插件对应的全局函数格式为 spadas::GetFilePluginV102 \n
 * 此类插件可支持文件读取、文件写入、以及文件截取。\n\n
 *
 * 文件读取需要实现以下接口函数：
-*   - spadas::IFilePluginV101::getFilesDuration
-*   - spadas::IFilePluginV101::openReadFiles
-*   - spadas::IFilePluginV101::readFilesData
-*   - spadas::IFilePluginV101::closeReadFiles
+*   - spadas::IFilePluginV102::getFilesDuration
+*   - spadas::IFilePluginV102::openReadFiles
+*   - spadas::IFilePluginV102::readFilesData
+*   - spadas::IFilePluginV102::closeReadFiles
 *
 * 文件写入需要实现以下接口函数：
-*   - spadas::IFilePluginV101::openWriteFiles
-*   - spadas::IFilePluginV101::writeFilesData
-*   - spadas::IFilePluginV101::closeWriteFiles
+*   - spadas::IFilePluginV102::openWriteFiles
+*   - spadas::IFilePluginV102::writeFilesData
+*   - spadas::IFilePluginV102::closeWriteFiles
 *
 * 文件截取需要实现以下接口函数：
-*   - spadas::IFilePluginV101::hasDataFiles
-*   - spadas::IFilePluginV101::pickSession
+*   - spadas::IFilePluginV102::hasDataFiles
+*   - spadas::IFilePluginV102::pickSession
 *
 * 以下接口函数可根据实际需要选择是否实现：
-*   - spadas::IFilePluginV101::setFileExtraConfig
-*   - spadas::IFilePluginV101::updateStartTimeLocal
-*   - spadas::IFilePluginV101::updateStartTimeUTC
+*   - spadas::IFilePluginV102::setFileExtraConfig
+*   - spadas::IFilePluginV102::updateStartTimeLocal
+*   - spadas::IFilePluginV102::updateStartTimeUTC
 */
 
 // CPU架构检查
