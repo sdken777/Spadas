@@ -4,8 +4,9 @@
             "name": "Windows主机/X86-Windows目标",
             "compilerPath": "C:\\x-tools\\x86-windows\\bin\\x86_64-w64-mingw32-g++.exe",
             "includePath": [
+                ".\\",
                 "..\\include",
-                "..\\include64",
+                // "..\\include64",
                 "C:\\x-tools-headers\\x86-windows\\lib\\gcc\\x86_64-w64-mingw32\\8.3.0\\include",
                 "C:\\x-tools-headers\\x86-windows\\x86_64-w64-mingw32\\include\\c++\\8.3.0",
                 "C:\\x-tools-headers\\x86-windows\\x86_64-w64-mingw32\\include\\c++\\8.3.0\\x86_64-w64-mingw32",
@@ -22,6 +23,7 @@
             "name": "Windows主机/X86-Ubuntu1804目标",
             "compilerPath": "C:\\x-tools\\x86-ubuntu1804\\bin\\x86_64-ubuntu18.04-linux-gnu-g++.exe",
             "includePath": [
+                ".\\",
                 "..\\include",
                 // "..\\includex",
                 "C:\\x-tools-headers\\x86-ubuntu1804\\lib\\gcc\\x86_64-ubuntu18.04-linux-gnu\\8.3.0\\include",
@@ -40,6 +42,7 @@
             "name": "Windows主机/Arm-Ubuntu1604目标",
             "compilerPath": "C:\\x-tools\\arm-ubuntu1604\\bin\\aarch64-ubuntu16.04-linux-gnu-g++.exe",
             "includePath": [
+                ".\\",
                 "..\\include",
                 // "..\\includexa",
                 "C:\\x-tools-headers\\arm-ubuntu1604\\lib\\gcc\\aarch64-ubuntu16.04-linux-gnu\\8.3.0\\include",
@@ -59,10 +62,11 @@
             "compilerPath": "C:\\x-tools\\x86-macos1010\\target\\bin2\\x86_64-apple-darwin14-clang++.exe",
             "compilerArgs": [ "-foc-compiler-path=C:\\x-tools\\x86-macos1010\\llvm-8\\bin" ],
             "includePath": [
+                ".\\",
                 "..\\include",
                 // "..\\includem",
                 "C:\\x-tools-headers\\x86-macos1010\\llvm-8\\lib\\clang\\8.0.0\\include",
-                "C:\\x-tools-headers\\x86-macos1010\\target\\SDK\\MacOSX10.10.sdk\\usr\\include\\c++\\4.2.1",
+                "C:\\x-tools-headers\\x86-macos1010\\target\\SDK\\MacOSX10.10.sdk\\usr\\include\\c++\\v1",
                 "C:\\x-tools-headers\\x86-macos1010\\target\\SDK\\MacOSX10.10.sdk\\usr\\include"
             ],
             "defines": [
@@ -76,8 +80,9 @@
             "name": "Linux主机/X86-Windows目标",
             "compilerPath": "/opt/x-tools/x86-windows/bin/x86_64-w64-mingw32-g++",
             "includePath": [
+                "./",
                 "../include",
-                "../include64",
+                // "../include64",
                 "/opt/x-tools/x86-windows/lib/gcc/x86_64-w64-mingw32/8.3.0/include",
                 "/opt/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0",
                 "/opt/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0/x86_64-w64-mingw32",
@@ -94,6 +99,7 @@
             "name": "Linux主机/X86-Ubuntu1804目标",
             "compilerPath": "/opt/x-tools/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-g++",
             "includePath": [
+                "./",
                 "../include",
                 // "../includex",
                 "/opt/x-tools/x86-ubuntu1804/lib/gcc/x86_64-ubuntu18.04-linux-gnu/8.3.0/include",
@@ -112,6 +118,7 @@
             "name": "Linux主机/Arm-Ubuntu1604目标",
             "compilerPath": "/opt/x-tools/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-g++",
             "includePath": [
+                "./",
                 "../include",
                 // "../includexa",
                 "/opt/x-tools/arm-ubuntu1604/lib/gcc/aarch64-ubuntu16.04-linux-gnu/8.3.0/include",
@@ -131,10 +138,11 @@
             "compilerPath": "/opt/x-tools/x86-macos1010/target/bin/x86_64-apple-darwin14-clang++",
             "compilerArgs": [ "-foc-compiler-path=/opt/x-tools/x86-macos1010/llvm-8/bin" ],
             "includePath": [
+                "./",
                 "../include",
                 // "../includem",
                 "/opt/x-tools/x86-macos1010/llvm-8/lib/clang/8.0.0/include",
-                "/opt/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/4.2.1",
+                "/opt/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/v1",
                 "/opt/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include"
             ],
             "defines": [
@@ -148,8 +156,9 @@
             "name": "MacOS主机/X86-Windows目标",
             "compilerPath": "/Volumes/x-tools/x86-windows/bin/x86_64-w64-mingw32-g++",
             "includePath": [
+                "./",
                 "../include",
-                "../include64",
+                // "../include64",
                 "/Volumes/x-tools/x86-windows/lib/gcc/x86_64-w64-mingw32/8.3.0/include",
                 "/Volumes/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0",
                 "/Volumes/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0/x86_64-w64-mingw32",
@@ -166,6 +175,7 @@
             "name": "MacOS主机/X86-Ubuntu1804目标",
             "compilerPath": "/Volumes/x-tools/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-g++",
             "includePath": [
+                "./",
                 "../include",
                 // "../includex",
                 "/Volumes/x-tools/x86-ubuntu1804/lib/gcc/x86_64-ubuntu18.04-linux-gnu/8.3.0/include",
@@ -184,6 +194,7 @@
             "name": "MacOS主机/Arm-Ubuntu1604目标",
             "compilerPath": "/Volumes/x-tools/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-g++",
             "includePath": [
+                "./",
                 "../include",
                 // "../includexa",
                 "/Volumes/x-tools/arm-ubuntu1604/lib/gcc/aarch64-ubuntu16.04-linux-gnu/8.3.0/include",
@@ -203,10 +214,11 @@
             "compilerPath": "/Volumes/x-tools/x86-macos1010/target/bin/x86_64-apple-darwin14-clang++",
             "compilerArgs": [ "-foc-compiler-path=/Volumes/x-tools/x86-macos1010/llvm-8/bin" ],
             "includePath": [
+                "./",
                 "../include",
                 // "../includem",
                 "/Volumes/x-tools/x86-macos1010/llvm-8/lib/clang/8.0.0/include",
-                "/Volumes/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/4.2.1",
+                "/Volumes/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/v1",
                 "/Volumes/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include"
             ],
             "defines": [

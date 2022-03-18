@@ -24,11 +24,11 @@
 .SUFFIXES:.c .cpp .cc .o .h .hpp
 
 # 获取源文件集
-HEADERS_H=$(filter-out $(FILTEROUT_H), $(wildcard *.h **/*.h))
-HEADERS_HPP=$(filter-out $(FILTEROUT_HPP), $(wildcard *.hpp **/*.hpp))
-SRCS_C=$(filter-out $(FILTEROUT_C), $(wildcard *.c **/*.c))
-SRCS_CPP=$(filter-out $(FILTEROUT_CPP), $(wildcard *.cpp **/*.cpp))
-SRCS_CC=$(filter-out $(FILTEROUT_CC), $(wildcard *.cc **/*.cc))
+HEADERS_H=$(filter-out $(FILTEROUT_H), $(wildcard *.h **/*.h **/**/*.h **/**/**/*.h))
+HEADERS_HPP=$(filter-out $(FILTEROUT_HPP), $(wildcard *.hpp **/*.hpp **/**/*.hpp **/**/**/*.hpp))
+SRCS_C=$(filter-out $(FILTEROUT_C), $(wildcard *.c **/*.c **/**/*.c **/**/**/*.c))
+SRCS_CPP=$(filter-out $(FILTEROUT_CPP), $(wildcard *.cpp **/*.cpp **/**/*.cpp **/**/**/*.cpp))
+SRCS_CC=$(filter-out $(FILTEROUT_CC), $(wildcard *.cc **/*.cc **/**/*.cc **/**/**/*.cc))
 OBJS=$(SRCS_CPP:.cpp=.o) $(SRCS_CC:.cc=.o) $(SRCS_C:.c=.o)
 
 # 目标运行平台相关
@@ -190,9 +190,9 @@ ifeq ($(COMPILE), cross)
 		COMPILER_CPP_EXE=$(XTOOLS_PATH)/x86-macos1010/target/bin/x86_64-apple-darwin14-clang++
 		STRIP_EXE=$(XTOOLS_PATH)/x86-macos1010/target/bin/x86_64-apple-darwin14-strip
 		ifeq ($(IS_CYGWIN), yes)
-			SYSROOT_OPTION=-isysroot $(CYGWIN_XTOOLS_PATH)/x86-macos1010/target/SDK/MacOSX10.10.sdk
+			SYSROOT_OPTION=-isysroot $(CYGWIN_XTOOLS_PATH)/x86-macos1010/target/SDK/MacOSX10.10.sdk -cxx-isystem $(CYGWIN_XTOOLS_PATH)/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/v1
 		else
-			SYSROOT_OPTION=-isysroot $(XTOOLS_PATH)/x86-macos1010/target/SDK/MacOSX10.10.sdk
+			SYSROOT_OPTION=-isysroot $(XTOOLS_PATH)/x86-macos1010/target/SDK/MacOSX10.10.sdk -cxx-isystem $(XTOOLS_PATH)/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/v1
 		endif
 	endif
 endif
@@ -230,9 +230,7 @@ ifeq ($(TYPE), lib)
 		endif
 	endif
 	ifeq ($(PLATFORM), macos)
-		ifneq ($(BIN_EXT), $(LIB_EXT))
-			WL_OPTION:=$(WL_OPTION),-install_name,$(OUT_NAME)
-		endif
+		WL_OPTION:=$(WL_OPTION),-install_name,$(OUT_NAME)
 		ifeq ($(MODE), release)
 			POSTLIB_COMMAND=cp -vf $(OUT_PATH)/$(OUT_NAME) $(LIB_PATH)/$(LIB_NAME)
 		endif
@@ -278,15 +276,15 @@ all:pre $(OBJS)
 
 $(OBJ_PATH)/%.o:%.c $(HEADERS_H) $(HEADERS_HPP)
 	mkdir -p `dirname $@`
-	$(COMPILER_C_EXE) -Wall $(SYSROOT_OPTION) $(CHARSET_OPTION) -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -fmessage-length=0 -fvisibility=hidden -fPIC $(CFLAG) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
+	$(COMPILER_C_EXE) -Wall $(SYSROOT_OPTION) $(CHARSET_OPTION) -I./ -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -fmessage-length=0 -fvisibility=hidden -fPIC $(CFLAG) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 
 $(OBJ_PATH)/%.o:%.cpp $(HEADERS_H) $(HEADERS_HPP)
 	mkdir -p `dirname $@`
-	$(COMPILER_CPP_EXE) -Wall $(SYSROOT_OPTION) $(CHARSET_OPTION) -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -fmessage-length=0 -fvisibility=hidden -fPIC -std=c++11 $(CFLAG) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
+	$(COMPILER_CPP_EXE) -Wall $(SYSROOT_OPTION) $(CHARSET_OPTION) -I./ -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -fmessage-length=0 -fvisibility=hidden -fPIC -std=c++11 $(CFLAG) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 
 $(OBJ_PATH)/%.o:%.cc $(HEADERS_H) $(HEADERS_HPP)
 	mkdir -p `dirname $@`
-	$(COMPILER_CPP_EXE) -Wall $(SYSROOT_OPTION) $(CHARSET_OPTION) -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -fmessage-length=0 -fvisibility=hidden -fPIC -std=c++11 $(CFLAG) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
+	$(COMPILER_CPP_EXE) -Wall $(SYSROOT_OPTION) $(CHARSET_OPTION) -I./ -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -fmessage-length=0 -fvisibility=hidden -fPIC -std=c++11 $(CFLAG) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 
 pre:
 	$(PREBUILD_COMMAND)
