@@ -151,6 +151,7 @@ void TimeWithMS::substract(TimeWithMS time, Int& week, Int& day, Int& hour, Int&
 ULong TimeWithMS::localTimeToPosix()
 {
 	tm t;
+	utility::memorySet(0, &t, sizeof(t));
 	t.tm_year = dateTime.year - 1900;
 	t.tm_mon = dateTime.month - 1;
 	t.tm_mday = dateTime.day;
@@ -178,6 +179,7 @@ ULong TimeWithMS::utcTimeToPosix()
 	}
 
 	tm t;
+	utility::memorySet(0, &t, sizeof(t));
 	t.tm_year = dateTime.year - 1900;
 	t.tm_mon = dateTime.month - 1;
 	t.tm_mday = dateTime.day;
