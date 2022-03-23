@@ -158,7 +158,7 @@ ULong TimeWithMS::localTimeToPosix()
 	t.tm_min = dateTime.minute;
 	t.tm_sec = dateTime.second;
 	time_t t1 = mktime(&t);
-	return (ULong)(1000 * t1) + milliseconds;
+	return (ULong)t1 * 1000 + milliseconds;
 }
 
 namespace time_ms_internal
@@ -185,7 +185,7 @@ ULong TimeWithMS::utcTimeToPosix()
 	t.tm_min = dateTime.minute;
 	t.tm_sec = dateTime.second;
 	time_t t1 = mktime(&t);
-	return (ULong)(1000 * t1) + milliseconds + time_ms_internal::diff;
+	return (ULong)t1 * 1000 + milliseconds + time_ms_internal::diff;
 }
 
 void TimeWithMS::localTimeFromPosix(ULong posixTime)
