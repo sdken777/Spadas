@@ -186,3 +186,17 @@ void IGeneralRawDataOutput::outputGeneralRawData(String protocol, GeneralRawData
 void IVideoPreviewExpress::outputPreview(Double ts, UInt ch, ImagePointer preview)
 {
 }
+
+void ICrossTransmitter::sendToApp(String id, Binary data)
+{
+}
+
+Bool ICrossTransmitter::sendToNative(String pluginType, String id, Binary data)
+{
+	return FALSE;
+}
+
+Bool ICrossCaller::callFunction(String pluginType, String id, BaseObject context)
+{
+	return FALSE;
+}

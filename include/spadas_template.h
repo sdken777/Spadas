@@ -184,6 +184,19 @@ namespace spadas_internal
 			else sortLinear(i, val);
 		}
 	}
+
+    template <typename Type> class FlexHandler : public EmptyObject, public IFlexHandler
+    {
+    public:
+        void createData(Pointer data)
+        {
+            new ((Type*)data)Type();
+        }
+        void destroyData(Pointer data)
+        {
+            ((Type*)data)->~Type();
+        }
+    };
 }
 
 namespace spadas
@@ -312,11 +325,53 @@ namespace spadas
 	template<typename TargetType>
 	TargetType Object<VarsType>::as()
 	{
-		TargetType obj;
-		if (!vars) return obj;
-		SPADAS_ERROR_RETURNVAL(!is<TargetType>(), obj);
-		obj.castVars((Vars*)vars);
-		return obj;
+		if (!vars) return TargetType();
+		if (((Vars*)vars)->getTypeName() == TargetType::TypeName)
+		{
+			auto objBase = TargetType::castCreate((Vars*)vars);
+			return *(TargetType*)(&objBase);
+		}
+		ListNode<String> typeNode = ((Vars*)vars)->getBaseChain();
+		while (TRUE)
+		{
+			if (typeNode->isEmpty()) break;
+			if (typeNode.value() == TargetType::TypeName)
+			{
+				auto objBase = TargetType::castCreate((Vars*)vars);
+				return *(TargetType*)(&objBase);
+			}
+			if (typeNode.hasNext()) typeNode.goNext();
+			else break;
+		}
+		typeNode.collapse();
+		SPADAS_WARNING_MSG("Wrong type");
+		return TargetType();
+	}
+
+	template<typename VarsType>
+	template<typename TargetType>
+	Optional<TargetType> Object<VarsType>::cast()
+	{
+		if (!vars) return TargetType();
+		if (((Vars*)vars)->getTypeName() == TargetType::TypeName)
+		{
+			auto objBase = TargetType::castCreate((Vars*)vars);
+			return *(TargetType*)(&objBase);
+		}
+		ListNode<String> typeNode = ((Vars*)vars)->getBaseChain();
+		while (TRUE)
+		{
+			if (typeNode->isEmpty()) break;
+			if (typeNode.value() == TargetType::TypeName)
+			{
+				auto objBase = TargetType::castCreate((Vars*)vars);
+				return *(TargetType*)(&objBase);
+			}
+			if (typeNode.hasNext()) typeNode.goNext();
+			else break;
+		}
+		typeNode.collapse();
+		return Optional<TargetType>();
 	}
 
 	template <typename VarsType>
@@ -345,6 +400,15 @@ namespace spadas
 			vars = (VarsType*)varsToCast;
 			if (vars) ((Vars*)vars)->retain();
 		}
+	}
+
+	template <typename VarsType>
+	Object<VarsType> Object<VarsType>::castCreate(Vars* varsToCast)
+	{
+		Object<VarsType> obj;
+		obj.vars = (VarsType*)varsToCast;
+		if (obj.vars) ((Vars*)obj.vars)->retain();
+		return obj;
 	}
 
 	template <typename VarsType>
@@ -415,7 +479,7 @@ namespace spadas
 	{
 		BaseObject obj;
 		if (!this->vars) return obj;
-		obj.castVars(this->vars->implementVars);
+		obj.setVars(this->vars->implementVars, FALSE);
 		return obj;
 	}
 
@@ -3299,6 +3363,52 @@ namespace spadas
 		{
 			return SampleInterpolationResult::OutOfRange;
 		}
+	}
+
+	///////////////////////////////////////////////////////
+	/// FlexVars函数的实现
+	///////////////////////////////////////////////////////
+	template <typename Type>
+	FlexVars<Type>::FlexVars(Array<UInt> validFlagIndices)
+	{
+		SPADAS_ERROR_RETURN(sizeof(Type) == 0);
+		SPADAS_ERROR_RETURN(validFlagIndices.isEmpty());
+		data = Binary((UInt)sizeof(Type));
+		flags = Array<ULong>((math::max(validFlagIndices) >> 6) + 1, 0);
+		for (UInt i = 0; i < validFlagIndices.size(); i++)
+		{
+			UInt flagIndex = validFlagIndices[i];
+			flags[flagIndex >> 6] |= 1 << (flagIndex & 0x3f);
+		}
+		handler = spadas_internal::FlexHandler<Type>();
+		handler->createData(data.data());
+	}
+	
+	template <typename Type>
+	FlexVars<Type>::~FlexVars()
+	{
+		if (handler.isValid()) handler->destroyData(data.data());
+	}
+
+	template <typename Type>
+	Bool FlexVars<Type>::valid()
+	{
+		return handler.isValid();
+	}
+
+	template <typename Type>
+	Bool FlexVars<Type>::has(UInt flagIndex)
+	{
+		UInt ulongIndex = flagIndex >> 6;
+		if (ulongIndex >= flags.size()) return FALSE;
+		else return flags[ulongIndex] & (1 << (flagIndex & 0x3f));
+	}
+
+	template <typename Type>
+	Type& FlexVars<Type>::cast()
+	{
+		SPADAS_ERROR_RETURNVAL(handler.isNull(), *(new Type));
+		return *(Type*)data.data();
 	}
 }
 

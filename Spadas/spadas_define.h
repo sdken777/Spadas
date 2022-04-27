@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 修正TimeWithMS::localTimeToPosix/utcTimeToPosix
+// 版本定义 // 新增IPluginV101，并支持仅实现IPluginVXXX的插件。新增FlexVars。新增Object.cast。提高Object.as效率
 #define SPADAS_VERSION_MAJOR 8
-#define SPADAS_VERSION_MINOR 2
-#define SPADAS_VERSION_BUILD 7
+#define SPADAS_VERSION_MINOR 3
+#define SPADAS_VERSION_BUILD 0
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.2.7\n
+* 本文档对应Spadas版本：8.3.0\n
 *
 * \n
 * \section top1 基本功能概述
@@ -70,15 +70,23 @@
 *   - 分别实现两个全局函数，返回上述两个对象（定义该函数需要前缀SPADAS_DEFAULT_API）
 *
 * \subsection p2 2. 插件通用定义
-* 全局函数格式为 spadas::GetPlugin \n
+* 全局函数格式为 spadas::GetPluginV101 \n
 * 需要实现以下接口函数：
-*   - spadas::IPlugin::getPluginType
-*   - spadas::IPlugin::getPluginVersion
+*   - spadas::IPluginV101::getPluginType
+*   - spadas::IPluginV101::getPluginVersion
 * 
 * 以下接口函数可根据实际需要选择是否实现：
-*   - spadas::IPlugin::closePlugin
+*   - spadas::IPluginV101::closePlugin
+*   - spadas::IPluginV101::onCrossData
+*   - spadas::IPluginV101::useCrossTransmitter
+*   - spadas::IPluginV101::onCrossCall
+*   - spadas::IPluginV101::useCrossCaller
 *
-* \subsection p3 3. 数据处理插件定义
+* \subsection p3 3. 一般原生插件定义
+* 一般原生插件的DLL文件名需要以"native_"开头。\n
+* 一般原生插件不需要额外的全局函数。 \n
+*
+* \subsection p4 4. 数据处理插件定义
 * 数据处理插件的DLL文件名需要以"proc_"开头。\n
 * 数据处理插件对应的全局函数格式为 spadas::GetProcessorPluginV601 \n
 * 此类插件可支持数据流模式、独立任务模式、或两种同时支持。\n\n
@@ -99,7 +107,7 @@
 *   - spadas::IProcessorPluginV601::isStandaloneTaskModeSupported （返回TRUE）
 *   - spadas::IProcessorPluginV601::runStandaloneTask
 *
-* \subsection p4 4. 通用设备插件定义
+* \subsection p5 5. 通用设备插件定义
 * 通用设备插件的DLL文件名需要以"dev_"开头。\n
 * 通用设备插件对应的全局函数格式为 spadas::GetDevicePluginV201 \n
 * 通用设备插件需要实现以下接口函数：
@@ -117,7 +125,7 @@
 *   - spadas::IDevicePluginV201::clearBufferFiles
 *   - spadas::IDevicePluginV201::pickEvent
 *
-* \subsection p5 5. 总线设备插件定义
+* \subsection p6 6. 总线设备插件定义
 * 总线设备插件的DLL文件名需要以"bus_"开头。\n
 * 总线设备插件对应的全局函数格式为 spadas::GetBusPluginV200 \n
 * 总线设备插件需要实现以下接口函数：
@@ -131,7 +139,7 @@
 *   - spadas::IBusPluginV200::setBusExtraConfig
 *   - spadas::IBusPluginV200::getBusPayload
 *
-* \subsection p6 6. 视频设备插件定义
+* \subsection p7 7. 视频设备插件定义
 * 视频设备插件的DLL文件名需要以"video_"开头。\n
 * 视频设备插件对应的全局函数格式为 spadas::GetVideoPluginV401 \n
 * 视频设备插件需要实现以下接口函数：
@@ -146,7 +154,7 @@
 *   - spadas::IVideoPluginV401::useVideoPreviewExpress
 *   - spadas::IVideoPluginV401::getExclusiveKeywords
 *
-* \subsection p7 7. 文件读写插件定义
+* \subsection p8 8. 文件读写插件定义
 * 文件读写插件的DLL文件名需要以"file_"开头。\n
 * 文件读写插件对应的全局函数格式为 spadas::GetFilePluginV102 \n
 * 此类插件可支持文件读取、文件写入、以及文件截取。\n\n
@@ -267,7 +275,7 @@
 #define NDINF spadas::math::ndinf()
 
 // 方便变量数据定义
-#define SPADAS_VARS_DEF(classType, baseVarsType) virtual String getTypeName() { return classType::TypeName; } virtual ListNode<String> getBaseChain() { return genBaseChain(baseVarsType::getTypeName(), baseVarsType::getBaseChain()); }
+#define SPADAS_VARS_DEF(classType, baseVarsType) virtual String getTypeName() override { return classType::TypeName; } virtual ListNode<String> getBaseChain() override { return genBaseChain(baseVarsType::getTypeName(), baseVarsType::getBaseChain()); }
 
 // 调试用
 #if defined(SPADAS_DEBUG)

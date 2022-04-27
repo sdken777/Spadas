@@ -22,7 +22,7 @@ namespace spadas
         }
 
 		// to string
-		String toString()
+		String toString() override
 		{
 			return Binary(data, length);
 		}

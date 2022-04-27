@@ -306,3 +306,10 @@ Optional<Range> TimestampSearch::getTimeRange(Path path, Interface<ITimestampSea
 		else return Range((Float)firstTS, (Float)lastTS);
 	}
 }
+
+void IFlexHandler::createData(Pointer data)
+{
+}
+void IFlexHandler::destroyData(Pointer data)
+{
+}

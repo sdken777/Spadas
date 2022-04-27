@@ -8,7 +8,7 @@ using namespace spadas;
 SPADAS_DEFAULT_API void get_native_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 1;
-	minor = 0;
+	minor = 1;
 }
 
 SPADAS_DEFAULT_API void get_bus_plugin_api_version(UInt& major, UInt& minor)
@@ -41,7 +41,7 @@ SPADAS_DEFAULT_API void get_file_plugin_api_version(UInt& major, UInt& minor)
 	minor = 2;
 }
 
-// 一般插件API 1.0
+// 一般原生插件API 1.0
 String IPlugin::getPluginType()
 {
 	return String();
@@ -53,6 +53,32 @@ String IPlugin::getPluginVersion()
 }
 
 void IPlugin::closePlugin()
+{}
+
+// 一般原生插件API 1.1
+String IPluginV101::getPluginType()
+{
+	return String();
+}
+
+String IPluginV101::getPluginVersion()
+{
+	return String();
+}
+
+void IPluginV101::closePlugin()
+{}
+
+void IPluginV101::onCrossData(String id, Binary data)
+{}
+
+void IPluginV101::useCrossTransmitter(Interface<ICrossTransmitter> transmitter)
+{}
+
+void IPluginV101::onCrossCall(String id, BaseObject context)
+{}
+
+void IPluginV101::useCrossCaller(Interface<ICrossCaller> caller)
 {}
 
 // 通用设备插件API 2.0

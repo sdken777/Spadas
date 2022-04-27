@@ -76,6 +76,9 @@ namespace spadas
 	// 字符串（前置声明）
 	class SPADAS_API String;
 
+	// 可空对象（前置声明）
+	template <typename Type> class Optional;
+
 	// 数组（前置声明）
 	template <typename Type> class Array;
 
@@ -494,9 +497,13 @@ namespace spadas
 		template <typename TargetType>
 		Bool is();
 
-		/// [多线程安全] 转换为基类或派生类对象，若变量数据指针为空或类型不符合则返回默认构造对象
+		/// [多线程安全] 转换为基类对象，若变量数据指针为空或类型不符合则返回默认构造对象
 		template <typename TargetType>
 		TargetType as();
+
+		/// [多线程安全] 转换为派生类对象，若类型不符合则返回无效对象
+		template <typename TargetType>
+		Optional<TargetType> cast();
 
 		/// [非安全指针] 获得变量数据的指针
 		VarsType *getVars();
@@ -506,8 +513,11 @@ namespace spadas
 		/// @param isNew 对于new出来的指针isNew应为TRUE，否则为FALSE（由 Object::getVars 等获得的情况）
 		void setVars(VarsType* newVars, Bool isNew);
 
-		/// [非安全操作] 转换输入并设置变量数据指针
+		/// [非安全操作] 转换输入并设置变量数据指针（建议使用castCreate）
 		void castVars(Vars* varsToCast);
+		
+		/// [非安全操作] 以输入的变量数据指针转换为当前类型创建对象
+		static Object<VarsType> castCreate(Vars* varsToCast);
 
 		/// 获取字符串描述
 		String toString();
@@ -3429,7 +3439,6 @@ namespace spadas
 	class SPADAS_API IWorkflow
 	{
 	public:
-		/// 析构函数
 		virtual ~IWorkflow() {};
 		
 		/// [可选] 给出流程的名称 (仅在 Threads::start 时被调用)
@@ -4481,7 +4490,6 @@ namespace spadas
 	class SPADAS_API IBusRawDataTransmitter
 	{
 	public:
-		/// 析构函数
 		virtual ~IBusRawDataTransmitter() {};
 
 		/// @brief 发送报文
@@ -4493,7 +4501,7 @@ namespace spadas
 	/// 总线设备ID
 	struct BusDeviceID
 	{
-		/// 插件类型ID，对应C\#插件NativeClass.GetNativePluginType()，以及info.txt中定义的type
+		/// 插件类型ID
 		String type;
 
 		/// 设备序列号
@@ -4665,7 +4673,7 @@ namespace spadas
 	/// 视频设备ID
 	struct VideoDeviceID
 	{
-		/// 插件类型ID，对应C\#插件NativeClass.GetNativePluginType()，以及info.txt中定义的type
+		/// 插件类型ID
 		String type;
 
 		/// 设备标识ID
@@ -4768,7 +4776,6 @@ namespace spadas
 	class SPADAS_API IVideoPreviewExpress
 	{
 	public:
-		/// 析构函数
 		virtual ~IVideoPreviewExpress() {};
 
 		/// @brief 输出预览图像
@@ -4868,7 +4875,6 @@ namespace spadas
 	class SPADAS_API IStandaloneTaskCallback
 	{
 	public:
-		/// 析构函数
 		virtual ~IStandaloneTaskCallback() {};
 
 		/// @brief 设置任务处理状态和进度
@@ -4993,6 +4999,38 @@ namespace spadas
 		Dictionary<String> sampleTitles;
 	};
 
+	/// 跨模块数据发送接口
+	class SPADAS_API ICrossTransmitter
+	{
+	public:
+		virtual ~ICrossTransmitter() {}
+
+		/// @brief 发送至应用层模块
+		/// @param id 数据ID
+		/// @param data 数据内容，可为空
+		void sendToApp(String id, Binary data);
+
+		/// @brief 发送至原生层模块
+		/// @param pluginType 模块的插件类型ID
+		/// @param id 数据ID
+		/// @param data 数据内容，可为空
+		/// @returns 若未找到符合指定插件类型ID的模块则返回FALSE
+		Bool sendToNative(String pluginType, String id, Binary data);
+	};
+
+	/// 跨模块函数调用接口
+	class SPADAS_API ICrossCaller
+	{
+	public:
+		virtual ~ICrossCaller() {}
+
+		/// @brief 调用函数
+		/// @param pluginType 模块的插件类型ID
+		/// @param id 调用ID，可用于区分不同功能或函数
+		/// @param context 调用上下文，存储输入输出和临时变量等
+		Bool callFunction(String pluginType, String id, BaseObject context);
+	};
+
 	// 插件相关实用功能 //////////////////////////////////////////////////////////////
 
 	/// 总线协议ID (形如XXX.dbc)
@@ -5099,7 +5137,6 @@ namespace spadas
 	class SPADAS_API IGeneralRawDataOutput
 	{
 	public:
-		/// 析构函数
 		virtual ~IGeneralRawDataOutput() {};
 
 		/// @brief 输出通用原始数据
@@ -5218,7 +5255,51 @@ namespace spadas
 		static Optional<Range> getTimeRange(Path path, Interface<ITimestampSearch> searcher);
 	};
 
+	/// 用于在 spadas::FlexVars 中构建和析构数据的接口
+    class SPADAS_API IFlexHandler
+    {
+	public:
+		virtual ~IFlexHandler() {};
+        virtual void createData(Pointer data);
+        virtual void destroyData(Pointer data);
+    };
+
+	/// 支持在多个模块中使用不同定义的变量数据基类
+    template <typename Type> class FlexVars : public Vars
+    {
+    public:
+		/// 初始化，输入当前定义下支持字段的序号列表（从0开始）
+        FlexVars(Array<UInt> validFlagIndices);
+
+		/// 析构函数(子类无需实现析构函数)
+        ~FlexVars();
+
+		/// 是否有效
+        Bool valid();
+
+		/// 此数据是否支持指定序号的字段
+        Bool has(UInt flagIndex);
+
+		/// [非安全操作] [可修改] 获取当前定义下的数据类型引用（使用字段前应先调用has方法确定是否支持）
+        Type& cast();
+
+    private:
+        Binary data;
+        Array<ULong> flags;
+        Interface<IFlexHandler> handler;
+    };
+
 	// 插件API（旧） /////////////////////////////////////////////////////////
+	class SPADAS_API IPlugin
+	{
+	public:
+		virtual ~IPlugin() {};
+		virtual String getPluginType();
+		virtual String getPluginVersion();
+		virtual void closePlugin();
+	};
+	typedef Interface<IPlugin>(*GetPlugin)();
+
 	class SPADAS_API IDevicePluginV200
 	{
 	public:
@@ -5308,26 +5389,44 @@ namespace spadas
 
 	// 插件API //////////////////////////////////////////////////////////////
 
-	/// 一般插件API 1.0
-	class SPADAS_API IPlugin
+	/// 一般原生插件API 1.1
+	class SPADAS_API IPluginV101
 	{
 	public:
-		virtual ~IPlugin() {};
+		virtual ~IPluginV101() {};
 
-		/// @brief 获取插件类型(ID)
-		/// @returns 插件类型ID，对应C\#插件NativeClass.GetNativePluginType()，以及info.txt中定义的type
+		/// @brief 获取插件类型ID
+		/// @returns 插件类型ID
 		virtual String getPluginType();
 
 		/// @brief 获取插件版本
 		/// @returns 插件版本，格式为x.x.x，分别表示主版本、次版本、build版本。一般而言主版本对应架构更新，次版本对应功能更新，build版本对应bug修复
 		virtual String getPluginVersion();
 
-		/// 在程序结束前调用，用于停止背景线程等
+		/// [可选] 在程序结束前被调用，用于停止背景线程等
 		virtual void closePlugin();
+
+		/// @brief [可选] 在收到其他模块发送的数据时被调用
+		/// @param id 数据ID
+		/// @param data 数据内容，可为空
+		virtual void onCrossData(String id, Binary data);
+
+		/// @brief [可选] 设置使用指定的跨模块数据发送接口
+		/// @param transmitter 跨模块数据发送接口
+		virtual void useCrossTransmitter(Interface<ICrossTransmitter> transmitter);
+
+		/// @brief [可选] 在收到其他模块调用函数请求时被调用
+		/// @param id 调用ID，可用于区分不同功能或函数
+		/// @param context 调用上下文，存储输入输出和临时变量等
+		virtual void onCrossCall(String id, BaseObject context);
+
+		/// @brief [可选] 设置使用指定的跨模块函数调用接口
+		/// @param caller 跨模块函数调用接口
+		virtual void useCrossCaller(Interface<ICrossCaller> caller);
 	};
 
 	/// 获取插件通用接口，函数名应为get_plugin
-	typedef Interface<IPlugin>(*GetPlugin)();
+	typedef Interface<IPluginV101>(*GetPluginV101)();
 
 	/// 通用设备插件API 2.1
 	class SPADAS_API IDevicePluginV201
