@@ -2,10 +2,10 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 新增IPluginV101，并支持仅实现IPluginVXXX的插件。新增FlexVars。新增Object.cast。提高Object.as效率
+// 版本定义 // FlexVars的flagIndex改为Int输入。增加IPluginV101::onCrossCall返回值。提高Array::create兼容性
 #define SPADAS_VERSION_MAJOR 8
 #define SPADAS_VERSION_MINOR 3
-#define SPADAS_VERSION_BUILD 0
+#define SPADAS_VERSION_BUILD 1
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n

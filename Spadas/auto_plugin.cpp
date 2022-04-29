@@ -75,8 +75,10 @@ void IPluginV101::onCrossData(String id, Binary data)
 void IPluginV101::useCrossTransmitter(Interface<ICrossTransmitter> transmitter)
 {}
 
-void IPluginV101::onCrossCall(String id, BaseObject context)
-{}
+Bool IPluginV101::onCrossCall(String id, BaseObject context)
+{
+	return FALSE;
+}
 
 void IPluginV101::useCrossCaller(Interface<ICrossCaller> caller)
 {}

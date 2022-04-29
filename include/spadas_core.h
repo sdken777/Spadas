@@ -5028,6 +5028,7 @@ namespace spadas
 		/// @param pluginType 模块的插件类型ID
 		/// @param id 调用ID，可用于区分不同功能或函数
 		/// @param context 调用上下文，存储输入输出和临时变量等
+		/// @returns 若未找到符合制定插件类型ID的模块，或未被任何模块响应则返回FALSE
 		Bool callFunction(String pluginType, String id, BaseObject context);
 	};
 
@@ -5269,7 +5270,7 @@ namespace spadas
     {
     public:
 		/// 初始化，输入当前定义下支持字段的序号列表（从0开始）
-        FlexVars(Array<UInt> validFlagIndices);
+        FlexVars(Array<Int> validFlagIndices);
 
 		/// 析构函数(子类无需实现析构函数)
         ~FlexVars();
@@ -5278,7 +5279,7 @@ namespace spadas
         Bool valid();
 
 		/// 此数据是否支持指定序号的字段
-        Bool has(UInt flagIndex);
+        Bool has(Int flagIndex);
 
 		/// [非安全操作] [可修改] 获取当前定义下的数据类型引用（使用字段前应先调用has方法确定是否支持）
         Type& cast();
@@ -5406,7 +5407,7 @@ namespace spadas
 		/// [可选] 在程序结束前被调用，用于停止背景线程等
 		virtual void closePlugin();
 
-		/// @brief [可选] 在收到其他模块发送的数据时被调用
+		/// @brief [可选] 在收到其他模块发送的数据时被调用（应确保微秒级别的运行时间）
 		/// @param id 数据ID
 		/// @param data 数据内容，可为空
 		virtual void onCrossData(String id, Binary data);
@@ -5415,10 +5416,11 @@ namespace spadas
 		/// @param transmitter 跨模块数据发送接口
 		virtual void useCrossTransmitter(Interface<ICrossTransmitter> transmitter);
 
-		/// @brief [可选] 在收到其他模块调用函数请求时被调用
+		/// @brief [可选] 在收到其他模块调用函数请求时被调用（应确保毫秒级别的运行时间，更长的处理应通过独立任务实现）
 		/// @param id 调用ID，可用于区分不同功能或函数
 		/// @param context 调用上下文，存储输入输出和临时变量等
-		virtual void onCrossCall(String id, BaseObject context);
+		/// @returns 是否已响应
+		virtual Bool onCrossCall(String id, BaseObject context);
 
 		/// @brief [可选] 设置使用指定的跨模块函数调用接口
 		/// @param caller 跨模块函数调用接口

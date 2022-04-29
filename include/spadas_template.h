@@ -809,13 +809,14 @@ namespace spadas
 	{
 		if (size == 0) return Array<Type>();
 		Array<Type> out = Array<Type>::createUninitialized(size);
-		out.initialize(0, (const Type&)firstValue);
+		out.initialize(0, (Type)firstValue);
 		if (size == 1) return out;
 		va_list list;
 		va_start(list, firstValue);
 		for (UInt i = 1; i < size; i++)
 		{
-			out.initialize(i, (const Type&)va_arg(list, ArgType));
+			Type val = (Type)va_arg(list, ArgType);
+			out.initialize(i, val);
 		}
 		va_end(list);
 		return out;
@@ -3369,15 +3370,20 @@ namespace spadas
 	/// FlexVars函数的实现
 	///////////////////////////////////////////////////////
 	template <typename Type>
-	FlexVars<Type>::FlexVars(Array<UInt> validFlagIndices)
+	FlexVars<Type>::FlexVars(Array<Int> validFlagIndices)
 	{
 		SPADAS_ERROR_RETURN(sizeof(Type) == 0);
 		SPADAS_ERROR_RETURN(validFlagIndices.isEmpty());
 		data = Binary((UInt)sizeof(Type));
-		flags = Array<ULong>((math::max(validFlagIndices) >> 6) + 1, 0);
+		UInt maxFlagIndex = 0;
 		for (UInt i = 0; i < validFlagIndices.size(); i++)
 		{
-			UInt flagIndex = validFlagIndices[i];
+			maxFlagIndex = math::max(maxFlagIndex, (UInt)validFlagIndices[i]);
+		}
+		flags = Array<ULong>((maxFlagIndex >> 6) + 1, 0);
+		for (UInt i = 0; i < validFlagIndices.size(); i++)
+		{
+			UInt flagIndex = (UInt)validFlagIndices[i];
 			flags[flagIndex >> 6] |= 1 << (flagIndex & 0x3f);
 		}
 		handler = spadas_internal::FlexHandler<Type>();
@@ -3397,11 +3403,12 @@ namespace spadas
 	}
 
 	template <typename Type>
-	Bool FlexVars<Type>::has(UInt flagIndex)
+	Bool FlexVars<Type>::has(Int flagIndex)
 	{
-		UInt ulongIndex = flagIndex >> 6;
+		UInt flagIndexUnsigned = (UInt)flagIndex;
+		UInt ulongIndex = flagIndexUnsigned >> 6;
 		if (ulongIndex >= flags.size()) return FALSE;
-		else return flags[ulongIndex] & (1 << (flagIndex & 0x3f));
+		else return flags[ulongIndex] & (1 << (flagIndexUnsigned & 0x3f));
 	}
 
 	template <typename Type>

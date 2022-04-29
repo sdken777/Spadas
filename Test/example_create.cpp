@@ -15,5 +15,5 @@ void exampleCreate()
 
 	// 创建字典
 	auto dict = Dictionary<String>::create(3, "Name", "Jack", "Age", "25", "Weight", "70");
-	console::print(String::merge(dict.keys(), ", "));
+	console::print(String::merge(dict.keysSorted(), ", "));
 }

@@ -9,7 +9,7 @@ void exampleConsole()
 	console::print("Input some text.");
 
 	String text = console::scan();
-	console::popup(text);
+	if (!text.isEmpty()) console::popup(text);
 
 	// 按键检测，输入Q推出
 	console::print("Press keys, Q to break.");
