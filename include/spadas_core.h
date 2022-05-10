@@ -3333,7 +3333,7 @@ namespace spadas
 
 		/// 创建Flag对象 (默认为not set状态)
 		Flag();
-        
+		
 		/// @brief 创建Flag对象并延迟一段时间后自动调用 Flag::set 方法。作为定时器，可用于等待或告知超时
 		/// @param delaySet 延迟set的时间，单位毫秒
 		Flag(UInt delaySet);
@@ -3343,11 +3343,11 @@ namespace spadas
 
 		/// 改为not set状态
 		void reset();
-        
+		
 		/// @brief 延迟一段时间后自动调用 Flag::set 方法
 		/// @param time 延迟set的时间，单位毫秒
 		void delaySet(UInt time);
-        
+		
 		/// @brief 延迟一段时间后自动调用 Flag::reset 方法
 		/// @param time 延迟reset的时间，单位毫秒
 		void delayReset(UInt time);
@@ -3688,10 +3688,10 @@ namespace spadas
 
 		/// 创建一个计时器对象并立即启动
 		Timer();
-        
+		
 		/// 重启计时器
 		void start();
-        
+		
 		/// 获得经过时长，单位毫秒
 		Double check();
 
@@ -3755,23 +3755,23 @@ namespace spadas
 	};
 
 	/// 内存映射数据流的发送结果
-    enum class MemoryMapSendResult
-    {
+	enum class MemoryMapSendResult
+	{
 		/// 发送成功
-        OK = 0,
+		OK = 0,
 
 		/// 未开启
-        NotOpen = 1,
+		NotOpen = 1,
 
 		/// 模式不正确
-        WrongMode = 2,
+		WrongMode = 2,
 
 		/// 数据大小超过范围（slotSize x slotCount）
-        WrongSize = 3,
+		WrongSize = 3,
 
 		/// 队列已满，或容量已不足以发送当前数据
-        QueueFull = 4,
-    };
+		QueueFull = 4,
+	};
 
 	/// 基于内存映射的数据流
 	class SPADAS_API MemoryMapStream : public Object<class MemoryMapStreamVars>
@@ -3781,10 +3781,10 @@ namespace spadas
 		static const String TypeName;
 
 		/// 创建一个数据流（未开启状态）
-        MemoryMapStream();
+		MemoryMapStream();
 
 		/// 是否为开启状态
-        Bool isOpen();
+		Bool isOpen();
 
 		/// @brief 打开数据流
 		/// @param path 映射文件路径（不需要事先创建）
@@ -3793,8 +3793,8 @@ namespace spadas
 		/// @param sendMode 是否为发送模式，否则为接收模式
 		/// @param host 是否控制映射文件的创建与删除，为TRUE的对象需要先执行open
 		/// @returns 返回是否成功
-        Bool open(Path path, UInt slotSize, UInt slotCount, Bool sendMode, Bool host);
-        
+		Bool open(Path path, UInt slotSize, UInt slotCount, Bool sendMode, Bool host);
+		
 		/// 关闭数据流
 		void close();
 
@@ -3802,15 +3802,15 @@ namespace spadas
 		/// @param dataPtr 数据的起始指针
 		/// @param byteCount 数据的字节数
 		/// @returns 返回发送结果
-        MemoryMapSendResult send(Pointer dataPtr, UInt byteCount);
+		MemoryMapSendResult send(Pointer dataPtr, UInt byteCount);
 
 		/// @brief 发送数据
 		/// @param data 二进制数据
 		/// @returns 返回发送结果
-        MemoryMapSendResult send(Binary data);
+		MemoryMapSendResult send(Binary data);
 
 		/// 接收所有收到的数据
-        Array<Binary> receive();
+		Array<Binary> receive();
 
 	private:
 		Bool isNull() { return FALSE; }
@@ -5008,14 +5008,14 @@ namespace spadas
 		/// @brief 发送至应用层模块
 		/// @param id 数据ID
 		/// @param data 数据内容，可为空
-		void sendToApp(String id, Binary data);
+		virtual void sendToApp(String id, Binary data);
 
 		/// @brief 发送至原生层模块
 		/// @param pluginType 模块的插件类型ID
 		/// @param id 数据ID
 		/// @param data 数据内容，可为空
 		/// @returns 若未找到符合指定插件类型ID的模块则返回FALSE
-		Bool sendToNative(String pluginType, String id, Binary data);
+		virtual Bool sendToNative(String pluginType, String id, Binary data);
 	};
 
 	/// 跨模块函数调用接口
@@ -5024,12 +5024,19 @@ namespace spadas
 	public:
 		virtual ~ICrossCaller() {}
 
-		/// @brief 调用函数
+		/// @brief 调用应用层函数
+		/// @param id 调用ID，可用于区分不同功能或函数
+		/// @param input 输入数据
+		/// @param output 输出数据
+		/// @returns 若未被应用层程序响应则返回FALSE
+		virtual Bool callAppFunction(String id, Binary input, Binary& output);
+
+		/// @brief 调用原生层函数
 		/// @param pluginType 模块的插件类型ID
 		/// @param id 调用ID，可用于区分不同功能或函数
 		/// @param context 调用上下文，存储输入输出和临时变量等
 		/// @returns 若未找到符合制定插件类型ID的模块，或未被任何模块响应则返回FALSE
-		Bool callFunction(String pluginType, String id, BaseObject context);
+		virtual Bool callNativeFunction(String pluginType, String id, BaseObject context);
 	};
 
 	// 插件相关实用功能 //////////////////////////////////////////////////////////////
@@ -5257,38 +5264,65 @@ namespace spadas
 	};
 
 	/// 用于在 spadas::FlexVars 中构建和析构数据的接口
-    class SPADAS_API IFlexHandler
-    {
+	class SPADAS_API IFlexHandler
+	{
 	public:
 		virtual ~IFlexHandler() {};
-        virtual void createData(Pointer data);
-        virtual void destroyData(Pointer data);
-    };
+		virtual void createData(Pointer data);
+		virtual void destroyData(Pointer data);
+	};
 
 	/// 支持在多个模块中使用不同定义的变量数据基类
-    template <typename Type> class FlexVars : public Vars
-    {
-    public:
+	template <typename Type> class FlexVars : public Vars
+	{
+	public:
 		/// 初始化，输入当前定义下支持字段的序号列表（从0开始）
-        FlexVars(Array<Int> validFlagIndices);
+		FlexVars(Array<Int> validFlagIndices);
 
 		/// 析构函数(子类无需实现析构函数)
-        ~FlexVars();
+		~FlexVars();
 
 		/// 是否有效
-        Bool valid();
+		Bool valid();
 
 		/// 此数据是否支持指定序号的字段
-        Bool has(Int flagIndex);
+		Bool has(Int flagIndex);
 
 		/// [非安全操作] [可修改] 获取当前定义下的数据类型引用（使用字段前应先调用has方法确定是否支持）
-        Type& cast();
+		Type& cast();
 
-    private:
-        Binary data;
-        Array<ULong> flags;
-        Interface<IFlexHandler> handler;
-    };
+	private:
+		Binary data;
+		Array<ULong> flags;
+		Interface<IFlexHandler> handler;
+	};
+
+	/// 通用的函数IO用对象
+	class SPADAS_API GeneralIOObject : public Object<class GeneralIOObjectVars>
+	{
+	public:
+		/// 类名称
+		static const String TypeName;
+
+		/// 创建对象
+		GeneralIOObject();
+
+		/// 获取输入数据
+		Binary getInput();
+
+		/// 设置输入数据
+		void setInput(Binary data);
+
+		/// 获取输出数据
+		Binary getOutput();
+
+		/// 设置输出数据
+		void setOutput(Binary data);
+
+	private:
+		Bool isNull() { return FALSE; }
+		Bool isValid() { return FALSE; }
+	};
 
 	// 插件API（旧） /////////////////////////////////////////////////////////
 	class SPADAS_API IPlugin

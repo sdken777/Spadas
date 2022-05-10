@@ -196,7 +196,12 @@ Bool ICrossTransmitter::sendToNative(String pluginType, String id, Binary data)
 	return FALSE;
 }
 
-Bool ICrossCaller::callFunction(String pluginType, String id, BaseObject context)
+Bool ICrossCaller::callAppFunction(String id, Binary input, Binary& output)
+{
+	return FALSE;
+}
+
+Bool ICrossCaller::callNativeFunction(String pluginType, String id, BaseObject context)
 {
 	return FALSE;
 }

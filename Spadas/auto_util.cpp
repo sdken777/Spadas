@@ -16,6 +16,15 @@ namespace spadas
 		TriggerFilterVars() : interval(1)
 		{}
 	};
+
+	class GeneralIOObjectVars : public Vars
+	{
+	public:
+		SPADAS_VARS_DEF(GeneralIOObject, Vars)
+
+		Binary input;
+		Binary output;
+	};
 }
 
 using namespace spadas;
@@ -312,4 +321,30 @@ void IFlexHandler::createData(Pointer data)
 }
 void IFlexHandler::destroyData(Pointer data)
 {
+}
+
+const String spadas::GeneralIOObject::TypeName = "spadas.GeneralIOObject";
+
+GeneralIOObject::GeneralIOObject() : Object<GeneralIOObjectVars>(new GeneralIOObjectVars, TRUE)
+{
+}
+
+Binary GeneralIOObject::getInput()
+{
+	return vars->input;
+}
+
+void GeneralIOObject::setInput(Binary data)
+{
+	vars->input = data;
+}
+
+Binary GeneralIOObject::getOutput()
+{
+	return vars->output;
+}
+
+void GeneralIOObject::setOutput(Binary data)
+{
+	vars->output = data;
 }
