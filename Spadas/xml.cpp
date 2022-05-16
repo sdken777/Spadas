@@ -215,11 +215,29 @@ namespace xml_internal
 		String rawString(xmlBinary);
 		
 		/* split with the angle brackets */
-		Array<UInt> leftAngleLocations = rawString.search('<');
-		Array<UInt> rightAngleLocations = rawString.search('>');
-		
-		SPADAS_ERROR_RETURNVAL(leftAngleLocations.size() != rightAngleLocations.size(), FALSE);
-		
+		Array<UInt> leftRaw = rawString.search('<');
+		Array<UInt> rightRaw = rawString.search('>');
+		Array<UInt> leftAngleLocations(leftRaw.size());
+		Array<UInt> rightAngleLocations(rightRaw.size());
+
+		UInt *leftRawData = leftRaw.data(), *rightRawData = rightRaw.data();
+		UInt *leftFineData = leftAngleLocations.data(), *rightFineData = rightAngleLocations.data();
+		UInt leftRawSize = leftRaw.size(), rightRawSize = rightRaw.size();
+		UInt pairCount = 0, leftIndex = 0, rightIndex = 0;
+		while (leftIndex < leftRawSize && rightIndex < rightRawSize)
+		{
+			while (leftIndex + 1 < leftRawSize && leftRawData[leftIndex + 1] < rightRawData[rightIndex]) leftIndex++;
+			while (rightRawData[rightIndex] < leftRawData[leftIndex])
+			{
+				if (rightIndex + 1 >= rightRawSize) break;
+				rightIndex++;
+			}
+			leftFineData[pairCount] = leftRawData[leftIndex++];
+			rightFineData[pairCount++] = rightRawData[rightIndex++];
+		}
+		leftAngleLocations.trim(pairCount);
+		rightAngleLocations.trim(pairCount);
+
 		UInt nBrackets = leftAngleLocations.size();
 		Array<BracketType> bracketTypes(nBrackets);
 		Array<String> bracketContents(nBrackets);

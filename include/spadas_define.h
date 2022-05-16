@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 添加GeneralIOObject。增加ICrossCaller::callAppFunction
+// 版本定义 // XML解析修正
 #define SPADAS_VERSION_MAJOR 8
 #define SPADAS_VERSION_MINOR 3
-#define SPADAS_VERSION_BUILD 2
+#define SPADAS_VERSION_BUILD 3
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.3.0\n
+* 本文档对应Spadas版本：8.3.3\n
 *
 * \n
 * \section top1 基本功能概述
