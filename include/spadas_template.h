@@ -201,7 +201,7 @@ namespace spadas_internal
 
 namespace spadas
 {
-	const UInt ARRAY_SIZE_LIMIT = 100000000;		// 一亿
+	const UInt ARRAY_SIZE_LIMIT = 1000000000;		// 十亿
 	const UInt ARRAYX_SIZE_LIMIT = 134217728;		// 一亿多(2^27)
 	const UInt ARRAYX_SEGMENT_LIMIT = 65536;
 	const UInt MAP_INDEX_LIMIT = 65536;
