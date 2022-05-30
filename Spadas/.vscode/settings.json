@@ -19,6 +19,7 @@
         "new": "cpp",
         "algorithm": "cpp",
         "xiosbase": "cpp",
-        "xmemory": "cpp"
+        "xmemory": "cpp",
+        "limits": "cpp"
     },
 }
