@@ -69,6 +69,7 @@ Pointer LibraryLoader::getSymbol(String symbol)
 #elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include <dlfcn.h>
+#include <unistd.h>
 
 namespace spadas
 {
@@ -113,7 +114,9 @@ Bool LibraryLoader::openWithPath(Path libPath)
 	SPADAS_ERROR_RETURNVAL(vars->handle != NULL, FALSE);
 	SPADAS_ERROR_RETURNVAL_MSG(!libPath.exist(), libPath.fullPath(), FALSE);
 
-	system::addEnvironmentPath(libPath.parentFolder());
+	Path rootDir = libPath.parentFolder();
+	system::addEnvironmentPath(rootDir);
+	chdir((Char*)rootDir.fullPath().bytes());
 
 	vars->handle = (Pointer)dlopen((Char*)libPath.fullPath().bytes(), RTLD_NOW | RTLD_GLOBAL);
 	SPADAS_ERROR_RETURNVAL_MSG(vars->handle == NULL, SS"dlopen failed: " + libPath.fullPath() + ". " + dlerror(), FALSE);

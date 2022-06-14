@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // ARRAY_SIZE_LIMIT扩至10^9
+// 版本定义 // 加载库前切换当前目录
 #define SPADAS_VERSION_MAJOR 8
 #define SPADAS_VERSION_MINOR 3
-#define SPADAS_VERSION_BUILD 5
+#define SPADAS_VERSION_BUILD 6
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.3.5\n
+* 本文档对应Spadas版本：8.3.6\n
 *
 * \n
 * \section top1 基本功能概述
@@ -65,9 +65,10 @@
 *
 * \n
 * \section top2 插件框架概述
-* \subsection p1 1. 插件实现方式
-*   - 分别实现两个类分别继承 spadas::IPlugin 和对应的插件接口
-*   - 分别实现两个全局函数，返回上述两个对象（定义该函数需要前缀SPADAS_DEFAULT_API）
+* \subsection p1 1. 一般原生插件实现方式
+*   - 一般原生插件的库文件名需要以"native_"或"libnative_"开头
+*   - 实现一个类继承 spadas::IPluginV101
+*   - 实现一个全局函数 spadas::GetPluginV101 ，返回上述类对象（定义该全局函数需要前缀SPADAS_DEFAULT_API）
 *
 * \subsection p2 2. 插件通用定义
 * 全局函数格式为 spadas::GetPluginV101 \n
@@ -82,12 +83,14 @@
 *   - spadas::IPluginV101::onCrossCall
 *   - spadas::IPluginV101::useCrossCaller
 *
-* \subsection p3 3. 一般原生插件定义
-* 一般原生插件的DLL文件名需要以"native_"开头。\n
-* 一般原生插件不需要额外的全局函数。 \n
+* \subsection p3 3. 扩展原生插件实现方式
+*   - 扩展原生插件的库文件名根据插件类型而不同（详见后续小节）
+*   - 实现一个类同时继承 spadas::IPluginV101 和扩展的插件接口
+*   - 实例化一个上述类的对象
+*   - 分别实现全局函数 spadas::GetPluginV101 和扩展插件接口对应的全局函数，都返回上述对象（定义该全局函数需要前缀SPADAS_DEFAULT_API）
 *
 * \subsection p4 4. 数据处理插件定义
-* 数据处理插件的DLL文件名需要以"proc_"开头。\n
+* 数据处理插件的库文件名需要以"proc_"或"libproc_"开头。\n
 * 数据处理插件对应的全局函数格式为 spadas::GetProcessorPluginV601 \n
 * 此类插件可支持数据流模式、独立任务模式、或两种同时支持。\n\n
 *
@@ -108,7 +111,7 @@
 *   - spadas::IProcessorPluginV601::runStandaloneTask
 *
 * \subsection p5 5. 通用设备插件定义
-* 通用设备插件的DLL文件名需要以"dev_"开头。\n
+* 通用设备插件的库文件名需要以"dev_"或"libdev_"开头。\n
 * 通用设备插件对应的全局函数格式为 spadas::GetDevicePluginV201 \n
 * 通用设备插件需要实现以下接口函数：
 *   - spadas::IDevicePluginV201::setDeviceConnection
@@ -126,7 +129,7 @@
 *   - spadas::IDevicePluginV201::pickEvent
 *
 * \subsection p6 6. 总线设备插件定义
-* 总线设备插件的DLL文件名需要以"bus_"开头。\n
+* 总线设备插件的库文件名需要以"bus_"或"libbus_"开头。\n
 * 总线设备插件对应的全局函数格式为 spadas::GetBusPluginV200 \n
 * 总线设备插件需要实现以下接口函数：
 *   - spadas::IBusPluginV200::getBusDeviceList
@@ -140,7 +143,7 @@
 *   - spadas::IBusPluginV200::getBusPayload
 *
 * \subsection p7 7. 视频设备插件定义
-* 视频设备插件的DLL文件名需要以"video_"开头。\n
+* 视频设备插件的库文件名需要以"video_"或"libvideo_"开头。\n
 * 视频设备插件对应的全局函数格式为 spadas::GetVideoPluginV401 \n
 * 视频设备插件需要实现以下接口函数：
 *   - spadas::IVideoPluginV401::getVideoDeviceList
@@ -155,7 +158,7 @@
 *   - spadas::IVideoPluginV401::getExclusiveKeywords
 *
 * \subsection p8 8. 文件读写插件定义
-* 文件读写插件的DLL文件名需要以"file_"开头。\n
+* 文件读写插件的库文件名需要以"file_"或"libfile_"开头。\n
 * 文件读写插件对应的全局函数格式为 spadas::GetFilePluginV102 \n
 * 此类插件可支持文件读取、文件写入、以及文件截取。\n\n
 *
