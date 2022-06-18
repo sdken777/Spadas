@@ -24,8 +24,6 @@
 .SUFFIXES:.c .cpp .cc .o .h .hpp
 
 # 获取源文件集
-HEADERS_H=$(filter-out $(FILTEROUT_H), $(wildcard *.h **/*.h **/**/*.h **/**/**/*.h))
-HEADERS_HPP=$(filter-out $(FILTEROUT_HPP), $(wildcard *.hpp **/*.hpp **/**/*.hpp **/**/**/*.hpp))
 SRCS_C=$(filter-out $(FILTEROUT_C), $(wildcard *.c **/*.c **/**/*.c **/**/**/*.c))
 SRCS_CPP=$(filter-out $(FILTEROUT_CPP), $(wildcard *.cpp **/*.cpp **/**/*.cpp **/**/**/*.cpp))
 SRCS_CC=$(filter-out $(FILTEROUT_CC), $(wildcard *.cc **/*.cc **/**/*.cc **/**/**/*.cc))
@@ -88,6 +86,10 @@ ifeq ($(PLATFORM), macos)
 	ENV_DEFINE=SPADAS_ENV_MACOS
 	ARCH_DEFINE=SPADAS_ARCH_X86
 endif
+
+# 获取头文件集
+HEADERS_H=$(filter-out $(FILTEROUT_H), $(wildcard *.h **/*.h **/**/*.h **/**/**/*.h ../include/*.h ../$(INCLUDE_DIR)/*.h))
+HEADERS_HPP=$(filter-out $(FILTEROUT_HPP), $(wildcard *.hpp **/*.hpp **/**/*.hpp **/**/**/*.hpp ../include/*.hpp ../$(INCLUDE_DIR)/*.hpp))
 
 # 输出目标类型相关
 ifeq ($(TYPE), lib)

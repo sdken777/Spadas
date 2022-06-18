@@ -1,175 +1,98 @@
 {
+    "options": {
+        "env": {
+            "TYPE": "lib",
+            "COMPILE": "cross",
+            "TARGET": "spadas",
+            "TARGET_VERSION": "8",
+            "DEPENDS_X86_WINDOWS": "spadasupport winmm ws2_32 iphlpapi",
+            "DEPENDS_X86_LINUX": "pthread dl",
+            "DEPENDS_ARM_LINUX": "pthread dl",
+            "DEPENDS_X86_MACOS": "pthread dl",
+            "FRAMEWORKS_X86_MACOS": "CoreServices",
+        }
+    },
+    "inputs": [
+        {
+            "id": "helper_platform_code",
+            "type": "command",
+            "command": "shell-command.run",
+            "args": {
+                "cmd": "dotnet",
+                "args": [
+                    "../bin/VSCodeHelper.dll",
+                    "shell_command",
+                    "platform_code"
+                ]
+            }
+        },
+        {
+            "id": "helper_platform_env_var_depends",
+            "type": "command",
+            "command": "shell-command.run",
+            "args": {
+                "cmd": "dotnet",
+                "args": [
+                    "../bin/VSCodeHelper.dll",
+                    "shell_command",
+                    "platform_env_var",
+                    "DEPENDS",
+                ]
+            }
+        },
+        {
+            "id": "helper_platform_env_var_frameworks",
+            "type": "command",
+            "command": "shell-command.run",
+            "args": {
+                "cmd": "dotnet",
+                "args": [
+                    "../bin/VSCodeHelper.dll",
+                    "shell_command",
+                    "platform_env_var",
+                    "FRAMEWORKS",
+                ]
+            }
+        },
+    ],
     "tasks": [
         {
             "type": "process",
-            "label": "清理",
+            "label": "调试构建",
+            "group": "build",
             "command": "make",
-            "args": [
-                "clean",
-            ],
-            "problemMatcher":[],
-        },
-        {
-            "type": "process",
-            "label": "(internal)创建include文件夹",
-            "command": "mkdir",
-            "args": [
-                "-p",
-                "../include",
-            ],
-            "problemMatcher":[],
-        },
-        {
-            "type": "process",
-            "label": "(internal)发布构建(X86-Windows目标)",
-            "command": "make",
-            "args": [
-                "-j4",
-                "TYPE=lib",
-                "MODE=release",
-                "PLATFORM=windows",
-                "COMPILE=cross",
-                "TARGET=spadas",
-                "TARGET_VERSION=8",
-                "DEPENDS=spadasupport winmm ws2_32 iphlpapi",
-                "MACRO_DEFINE=SPADAS_EXPORTS",
-            ],
             "problemMatcher":"$gcc",
+            "windows": {
+                "args": [
+                    "-j4",
+                    "MODE=debug",
+                    "PLATFORM=${input:helper_platform_code}",
+                    "DEPENDS=${input:helper_platform_env_var_depends}",
+                    "MACRO_DEFINE=SPADAS_EXPORTS",
+                ],
+            },
+            "linux": {
+                "args": [
+                    "-j4",
+                    "MODE=debug",
+                    "PLATFORM=${input:helper_platform_code}",
+                    "DEPENDS=${input:helper_platform_env_var_depends}",
+                ],
+            },
+            "osx": {
+                "args": [
+                    "-j4",
+                    "MODE=debug",
+                    "PLATFORM=${input:helper_platform_code}",
+                    "DEPENDS=${input:helper_platform_env_var_depends}",
+                    "FRAMEWORKS=${input:helper_platform_env_var_frameworks}",
+                ],
+            },
         },
         {
             "type": "process",
-            "label": "(internal)发布构建(X86-Ubuntu1804目标)",
-            "command": "make",
-            "args": [
-                "-j4",
-                "TYPE=lib",
-                "MODE=release",
-                "PLATFORM=linux",
-                "COMPILE=cross",
-                "TARGET=spadas",
-                "TARGET_VERSION=8",
-                "DEPENDS=pthread dl",
-            ],
-            "problemMatcher":"$gcc",
-        },
-        {
-            "type": "process",
-            "label": "(internal)发布构建(Arm-Ubuntu1604目标)",
-            "command": "make",
-            "args": [
-                "-j4",
-                "TYPE=lib",
-                "MODE=release",
-                "PLATFORM=linuxarm",
-                "COMPILE=cross",
-                "TARGET=spadas",
-                "TARGET_VERSION=8",
-                "DEPENDS=pthread dl",
-            ],
-            "problemMatcher":"$gcc",
-        },
-        {
-            "type": "process",
-            "label": "(internal)发布构建(X86-MacOS1010目标)",
-            "command": "make",
-            "args": [
-                "-j4",
-                "TYPE=lib",
-                "MODE=release",
-                "PLATFORM=macos",
-                "COMPILE=cross",
-                "TARGET=spadas",
-                "TARGET_VERSION=8",
-                "DEPENDS=pthread dl",
-                "FRAMEWORKS=CoreServices"
-            ],
-            "problemMatcher":"$gcc",
-        },
-        {
-            "type": "process",
-            "label": "调试构建(X86-Windows目标)",
-            "command": "make",
-            "args": [
-                "-j4",
-                "TYPE=lib",
-                "MODE=debug",
-                "PLATFORM=windows",
-                "COMPILE=cross",
-                "TARGET=spadas",
-                "TARGET_VERSION=8",
-                "DEPENDS=spadasupport winmm ws2_32 iphlpapi",
-                "MACRO_DEFINE=SPADAS_EXPORTS",
-            ],
-            "problemMatcher":"$gcc",
-        },
-        {
-            "type": "process",
-            "label": "调试构建(X86-Ubuntu1804目标)",
-            "command": "make",
-            "args": [
-                "-j4",
-                "TYPE=lib",
-                "MODE=debug",
-                "PLATFORM=linux",
-                "COMPILE=cross",
-                "TARGET=spadas",
-                "TARGET_VERSION=8",
-                "DEPENDS=pthread dl",
-            ],
-            "problemMatcher":"$gcc",
-        },
-        {
-            "type": "process",
-            "label": "调试构建(Arm-Ubuntu1604目标)",
-            "command": "make",
-            "args": [
-                "-j4",
-                "TYPE=lib",
-                "MODE=debug",
-                "PLATFORM=linuxarm",
-                "COMPILE=cross",
-                "TARGET=spadas",
-                "TARGET_VERSION=8",
-                "DEPENDS=pthread dl",
-            ],
-            "problemMatcher":"$gcc",
-        },
-        {
-            "type": "process",
-            "label": "调试构建(X86-MacOS1010目标)",
-            "command": "make",
-            "args": [
-                "-j4",
-                "TYPE=lib",
-                "MODE=debug",
-                "PLATFORM=macos",
-                "COMPILE=cross",
-                "TARGET=spadas",
-                "TARGET_VERSION=8",
-                "DEPENDS=pthread dl",
-                "FRAMEWORKS=CoreServices"
-            ],
-            "problemMatcher":"$gcc",
-        },
-        {
-            "type": "process",
-            "label": "(internal)发布构建(全平台目标)",
-            "command": "echo",
-            "args": [
-                "Done.",
-            ],
-            "dependsOrder": "sequence",
-            "dependsOn": [
-                "(internal)发布构建(X86-Windows目标)",
-                "(internal)发布构建(X86-Ubuntu1804目标)",
-                "(internal)发布构建(Arm-Ubuntu1604目标)",
-                "(internal)发布构建(X86-MacOS1010目标)",
-            ],
-            "problemMatcher":[],
-        },
-        {
-            "type": "process",
-            "label": "发布构建(全平台目标)并拷贝头文件",
+            "label": "发布构建",
+            "group": "build",
             "command": "cp",
             "args": [
                 "-vf",
@@ -179,9 +102,86 @@
                 "./spadas_template.h",
                 "../include/",
             ],
+            "dependsOrder": "sequence",
             "dependsOn": [
-                "(internal)发布构建(全平台目标)",
-                "(internal)创建include文件夹",
+                "(子任务)发布构建(X86-Windows目标)",
+                "(子任务)发布构建(X86-Ubuntu1804目标)",
+                "(子任务)发布构建(Arm-Ubuntu1604目标)",
+                "(子任务)发布构建(X86-MacOS1010目标)",
+                "(子任务)创建include文件夹",
+            ],
+            "problemMatcher":[],
+        },
+        {
+            "type": "process",
+            "label": "清理",
+            "group": "build",
+            "command": "make",
+            "args": [
+                "clean",
+            ],
+            "problemMatcher":[],
+        },
+
+        // 以下为子任务
+
+        {
+            "type": "process",
+            "label": "(子任务)发布构建(X86-Windows目标)",
+            "command": "make",
+            "args": [
+                "-j4",
+                "MODE=release",
+                "PLATFORM=windows",
+                "DEPENDS=${DEPENDS_X86_WINDOWS}",
+                "MACRO_DEFINE=SPADAS_EXPORTS",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
+            "label": "(子任务)发布构建(X86-Ubuntu1804目标)",
+            "command": "make",
+            "args": [
+                "-j4",
+                "MODE=release",
+                "PLATFORM=linux",
+                "DEPENDS=${DEPENDS_X86_LINUX}",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
+            "label": "(子任务)发布构建(Arm-Ubuntu1604目标)",
+            "command": "make",
+            "args": [
+                "-j4",
+                "MODE=release",
+                "PLATFORM=linuxarm",
+                "DEPENDS=${DEPENDS_ARM_LINUX}",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
+            "label": "(子任务)发布构建(X86-MacOS1010目标)",
+            "command": "make",
+            "args": [
+                "-j4",
+                "MODE=release",
+                "PLATFORM=macos",
+                "DEPENDS=${DEPENDS_X86_MACOS}",
+                "FRAMEWORKS=${FRAMEWORKS_X86_MACOS}",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
+            "label": "(子任务)创建include文件夹",
+            "command": "mkdir",
+            "args": [
+                "-p",
+                "../include",
             ],
             "problemMatcher":[],
         },

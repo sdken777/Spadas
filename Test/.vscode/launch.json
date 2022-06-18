@@ -1,128 +1,73 @@
 {
     "version": "0.2.0",
-
+    "inputs": [
+        {
+            "id": "helper_platform_bin_name",
+            "type": "command",
+            "command": "shell-command.run",
+            "args": {
+                "cmd": "dotnet",
+                "args": [
+                    "../bin/VSCodeHelper.dll",
+                    "shell_command",
+                    "platform_bin_name"
+                ]
+            }
+        }
+    ],
     "configurations": [
         {
-            "name": "调试运行(X86-Windows主机)",
+            "name": "调试运行",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/../bin64/debug/test",
+            "program": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/test",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/../bin64/debug/",
+            "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/",
             "environment": [],
-            "externalConsole": true,
-            "MIMode": "gdb",
-            "preLaunchTask": "调试构建(X86-Windows目标)",
+            "preLaunchTask": "调试构建",
             "setupCommands": [
                 {
                     "description": "为 gdb 启用整齐打印",
                     "text": "-enable-pretty-printing",
                     "ignoreFailures": true
                 }
-            ]
+            ],
+            "windows": {
+                "externalConsole": true,
+                "MIMode": "gdb",
+            },
+            "linux": {
+                "externalConsole": false,
+                "MIMode": "gdb",
+            },
+            "osx": {
+                "externalConsole": true,
+                "MIMode": "lldb",
+            },
         },
         {
-            "name": "调试运行(X86-Linux主机)",
+            "name": "发布运行",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/../binx/debug/test",
+            "program": "${workspaceFolder}/../${input:helper_platform_bin_name}/test",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/../binx/debug/",
+            "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/",
             "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "preLaunchTask": "调试构建(X86-Ubuntu1804目标)",
-            "setupCommands": [
-                {
-                    "description": "为 gdb 启用整齐打印",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
-            "name": "调试运行(Arm-Linux主机)",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/../binxa/debug/test",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/../binxa/debug/",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "preLaunchTask": "调试构建(Arm-Ubuntu1604目标)",
-            "setupCommands": [
-                {
-                    "description": "为 gdb 启用整齐打印",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
-            "name": "调试运行(X86-MacOS主机)",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/../binm/debug/test",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/../binm/debug/",
-            "environment": [],
-            "externalConsole": true,
-            "MIMode": "lldb",
-            "preLaunchTask": "调试构建(X86-MacOS1010目标)",
-        },
-        {
-            "name": "发布运行(X86-Windows主机)",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/../bin64/test",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/../bin64/",
-            "environment": [],
-            "externalConsole": true,
-            "preLaunchTask": "发布构建(全平台目标)",
-        },
-        {
-            "name": "发布运行(X86-Linux主机)",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/../binx/test",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/../binx/",
-            "environment": [],
-            "externalConsole": false,
-            "preLaunchTask": "发布构建(全平台目标)",
-        },
-        {
-            "name": "发布运行(Arm-Linux主机)",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/../binxa/test",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/../binxa/",
-            "environment": [],
-            "externalConsole": false,
-            "preLaunchTask": "发布构建(全平台目标)",
-        },
-        {
-            "name": "发布运行(X86-MacOS主机)",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/../binm/test",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/../binm/",
-            "environment": [],
-            "externalConsole": true,
-            "MIMode": "lldb",
-            "preLaunchTask": "发布构建(全平台目标)",
+            "preLaunchTask": "发布构建",
+            "windows": {
+                "externalConsole": true,
+                "MIMode": "gdb",
+            },
+            "linux": {
+                "externalConsole": false,
+                "MIMode": "gdb",
+            },
+            "osx": {
+                "externalConsole": true,
+                "MIMode": "lldb",
+            },
         },
     ]
 }
