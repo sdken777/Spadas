@@ -54,7 +54,69 @@
                 ]
             }
         },
+        {
+            "id": "helper_thread_count",
+            "type": "command",
+            "command": "shell-command.run",
+            "args": {
+                "cmd": "dotnet",
+                "args": [
+                    "../bin/VSCodeHelper.dll",
+                    "shell_command",
+                    "thread_count",
+                    "0.8",
+                ]
+            }
+        },
+        {
+            "id": "command_for_x86_windows",
+            "type": "pickString",
+            "description": "是否交叉编译X86-Windows? (不编译则选择echo)",
+            "default": "make",
+            "options": [
+                "make",
+                "echo",
+            ],
+        },
+        {
+            "id": "command_for_x86_linux",
+            "type": "pickString",
+            "description": "是否交叉编译X86-Ubuntu1804? (不编译则选择echo)",
+            "default": "make",
+            "options": [
+                "make",
+                "echo",
+            ],
+        },
+        {
+            "id": "command_for_arm_linux",
+            "type": "pickString",
+            "description": "是否交叉编译Arm-Ubuntu1604? (不编译则选择echo)",
+            "default": "make",
+            "options": [
+                "make",
+                "echo",
+            ],
+        },
+        {
+            "id": "command_for_x86_macos",
+            "type": "pickString",
+            "description": "是否交叉编译X86-MacOS1010? (不编译则选择echo)",
+            "default": "make",
+            "options": [
+                "make",
+                "echo",
+            ],
+        },
     ],
+    "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+    },
     "tasks": [
         {
             "type": "process",
@@ -64,7 +126,7 @@
             "problemMatcher":"$gcc",
             "windows": {
                 "args": [
-                    "-j4",
+                    "-j${input:helper_thread_count}",
                     "MODE=debug",
                     "PLATFORM=${input:helper_platform_code}",
                     "DEPENDS=${input:helper_platform_env_var_depends}",
@@ -73,7 +135,7 @@
             },
             "linux": {
                 "args": [
-                    "-j4",
+                    "-j${input:helper_thread_count}",
                     "MODE=debug",
                     "PLATFORM=${input:helper_platform_code}",
                     "DEPENDS=${input:helper_platform_env_var_depends}",
@@ -81,7 +143,7 @@
             },
             "osx": {
                 "args": [
-                    "-j4",
+                    "-j${input:helper_thread_count}",
                     "MODE=debug",
                     "PLATFORM=${input:helper_platform_code}",
                     "DEPENDS=${input:helper_platform_env_var_depends}",
@@ -128,9 +190,9 @@
         {
             "type": "process",
             "label": "(子任务)发布构建(X86-Windows目标)",
-            "command": "make",
+            "command": "${input:command_for_x86_windows}",
             "args": [
-                "-j4",
+                "-j${input:helper_thread_count}",
                 "MODE=release",
                 "PLATFORM=windows",
                 "DEPENDS=${DEPENDS_X86_WINDOWS}",
@@ -141,9 +203,9 @@
         {
             "type": "process",
             "label": "(子任务)发布构建(X86-Ubuntu1804目标)",
-            "command": "make",
+            "command": "${input:command_for_x86_linux}",
             "args": [
-                "-j4",
+                "-j${input:helper_thread_count}",
                 "MODE=release",
                 "PLATFORM=linux",
                 "DEPENDS=${DEPENDS_X86_LINUX}",
@@ -153,9 +215,9 @@
         {
             "type": "process",
             "label": "(子任务)发布构建(Arm-Ubuntu1604目标)",
-            "command": "make",
+            "command": "${input:command_for_arm_linux}",
             "args": [
-                "-j4",
+                "-j${input:helper_thread_count}",
                 "MODE=release",
                 "PLATFORM=linuxarm",
                 "DEPENDS=${DEPENDS_ARM_LINUX}",
@@ -165,9 +227,9 @@
         {
             "type": "process",
             "label": "(子任务)发布构建(X86-MacOS1010目标)",
-            "command": "make",
+            "command": "${input:command_for_x86_macos}",
             "args": [
-                "-j4",
+                "-j${input:helper_thread_count}",
                 "MODE=release",
                 "PLATFORM=macos",
                 "DEPENDS=${DEPENDS_X86_MACOS}",
