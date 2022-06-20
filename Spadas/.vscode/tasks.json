@@ -68,46 +68,6 @@
                 ]
             }
         },
-        {
-            "id": "command_for_x86_windows",
-            "type": "pickString",
-            "description": "是否交叉编译X86-Windows? (不编译则选择echo)",
-            "default": "make",
-            "options": [
-                "make",
-                "echo",
-            ],
-        },
-        {
-            "id": "command_for_x86_linux",
-            "type": "pickString",
-            "description": "是否交叉编译X86-Ubuntu1804? (不编译则选择echo)",
-            "default": "make",
-            "options": [
-                "make",
-                "echo",
-            ],
-        },
-        {
-            "id": "command_for_arm_linux",
-            "type": "pickString",
-            "description": "是否交叉编译Arm-Ubuntu1604? (不编译则选择echo)",
-            "default": "make",
-            "options": [
-                "make",
-                "echo",
-            ],
-        },
-        {
-            "id": "command_for_x86_macos",
-            "type": "pickString",
-            "description": "是否交叉编译X86-MacOS1010? (不编译则选择echo)",
-            "default": "make",
-            "options": [
-                "make",
-                "echo",
-            ],
-        },
     ],
     "presentation": {
         "echo": true,
@@ -190,7 +150,7 @@
         {
             "type": "process",
             "label": "(子任务)发布构建(X86-Windows目标)",
-            "command": "${input:command_for_x86_windows}",
+            "command": "make",
             "args": [
                 "-j${input:helper_thread_count}",
                 "MODE=release",
@@ -203,7 +163,7 @@
         {
             "type": "process",
             "label": "(子任务)发布构建(X86-Ubuntu1804目标)",
-            "command": "${input:command_for_x86_linux}",
+            "command": "make",
             "args": [
                 "-j${input:helper_thread_count}",
                 "MODE=release",
@@ -215,7 +175,7 @@
         {
             "type": "process",
             "label": "(子任务)发布构建(Arm-Ubuntu1604目标)",
-            "command": "${input:command_for_arm_linux}",
+            "command": "make",
             "args": [
                 "-j${input:helper_thread_count}",
                 "MODE=release",
@@ -227,7 +187,7 @@
         {
             "type": "process",
             "label": "(子任务)发布构建(X86-MacOS1010目标)",
-            "command": "${input:command_for_x86_macos}",
+            "command": "make",
             "args": [
                 "-j${input:helper_thread_count}",
                 "MODE=release",
