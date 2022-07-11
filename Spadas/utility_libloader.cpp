@@ -51,14 +51,22 @@ Bool LibraryLoader::openWithName(Path libDir, String libName, String libVersion,
 	String versionPostfix = String(libVersion.isEmpty() ? "" : ".") + libVersion;
 
 #if defined(SPADAS_ENV_WINDOWS)
-	return openWithPath(libDir.childFile(libName + ".dll"), errorMessage);
+	Path libPath = libDir.childFile(libName + ".dll");
 #endif
 #if defined(SPADAS_ENV_LINUX)
-	return openWithPath(libDir.childFile(SS"lib" + libName + ".so" + versionPostfix), errorMessage);
+	Path libPath = libDir.childFile(SS"lib" + libName + ".so" + versionPostfix);
 #endif
 #if defined(SPADAS_ENV_MACOS)
-	return openWithPath(libDir.childFile(SS"lib" + libName + versionPostfix + ".dylib"), errorMessage);
+	Path libPath = libDir.childFile(SS"lib" + libName + versionPostfix + ".dylib");
 #endif
+
+	if (!libPath.exist())
+	{
+		errorMessage = "Library file doesn't exist.";
+		return FALSE;
+	}
+
+	return openWithPath(libPath, errorMessage);
 }
 
 Bool LibraryLoader::openWithPath(Path libPath)
