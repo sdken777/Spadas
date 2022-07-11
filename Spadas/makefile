@@ -186,7 +186,7 @@ ifeq ($(COMPILE), cross)
 		SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/x86-windows/x86_64-w64-mingw32/sysroot
 	endif
 	ifeq ($(PLATFORM), macos)
-		LINK_OPTION:=$(LINK_OPTION) -lgcc_s.10.5
+		LINK_OPTION:=$(LINK_OPTION) -lgcc_s.10.5 -lc++
 		PATH:=$(XTOOLS_PATH)/x86-macos1010/target/bin:$(XTOOLS_PATH)/x86-macos1010/llvm-8/bin:$(PATH)
 		COMPILER_C_EXE=$(XTOOLS_PATH)/x86-macos1010/target/bin/x86_64-apple-darwin14-clang
 		COMPILER_CPP_EXE=$(XTOOLS_PATH)/x86-macos1010/target/bin/x86_64-apple-darwin14-clang++

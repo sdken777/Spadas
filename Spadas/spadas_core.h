@@ -3863,8 +3863,14 @@ namespace spadas
 		/// 使用指定文件夹下的库名称打开动态库（无需添加lib等前缀或后缀名），libVersion用于指定so等动态库的后缀版本号（如"1.0"）
 		Bool openWithName(Path libDir, String libName, String libVersion = String());
 
+		/// 使用指定文件夹下的库名称打开动态库（无需添加lib等前缀或后缀名），libVersion用于指定so等动态库的后缀版本号（如"1.0"），若失败则输出错误信息
+		Bool openWithName(Path libDir, String libName, String libVersion, String& errorMessage);
+
 		/// 使用库文件路径打开动态库
 		Bool openWithPath(Path libPath);
+
+		/// 使用库文件路径打开动态库，若失败则输出错误信息
+		Bool openWithPath(Path libPath, String& errorMessage);
 
 		/// 关闭动态库（一般不执行）
 		void close();
