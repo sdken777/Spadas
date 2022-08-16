@@ -3,8 +3,8 @@ namespace file_internal
 {
 	using namespace spadas;
 
-	// pathes
-	class PathesInfo
+	// paths
+	class PathsInfo
 	{
 	public:
 		String workPath;
@@ -12,12 +12,12 @@ namespace file_internal
 		String executableFolderPath;
 		String homePath;
 		String spadasFilesPath;
-		PathesInfo();
+		PathsInfo();
 		void setWorkPath(String path);
 		void setExecutableFolderPath(String path);
-		~PathesInfo();
+		~PathsInfo();
 	};
-	extern PathesInfo pathesInfo;
+	extern PathsInfo pathsInfo;
 
 	String getWorkPathString();
 	String getExecutableFolderPathString();

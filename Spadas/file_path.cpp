@@ -124,7 +124,7 @@ namespace file_internal
 		}
 	}
 
-	PathesInfo::PathesInfo()
+	PathsInfo::PathsInfo()
 	{
 		executableFolderPath = getExecutableFolderPathString();
 		workPath = getWorkPathString();
@@ -134,20 +134,20 @@ namespace file_internal
 		if (!workPath.isEmpty()) workPathComponents = parseWorkPath(workPath);
 		if (!spadasFilesPath.isEmpty() && !folderExist(spadasFilesPath)) folderCreate(spadasFilesPath);
 	}
-	void PathesInfo::setWorkPath(String path)
+	void PathsInfo::setWorkPath(String path)
 	{
 		workPath = path;
 		if (!workPath.isEmpty()) workPathComponents = parseWorkPath(workPath);
 	}
-	void PathesInfo::setExecutableFolderPath(String path)
+	void PathsInfo::setExecutableFolderPath(String path)
 	{
 		executableFolderPath = path;
 	}
-	PathesInfo::~PathesInfo()
+	PathsInfo::~PathsInfo()
 	{
 		workPathComponents.collapse();
 	}
-	PathesInfo pathesInfo;
+	PathsInfo pathsInfo;
 }
 
 using namespace spadas;
@@ -193,10 +193,10 @@ Path::Path(String pathString)
 	}
 	else
 	{
-		if (pathesInfo.workPath.isEmpty()) return;
+		if (pathsInfo.workPath.isEmpty()) return;
 		setVars(new PathVars(), TRUE);
 		vars->components.collapse();
-		vars->components = pathesInfo.workPathComponents.cloneList();
+		vars->components = pathsInfo.workPathComponents.cloneList();
 		for (UInt i = 0; i < contents.size(); i++) vars->components.insertPrevious(contents[i]);
 	}
 	
@@ -649,36 +649,36 @@ String Path::separator()
 
 Path Path::workPath()
 {
-	if (pathesInfo.workPath.isEmpty()) return Path();
-	else return Path(pathesInfo.workPath);
+	if (pathsInfo.workPath.isEmpty()) return Path();
+	else return Path(pathsInfo.workPath);
 }
 
 Path Path::executableFolderPath()
 {
-	if (pathesInfo.executableFolderPath.isEmpty()) return Path();
-	else return Path(pathesInfo.executableFolderPath);
+	if (pathsInfo.executableFolderPath.isEmpty()) return Path();
+	else return Path(pathsInfo.executableFolderPath);
 }
 
 Path Path::homePath()
 {
-	if (pathesInfo.homePath.isEmpty()) return Path();
-	else return Path(pathesInfo.homePath);
+	if (pathsInfo.homePath.isEmpty()) return Path();
+	else return Path(pathsInfo.homePath);
 }
 
 Path Path::spadasFilesPath()
 {
-	if (pathesInfo.spadasFilesPath.isEmpty()) return Path();
-	else return Path(pathesInfo.spadasFilesPath);
+	if (pathsInfo.spadasFilesPath.isEmpty()) return Path();
+	else return Path(pathsInfo.spadasFilesPath);
 }
 
 void Path::setWorkPath(String pathString)
 {
 	String separator = Path::separator();
-	if (!pathString.isEmpty() && pathString.endsWith(separator)) pathesInfo.setWorkPath(pathString);
+	if (!pathString.isEmpty() && pathString.endsWith(separator)) pathsInfo.setWorkPath(pathString);
 }
 
 void Path::setExecutableFolderPath(String pathString)
 {
 	String separator = Path::separator();
-	if (!pathString.isEmpty() && pathString.endsWith(separator)) pathesInfo.setExecutableFolderPath(pathString);
+	if (!pathString.isEmpty() && pathString.endsWith(separator)) pathsInfo.setExecutableFolderPath(pathString);
 }

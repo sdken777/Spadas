@@ -17,7 +17,7 @@ namespace file_internal
 {
 	using namespace spadas;
 
-	// pathes
+	// paths
 	String getExecutableFolderPathString()
 	{
 		WChar buffer[1024];
