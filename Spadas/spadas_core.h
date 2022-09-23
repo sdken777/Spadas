@@ -2337,7 +2337,7 @@ namespace spadas
 		static Bool is3DMerged(Enum<MergeMode> mode);
 	};
 
-	/// 时间戳
+	/// 时间编码
 	struct TimeCode
 	{
 		UInt hour;
@@ -3663,16 +3663,16 @@ namespace spadas
 		/// 返回两个时间的时间差，以分量的形式
 		SPADAS_API void substract(TimeWithMS time, Int& week, Int& day, Int& hour, Int& minute, Int& second, Int& millisecond);
 
-		/// 本地时间转Posix时间
+		/// 分量时间（按本地时间）转Posix时间
 		SPADAS_API ULong localTimeToPosix();
 
-		/// UTC时间转Posix时间
+		/// 分量时间（按国际协调时间）转Posix时间
 		SPADAS_API ULong utcTimeToPosix();
 
-		/// Posix时间转本地时间
+		/// Posix时间转分量时间（按本地时间）
 		SPADAS_API void localTimeFromPosix(ULong posixTime);
 
-		/// Posix时间转UTC时间
+		/// Posix时间转分量时间（按国际协调时间）
 		SPADAS_API void utcTimeFromPosix(ULong posixTime);
 
 		/// 基于分隔符转为字符串
@@ -3895,10 +3895,10 @@ namespace spadas
 		/// 检查字节序是否Big-Endian
 		SPADAS_API Bool isBigEndian();
 
-		/// 获得当前系统时间
+		/// 获得当前主机时间（本地时区）
 		SPADAS_API Time getTime();
 
-		/// 获得当前系统时间，带毫秒信息
+		/// 获得当前主机时间（本地时区），带毫秒信息
 		SPADAS_API TimeWithMS getTimeWithMS();
 
 		/// 执行一个控制台命令
@@ -4650,7 +4650,7 @@ namespace spadas
 		/// 视频原始帧的时间偏置，单位秒，大于零有效
 		Double ts;
 
-		/// UTC posix时间，单位毫秒，0表示无效
+		/// 国际协调posix时间，单位毫秒，0表示无效
 		ULong posixUTC;
 
 		/// 本地posix时间(一般为基于本地NTP服务器同步后的时间)，单位毫秒，0表示无效
