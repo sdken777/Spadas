@@ -273,7 +273,16 @@ namespace file_internal
 			String fileName = content->d_name;
 			if (fileName == "." || fileName == "..") continue;
 
-			Bool isFolder = ((Int)content->d_type & (Int)DT_DIR) != 0;
+			Bool isFolder = FALSE;
+			if ((Int)content->d_type == (Int)DT_UNKNOWN)
+			{
+				struct stat fileStat;
+				String contentPath = targetFolder + fileName;
+				stat(contentPath.chars().data(), &fileStat);
+				isFolder = S_ISDIR(fileStat.st_mode);
+			}
+			else isFolder = ((Int)content->d_type & (Int)DT_DIR) != 0;
+
 			if (isFolder) out[out.size()] = fileName + separator;
 			else out[out.size()] = fileName;
 		}
