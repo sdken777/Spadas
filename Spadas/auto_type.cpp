@@ -162,6 +162,11 @@ String GlobalTimestamp::toString()
 	return base.dateString(String()) + "-" + base.timeString("-") + "-" + String(offset, 6);
 }
 
+String Timestamp::toString()
+{
+	return session.dateString(String()) + "-" + session.timeString("-") + "-" + String(offset, 6);
+}
+
 String GeneralElement::toString()
 {
 	return valid ? (isText ? text : String(value)) : "(invalid)";

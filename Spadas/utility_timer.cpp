@@ -5,102 +5,46 @@
 
 #include <windows.h>
 
-namespace spadas
+namespace timer_interval
 {
-	class TimerVars : public Vars
+	using namespace spadas;
+
+	inline ULong getCurrentCPUTick()
 	{
-    public:
-		SPADAS_VARS_DEF(Timer, Vars)
-
-		LARGE_INTEGER startTime;
-		LARGE_INTEGER frequency;
-
-		TimerVars()
-		{
-			startTime.QuadPart = 0;
-			frequency.QuadPart = 0;
-		}
-	};
-}
-
-using namespace spadas;
-
-const String spadas::Timer::TypeName = "spadas.Timer";
-
-Timer::Timer() : Object<TimerVars>(new TimerVars(), TRUE)
-{
-	start();
-}
-
-void Timer::start()
-{
-	/* query frequency if not queried */
-	if (vars->frequency.QuadPart == 0)
-	{
-		QueryPerformanceFrequency(&vars->frequency);
+		LARGE_INTEGER time;
+		QueryPerformanceCounter(&time);
+		return (ULong)time.QuadPart;
 	}
 
-	/* query tickcount of start time */
-	QueryPerformanceCounter(&vars->startTime);
-}
-
-Double Timer::check()
-{
-	/* query tickcount of current time */
-	LARGE_INTEGER currentTime;
-	QueryPerformanceCounter(&currentTime);
-
-	/* calculate the passed time in millisecond */
-	return (Double)(currentTime.QuadPart - vars->startTime.QuadPart) * 1000.0 / (Double)vars->frequency.QuadPart;
-}
-
-Double Timer::getStartTime()
-{
-	return (Double)(vars->startTime.QuadPart) * 1000.0 / (Double)vars->frequency.QuadPart;
+	inline ULong getCPUTicksPerSecond()
+	{
+		LARGE_INTEGER frequency;
+		QueryPerformanceFrequency(&frequency);
+		return (ULong)frequency.QuadPart;
+	}
 }
 
 #endif
 
 #if defined(SPADAS_ENV_LINUX)
 
-#include <sys/time.h>
-#include <sys/select.h>
+#include <time.h>
 
-namespace spadas
+namespace timer_interval
 {
-	class TimerVars : public Vars
+	using namespace spadas;
+
+	inline ULong getCurrentCPUTick()
 	{
-	public:
-		SPADAS_VARS_DEF(Timer, Vars)
+		timespec time;
+		clock_gettime(CLOCK_MONOTONIC_RAW, &time);
+		return (ULong)time.tv_nsec + (ULong)time.tv_sec * 1000000000ull;
+	}
 
-		struct timeval startTime;
-	};
-}
-
-using namespace spadas;
-
-const String spadas::Timer::TypeName = "spadas.Timer";
-
-Timer::Timer() : Object<TimerVars>(new TimerVars(), TRUE)
-{
-	start();
-}
-
-void Timer::start()
-{
-	gettimeofday(&vars->startTime, NULL);
-}
-
-Double Timer::check()
-{
-	struct timeval endTime;
-	gettimeofday(&endTime, NULL);
-	return (Double)(endTime.tv_sec - vars->startTime.tv_sec) * 1000 + (Double)(endTime.tv_usec - vars->startTime.tv_usec) / 1000;
-}
-
-Double Timer::getStartTime()
-{
-	return (Double)(vars->startTime.tv_sec) * 1000 + (Double)(vars->startTime.tv_usec) / 1000; 
+	inline ULong getCPUTicksPerSecond()
+	{
+		return 1000000000ull;
+	}
 }
 
 #endif
@@ -109,6 +53,25 @@ Double Timer::getStartTime()
 
 #include <mach/mach_time.h>
 
+namespace timer_interval
+{
+	using namespace spadas;
+
+	inline ULong getCurrentCPUTick()
+	{
+		return mach_absolute_time();
+	}
+
+	inline ULong getCPUTicksPerSecond()
+	{
+		mach_timebase_info_data_t info;
+		mach_timebase_info(&info);
+		return 1000000000ull * info.denom / info.numer;
+	}
+}
+
+#endif
+
 namespace spadas
 {
 	class TimerVars : public Vars
@@ -116,41 +79,65 @@ namespace spadas
     public:
 		SPADAS_VARS_DEF(Timer, Vars)
 
-		Double conversion;
-		ULong startTime;
+		ULong startCPUTick;
 
-        TimerVars()
-        {
-            mach_timebase_info_data_t info;
-            mach_timebase_info(&info);
-            conversion = 1e-6 * (Double)info.numer / (Double)info.denom;
-        }
+		TimerVars(ULong startCPUTick) : startCPUTick(startCPUTick)
+		{}
 	};
+
+	ULong cpuTicksPerSecondsConstant = 0;
+	Double millisecondCoefficient = 0;
+
+	inline void initTimerConstants()
+	{
+		if (cpuTicksPerSecondsConstant == 0)
+		{
+			cpuTicksPerSecondsConstant = getCPUTicksPerSecond();
+			millisecondCoefficient = 1000.0 / cpuTicksPerSecondsConstant;
+		}
+	}
 }
 
 using namespace spadas;
+using namespace timer_interval;
 
 const String spadas::Timer::TypeName = "spadas.Timer";
 
-Timer::Timer() : Object<class TimerVars>(new TimerVars(), TRUE)
-{
-	start();
-}
+Timer::Timer() : Object<TimerVars>(new TimerVars(getCurrentCPUTick()), TRUE)
+{}
+
+Timer::Timer(ULong startCPUTick) : Object<TimerVars>(new TimerVars(math::min(getCurrentCPUTick(), startCPUTick)), TRUE)
+{}
 
 void Timer::start()
 {
-	vars->startTime = mach_absolute_time();
+	vars->startCPUTick = getCurrentCPUTick();
 }
 
 Double Timer::check()
 {
-	ULong endTime = mach_absolute_time();
-	return vars->conversion * ((Double)endTime - (Double)vars->startTime);
+	initTimerConstants();
+	return millisecondCoefficient * (getCurrentCPUTick() - vars->startCPUTick);
 }
 
 Double Timer::getStartTime()
 {
-	return vars->conversion * (Double)vars->startTime;
+	initTimerConstants();
+	return millisecondCoefficient * vars->startCPUTick;
 }
 
-#endif
+ULong Timer::getStartCPUTick()
+{
+	return vars->startCPUTick;
+}
+
+ULong Timer::cpuTick()
+{
+	return getCurrentCPUTick();
+}
+
+ULong Timer::cpuTicksPerSecond()
+{
+	initTimerConstants();
+	return cpuTicksPerSecondsConstant;
+}

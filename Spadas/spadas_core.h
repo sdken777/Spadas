@@ -3688,6 +3688,9 @@ namespace spadas
 
 		/// 创建一个计时器对象并立即启动
 		Timer();
+
+		/// 以指定的CPU计数作为开始时间创建一个计时器，该计数不得大于创建时的CPU计数
+		Timer(ULong startCPUTick);
 		
 		/// 重启计时器
 		void start();
@@ -3697,6 +3700,15 @@ namespace spadas
 
 		/// 获得开始时间，单位毫秒
 		Double getStartTime();
+
+		/// 获得开始时的CPU计数
+		ULong getStartCPUTick();
+
+		/// 获取当前CPU计数
+		static ULong cpuTick();
+
+		/// 获取每秒增长的CPU计数
+		static ULong cpuTicksPerSecond();
 
 	private:
 		Bool isNull() { return FALSE; }
@@ -4106,59 +4118,83 @@ namespace spadas
 	/// Session ID
 	typedef Time SessionID;
 
-	/// 全局时间戳
-	struct GlobalTimestamp
+	/// 时间偏置来源
+	enum class TimeOffsetSource
+	{
+		/// 未知来源
+		Unknown = 0,
+
+		/// 根据到达时CPU计数得到
+		CPUTick = 1,
+
+		/// 与授时服务器时间同步后得到
+		SyncServer = 2,
+
+		/// 与卫星时间同步后得到
+		SyncGnss = 3,
+	};
+
+	/// 时间戳
+	struct Timestamp
 	{
 		/// Session ID
-		SessionID base;
+		SessionID session;
 
 		/// 时间偏置，单位秒，大于零有效
 		Double offset;
 
-		/// 默认构造函数，时间为1900年1月1日0时0分0秒0毫秒
-		GlobalTimestamp() : offset(0)
+		/// 时间偏置来源
+		TimeOffsetSource offsetSource;
+
+		/// 到达时CPU计数
+		ULong cpuTick;
+
+		/// 客机Posix时间，单位毫秒，0表示无效
+		ULong guestPosix;
+
+		/// 授时服务器Posix时间，单位毫秒，0表示无效
+		ULong serverPosix;
+
+		/// 卫星Posix时间，单位毫秒，0表示无效
+		ULong gnssPosix;
+
+		/// 默认构造函数
+		Timestamp() : offset(0), offsetSource(TimeOffsetSource::Unknown), cpuTick(0), guestPosix(0), serverPosix(0), gnssPosix(0)
 		{}
 
-		/// 基于时间原点和偏置初始化
-		GlobalTimestamp(SessionID base, Double offset) : base(base), offset(offset)
-		{}
-
-		/// 是否相等
-		SPADAS_API Bool operator ==(GlobalTimestamp time);
-
-		/// 是否不等于
-		SPADAS_API Bool operator !=(GlobalTimestamp time);
-
-		/// 转为字符串显示，格式为"原点年月日-时-分-秒-偏置"，如20190101-12-30-45-123.456789
+		/// 转为字符串显示，格式为"Session年月日-时-分-秒-偏置"，如20190101-12-30-45-123.456789
 		SPADAS_API String toString();
 	};
 
 	/// 信号
-	struct Signal
+	struct WetSignal
 	{
 		/// 时间戳
-		GlobalTimestamp timestamp;
+		Timestamp timestamp;
 
 		/// 数值
 		Double value;
 
 		/// 默认构造函数，初始值为0
-		Signal() : value(0)
+		WetSignal() : value(0)
 		{}
 
 		/// 基于时间戳和数值初始化
-		Signal(GlobalTimestamp timestamp, Double val) : timestamp(timestamp), value(val)
+		WetSignal(Timestamp timestamp, Double val) : timestamp(timestamp), value(val)
 		{}
 	};
 
 	/// 信号数据表，key为信号ID，格式为"大类:小类:信号名称"。其中总线信号的情况下，大类为协议文件名，如vehicle.dbc；小类为报文本通道ID，如123
-	typedef Dictionary<Array<Signal> > SignalTable;
+	typedef Dictionary<Array<WetSignal> > WetSignalTable;
 
-	/// 通用原始数据
-	struct GeneralRawData
+	/// 通用设备输出原始数据
+	struct GeneralDeviceData
 	{
-		/// 时间戳
-		GlobalTimestamp timestamp;
+		/// 到达时CPU计数
+		ULong cpuTick;
+
+		/// 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
+		String protocol;
 
 		/// 数值数组数据
 		Array<Double> vector;
@@ -4167,16 +4203,37 @@ namespace spadas
 		Binary binary;
 
 		/// 默认构造函数
-		GeneralRawData()
+		GeneralDeviceData()
 		{}
 
 		/// 基于时间戳和数据初始化
-		GeneralRawData(GlobalTimestamp timestamp, Array<Double> vector, Binary binary) : timestamp(timestamp), vector(vector), binary(binary)
+		GeneralDeviceData(ULong cpuTick, Array<Double> vector, Binary binary) : cpuTick(cpuTick), vector(vector), binary(binary)
 		{}
 	};
 
-	/// 原始数据表，key为原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
-	typedef Dictionary<Array<GeneralRawData> > RawDataTable;
+	/// 通用原始数据
+	struct WetGeneralRawData
+	{
+		/// 时间戳
+		Timestamp timestamp;
+
+		/// 数值数组数据
+		Array<Double> vector;
+
+		/// [可选] 二进制数据
+		Binary binary;
+
+		/// 默认构造函数
+		WetGeneralRawData()
+		{}
+
+		/// 基于时间戳和数据初始化
+		WetGeneralRawData(Timestamp timestamp, Array<Double> vector, Binary binary) : timestamp(timestamp), vector(vector), binary(binary)
+		{}
+	};
+
+	/// 通用原始数据表，key为原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
+	typedef Dictionary<Array<WetGeneralRawData> > WetGeneralRawDataTable;
 
 	/// 通用样本元素
 	struct GeneralElement
@@ -4222,10 +4279,10 @@ namespace spadas
 	};
 
 	/// 通用样本
-	struct GeneralSample
+	struct WetGeneralSample
 	{
 		/// 时间戳
-		GlobalTimestamp timeStamp;
+		Timestamp timestamp;
 
 		/// 样本数据数组
 		Array<GeneralElement> values;
@@ -4234,20 +4291,20 @@ namespace spadas
 		UInt significantCount;
 
 		/// 默认构造函数
-		GeneralSample() : significantCount(0)
+		WetGeneralSample() : significantCount(0)
 		{}
 
 		/// 基于时间戳和数据初始化
-		GeneralSample(GlobalTimestamp timestamp, Array<GeneralElement> values) : timeStamp(timestamp), values(values), significantCount(0)
+		WetGeneralSample(Timestamp timestamp, Array<GeneralElement> values) : timestamp(timestamp), values(values), significantCount(0)
 		{}
 
 		/// 基于时间戳、数据、关键元素个数初始化
-		GeneralSample(GlobalTimestamp timestamp, Array<GeneralElement> values, UInt significantCount) : timeStamp(timestamp), values(values), significantCount(significantCount)
+		WetGeneralSample(Timestamp timestamp, Array<GeneralElement> values, UInt significantCount) : timestamp(timestamp), values(values), significantCount(significantCount)
 		{}
 	};
 
 	/// 通用样本表，key为样本协议ID，一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始
-	typedef Dictionary<Array<GeneralSample> > SampleTable;
+	typedef Dictionary<Array<WetGeneralSample> > WetGeneralSampleTable;
 
 	/// 通用样本插值结果
 	enum class SampleInterpolationResult
@@ -4268,15 +4325,31 @@ namespace spadas
 		ParseError = 4,
 	};
 
+	/// 通用样本缓存中的搜索模式
+	enum class SampleSearchMode
+	{
+		/// 按到达时CPU计数搜索
+		CPUTick = 0,
+
+		/// 按客机Posix时间搜索
+		GuestPosix = 1,
+
+		/// 按授时服务器Posix时间搜索
+		ServerPosix = 2,
+
+		/// 按卫星Posix时间搜索
+		GnssPosix = 3,
+	};
+
 	/// 通用样本缓存
-	class SPADAS_API SampleBuffer : public Object<class SampleBufferVars>
+	class SPADAS_API WetSampleBuffer : public Object<class WetSampleBufferVars>
 	{
 	public:
 		/// 类名称
 		static const String TypeName;
 
 		/// 创建样本缓存
-		SampleBuffer();
+		WetSampleBuffer();
 
 		/// @brief 设置对应的通用样本协议
 		/// @param protocol 通用样本协议ID
@@ -4290,7 +4363,7 @@ namespace spadas
 		/// @brief 添加新样本
 		/// @param sample 新通用样本
 		/// @param maxSize 样本缓存的最大容量，若已满则移除最早样本再添加新样本
-		void addSample(GeneralSample sample, UInt maxSize = 100);
+		void addSample(WetGeneralSample sample, UInt maxSize = 100);
 
 		/// 缓存是否为空
 		Bool isEmpty();
@@ -4304,43 +4377,52 @@ namespace spadas
 		/// @brief 获取最早样本
 		/// @param sampleEarliest 输出最早样本
 		/// @returns 若样本缓存为空则返回FALSE
-		Bool getEarliest(GeneralSample& sampleEarliest);
+		Bool getEarliest(WetGeneralSample& sampleEarliest);
 
 		/// @brief 获取最新样本
 		/// @param sampleEarliest 输出最新样本
 		/// @returns 若样本缓存为空则返回FALSE
-		Bool getLatest(GeneralSample& sampleLatest);
+		Bool getLatest(WetGeneralSample& sampleLatest);
 
-		/// @brief 根据全局时间戳寻找最近样本
-		/// @param time 输入时间戳
-		/// @param sampleNearest 输出离时间戳最近样本
-		/// @returns 若样本缓存为空或当前session不一致，则返回FALSE
-		Bool getNearest(GlobalTimestamp time, GeneralSample& sampleNearest);
+		/// @brief 根据时间偏置寻找最近样本
+		/// @param offset 目标时间偏置
+		/// @param sampleNearest 输出离目标最近样本
+		/// @returns 若样本缓存为空，则返回FALSE
+		Bool getNearest(Double offset, WetGeneralSample& sampleNearest);
 
-		/// @brief 根据全局时间戳寻找不为该时间的下个样本
-		/// @param time 输入时间戳
-		/// @param sampleNext 输出下个样本
-		/// @returns 若无则返回FALSE
-		Bool getNext(GlobalTimestamp time, GeneralSample& sampleNext);
+		/// @brief 根据时间戳寻找最近样本
+		/// @param mode 搜索模式
+		/// @param time 目标时间戳，不同模式下意义不同，详见 spadas::Timestamp
+		/// @param sampleNearest 输出离目标最近样本
+		/// @returns 若样本缓存为空，则返回FALSE
+		Bool getNearest(SampleSearchMode mode, ULong time, WetGeneralSample& sampleNearest);
 
-		/// @brief 根据全局时间戳寻找前后两个样本
-		/// @param time 输入时间戳
+		/// @brief 根据时间偏置寻找前后两个样本
+		/// @param offset 目标时间偏置
 		/// @param sampleBefore 输出比时间戳早的最近样本
 		/// @param sampleAfter 输出比时间戳晚的最近样本
 		/// @returns 若无则返回FALSE
-		Bool search(GlobalTimestamp time, GeneralSample& sampleBefore, GeneralSample& sampleAfter);
+		Bool search(Double offset, WetGeneralSample& sampleBefore, WetGeneralSample& sampleAfter);
 
-		/// @brief 按照模板样本插值
-		/// @param time 输入插值时间戳
+		/// @brief 根据时间戳寻找前后两个样本
+		/// @param mode 搜索模式
+		/// @param time 目标时间戳，不同模式下意义不同，详见 spadas::Timestamp
+		/// @param sampleBefore 输出比时间戳早的最近样本
+		/// @param sampleAfter 输出比时间戳晚的最近样本
+		/// @returns 若无则返回FALSE
+		Bool search(SampleSearchMode mode, ULong time, WetGeneralSample& sampleBefore, WetGeneralSample& sampleAfter);
+
+		/// @brief 根据时间偏置寻找前后两个样本并插值
+		/// @param offset 目标时间偏置
 		/// @param interpolatedSample 输出插值完成的样本
 		/// @param earlyThresh 用于判断缓存范围是否过早的阈值，参考 SampleInterpolationResult::TooEarly
 		/// @details 该模板类型必须实现以下函数：\n
-		/// - Bool fromGeneralSample(GeneralSample); \n
-		/// - Bool fromGeneralSample(String protocol, GeneralSample); \n
+		/// - Bool fromGeneralSample(WetGeneralSample); \n
+		/// - Bool fromGeneralSample(String protocol, WetGeneralSample); \n
 		/// - static Bool supportInterpolation(); \n
-		/// - static Type interpolate(Type& s1, Double w1, Type& s2, Double w2, GlobalTimestamp);
+		/// - static Type interpolate(Type& s1, Double w1, Type& s2, Double w2, Timestamp);
 		template <typename Type>
-		SampleInterpolationResult interpolate(GlobalTimestamp time, Type& interpolatedSample, UInt earlyThresh = 1000/* ms */);
+		SampleInterpolationResult interpolate(Double offset, Type& interpolatedSample, UInt earlyThresh = 1000/* ms */);
 
 	private:
 		Bool isNull() { return FALSE; }
@@ -4348,13 +4430,13 @@ namespace spadas
 	};
 
 	/// 通用样本缓存表，key为样本协议ID，一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始
-	typedef Dictionary<SampleBuffer> SampleBufferTable;
+	typedef Dictionary<WetSampleBuffer> WetSampleBufferTable;
 
 	/// 矩阵样本
-	struct MatrixSample
+	struct WetMatrixSample
 	{
 		/// 时间戳
-		GlobalTimestamp timeStamp;
+		Timestamp timestamp;
 
 		/// 矩阵数据，按行、列的顺序存储，如第0元素为第一行第一列，第1元素为第一行第二列，...
 		Array<Float> matData;
@@ -4366,11 +4448,11 @@ namespace spadas
 		UInt cols;
 
 		/// 默认构造函数
-		MatrixSample() : rows(0), cols(0)
+		WetMatrixSample() : rows(0), cols(0)
 		{}
 
 		/// 基于矩阵尺寸初始化
-		MatrixSample(Size2D size)
+		WetMatrixSample(Size2D size)
 		{
 			matData = Array<Float>(size.dim0 * size.dim1);
 			rows = size.dim0;
@@ -4379,7 +4461,7 @@ namespace spadas
 	};
 
 	/// 矩阵样本表，key为样本协议ID，一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始
-	typedef Dictionary<Array<MatrixSample> > MatrixTable;
+	typedef Dictionary<Array<WetMatrixSample> > WetMatrixSampleTable;
 
 	/// 通用设备状态
 	enum class GeneralDeviceStatus
@@ -4451,57 +4533,87 @@ namespace spadas
 		FR_10M = 303, // default
 	};
 
-	/// 总线原始报文信息
-	struct BusRawData
+	/// 总线设备输出原始数据
+	struct BusDeviceData
 	{
-		/// 报文时间偏置，单位秒，大于零有效
-		Double ts;
+		/// 到达时CPU计数
+		ULong tick;
+
+		/// 已与授时服务器同步的客机Posix时间的毫秒部分，0表示无效
+		ULong serverPosixMS;
+
+		/// 已与授时服务器同步的客机Posix时间的纳秒部分
+		UInt serverPosixNS;
 
 		/// 总线通道，1~16
-		UInt ch;
+		UInt channel;
 
-		/// 本通道ID
+		/// 该通道内的报文ID
 		UInt id;
 
 		/// 报文数据
-		Binary bin;
+		Binary binary;
 
 		/// 默认构造函数
-		BusRawData() : ts(0), ch(0), id(0)
-		{}
-
-		/// 基于时间偏置、总线通道、报文ID、报文数据初始化
-		BusRawData(Double ts, UInt ch, UInt id, Binary bin) : ts(ts), ch(ch), id(id), bin(bin)
+		BusDeviceData() : tick(0), serverPosixMS(0), serverPosixNS(0), channel(0), id(0)
 		{}
 	};
 
-	/// 总线原始报文数据表
-	struct BusRawDataTable
+	/// 总线原始数据
+	struct WetBusRawData
 	{
-		/// 所有报文的Session ID
-		SessionID base;
+		/// 时间戳
+		Timestamp timestamp;
 
-		/// 各个通道的报文数据，共16个通道
-		Array<Array<BusRawData> > channelDatas;
+		/// 总线通道，1~16
+		UInt channel;
+
+		/// 该通道内的报文ID
+		UInt id;
+
+		/// 报文数据
+		Binary binary;
 
 		/// 默认构造函数
-		BusRawDataTable() : channelDatas(16)
+		WetBusRawData() : channel(0), id(0)
 		{}
-
-		/// 清空所有数据
-		SPADAS_API void clear();
 	};
 
-	/// 报文发送接口接口
-	class SPADAS_API IBusRawDataTransmitter
+	/// 总线原始数据表（长度16, 分别表示总线通道1~16）
+	typedef Array<Array<WetBusRawData> > WetBusRawDataTable;
+
+	/// 总线报文发送接口
+	class SPADAS_API IBusMessageTransmitter
 	{
 	public:
-		virtual ~IBusRawDataTransmitter() {};
+		virtual ~IBusMessageTransmitter() {};
 
-		/// @brief 发送报文
-		/// @param msg 待发送报文（其中ts不使用）
-		/// @param interval 发送周期[ms]，至少10ms，UINF表示单次发送
-		virtual void transmitMessage(BusRawData msg, UInt interval);
+		/// @brief 立即发送报文
+		/// @param channel 总线通道，1~16
+		/// @param id 该通道内的报文ID
+		/// @param binary 报文数据
+		virtual void transmitNow(UInt channel, UInt id, Binary binary);
+
+		/// @brief 设定重复发送报文
+		/// @param channel 总线通道，1~16
+		/// @param id 该通道内的报文ID
+		/// @param binary 报文数据
+		/// @param interval 发送周期[ms]，有效范围10~1000ms
+		virtual void transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval);
+
+		/// @brief 按时间偏置预约发送报文（将优先按授时服务器Posix时间预约发送，不满足条件则按CPU计数时间发送）
+		/// @param channel 总线通道，1~16
+		/// @param id 该通道内的报文ID
+		/// @param binary 报文数据
+		/// @param offset 时间偏置，单位秒
+		virtual void transmitAtTimeOffset(UInt channel, UInt id, Binary binary, Double offset);
+
+		/// @brief 指定按授时服务器Posix时间预约发送报文
+		/// @param channel 总线通道，1~16
+		/// @param id 该通道内的报文ID
+		/// @param binary 报文数据
+		/// @param serverPosix 授时服务器Posix时间，单位毫秒
+		virtual void transmitAtServerPosix(UInt channel, UInt id, Binary binary, ULong serverPosix);
 	};
 
 	/// 总线设备ID
@@ -4522,7 +4634,7 @@ namespace spadas
 	};
 
 	/// 总线设备信息
-	struct BusDeviceInfo
+	struct BusDeviceInfoX
 	{
 		/// 总线设备ID
 		BusDeviceID id;
@@ -4532,6 +4644,13 @@ namespace spadas
 
 		/// 设备通道描述
 		String description;
+
+		/// 是否支持按授时服务器Posix时间预约发送报文
+		Bool supportTransmitScheduled;
+
+		/// 默认构造函数
+		BusDeviceInfoX() : supportTransmitScheduled(FALSE)
+		{}
 	};
 
 	/// 总线设备配置
@@ -4565,6 +4684,10 @@ namespace spadas
 
 		/// 数据负载，单位%
 		Float payloadPercent;
+
+		/// 默认构造函数
+		BusChannelPayload() : mapChannel(0), payloadPercent(0)
+		{}
 	};
 
 	/// 总线报文信息
@@ -4585,28 +4708,28 @@ namespace spadas
 	};
 
 	/// 总线报文
-	struct BusMessage
+	struct WetBusMessage
 	{
+		/// 时间戳
+		Timestamp timestamp;
+
 		/// 报文信息
 		BusMessageInfo info;
-
-		/// 时间戳
-		GlobalTimestamp timestamp;
 
 		/// 数据
 		Binary data;
 
 		/// 默认构造函数
-		BusMessage()
+		WetBusMessage()
 		{}
 
 		/// 基于信息、时间戳和数据初始化
-		BusMessage(BusMessageInfo info, GlobalTimestamp timestamp, Binary data) : info(info), timestamp(timestamp), data(data)
+		WetBusMessage(Timestamp timestamp, BusMessageInfo info, Binary data) : timestamp(timestamp), info(info), data(data)
 		{}
 	};
 
 	/// 总线报文数据表，key为报文全局ID，格式为"协议文件名:本通道ID"，如vehicle.dbc:123
-	typedef Dictionary<Array<BusMessage> > BusMessageTable;
+	typedef Dictionary<Array<WetBusMessage> > WetBusMessageTable;
 
 	/// 视频数据流编码方式
 	enum class VideoDataCodec
@@ -4628,6 +4751,12 @@ namespace spadas
 
 		/// H.265：有损编码，帧间依赖
 		H265 = 5,
+
+		/// YUV422：无损编码，帧间独立
+		YUV422 = 6,
+
+		/// RAW：自定义原始格式
+		RAW = 7,
 	};
 
 	/// 视频数据流输入模式
@@ -4644,20 +4773,34 @@ namespace spadas
 		{}
 	};
 
-	/// 视频原始帧信息
-	struct VideoRawData
+	/// 视频数据流回注模式
+	struct VideoOutputMode
 	{
-		/// 视频原始帧的时间偏置，单位秒，大于零有效
-		Double ts;
+		/// 图像大小
+		Size2D size;
 
-		/// 国际协调posix时间，单位毫秒，0表示无效
-		ULong posixUTC;
+		/// 编码方式
+		VideoDataCodec codec;
 
-		/// 本地posix时间(一般为基于本地NTP服务器同步后的时间)，单位毫秒，0表示无效
-		ULong posixLocal;
+		/// 默认构造函数
+		VideoOutputMode() : codec(VideoDataCodec::Invalid)
+		{}
+	};
+
+	/// 视频设备输出原始数据
+	struct VideoDeviceData
+	{
+		/// 到达时CPU计数
+		ULong tick;
+
+		/// 已与授时服务器同步的客机Posix时间，0表示无效
+		ULong serverPosix;
+
+		/// 卫星Posix时间，0表示无效
+		ULong gnssPosix;
 
 		/// 视频通道，0~23，对应A~X
-		UInt ch;
+		UInt channel;
 
 		/// 视频数据流输入模式
 		VideoInputMode inputMode;
@@ -4672,7 +4815,33 @@ namespace spadas
 		ImagePointer preview;
 
 		/// 默认构造函数
-		VideoRawData() : ts(0), posixUTC(0), posixLocal(0), ch(0), hasPreview(FALSE)
+		VideoDeviceData() : tick(0), serverPosix(0), gnssPosix(0), channel(0), hasPreview(FALSE)
+		{}
+	};
+
+	/// 视频原始数据
+	struct WetVideoRawData
+	{
+		/// 时间戳
+		Timestamp timestamp;
+
+		/// 视频通道，0~23，对应A~X
+		UInt channel;
+
+		/// 视频数据流输入模式
+		VideoInputMode inputMode;
+
+		/// 视频原始帧的数据
+		Binary data;
+
+		/// 是否包含预览图像
+		Bool hasPreview;
+
+		/// 预览图像，640x(360-480)分辨率的BGR图像
+		ImagePointer preview;
+
+		/// 默认构造函数
+		WetVideoRawData() : channel(0), hasPreview(FALSE)
 		{}
 	};
 
@@ -4687,7 +4856,7 @@ namespace spadas
 	};
 
 	/// 视频设备信息
-	struct VideoDeviceInfo
+	struct VideoDeviceInfoX
 	{
 		/// 视频设备ID
 		VideoDeviceID id;
@@ -4698,8 +4867,14 @@ namespace spadas
 		/// 该视频设备通道支持的视频数据流输入模式
 		Array<VideoInputMode> inputModes;
 
+		/// 该视频设备通道支持的视频数据流回注模式
+		Array<VideoOutputMode> outputModes;
+
+		/// 是否支持按授时服务器Posix时间预约发送视频帧
+		Bool supportTransmitScheduled;
+
 		/// 默认构造函数
-		VideoDeviceInfo()
+		VideoDeviceInfoX() : supportTransmitScheduled(FALSE)
 		{}
 	};
 
@@ -4723,14 +4898,14 @@ namespace spadas
 		{}
 	};
 
-	/// 用于数据处理的视频帧信息
-	struct VideoProcData
+	/// 用于数据处理的视频数据
+	struct WetVideoProcData
 	{
 		/// 时间戳
-		GlobalTimestamp timestamp;
+		Timestamp timestamp;
 
 		/// 软件通道，0~23，对应A~X
-		UInt ch;
+		UInt channel;
 
 		/// 用于数据处理的图像数据
 		ImagePointer data;
@@ -4742,114 +4917,118 @@ namespace spadas
 		Array<Double> meta;
 
 		/// 默认构造函数
-		VideoProcData() : ch(0)
+		WetVideoProcData() : channel(0)
 		{}
 	};
 
-	/// 视频原始数据表
-	struct VideoRawDataTable
-	{
-		/// 所有视频数据的Session ID
-		SessionID base;
+	/// 视频原始数据表（长度24, 分别表示视频通道A~X）
+	typedef Array<Array<WetVideoRawData> > WetVideoRawDataTable;
 
-		/// 各个通道的视频数据，共24个通道
-		Array<Array<VideoRawData> > channelDatas;
-
-		/// 默认构造函数
-		SPADAS_API VideoRawDataTable();
-
-		/// 清空所有数据
-		SPADAS_API void clear();
-
-		/// 无任何数据？
-		SPADAS_API Bool isEmpty();
-	};
-
-	/// 用于数据处理的视频数据表
-	struct VideoProcDataTable
-	{
-		/// 各个通道的视频数据，共24个通道，对应A~L
-		Array<Array<VideoProcData> > channelDatas;
-
-		/// 默认构造函数
-		SPADAS_API VideoProcDataTable();
-
-		/// 清空所有数据
-		SPADAS_API void clear();
-	};
+	/// 用于数据处理的视频数据表（长度24, 分别表示视频通道A~X）
+	typedef Array<Array<WetVideoProcData> > WetVideoProcDataTable;
 
 	/// 视频预览图像的快速输出接口
-	class SPADAS_API IVideoPreviewExpress
+	class SPADAS_API IVideoDeviceExpress
 	{
 	public:
-		virtual ~IVideoPreviewExpress() {};
+		virtual ~IVideoDeviceExpress() {};
 
 		/// @brief 输出预览图像
-		/// @param ts 视频帧的时间偏置，单位秒，大于零有效
-		/// @param ch 视频通道，0~23，对应A~X
+		/// @param cpuTick 视频帧的到达时CPU计数
+		/// @param channel 视频通道，0~23，对应A~X
 		/// @param preview 预览图像，640x(360-480)分辨率的BGR图像
-		virtual void outputPreview(Double ts, UInt ch, ImagePointer preview);
+		virtual void outputPreview(ULong cpuTick, UInt channel, ImagePointer preview);
+	};
+
+	/// 视频帧回注接口
+	class SPADAS_API IVideoFrameTransmitter
+	{
+	public:
+		virtual ~IVideoFrameTransmitter() {};
+
+		/// @brief 立即发送视频帧
+		/// @param channel 视频通道，0~23
+		/// @param codec 视频帧的编码格式
+		/// @param size 视频帧的大小，像素单位
+		/// @param data 视频帧数据
+		virtual void transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data);
+
+		/// @brief 按时间偏置预约发送视频帧（将优先按服务器Posix时间预约发送，不满足条件则按CPU计数时间发送）
+		/// @param channel 视频通道，0~23
+		/// @param codec 视频帧的编码格式
+		/// @param size 视频帧的大小，像素单位
+		/// @param data 视频帧数据
+		/// @param offset 时间偏置，单位秒
+		virtual void transmitAtTimeOffset(UInt channel, VideoDataCodec codec, Size2D size, Binary data, Double offset);
+
+		/// @brief 指定按服务器Posix时间预约发送视频帧
+		/// @param channel 视频通道，0~23
+		/// @param codec 视频帧的编码格式
+		/// @param size 视频帧的大小，像素单位
+		/// @param data 视频帧数据
+		/// @param serverPosix 服务器Posix时间，单位毫秒
+		virtual void transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosix);
 	};
 
 	/// 所有输入数据表
-	struct InputTables
+	struct InputTablesX
 	{
-		/// 原始数据
-		RawDataTable rawDatas;
+		/// 通用原始数据表
+		WetGeneralRawDataTable rawDatas;
 
-		/// 总线数据
-		BusRawDataTable busRawDatas;
+		/// 总线原始数据表
+		WetBusRawDataTable busRawDatas;
 
-		/// 视频原始数据
-		VideoRawDataTable videoRawDatas;
+		/// 视频原始数据表
+		WetVideoRawDataTable videoRawDatas;
 
-		/// 用于数据处理的视频数据
-		VideoProcDataTable videoProcDatas;
+		/// 用于数据处理的视频数据表
+		WetVideoProcDataTable videoProcDatas;
 
-		/// 总线报文数据
-		BusMessageTable busMessages;
+		/// 总线报文数据表
+		WetBusMessageTable busMessages;
 
-		/// 信号数据
-		SignalTable signals;
+		/// 信号数据表
+		WetSignalTable signals;
 
-		/// 样本数据
-		SampleTable samples;
+		/// 样本数据表
+		WetGeneralSampleTable samples;
 
-		/// 矩阵数据
-		MatrixTable matrices;
+		/// 矩阵数据表
+		WetMatrixSampleTable matrices;
 
 		/// 默认构造函数
-		InputTables()
+		InputTablesX()
 		{}
 
 		/// 清空所有数据
 		inline void clear()
 		{
 			rawDatas.clear();
-			busRawDatas.clear();
-			videoRawDatas.clear();
-			videoProcDatas.clear();
 			busMessages.clear();
 			signals.clear();
 			samples.clear();
 			matrices.clear();
+			busRawDatas = WetBusRawDataTable(busRawDatas.size());
+			videoRawDatas = WetVideoRawDataTable(videoRawDatas.size());
+			videoProcDatas = WetVideoProcDataTable(videoProcDatas.size());
 		}
 	};
 
 	/// 所有输出数据表
-	struct OutputTables
+	struct OutputTablesX
 	{
 		/// 信号数据
-		SignalTable signals;
+		WetSignalTable signals;
 
 		/// 样本数据
-		SampleTable samples;
+		WetGeneralSampleTable samples;
 
 		/// 矩阵数据
-		MatrixTable matrices;
+		WetMatrixSampleTable matrices;
 
 		/// 默认构造函数
-		OutputTables()
+		OutputTablesX()
 		{}
 
 		/// 清空所有数据
@@ -4899,7 +5078,7 @@ namespace spadas
 	/// 数据截取任务参数
 	struct PickConfig
 	{
-		/// 截取源session的时间范围
+		/// 截取源session的时间偏置范围
 		Range srcRange;
 
 		/// 目标session ID
@@ -5045,6 +5224,31 @@ namespace spadas
 		virtual Bool callNativeFunction(String pluginType, String id, BaseObject context);
 	};
 
+	/// 时间戳生成接口
+	class SPADAS_API ITimestampProvider
+	{
+	public:
+		virtual ~ITimestampProvider() {}
+
+		/// @brief 创建时间戳
+		/// @param outputTimestamp 输出的时间戳
+		/// @param session 时间戳所在session
+		/// @param cpuTick 到达时CPU计数，0表示无效
+		/// @param guestServerSync 客机是否已与授时服务器同步
+		/// @param guestPosix 客机Posix时间，单位毫秒，0表示无效
+		/// @param gnssPosix 卫星Posix时间，单位毫秒，0表示无效
+		/// @return 是否成功
+		virtual Bool createTimestamp(Timestamp& outputTimestamp, SessionID session, ULong cpuTick = 0, Bool guestServerSync = FALSE, ULong guestPosix = 0, ULong gnssPosix = 0);
+
+		/// @brief 尝试根据基准时间戳与授时服务器或卫星时间同步（优先按卫星时间）
+		/// @param srcTimestamp 基准时间戳
+		/// @param guestServerSync 客机是否已与授时服务器同步
+		/// @param guestPosix 非0则使用该输入作为基准时间戳的客机Posix时间
+		/// @param gnssPosix 非0则使用该输入作为基准时间戳的卫星Posix时间
+		/// @return 输出的时间戳
+		virtual Timestamp tryUpdateTimestamp(Timestamp srcTimestamp, Bool guestServerSync = FALSE, ULong guestPosix = 0, ULong gnssPosix = 0);
+	};
+
 	// 插件相关实用功能 //////////////////////////////////////////////////////////////
 
 	/// 总线协议ID (形如XXX.dbc)
@@ -5148,15 +5352,15 @@ namespace spadas
 	};
 
 	/// 通用原始数据输出接口
-	class SPADAS_API IGeneralRawDataOutput
+	class SPADAS_API IGeneralDeviceDataOutput
 	{
 	public:
-		virtual ~IGeneralRawDataOutput() {};
+		virtual ~IGeneralDeviceDataOutput() {};
 
-		/// @brief 输出通用原始数据
+		/// @brief 输出通用设备原始数据
 		/// @param protocol 原始数据协议
-		/// @param data 原始数据
-		virtual void outputGeneralRawData(String protocol, GeneralRawData data);
+		/// @param data 通用设备原始数据
+		virtual void outputGeneralDeviceData(String protocol, GeneralDeviceData data);
 	};
 
 	/// 样本状态
@@ -5207,27 +5411,6 @@ namespace spadas
 
 		/// 重置
 		void reset();
-
-	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
-	};
-
-	/// 触发信号过滤器
-	class SPADAS_API TriggerFilter : public Object<class TriggerFilterVars>
-	{
-	public:
-		/// 类名称
-		static const String TypeName;
-
-		/// 创建触发信号过滤器
-		TriggerFilter();
-
-		/// 设置触发最小间隔时间 (默认1秒)
-		void setMinInterval(Double sec);
-
-		/// 更新状态，返回是否触发(state从FALSE变为TRUE)
-		Bool update(Bool state, GlobalTimestamp ts);
 
 	private:
 		Bool isNull() { return FALSE; }
@@ -5325,6 +5508,262 @@ namespace spadas
 		/// 设置输出数据
 		void setOutput(Binary data);
 
+	private:
+		Bool isNull() { return FALSE; }
+		Bool isValid() { return FALSE; }
+	};
+
+	// 插件相关类型定义（旧） //////////////////////////////////////////////////////////////
+	struct GlobalTimestamp
+	{
+		SessionID base;
+		Double offset;
+		GlobalTimestamp() : offset(0)
+		{}
+		GlobalTimestamp(SessionID base, Double offset) : base(base), offset(offset)
+		{}
+		SPADAS_API Bool operator ==(GlobalTimestamp time);
+		SPADAS_API Bool operator !=(GlobalTimestamp time);
+		SPADAS_API String toString();
+	};
+	
+	struct Signal
+	{
+		GlobalTimestamp timestamp;
+		Double value;
+		Signal() : value(0)
+		{}
+		Signal(GlobalTimestamp timestamp, Double val) : timestamp(timestamp), value(val)
+		{}
+	};
+	typedef Dictionary<Array<Signal> > SignalTable;
+
+	struct GeneralRawData
+	{
+		GlobalTimestamp timestamp;
+		Array<Double> vector;
+		Binary binary;
+		GeneralRawData()
+		{}
+		GeneralRawData(GlobalTimestamp timestamp, Array<Double> vector, Binary binary) : timestamp(timestamp), vector(vector), binary(binary)
+		{}
+	};
+	typedef Dictionary<Array<GeneralRawData> > RawDataTable;
+
+	struct GeneralSample
+	{
+		GlobalTimestamp timeStamp;
+		Array<GeneralElement> values;
+		UInt significantCount;
+		GeneralSample() : significantCount(0)
+		{}
+		GeneralSample(GlobalTimestamp timestamp, Array<GeneralElement> values) : timeStamp(timestamp), values(values), significantCount(0)
+		{}
+		GeneralSample(GlobalTimestamp timestamp, Array<GeneralElement> values, UInt significantCount) : timeStamp(timestamp), values(values), significantCount(significantCount)
+		{}
+	};
+	typedef Dictionary<Array<GeneralSample> > SampleTable;
+
+	class SPADAS_API SampleBuffer : public Object<class SampleBufferVars>
+	{
+	public:
+		static const String TypeName;
+		SampleBuffer();
+		void setProtocol(String protocol);
+		String getProtocol(Bool withChannel);
+		void addSample(GeneralSample sample, UInt maxSize = 100);
+		Bool isEmpty();
+		UInt getSampleCount();
+		SessionID getCurrentSession();
+		Bool getEarliest(GeneralSample& sampleEarliest);
+		Bool getLatest(GeneralSample& sampleLatest);
+		Bool getNearest(GlobalTimestamp time, GeneralSample& sampleNearest);
+		Bool getNext(GlobalTimestamp time, GeneralSample& sampleNext);
+		Bool search(GlobalTimestamp time, GeneralSample& sampleBefore, GeneralSample& sampleAfter);
+		template <typename Type>
+		SampleInterpolationResult interpolate(GlobalTimestamp time, Type& interpolatedSample, UInt earlyThresh = 1000/* ms */);
+	private:
+		Bool isNull() { return FALSE; }
+		Bool isValid() { return FALSE; }
+	};
+	typedef Dictionary<SampleBuffer> SampleBufferTable;
+
+	struct MatrixSample
+	{
+		GlobalTimestamp timeStamp;
+		Array<Float> matData;
+		UInt rows;
+		UInt cols;
+		MatrixSample() : rows(0), cols(0)
+		{}
+		MatrixSample(Size2D size)
+		{
+			matData = Array<Float>(size.dim0 * size.dim1);
+			rows = size.dim0;
+			cols = size.dim1;
+		}
+	};
+	typedef Dictionary<Array<MatrixSample> > MatrixTable;
+
+	struct BusRawData
+	{
+		Double ts;
+		UInt ch;
+		UInt id;
+		Binary bin;
+		BusRawData() : ts(0), ch(0), id(0)
+		{}
+		BusRawData(Double ts, UInt ch, UInt id, Binary bin) : ts(ts), ch(ch), id(id), bin(bin)
+		{}
+	};
+
+	struct BusRawDataTable
+	{
+		SessionID base;
+		Array<Array<BusRawData> > channelDatas;
+		BusRawDataTable() : channelDatas(16)
+		{}
+		SPADAS_API void clear();
+	};
+
+	class SPADAS_API IBusRawDataTransmitter
+	{
+	public:
+		virtual ~IBusRawDataTransmitter() {};
+		virtual void transmitMessage(BusRawData msg, UInt interval);
+	};
+
+	struct BusDeviceInfo
+	{
+		BusDeviceID id;
+		Array<BusChannelType> types;
+		String description;
+	};
+
+	struct BusMessage
+	{
+		BusMessageInfo info;
+		GlobalTimestamp timestamp;
+		Binary data;
+		BusMessage()
+		{}
+		BusMessage(BusMessageInfo info, GlobalTimestamp timestamp, Binary data) : info(info), timestamp(timestamp), data(data)
+		{}
+	};
+	typedef Dictionary<Array<BusMessage> > BusMessageTable;
+
+	struct VideoRawData
+	{
+		Double ts;
+		ULong posixUTC;
+		ULong posixLocal;
+		UInt ch;
+		VideoInputMode inputMode;
+		Binary data;
+		Bool hasPreview;
+		ImagePointer preview;
+		VideoRawData() : ts(0), posixUTC(0), posixLocal(0), ch(0), hasPreview(FALSE)
+		{}
+	};
+
+	struct VideoProcData
+	{
+		GlobalTimestamp timestamp;
+		UInt ch;
+		ImagePointer data;
+		String metaProtocol;
+		Array<Double> meta;
+		VideoProcData() : ch(0)
+		{}
+	};
+
+	struct VideoDeviceInfo
+	{
+		VideoDeviceID id;
+		String description;
+		Array<VideoInputMode> inputModes;
+		VideoDeviceInfo()
+		{}
+	};
+
+	struct VideoRawDataTable
+	{
+		SessionID base;
+		Array<Array<VideoRawData> > channelDatas;
+		SPADAS_API VideoRawDataTable();
+		SPADAS_API void clear();
+		SPADAS_API Bool isEmpty();
+	};
+
+	struct VideoProcDataTable
+	{
+		Array<Array<VideoProcData> > channelDatas;
+		SPADAS_API VideoProcDataTable();
+		SPADAS_API void clear();
+	};
+
+	class SPADAS_API IVideoPreviewExpress
+	{
+	public:
+		virtual ~IVideoPreviewExpress() {};
+		virtual void outputPreview(Double ts, UInt ch, ImagePointer preview);
+	};
+
+	struct InputTables
+	{
+		RawDataTable rawDatas;
+		BusRawDataTable busRawDatas;
+		VideoRawDataTable videoRawDatas;
+		VideoProcDataTable videoProcDatas;
+		BusMessageTable busMessages;
+		SignalTable signals;
+		SampleTable samples;
+		MatrixTable matrices;
+		InputTables()
+		{}
+		inline void clear()
+		{
+			rawDatas.clear();
+			busRawDatas.clear();
+			videoRawDatas.clear();
+			videoProcDatas.clear();
+			busMessages.clear();
+			signals.clear();
+			samples.clear();
+			matrices.clear();
+		}
+	};
+
+	struct OutputTables
+	{
+		SignalTable signals;
+		SampleTable samples;
+		MatrixTable matrices;
+		OutputTables()
+		{}
+		inline void clear()
+		{
+			signals.clear();
+			samples.clear();
+			matrices.clear();
+		}
+	};
+
+	// 插件相关实用功能（旧） //////////////////////////////////////////////////////////////
+	class SPADAS_API IGeneralRawDataOutput
+	{
+	public:
+		virtual ~IGeneralRawDataOutput() {};
+		virtual void outputGeneralRawData(String protocol, GeneralRawData data);
+	};
+	
+	class SPADAS_API TriggerFilter : public Object<class TriggerFilterVars>
+	{
+	public:
+		static const String TypeName;
+		TriggerFilter();
+		void setMinInterval(Double sec);
+		Bool update(Bool state, GlobalTimestamp ts);
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
@@ -5428,6 +5867,92 @@ namespace spadas
 	};
 	typedef Interface<IVideoPluginV400>(*GetVideoPluginV400)();
 
+	class SPADAS_API IDevicePluginV201
+	{
+	public:
+		virtual ~IDevicePluginV201() {};
+		virtual void setDeviceConnection(String config);
+		virtual void disconnectDevice();
+		virtual GeneralDeviceStatus getDeviceStatus(String& info);
+		virtual Array<GeneralDeviceStatus> getChildDeviceStatus();
+		virtual void resetDeviceDataStream(SessionID session, Timer sync, Path inputRoot, Bool eventMode);
+		virtual void closeDeviceDataStream();
+		virtual RawDataTable getDeviceNewData();
+		virtual void useBusTransmitter(Interface<IBusRawDataTransmitter> transmitter);
+		virtual OptionalDouble getBufferFilesLatestTime(SessionID session);
+		virtual void clearBufferFiles(SessionID session, Double freeTime);
+		virtual void pickEvent(SessionID srcSession, PickConfig pick, Interface<IStandaloneTaskCallback> callback);
+	};
+	typedef Interface<IDevicePluginV201>(*GetDevicePluginV201)();
+
+	class SPADAS_API IBusPluginV200
+	{
+	public:
+		virtual ~IBusPluginV200() {};
+		virtual Array<BusDeviceInfo> getBusDeviceList();
+		virtual Bool openBusDevice(Array<BusDeviceConfig> configs, Timer sync);
+		virtual void closeBusDevice();
+		virtual Bool receiveBusMessage(BusRawData& rxData);
+		virtual Bool transmitBusMessage(BusRawData txData);
+		virtual void setBusExtraConfig(String extra);
+		virtual Array<BusChannelPayload> getBusPayload();
+	};
+	typedef Interface<IBusPluginV200>(*GetBusPluginV200)();
+
+	class SPADAS_API IVideoPluginV401
+	{
+	public:
+		virtual ~IVideoPluginV401() {};
+		virtual Array<VideoDeviceInfo> getVideoDeviceList();
+		virtual Bool openVideoDevice(Array<VideoDeviceConfig> configs, Timer sync);
+		virtual void closeVideoDevice();
+		virtual Bool queryVideoFrame(VideoRawData& frame);
+		virtual void setVideoExtraConfig(String extra);
+		virtual RawDataTable getVideoDeviceNewData(SessionID session);
+		virtual void useVideoPreviewExpress(Interface<IVideoPreviewExpress> previewExpress);
+		virtual Array<String> getExclusiveKeywords();
+	};
+	typedef Interface<IVideoPluginV401>(*GetVideoPluginV401)();
+
+	class SPADAS_API IProcessorPluginV601
+	{
+	public:
+		virtual ~IProcessorPluginV601() {};
+		virtual Bool isDataStreamModeSupported();
+		virtual Bool isUsingSetProcessorConfigX();
+		virtual Bool isProcessorOnlineOnly();
+		virtual Bool isProcessorOfflineOnly();
+		virtual void setProcessorConfig(String config);
+		virtual void setProcessorConfigX(String config, Bool onlineMode, Bool recordMode, Map<SessionID, Path> inputRoots);
+		virtual void disableProcessor();
+		virtual void processData(InputTables inputs, SampleBufferTable sampleBuffers, OutputTables outputs);
+		virtual void useBusTransmitter(Interface<IBusRawDataTransmitter> transmitter);
+		virtual void updateStartTimeLocal(SessionID session, ULong posixTime, Double timeRatio);
+		virtual void updateStartTimeUTC(SessionID session, ULong posixTime, Double timeRatio);
+		virtual Bool isStandaloneTaskModeSupported();
+		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
+	};
+	typedef Interface<IProcessorPluginV601>(*GetProcessorPluginV601)();
+
+	class SPADAS_API IFilePluginV102
+	{
+	public:
+		virtual ~IFilePluginV102() {};
+		virtual Double getFilesDuration(String readerName, Path inputRoot, Array<Path> subInputRoots, Array<Path> generationRoots, FileIOBasicInfo basicInfo);
+		virtual Bool openReadFiles(String readerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Double timeOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo);
+		virtual Bool readFilesData(String readerName, InputTables inputs, Double targetTime, Flag shouldEnd);
+		virtual void closeReadFiles(String readerName);
+		virtual Bool openWriteFiles(String writerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo);
+		virtual void writeFilesData(String writerName, InputTables inputs, Array<BusRawData> busMessages, Flag shouldEnd);
+		virtual void closeWriteFiles(String writerName);
+		virtual Bool hasDataFiles(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo);
+		virtual void pickSession(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
+		virtual void setFileExtraConfig(String extra);
+		virtual void updateStartTimeLocal(ULong posixTime, Double timeRatio);
+		virtual void updateStartTimeUTC(ULong posixTime, Double timeRatio);
+	};
+	typedef Interface<IFilePluginV102>(*GetFilePluginV102)();
+
 	// 插件API //////////////////////////////////////////////////////////////
 
 	/// 一般原生插件API 1.1
@@ -5470,11 +5995,11 @@ namespace spadas
 	/// 获取插件通用接口，函数名应为get_plugin
 	typedef Interface<IPluginV101>(*GetPluginV101)();
 
-	/// 通用设备插件API 2.1
-	class SPADAS_API IDevicePluginV201
+	/// 通用设备插件API 2.2
+	class SPADAS_API IDevicePluginV202
 	{
 	public:
-		virtual ~IDevicePluginV201() {};
+		virtual ~IDevicePluginV202() {};
 
 		/// @brief 配置设备，在函数内部根据配置实现连接、断开、或重连（仅在非session时段被调用）
 		/// @param config 配置信息，应包含是否连接设备的配置
@@ -5492,57 +6017,32 @@ namespace spadas
 		/// @returns 返回各子设备的连接状态，数组长度即子设备数量
 		virtual Array<GeneralDeviceStatus> getChildDeviceStatus();
 
-		/// @brief 重置设备输出数据流（在开始session时被调用）
-		/// @param session 当前session ID
-		/// @param sync 当前session的同步计时器
-		/// @param inputRoot 当前session的input文件夹路径（若不采集则为无效对象），用于采集设备自定义数据
-		/// @param eventMode FALSE为连续采集模式，TRUE为事件采集模式（若不支持不写文件即可）
-		virtual void resetDeviceDataStream(SessionID session, Timer sync, Path inputRoot, Bool eventMode);
-
-		/// 关闭设备输出数据流（在结束session时被调用）
-		virtual void closeDeviceDataStream();
-
 		/// @brief 获取设备新数据
-		/// @returns 返回原始数据表，存储新获取的数据
-		virtual RawDataTable getDeviceNewData();
+		/// @returns 返回新获取的数据
+		virtual Array<GeneralDeviceData> getDeviceNewData();
 
 		/// @brief [可选] 设置使用指定的总线报文发送器
 		/// @param transmitter 总线报文发送器接口
-		virtual void useBusTransmitter(Interface<IBusRawDataTransmitter> transmitter);
-
-		/// @brief [可选] 获取用于事件采集模式的缓存文件已存储的数据中最大时间戳
-		/// @returns 已存储数据中的最大时间戳，单位秒，若不支持则返回无效对象
-		virtual OptionalDouble getBufferFilesLatestTime(SessionID session);
-
-		/// @brief [可选] 清除用于事件采集模式的缓存文件
-		/// @param session Session ID，可不为当前采集中的session
-		/// @param freeTime 整体小于此时间的缓存文件可清除，单位秒，DINF表示整个session的缓存文件都可清除
-		virtual void clearBufferFiles(SessionID session, Double freeTime);
-
-		/// @brief [可选] 在事件采集模式下截取设备自定义数据（边采边截取）
-		/// @param srcSession 源session ID，可不为当前采集中的session
-		/// @param pick 截取任务参数
-		/// @param callback 任务的反馈接口，主要用于通知任务进度
-		virtual void pickEvent(SessionID srcSession, PickConfig pick, Interface<IStandaloneTaskCallback> callback);
+		virtual void useBusTransmitter(Interface<IBusMessageTransmitter> transmitter);
 	};
 
-	/// 获取通用设备插件接口，函数名应为get_device_plugin_v201
-	typedef Interface<IDevicePluginV201>(*GetDevicePluginV201)();
+	/// 获取通用设备插件接口，函数名应为get_device_plugin_v202
+	typedef Interface<IDevicePluginV202>(*GetDevicePluginV202)();
 
-	/// 总线设备插件API 2.0
-	class SPADAS_API IBusPluginV200
+	/// 总线设备插件API 2.1
+	class SPADAS_API IBusPluginV201
 	{
 	public:
-		virtual ~IBusPluginV200() {};
+		virtual ~IBusPluginV201() {};
 
 		/// @brief 获取总线设备列表
 		/// @returns 返回总线设备列表
-		virtual Array<BusDeviceInfo> getBusDeviceList();
+		virtual Array<BusDeviceInfoX> getBusDeviceList();
 
 		/// @brief 打开总线设备（在开始session时被调用）
 		/// @param configs 希望打开的总线设备通道列表及相关配置
 		/// @param sync 当前session的同步计时器
-		virtual Bool openBusDevice(Array<BusDeviceConfig> configs, Timer sync);
+		virtual Bool openBusDevice(Array<BusDeviceConfig> configs);
 
 		/// 关闭总线设备（在结束session时被调用）
 		virtual void closeBusDevice();
@@ -5550,14 +6050,25 @@ namespace spadas
 		/// @brief 获取一帧数据
 		/// @param rxData 输出一帧数据（若有）
 		/// @returns 返回是否成功获取一帧数据
-		virtual Bool receiveBusMessage(BusRawData& rxData);
+		virtual Bool receiveBusMessage(BusDeviceData& rxData);
 
-		/// @brief [可选] 传送一帧数据
-		/// @param txData 希望传送的数据
-		/// @returns 返回是否成功传送一帧数据
-		virtual Bool transmitBusMessage(BusRawData txData);
+		/// @brief [可选] 立即发送一帧数据
+		/// @param channel 总线通道，1~16
+		/// @param id 该通道内的报文ID
+		/// @param binary 报文数据
+		/// @returns 返回是否成功发送一帧数据
+		virtual Bool transmitBusMessageNow(UInt channel, UInt id, Binary binary);
 
-		/// @brief [可选] 对总线设备进行额外设置（在open_bus_device前被调用）
+		/// @brief [可选] 预约发送一帧数据
+		/// @param channel 总线通道，1~16
+		/// @param id 该通道内的报文ID
+		/// @param binary 报文数据
+		/// @param serverPosixMS 预约发送的授时服务器Posix时间的毫秒部分
+		/// @param serverPosixNS 预约发送的授时服务器Posix时间的纳秒部分
+		/// @returns 返回是否成功预约发送一帧数据
+		virtual Bool transmitBusMessageScheduled(UInt channel, UInt id, Binary binary, ULong serverPosixMS, UInt serverPosixNS);
+
+		/// @brief [可选] 对总线设备进行额外设置（在openBusDevice前被调用）
 		/// @param extra 配置信息
 		virtual void setBusExtraConfig(String extra);
 
@@ -5566,23 +6077,23 @@ namespace spadas
 		virtual Array<BusChannelPayload> getBusPayload();
 	};
 
-	/// 获取总线设备插件接口，函数名应为get_bus_plugin_v200
-	typedef Interface<IBusPluginV200>(*GetBusPluginV200)();
+	/// 获取总线设备插件接口，函数名应为get_bus_plugin_v201
+	typedef Interface<IBusPluginV201>(*GetBusPluginV201)();
 
-	/// 视频设备插件API 4.1
-	class SPADAS_API IVideoPluginV401
+	/// 视频设备插件API 4.2
+	class SPADAS_API IVideoPluginV402
 	{
 	public:
-		virtual ~IVideoPluginV401() {};
+		virtual ~IVideoPluginV402() {};
 
 		/// @brief 获取视频设备列表
 		/// @returns 视频设备列表
-		virtual Array<VideoDeviceInfo> getVideoDeviceList();
+		virtual Array<VideoDeviceInfoX> getVideoDeviceList();
 
 		/// @brief 打开视频设备（在开始session时被调用）
 		/// @param configs 希望打开的视频设备通道列表及相关配置
 		/// @param sync 当前session的同步计时器
-		virtual Bool openVideoDevice(Array<VideoDeviceConfig> configs, Timer sync);
+		virtual Bool openVideoDevice(Array<VideoDeviceConfig> configs);
 
 		/// 关闭总线设备（在结束session时被调用）
 		virtual void closeVideoDevice();
@@ -5590,42 +6101,55 @@ namespace spadas
 		/// @brief 获取一帧数据
 		/// @param frame 输出一帧数据（若有）
 		/// @returns 返回是否成功输出一帧数据
-		virtual Bool queryVideoFrame(VideoRawData& frame);
+		virtual Bool queryVideoFrame(VideoDeviceData& frame);
+
+		/// @brief [可选] 立即发送一帧数据
+		/// @param channel 视频通道，0~23，对应A~X
+		/// @param codec 视频帧编码方式
+		/// @param size 视频帧大小，像素单位
+		/// @param data 视频帧数据
+		/// @returns 返回是否成功发送一帧数据
+		virtual Bool transmitVideoFrameNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data);
+
+		/// @brief [可选] 预约发送一帧数据
+		/// @param channel 视频通道，0~23，对应A~X
+		/// @param codec 视频帧编码方式
+		/// @param size 视频帧大小，像素单位
+		/// @param data 视频帧数据
+		/// @param serverPosix 预约发送的授时服务器Posix时间，单位毫秒
+		/// @returns 返回是否成功预约发送一帧数据
+		virtual Bool transmitVideoFrameScheduled(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosix);
 
 		/// @brief [可选] 对视频设备进行额外设置（在open_video_device前被调用）
 		/// @param extra 配置信息
 		virtual void setVideoExtraConfig(String extra);
 
 		/// @brief [可选] 获取视频设备新原始数据
-		/// @param session 当前session ID，生成 spadas::GeneralRawData 时需要
-		/// @returns 返回原始数据表，存储新获取的数据
-		virtual RawDataTable getVideoDeviceNewData(SessionID session);
+		/// @returns 返回新获取的数据
+		virtual Array<GeneralDeviceData> getVideoDeviceNewData();
 
 		/// @brief [可选] 设置使用指定的视频预览图像的快速输出接口
 		/// @param previewExpress 视频预览图像的快速输出接口
-		virtual void useVideoPreviewExpress(Interface<IVideoPreviewExpress> previewExpress);
+		virtual void useVideoPreviewExpress(Interface<IVideoDeviceExpress> previewExpress);
 
 		/// @brief [可选] 获取视频设备独占关键字，其他插件匹配此关键字的视频设备将被禁用
 		/// @returns 返回视频设备独占关键字
 		virtual Array<String> getExclusiveKeywords();
 	};
 
-	/// 获取视频设备插件接口，函数名应为get_video_plugin_v401
-	typedef Interface<IVideoPluginV401>(*GetVideoPluginV401)();
+	/// 获取视频设备插件接口，函数名应为get_video_plugin_v402
+	typedef Interface<IVideoPluginV402>(*GetVideoPluginV402)();
 
-	/// 数据处理插件API 6.1
-	class SPADAS_API IProcessorPluginV601
+	/// 数据处理插件API 6.2
+	class SPADAS_API IProcessorPluginV602
 	{
 	public:
-		virtual ~IProcessorPluginV601() {};
+		virtual ~IProcessorPluginV602() {};
 
 		// 数据流模式
 
 		/// 是否支持数据流模式
 		virtual Bool isDataStreamModeSupported();
-
-		/// 配置数据处理是否使用扩展版接口setProcessorConfigX
-		virtual Bool isUsingSetProcessorConfigX();
 
 		/// [可选] 是否为在线限定的数据处理（默认为FALSE）
 		virtual Bool isProcessorOnlineOnly();
@@ -5633,16 +6157,13 @@ namespace spadas
 		/// [可选] 是否为离线限定的数据处理（默认为FALSE）
 		virtual Bool isProcessorOfflineOnly();
 
-		/// @brief 配置数据处理（在开始session时被调用）
-		/// @param config 配置信息，应包含是否启用功能的配置
-		virtual void setProcessorConfig(String config);
-
 		/// @brief 配置数据处理及杂项数据路径表（在开始session时被调用）
 		/// @param config 配置信息，应包含是否启用功能的配置
 		/// @param onlineMode 是否为在线模式，否则为离线模式或回放模式
 		/// @param recordMode 是否记录至文件（在线采集或离线生成）
 		/// @param inputRoots 各session对应的input文件夹路径，可用于读取设备自定义数据
-		virtual void setProcessorConfigX(String config, Bool onlineMode, Bool recordMode, Map<SessionID, Path> inputRoots);
+		/// @param timestampProvider 时间戳生成接口
+		virtual void setProcessorConfig(String config, Bool onlineMode, Bool recordMode, Map<SessionID, Path> inputRoots, Interface<ITimestampProvider> timestampProvider);
 
 		/// 函数名disable_processor: 禁用数据处理功能（在结束session时被调用）
 		virtual void disableProcessor();
@@ -5651,23 +6172,15 @@ namespace spadas
 		/// @param inputs 输入数据表
 		/// @param sampleBuffers 样本缓存表
 		/// @param outputs 输出数据表
-		virtual void processData(InputTables inputs, SampleBufferTable sampleBuffers, OutputTables outputs);
+		virtual void processData(InputTablesX inputs, WetSampleBufferTable sampleBuffers, OutputTablesX outputs);
 
-		/// @brief [可选] 设置使用指定的总线报文发送器
-		/// @param transmitter 总线报文发送器接口
-		virtual void useBusTransmitter(Interface<IBusRawDataTransmitter> transmitter);
+		/// @brief [可选] 设置使用指定的总线报文发送接口
+		/// @param transmitter 总线报文发送接口
+		virtual void useBusTransmitter(Interface<IBusMessageTransmitter> busTransmitter);
 
-		/// @brief [可选] 更新指定session的本地开始时间(posix)用于NTP同步
-		/// @param session 当前session ID
-		/// @param posixTime 该session的本地开始时间(posix)
-		/// @param timeRatio 相对时间(时间偏置)向本地时间的转换比例
-		virtual void updateStartTimeLocal(SessionID session, ULong posixTime, Double timeRatio);
-
-		/// @brief [可选] 更新指定session的UTC开始时间(posix)用于GNSS同步
-		/// @param session 当前session ID
-		/// @param posixTime 该session的UTC开始时间(posix)
-		/// @param timeRatio 相对时间(时间偏置)向UTC时间的转换比例
-		virtual void updateStartTimeUTC(SessionID session, ULong posixTime, Double timeRatio);
+		/// @brief [可选] 设置使用指定的视频帧回注接口
+		/// @param transmitter 视频帧回注接口
+		virtual void useVideoTransmitter(Interface<IVideoFrameTransmitter> videoTransmitter);
 
 		// 独立任务模式
 
@@ -5682,14 +6195,14 @@ namespace spadas
 		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
 	};
 
-	/// 获取数据处理插件接口，函数名应为get_processor_plugin_v601
-	typedef Interface<IProcessorPluginV601>(*GetProcessorPluginV601)();
+	/// 获取数据处理插件接口，函数名应为get_processor_plugin_v602
+	typedef Interface<IProcessorPluginV602>(*GetProcessorPluginV602)();
 
-	/// 文件读写插件API 1.2
-	class SPADAS_API IFilePluginV102
+	/// 文件读写插件API 1.3
+	class SPADAS_API IFilePluginV103
 	{
 	public:
-		virtual ~IFilePluginV102() {};
+		virtual ~IFilePluginV103() {};
 
 		/// @brief [可选] 获取适用于指定读取器的所有文件的最大时长
 		/// @param readerName 读取器名称
@@ -5705,19 +6218,19 @@ namespace spadas
 		/// @param inputRoot Session的input文件夹路径
 		/// @param subInputRoots Session的input子文件夹路径
 		/// @param generationRoot Generation的文件夹路径
-		/// @param timeOffset 跳转至该时间戳开始读取
+		/// @param jumpOffset 跳转至该时间偏置开始读取
 		/// @param basicInfo 文件读写基本信息
 		/// @param extInfo 输出文件扩展信息
 		/// @returns 返回是否成功初始化，无数据文件的情况也返回FALSE
-		virtual Bool openReadFiles(String readerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Double timeOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo);
+		virtual Bool openReadFiles(String readerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Double jumpOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo);
 
 		/// @brief [可选] 读取文件数据
 		/// @param readerName 读取器名称
 		/// @param inputs 输入数据表，读取的数据写入该表（其中视频首帧图像的所有依赖帧时间戳为0）
-		/// @param targetTime 读取的目标时间戳，单位秒
+		/// @param targetOffset 读取的目标时间偏置，单位秒
 		/// @param shouldEnd 是否准备关闭
 		/// @returns 后续是否还有数据，若所有文件已读取至末尾则返回FALSE
-		virtual Bool readFilesData(String readerName, InputTables inputs, Double targetTime, Flag shouldEnd);
+		virtual Bool readFilesData(String readerName, InputTablesX inputs, Double targetOffset, Flag shouldEnd);
 
 		/// @brief [可选] 关闭读取文件
 		/// @param readerName 读取器名称
@@ -5738,7 +6251,7 @@ namespace spadas
 		/// @param inputs 输入数据表，从表中获取数据写入文件（其中视频首帧图像的所有依赖帧时间戳为0）
 		/// @param busMessages 按时间戳排序的所有通道总线数据
 		/// @param shouldEnd 是否准备关闭
-		virtual void writeFilesData(String writerName, InputTables inputs, Array<BusRawData> busMessages, Flag shouldEnd);
+		virtual void writeFilesData(String writerName, InputTablesX inputs, Array<WetBusRawData> busMessages, Flag shouldEnd);
 
 		/// @brief [可选] 关闭写入文件
 		/// @param writerName 写入器名称
@@ -5767,20 +6280,10 @@ namespace spadas
 		/// @brief [可选] 对文件读写进行额外设置（在各openXXXFiles函数前被调用）
 		/// @param extra 配置信息
 		virtual void setFileExtraConfig(String extra);
-
-		/// @brief [可选] 更新本地开始时间(posix)用于写入NTP同步时间戳
-		/// @param posixTime 当前session的本地开始时间(posix)
-		/// @param timeRatio 相对时间(时间偏置)向本地时间的转换比例
-		virtual void updateStartTimeLocal(ULong posixTime, Double timeRatio);
-
-		/// @brief [可选] 更新UTC开始时间(posix)用于写入GNSS同步时间戳
-		/// @param posixTime 当前session的UTC开始时间(posix)
-		/// @param timeRatio 相对时间(时间偏置)向UTC时间的转换比例
-		virtual void updateStartTimeUTC(ULong posixTime, Double timeRatio);
 	};
 
-	/// 获取文件读写插件接口，函数名应为get_file_plugin_v102
-	typedef Interface<IFilePluginV102>(*GetFilePluginV102)();
+	/// 获取文件读写插件接口，函数名应为get_file_plugin_v103
+	typedef Interface<IFilePluginV102>(*GetFilePluginV103)();
 }
 
 #endif
