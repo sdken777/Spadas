@@ -4252,6 +4252,26 @@ namespace spadas
 	/// 通用原始数据表，key为原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
 	typedef Dictionary<Array<SessionGeneralRawData> > SessionGeneralRawDataTable;
 
+	/// 通用原始数据发送接口
+	class SPADAS_API IGeneralDataTransmitter
+	{
+	public:
+		virtual ~IGeneralDataTransmitter() {};
+
+		/// @brief 立即发送数据
+		/// @param protocol 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
+		/// @param vector 数值数组数据
+		/// @param binary 二进制数据
+		virtual void transmitNow(String protocol, Array<Double> vector, Binary binary);
+
+		/// @brief 按时间偏置预约发送数据
+		/// @param protocol 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
+		/// @param vector 数值数组数据
+		/// @param binary 二进制数据
+		/// @param offset 时间偏置，单位秒 (必须大于该协议的上一帧预约发送数据的时间戳)
+		virtual void transmitAtTimeOffset(String protocol, Array<Double> vector, Binary binary, Double offset);
+	};
+
 	/// 通用样本元素
 	struct GeneralElement
 	{
@@ -5615,9 +5635,16 @@ namespace spadas
 		/// @returns 返回新获取的数据
 		virtual Array<GeneralDeviceData> getDeviceNewData();
 
-		/// @brief [可选] 设置使用指定的总线报文发送器
-		/// @param transmitter 总线报文发送器接口
-		virtual void useBusTransmitter(Interface<IBusMessageTransmitter> transmitter);
+		/// @brief [可选] 获取可发送的数据协议列表
+		/// @return 可发送的数据协议列表
+		virtual Array<String> getTransmittableProtocols();
+
+		/// @brief [可选] 立即发送一帧数据
+		/// @param protocol 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
+		/// @param vector 数值数组数据
+		/// @param binary 二进制数据
+		/// @returns 返回是否成功发送一帧数据，若协议未在可发送的协议列表内则返回FALSE
+		virtual Bool transmitGeneralDataNow(String protocol, Array<Double> vector, Binary binary);
 	};
 
 	/// 获取通用设备插件接口，函数名应为get_device_plugin_v202
@@ -5768,12 +5795,16 @@ namespace spadas
 		/// @param outputs 输出数据表
 		virtual void processData(InputTablesX inputs, SessionSampleBufferTable sampleBuffers, OutputTablesX outputs);
 
+		/// @brief [可选] 设置使用指定的通用原始数据发送接口
+		/// @param generalTransmitter 通用原始数据发送接口
+		virtual void useGeneralTransmitter(Interface<IGeneralDataTransmitter> generalTransmitter);
+
 		/// @brief [可选] 设置使用指定的总线报文发送接口
-		/// @param transmitter 总线报文发送接口
+		/// @param busTransmitter 总线报文发送接口
 		virtual void useBusTransmitter(Interface<IBusMessageTransmitter> busTransmitter);
 
 		/// @brief [可选] 设置使用指定的视频帧回注接口
-		/// @param transmitter 视频帧回注接口
+		/// @param videoTransmitter 视频帧回注接口
 		virtual void useVideoTransmitter(Interface<IVideoFrameTransmitter> videoTransmitter);
 
 		// 独立任务模式
