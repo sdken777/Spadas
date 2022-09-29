@@ -251,6 +251,36 @@ namespace spadas
 	};
 
 	// 插件相关实用功能（旧） //////////////////////////////////////////////////////////////
+	enum class SampleState
+	{
+		None, 
+		First, 
+		Normal, 
+	};
+
+	class SPADAS_API BusDataSorter : public Object<class BusDataSorterVars>
+	{
+	public:
+		static const String TypeName;
+		BusDataSorter();
+		struct SortedObject
+		{
+			Bool signal;
+			Int id;
+			Int index;
+		};
+		Int addSignals(Array<Signal> signals);
+		Int addBusMessages(Array<BusMessage> messages);
+		Bool process(Array<SortedObject>& sorted);
+		Bool getSignal(SortedObject obj, Signal& signal);
+		Bool getMessage(SortedObject obj, BusMessage& message);
+		void reset();
+
+	private:
+		Bool isNull() { return FALSE; }
+		Bool isValid() { return FALSE; }
+	};
+	
 	class SPADAS_API IGeneralRawDataOutput
 	{
 	public:

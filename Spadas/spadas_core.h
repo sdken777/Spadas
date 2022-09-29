@@ -4144,6 +4144,10 @@ namespace spadas
 		ShortTimestamp() : offset(0)
 		{}
 
+		/// 基于Session ID和时间偏置初始化
+		ShortTimestamp(SessionID session, Double offset) : session(session), offset(offset)
+		{}
+
 		/// 转为字符串显示，格式为"Session年月日-时-分-秒-偏置"，如20190101-12-30-45-123.456789
 		SPADAS_API String toString();
 	};
@@ -4160,8 +4164,11 @@ namespace spadas
 		/// 时间偏置来源
 		TimeOffsetSync offsetSync;
 
-		/// 到达时CPU计数
+		/// 到达时CPU计数，0表示无效
 		ULong cpuTick;
+
+		/// 到达时主机Posix时间，单位毫秒，0表示无效
+		ULong hostPosix;
 
 		/// 客机Posix时间，单位毫秒，0表示无效
 		ULong guestPosix;
@@ -4173,7 +4180,7 @@ namespace spadas
 		ULong gnssPosix;
 
 		/// 默认构造函数
-		FullTimestamp() : offset(0), offsetSync(TimeOffsetSync::None), cpuTick(0), guestPosix(0), serverPosix(0), gnssPosix(0)
+		FullTimestamp() : offset(0), offsetSync(TimeOffsetSync::None), cpuTick(0), hostPosix(0), guestPosix(0), serverPosix(0), gnssPosix(0)
 		{}
 
 		/// 转为简单时间戳
@@ -4368,14 +4375,17 @@ namespace spadas
 		/// 按到达时CPU计数搜索
 		CPUTick = 0,
 
+		/// 按到达时主机Posix时间搜索
+		HostPosix = 1,
+
 		/// 按客机Posix时间搜索
-		GuestPosix = 1,
+		GuestPosix = 2,
 
 		/// 按授时服务器Posix时间搜索
-		ServerPosix = 2,
+		ServerPosix = 3,
 
 		/// 按卫星Posix时间搜索
-		GnssPosix = 3,
+		GnssPosix = 4,
 	};
 
 	/// 通用样本缓存
@@ -5274,11 +5284,11 @@ namespace spadas
 	public:
 		virtual ~ITimestampProvider() {}
 
-		/// @brief 创建时间戳（计算时间偏置的优先级从高至低为：卫星Posix时间、授时服务器Posix时间、主机Posix时间、到达时CPU计数）
+		/// @brief 创建时间戳（计算时间偏置的优先级从高至低为：卫星Posix时间、授时服务器Posix时间、到达时CPU计数、到达时主机Posix时间）
 		/// @param outputTimestamp 输出的时间戳
 		/// @param session 时间戳所在session
 		/// @param cpuTick 到达时CPU计数，0表示无效
-		/// @param hostPosix 主机Posix时间，单位毫秒，0表示无效
+		/// @param hostPosix 到达时主机Posix时间，单位毫秒，0表示无效
 		/// @param guestServerSync 客机是否已与授时服务器同步
 		/// @param guestPosix 客机Posix时间，单位毫秒，0表示无效
 		/// @param gnssPosix 卫星Posix时间，单位毫秒，0表示无效
@@ -5293,7 +5303,7 @@ namespace spadas
 		/// @return 输出的时间戳
 		virtual FullTimestamp resyncTimestamp(FullTimestamp srcTimestamp, Bool guestServerSync = FALSE, ULong guestPosix = 0, ULong gnssPosix = 0);
 
-		/// @brief 根据基准时间戳的时间偏置反算CPU计数、授时服务器Posix时间、卫星Posix时间等
+		/// @brief 根据基准时间戳的时间偏置反算CPU计数、主机Posix时间、客机及授时服务器Posix时间、卫星Posix时间等
 		/// @param srcTimestamp 基准时间戳
 		/// @return 输出的时间戳
 		virtual FullTimestamp fillTimestamp(ShortTimestamp srcTimestamp);
@@ -5411,60 +5421,6 @@ namespace spadas
 		/// @param protocol 原始数据协议
 		/// @param data 通用设备原始数据
 		virtual void outputGeneralDeviceData(String protocol, GeneralDeviceData data);
-	};
-
-	/// 样本状态
-	enum class SampleState
-	{
-		/// 未生成任何样本
-		None, 
-
-		/// 已生成一个样本，不使用
-		First, 
-
-		/// 已生成至少两个样本，使用中
-		Normal, 
-	};
-
-	/// 总线数据时序整理
-	class SPADAS_API BusDataSorter : public Object<class BusDataSorterVars>
-	{
-	public:
-		/// 类名称
-		static const String TypeName;
-
-		/// 创建总线数据时序整理对象
-		BusDataSorter();
-
-		/// 排序后对象
-		struct SortedObject
-		{
-			Bool signal;
-			Int id;
-			Int index;
-		};
-
-		/// 添加信号，返回识别号(id)
-		Int addSignals(Array<Signal> signals);
-
-		/// 添加总线报文，返回识别号(id)
-		Int addBusMessages(Array<BusMessage> messages);
-
-		/// 处理已添加对象
-		Bool process(Array<SortedObject>& sorted);
-
-		/// 获取信号
-		Bool getSignal(SortedObject obj, Signal& signal);
-
-		/// 获取总线报文
-		Bool getMessage(SortedObject obj, BusMessage& message);
-
-		/// 重置
-		void reset();
-
-	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
 	};
 
 	/// 时间戳搜索接口

@@ -84,7 +84,10 @@ namespace spadas
 		TimerVars(ULong startCPUTick) : startCPUTick(startCPUTick)
 		{}
 	};
+}
 
+namespace timer_interval
+{
 	ULong cpuTicksPerSecondsConstant = 0;
 	Double millisecondCoefficient = 0;
 

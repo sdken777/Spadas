@@ -162,9 +162,19 @@ String GlobalTimestamp::toString()
 	return base.dateString(String()) + "-" + base.timeString("-") + "-" + String(offset, 6);
 }
 
-String Timestamp::toString()
+String ShortTimestamp::toString()
 {
 	return session.dateString(String()) + "-" + session.timeString("-") + "-" + String(offset, 6);
+}
+
+String FullTimestamp::toString()
+{
+	return session.dateString(String()) + "-" + session.timeString("-") + "-" + String(offset, 6);
+}
+
+ShortTimestamp FullTimestamp::toShort()
+{
+	return ShortTimestamp(session, offset);
 }
 
 String GeneralElement::toString()
