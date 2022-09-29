@@ -177,6 +177,16 @@ namespace spadas
 		{}
 	};
 
+	struct VideoDeviceConfig
+	{
+		VideoDeviceID id;
+		UInt mapChannel;
+		VideoInputMode inputMode;
+		UInt frameRate;
+		VideoDeviceConfig() : mapChannel(0), frameRate(0)
+		{}
+	};
+
 	struct VideoRawDataTable
 	{
 		SessionID base;

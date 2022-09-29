@@ -4648,12 +4648,13 @@ namespace spadas
 		/// @param offset 时间偏置，单位秒 (必须大于该通道上一帧预约发送报文的时间戳)
 		virtual void transmitAtTimeOffset(UInt channel, UInt id, Binary binary, Double offset);
 
-		/// @brief 指定按授时服务器Posix时间预约发送报文
+		/// @brief 指定按授时服务器Posix时间预约发送报文 (必须大于该通道上一帧预约发送报文的时间)
 		/// @param channel 总线通道，1~16
 		/// @param id 该通道内的报文ID
 		/// @param binary 报文数据
-		/// @param serverPosix 授时服务器Posix时间，单位毫秒 (必须大于该通道上一帧预约发送报文的时间)
-		virtual void transmitAtServerPosix(UInt channel, UInt id, Binary binary, ULong serverPosix);
+		/// @param serverPosixMS 授时服务器Posix时间的毫秒部分
+		/// @param serverPosixNS 授时服务器Posix时间的纳秒部分
+		virtual void transmitAtServerPosix(UInt channel, UInt id, Binary binary, ULong serverPosixMS, UInt serverPosixNS);
 	};
 
 	/// 总线设备ID
@@ -4922,7 +4923,7 @@ namespace spadas
 	};
 
 	/// 视频设备配置
-	struct VideoDeviceConfig
+	struct VideoDeviceConfigX
 	{
 		/// 视频设备ID
 		VideoDeviceID id;
@@ -4933,11 +4934,14 @@ namespace spadas
 		/// 该通道的视频数据流输入模式
 		VideoInputMode inputMode;
 
-		/// 参考帧率，10~60
+		/// 该通道的视频数据流回注模式
+		VideoOutputMode outputMode;
+
+		/// 输入参考帧率，10~120Hz
 		UInt frameRate;
 
 		/// 默认构造函数
-		VideoDeviceConfig() : mapChannel(0), frameRate(0)
+		VideoDeviceConfigX() : mapChannel(0), frameRate(0)
 		{}
 	};
 
@@ -5714,7 +5718,7 @@ namespace spadas
 		/// @brief 打开视频设备（在开始session时被调用）
 		/// @param configs 希望打开的视频设备通道列表及相关配置
 		/// @param sync 当前session的同步计时器
-		virtual Bool openVideoDevice(Array<VideoDeviceConfig> configs);
+		virtual Bool openVideoDevice(Array<VideoDeviceConfigX> configs);
 
 		/// 关闭总线设备（在结束session时被调用）
 		virtual void closeVideoDevice();
