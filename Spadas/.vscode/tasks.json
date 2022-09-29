@@ -122,6 +122,7 @@
                 "./spadas_core.h",
                 "./spadas_define.h",
                 "./spadas_template.h",
+                "./spadas_deprecated.h",
                 "../include/",
             ],
             "dependsOrder": "sequence",

@@ -4,6 +4,7 @@
 
 #include "spadas_define.h"
 #include "spadas_core.h"
+#include "spadas_deprecated.h"
 #include "spadas_template.h"
 
 #endif
