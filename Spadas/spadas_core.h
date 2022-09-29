@@ -4118,24 +4118,38 @@ namespace spadas
 	/// Session ID
 	typedef Time SessionID;
 
-	/// 时间偏置来源
-	enum class TimeOffsetSource
+	/// 时间偏置同步状态
+	enum class TimeOffsetSync
 	{
-		/// 未知来源
-		Unknown = 0,
+		/// 未同步或同步源未知
+		None = 0,
 
-		/// 根据到达时CPU计数得到
-		CPUTick = 1,
+		/// 已与授时服务器时间同步
+		Server = 1,
 
-		/// 与授时服务器时间同步后得到
-		SyncServer = 2,
-
-		/// 与卫星时间同步后得到
-		SyncGnss = 3,
+		/// 已与卫星时间同步
+		Gnss = 2,
 	};
 
-	/// 时间戳
-	struct Timestamp
+	/// 简单时间戳
+	struct ShortTimestamp
+	{
+		/// Session ID
+		SessionID session;
+
+		/// 时间偏置，单位秒，大于零有效
+		Double offset;
+
+		/// 默认构造函数
+		ShortTimestamp() : offset(0)
+		{}
+
+		/// 转为字符串显示，格式为"Session年月日-时-分-秒-偏置"，如20190101-12-30-45-123.456789
+		SPADAS_API String toString();
+	};
+
+	/// 完整时间戳
+	struct FullTimestamp
 	{
 		/// Session ID
 		SessionID session;
@@ -4144,7 +4158,7 @@ namespace spadas
 		Double offset;
 
 		/// 时间偏置来源
-		TimeOffsetSource offsetSource;
+		TimeOffsetSync offsetSync;
 
 		/// 到达时CPU计数
 		ULong cpuTick;
@@ -4159,33 +4173,36 @@ namespace spadas
 		ULong gnssPosix;
 
 		/// 默认构造函数
-		Timestamp() : offset(0), offsetSource(TimeOffsetSource::Unknown), cpuTick(0), guestPosix(0), serverPosix(0), gnssPosix(0)
+		FullTimestamp() : offset(0), offsetSync(TimeOffsetSync::None), cpuTick(0), guestPosix(0), serverPosix(0), gnssPosix(0)
 		{}
+
+		/// 转为简单时间戳
+		SPADAS_API ShortTimestamp toShort();
 
 		/// 转为字符串显示，格式为"Session年月日-时-分-秒-偏置"，如20190101-12-30-45-123.456789
 		SPADAS_API String toString();
 	};
 
 	/// 信号
-	struct WetSignal
+	struct SessionSignal
 	{
 		/// 时间戳
-		Timestamp timestamp;
+		ShortTimestamp timestamp;
 
 		/// 数值
 		Double value;
 
 		/// 默认构造函数，初始值为0
-		WetSignal() : value(0)
+		SessionSignal() : value(0)
 		{}
 
 		/// 基于时间戳和数值初始化
-		WetSignal(Timestamp timestamp, Double val) : timestamp(timestamp), value(val)
+		SessionSignal(ShortTimestamp timestamp, Double val) : timestamp(timestamp), value(val)
 		{}
 	};
 
 	/// 信号数据表，key为信号ID，格式为"大类:小类:信号名称"。其中总线信号的情况下，大类为协议文件名，如vehicle.dbc；小类为报文本通道ID，如123
-	typedef Dictionary<Array<WetSignal> > WetSignalTable;
+	typedef Dictionary<Array<SessionSignal> > SessionSignalTable;
 
 	/// 通用设备输出原始数据
 	struct GeneralDeviceData
@@ -4212,10 +4229,10 @@ namespace spadas
 	};
 
 	/// 通用原始数据
-	struct WetGeneralRawData
+	struct SessionGeneralRawData
 	{
 		/// 时间戳
-		Timestamp timestamp;
+		ShortTimestamp timestamp;
 
 		/// 数值数组数据
 		Array<Double> vector;
@@ -4224,16 +4241,16 @@ namespace spadas
 		Binary binary;
 
 		/// 默认构造函数
-		WetGeneralRawData()
+		SessionGeneralRawData()
 		{}
 
 		/// 基于时间戳和数据初始化
-		WetGeneralRawData(Timestamp timestamp, Array<Double> vector, Binary binary) : timestamp(timestamp), vector(vector), binary(binary)
+		SessionGeneralRawData(ShortTimestamp timestamp, Array<Double> vector, Binary binary) : timestamp(timestamp), vector(vector), binary(binary)
 		{}
 	};
 
 	/// 通用原始数据表，key为原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
-	typedef Dictionary<Array<WetGeneralRawData> > WetGeneralRawDataTable;
+	typedef Dictionary<Array<SessionGeneralRawData> > SessionGeneralRawDataTable;
 
 	/// 通用样本元素
 	struct GeneralElement
@@ -4279,10 +4296,10 @@ namespace spadas
 	};
 
 	/// 通用样本
-	struct WetGeneralSample
+	struct SessionGeneralSample
 	{
 		/// 时间戳
-		Timestamp timestamp;
+		FullTimestamp timestamp;
 
 		/// 样本数据数组
 		Array<GeneralElement> values;
@@ -4291,20 +4308,20 @@ namespace spadas
 		UInt significantCount;
 
 		/// 默认构造函数
-		WetGeneralSample() : significantCount(0)
+		SessionGeneralSample() : significantCount(0)
 		{}
 
 		/// 基于时间戳和数据初始化
-		WetGeneralSample(Timestamp timestamp, Array<GeneralElement> values) : timestamp(timestamp), values(values), significantCount(0)
+		SessionGeneralSample(FullTimestamp timestamp, Array<GeneralElement> values) : timestamp(timestamp), values(values), significantCount(0)
 		{}
 
 		/// 基于时间戳、数据、关键元素个数初始化
-		WetGeneralSample(Timestamp timestamp, Array<GeneralElement> values, UInt significantCount) : timestamp(timestamp), values(values), significantCount(significantCount)
+		SessionGeneralSample(FullTimestamp timestamp, Array<GeneralElement> values, UInt significantCount) : timestamp(timestamp), values(values), significantCount(significantCount)
 		{}
 	};
 
 	/// 通用样本表，key为样本协议ID，一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始
-	typedef Dictionary<Array<WetGeneralSample> > WetGeneralSampleTable;
+	typedef Dictionary<Array<SessionGeneralSample> > SessionGeneralSampleTable;
 
 	/// 通用样本插值结果
 	enum class SampleInterpolationResult
@@ -4342,14 +4359,14 @@ namespace spadas
 	};
 
 	/// 通用样本缓存
-	class SPADAS_API WetSampleBuffer : public Object<class WetSampleBufferVars>
+	class SPADAS_API SessionSampleBuffer : public Object<class SessionSampleBufferVars>
 	{
 	public:
 		/// 类名称
 		static const String TypeName;
 
 		/// 创建样本缓存
-		WetSampleBuffer();
+		SessionSampleBuffer();
 
 		/// @brief 设置对应的通用样本协议
 		/// @param protocol 通用样本协议ID
@@ -4363,7 +4380,7 @@ namespace spadas
 		/// @brief 添加新样本
 		/// @param sample 新通用样本
 		/// @param maxSize 样本缓存的最大容量，若已满则移除最早样本再添加新样本
-		void addSample(WetGeneralSample sample, UInt maxSize = 100);
+		void addSample(SessionGeneralSample sample, UInt maxSize = 100);
 
 		/// 缓存是否为空
 		Bool isEmpty();
@@ -4377,32 +4394,32 @@ namespace spadas
 		/// @brief 获取最早样本
 		/// @param sampleEarliest 输出最早样本
 		/// @returns 若样本缓存为空则返回FALSE
-		Bool getEarliest(WetGeneralSample& sampleEarliest);
+		Bool getEarliest(SessionGeneralSample& sampleEarliest);
 
 		/// @brief 获取最新样本
 		/// @param sampleEarliest 输出最新样本
 		/// @returns 若样本缓存为空则返回FALSE
-		Bool getLatest(WetGeneralSample& sampleLatest);
+		Bool getLatest(SessionGeneralSample& sampleLatest);
 
 		/// @brief 根据时间偏置寻找最近样本
 		/// @param offset 目标时间偏置
 		/// @param sampleNearest 输出离目标最近样本
 		/// @returns 若样本缓存为空，则返回FALSE
-		Bool getNearest(Double offset, WetGeneralSample& sampleNearest);
+		Bool getNearest(Double offset, SessionGeneralSample& sampleNearest);
 
 		/// @brief 根据时间戳寻找最近样本
 		/// @param mode 搜索模式
 		/// @param time 目标时间戳，不同模式下意义不同，详见 spadas::Timestamp
 		/// @param sampleNearest 输出离目标最近样本
 		/// @returns 若样本缓存为空，则返回FALSE
-		Bool getNearest(SampleSearchMode mode, ULong time, WetGeneralSample& sampleNearest);
+		Bool getNearest(SampleSearchMode mode, ULong time, SessionGeneralSample& sampleNearest);
 
 		/// @brief 根据时间偏置寻找前后两个样本
 		/// @param offset 目标时间偏置
 		/// @param sampleBefore 输出比时间戳早的最近样本
 		/// @param sampleAfter 输出比时间戳晚的最近样本
 		/// @returns 若无则返回FALSE
-		Bool search(Double offset, WetGeneralSample& sampleBefore, WetGeneralSample& sampleAfter);
+		Bool search(Double offset, SessionGeneralSample& sampleBefore, SessionGeneralSample& sampleAfter);
 
 		/// @brief 根据时间戳寻找前后两个样本
 		/// @param mode 搜索模式
@@ -4410,15 +4427,15 @@ namespace spadas
 		/// @param sampleBefore 输出比时间戳早的最近样本
 		/// @param sampleAfter 输出比时间戳晚的最近样本
 		/// @returns 若无则返回FALSE
-		Bool search(SampleSearchMode mode, ULong time, WetGeneralSample& sampleBefore, WetGeneralSample& sampleAfter);
+		Bool search(SampleSearchMode mode, ULong time, SessionGeneralSample& sampleBefore, SessionGeneralSample& sampleAfter);
 
 		/// @brief 根据时间偏置寻找前后两个样本并插值
 		/// @param offset 目标时间偏置
 		/// @param interpolatedSample 输出插值完成的样本
 		/// @param earlyThresh 用于判断缓存范围是否过早的阈值，参考 SampleInterpolationResult::TooEarly
 		/// @details 该模板类型必须实现以下函数：\n
-		/// - Bool fromGeneralSample(WetGeneralSample); \n
-		/// - Bool fromGeneralSample(String protocol, WetGeneralSample); \n
+		/// - Bool fromGeneralSample(SessionGeneralSample); \n
+		/// - Bool fromGeneralSample(String protocol, SessionGeneralSample); \n
 		/// - static Bool supportInterpolation(); \n
 		/// - static Type interpolate(Type& s1, Double w1, Type& s2, Double w2, Timestamp);
 		template <typename Type>
@@ -4430,13 +4447,13 @@ namespace spadas
 	};
 
 	/// 通用样本缓存表，key为样本协议ID，一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始
-	typedef Dictionary<WetSampleBuffer> WetSampleBufferTable;
+	typedef Dictionary<SessionSampleBuffer> SessionSampleBufferTable;
 
 	/// 矩阵样本
-	struct WetMatrixSample
+	struct SessionMatrixSample
 	{
 		/// 时间戳
-		Timestamp timestamp;
+		FullTimestamp timestamp;
 
 		/// 矩阵数据，按行、列的顺序存储，如第0元素为第一行第一列，第1元素为第一行第二列，...
 		Array<Float> matData;
@@ -4448,11 +4465,11 @@ namespace spadas
 		UInt cols;
 
 		/// 默认构造函数
-		WetMatrixSample() : rows(0), cols(0)
+		SessionMatrixSample() : rows(0), cols(0)
 		{}
 
 		/// 基于矩阵尺寸初始化
-		WetMatrixSample(Size2D size)
+		SessionMatrixSample(Size2D size)
 		{
 			matData = Array<Float>(size.dim0 * size.dim1);
 			rows = size.dim0;
@@ -4461,7 +4478,7 @@ namespace spadas
 	};
 
 	/// 矩阵样本表，key为样本协议ID，一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始
-	typedef Dictionary<Array<WetMatrixSample> > WetMatrixSampleTable;
+	typedef Dictionary<Array<SessionMatrixSample> > SessionMatrixSampleTable;
 
 	/// 通用设备状态
 	enum class GeneralDeviceStatus
@@ -4537,13 +4554,16 @@ namespace spadas
 	struct BusDeviceData
 	{
 		/// 到达时CPU计数
-		ULong tick;
+		ULong cpuTick;
+
+		/// 客机时间偏置，单位秒，0表示无效
+		Double bridgeTimeOffset;
 
 		/// 已与授时服务器同步的客机Posix时间的毫秒部分，0表示无效
-		ULong serverPosixMS;
+		ULong bridgeGuestPosixMS;
 
 		/// 已与授时服务器同步的客机Posix时间的纳秒部分
-		UInt serverPosixNS;
+		UInt bridgeGuestPosixNS;
 
 		/// 总线通道，1~16
 		UInt channel;
@@ -4555,15 +4575,15 @@ namespace spadas
 		Binary binary;
 
 		/// 默认构造函数
-		BusDeviceData() : tick(0), serverPosixMS(0), serverPosixNS(0), channel(0), id(0)
+		BusDeviceData() : cpuTick(0), bridgeTimeOffset(0), bridgeGuestPosixMS(0), bridgeGuestPosixNS(0), channel(0), id(0)
 		{}
 	};
 
 	/// 总线原始数据
-	struct WetBusRawData
+	struct SessionBusRawData
 	{
 		/// 时间戳
-		Timestamp timestamp;
+		ShortTimestamp timestamp;
 
 		/// 总线通道，1~16
 		UInt channel;
@@ -4575,12 +4595,12 @@ namespace spadas
 		Binary binary;
 
 		/// 默认构造函数
-		WetBusRawData() : channel(0), id(0)
+		SessionBusRawData() : channel(0), id(0)
 		{}
 	};
 
 	/// 总线原始数据表（长度16, 分别表示总线通道1~16）
-	typedef Array<Array<WetBusRawData> > WetBusRawDataTable;
+	typedef Array<Array<SessionBusRawData> > SessionBusRawDataTable;
 
 	/// 总线报文发送接口
 	class SPADAS_API IBusMessageTransmitter
@@ -4605,14 +4625,14 @@ namespace spadas
 		/// @param channel 总线通道，1~16
 		/// @param id 该通道内的报文ID
 		/// @param binary 报文数据
-		/// @param offset 时间偏置，单位秒
+		/// @param offset 时间偏置，单位秒 (必须大于该通道上一帧预约发送报文的时间戳)
 		virtual void transmitAtTimeOffset(UInt channel, UInt id, Binary binary, Double offset);
 
 		/// @brief 指定按授时服务器Posix时间预约发送报文
 		/// @param channel 总线通道，1~16
 		/// @param id 该通道内的报文ID
 		/// @param binary 报文数据
-		/// @param serverPosix 授时服务器Posix时间，单位毫秒
+		/// @param serverPosix 授时服务器Posix时间，单位毫秒 (必须大于该通道上一帧预约发送报文的时间)
 		virtual void transmitAtServerPosix(UInt channel, UInt id, Binary binary, ULong serverPosix);
 	};
 
@@ -4708,10 +4728,10 @@ namespace spadas
 	};
 
 	/// 总线报文
-	struct WetBusMessage
+	struct SessionBusMessage
 	{
 		/// 时间戳
-		Timestamp timestamp;
+		ShortTimestamp timestamp;
 
 		/// 报文信息
 		BusMessageInfo info;
@@ -4720,16 +4740,16 @@ namespace spadas
 		Binary data;
 
 		/// 默认构造函数
-		WetBusMessage()
+		SessionBusMessage()
 		{}
 
 		/// 基于信息、时间戳和数据初始化
-		WetBusMessage(Timestamp timestamp, BusMessageInfo info, Binary data) : timestamp(timestamp), info(info), data(data)
+		SessionBusMessage(ShortTimestamp timestamp, BusMessageInfo info, Binary data) : timestamp(timestamp), info(info), data(data)
 		{}
 	};
 
 	/// 总线报文数据表，key为报文全局ID，格式为"协议文件名:本通道ID"，如vehicle.dbc:123
-	typedef Dictionary<Array<WetBusMessage> > WetBusMessageTable;
+	typedef Dictionary<Array<SessionBusMessage> > SessionBusMessageTable;
 
 	/// 视频数据流编码方式
 	enum class VideoDataCodec
@@ -4791,7 +4811,7 @@ namespace spadas
 	struct VideoDeviceData
 	{
 		/// 到达时CPU计数
-		ULong tick;
+		ULong cpuTick;
 
 		/// 已与授时服务器同步的客机Posix时间，0表示无效
 		ULong serverPosix;
@@ -4815,15 +4835,15 @@ namespace spadas
 		ImagePointer preview;
 
 		/// 默认构造函数
-		VideoDeviceData() : tick(0), serverPosix(0), gnssPosix(0), channel(0), hasPreview(FALSE)
+		VideoDeviceData() : cpuTick(0), serverPosix(0), gnssPosix(0), channel(0), hasPreview(FALSE)
 		{}
 	};
 
 	/// 视频原始数据
-	struct WetVideoRawData
+	struct SessionVideoRawData
 	{
 		/// 时间戳
-		Timestamp timestamp;
+		FullTimestamp timestamp;
 
 		/// 视频通道，0~23，对应A~X
 		UInt channel;
@@ -4841,9 +4861,12 @@ namespace spadas
 		ImagePointer preview;
 
 		/// 默认构造函数
-		WetVideoRawData() : channel(0), hasPreview(FALSE)
+		SessionVideoRawData() : channel(0), hasPreview(FALSE)
 		{}
 	};
+
+	/// 视频原始数据表（长度24, 分别表示视频通道A~X）
+	typedef Array<Array<SessionVideoRawData> > SessionVideoRawDataTable;
 
 	/// 视频设备ID
 	struct VideoDeviceID
@@ -4899,10 +4922,10 @@ namespace spadas
 	};
 
 	/// 用于数据处理的视频数据
-	struct WetVideoProcData
+	struct SessionVideoProcData
 	{
 		/// 时间戳
-		Timestamp timestamp;
+		FullTimestamp timestamp;
 
 		/// 软件通道，0~23，对应A~X
 		UInt channel;
@@ -4917,15 +4940,12 @@ namespace spadas
 		Array<Double> meta;
 
 		/// 默认构造函数
-		WetVideoProcData() : channel(0)
+		SessionVideoProcData() : channel(0)
 		{}
 	};
 
-	/// 视频原始数据表（长度24, 分别表示视频通道A~X）
-	typedef Array<Array<WetVideoRawData> > WetVideoRawDataTable;
-
 	/// 用于数据处理的视频数据表（长度24, 分别表示视频通道A~X）
-	typedef Array<Array<WetVideoProcData> > WetVideoProcDataTable;
+	typedef Array<Array<SessionVideoProcData> > SessionVideoProcDataTable;
 
 	/// 视频预览图像的快速输出接口
 	class SPADAS_API IVideoDeviceExpress
@@ -4958,7 +4978,7 @@ namespace spadas
 		/// @param codec 视频帧的编码格式
 		/// @param size 视频帧的大小，像素单位
 		/// @param data 视频帧数据
-		/// @param offset 时间偏置，单位秒
+		/// @param offset 时间偏置，单位秒 (必须大于该通道上一帧预约发送报文的时间戳)
 		virtual void transmitAtTimeOffset(UInt channel, VideoDataCodec codec, Size2D size, Binary data, Double offset);
 
 		/// @brief 指定按服务器Posix时间预约发送视频帧
@@ -4966,7 +4986,7 @@ namespace spadas
 		/// @param codec 视频帧的编码格式
 		/// @param size 视频帧的大小，像素单位
 		/// @param data 视频帧数据
-		/// @param serverPosix 服务器Posix时间，单位毫秒
+		/// @param serverPosix 服务器Posix时间，单位毫秒 (必须大于该通道上一帧预约发送报文的时间)
 		virtual void transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosix);
 	};
 
@@ -4974,28 +4994,28 @@ namespace spadas
 	struct InputTablesX
 	{
 		/// 通用原始数据表
-		WetGeneralRawDataTable rawDatas;
+		SessionGeneralRawDataTable rawDatas;
 
 		/// 总线原始数据表
-		WetBusRawDataTable busRawDatas;
+		SessionBusRawDataTable busRawDatas;
 
 		/// 视频原始数据表
-		WetVideoRawDataTable videoRawDatas;
+		SessionVideoRawDataTable videoRawDatas;
 
 		/// 用于数据处理的视频数据表
-		WetVideoProcDataTable videoProcDatas;
+		SessionVideoProcDataTable videoProcDatas;
 
 		/// 总线报文数据表
-		WetBusMessageTable busMessages;
+		SessionBusMessageTable busMessages;
 
 		/// 信号数据表
-		WetSignalTable signals;
+		SessionSignalTable signals;
 
 		/// 样本数据表
-		WetGeneralSampleTable samples;
+		SessionGeneralSampleTable samples;
 
 		/// 矩阵数据表
-		WetMatrixSampleTable matrices;
+		SessionMatrixSampleTable matrices;
 
 		/// 默认构造函数
 		InputTablesX()
@@ -5009,9 +5029,9 @@ namespace spadas
 			signals.clear();
 			samples.clear();
 			matrices.clear();
-			busRawDatas = WetBusRawDataTable(busRawDatas.size());
-			videoRawDatas = WetVideoRawDataTable(videoRawDatas.size());
-			videoProcDatas = WetVideoProcDataTable(videoProcDatas.size());
+			busRawDatas = SessionBusRawDataTable(busRawDatas.size());
+			videoRawDatas = SessionVideoRawDataTable(videoRawDatas.size());
+			videoProcDatas = SessionVideoProcDataTable(videoProcDatas.size());
 		}
 	};
 
@@ -5019,13 +5039,13 @@ namespace spadas
 	struct OutputTablesX
 	{
 		/// 信号数据
-		WetSignalTable signals;
+		SessionSignalTable signals;
 
 		/// 样本数据
-		WetGeneralSampleTable samples;
+		SessionGeneralSampleTable samples;
 
 		/// 矩阵数据
-		WetMatrixSampleTable matrices;
+		SessionMatrixSampleTable matrices;
 
 		/// 默认构造函数
 		OutputTablesX()
@@ -5238,15 +5258,20 @@ namespace spadas
 		/// @param guestPosix 客机Posix时间，单位毫秒，0表示无效
 		/// @param gnssPosix 卫星Posix时间，单位毫秒，0表示无效
 		/// @return 是否成功
-		virtual Bool createTimestamp(Timestamp& outputTimestamp, SessionID session, ULong cpuTick = 0, Bool guestServerSync = FALSE, ULong guestPosix = 0, ULong gnssPosix = 0);
+		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionID session, ULong cpuTick = 0, Bool guestServerSync = FALSE, ULong guestPosix = 0, ULong gnssPosix = 0);
 
-		/// @brief 尝试根据基准时间戳与授时服务器或卫星时间同步（优先按卫星时间）
+		/// @brief 根据基准时间戳与授时服务器或卫星时间进行二次同步（优先按卫星时间）
 		/// @param srcTimestamp 基准时间戳
 		/// @param guestServerSync 客机是否已与授时服务器同步
 		/// @param guestPosix 非0则使用该输入作为基准时间戳的客机Posix时间
 		/// @param gnssPosix 非0则使用该输入作为基准时间戳的卫星Posix时间
 		/// @return 输出的时间戳
-		virtual Timestamp tryUpdateTimestamp(Timestamp srcTimestamp, Bool guestServerSync = FALSE, ULong guestPosix = 0, ULong gnssPosix = 0);
+		virtual FullTimestamp resyncTimestamp(FullTimestamp srcTimestamp, Bool guestServerSync = FALSE, ULong guestPosix = 0, ULong gnssPosix = 0);
+
+		/// @brief 根据基准时间戳的时间偏置反算CPU计数、授时服务器Posix时间、卫星Posix时间等
+		/// @param srcTimestamp 基准时间戳
+		/// @return 输出的时间戳
+		virtual FullTimestamp fillTimestamp(ShortTimestamp srcTimestamp);
 	};
 
 	// 插件相关实用功能 //////////////////////////////////////////////////////////////
@@ -5511,6 +5536,14 @@ namespace spadas
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
+	};
+
+	/// 时间戳生成器
+	class TimestampProvider : public Object<class TimestampProviderVars>, public ITimestampProvider
+	{
+	public:
+		/// 默认构造函数
+		TimestampProvider();
 	};
 
 	// 插件相关类型定义（旧） //////////////////////////////////////////////////////////////
@@ -6059,7 +6092,7 @@ namespace spadas
 		/// @returns 返回是否成功发送一帧数据
 		virtual Bool transmitBusMessageNow(UInt channel, UInt id, Binary binary);
 
-		/// @brief [可选] 预约发送一帧数据
+		/// @brief [可选] 预约发送一帧数据（相同通道的预约发送时间已确保递增）
 		/// @param channel 总线通道，1~16
 		/// @param id 该通道内的报文ID
 		/// @param binary 报文数据
@@ -6111,7 +6144,7 @@ namespace spadas
 		/// @returns 返回是否成功发送一帧数据
 		virtual Bool transmitVideoFrameNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data);
 
-		/// @brief [可选] 预约发送一帧数据
+		/// @brief [可选] 预约发送一帧数据（相同通道的预约发送时间已确保递增）
 		/// @param channel 视频通道，0~23，对应A~X
 		/// @param codec 视频帧编码方式
 		/// @param size 视频帧大小，像素单位
@@ -6172,7 +6205,7 @@ namespace spadas
 		/// @param inputs 输入数据表
 		/// @param sampleBuffers 样本缓存表
 		/// @param outputs 输出数据表
-		virtual void processData(InputTablesX inputs, WetSampleBufferTable sampleBuffers, OutputTablesX outputs);
+		virtual void processData(InputTablesX inputs, SessionSampleBufferTable sampleBuffers, OutputTablesX outputs);
 
 		/// @brief [可选] 设置使用指定的总线报文发送接口
 		/// @param transmitter 总线报文发送接口
@@ -6251,7 +6284,7 @@ namespace spadas
 		/// @param inputs 输入数据表，从表中获取数据写入文件（其中视频首帧图像的所有依赖帧时间戳为0）
 		/// @param busMessages 按时间戳排序的所有通道总线数据
 		/// @param shouldEnd 是否准备关闭
-		virtual void writeFilesData(String writerName, InputTablesX inputs, Array<WetBusRawData> busMessages, Flag shouldEnd);
+		virtual void writeFilesData(String writerName, InputTablesX inputs, Array<SessionBusRawData> busMessages, Flag shouldEnd);
 
 		/// @brief [可选] 关闭写入文件
 		/// @param writerName 写入器名称
@@ -6283,7 +6316,7 @@ namespace spadas
 	};
 
 	/// 获取文件读写插件接口，函数名应为get_file_plugin_v103
-	typedef Interface<IFilePluginV102>(*GetFilePluginV103)();
+	typedef Interface<IFilePluginV103>(*GetFilePluginV103)();
 }
 
 #endif
