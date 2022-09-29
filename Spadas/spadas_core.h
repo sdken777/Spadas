@@ -5038,13 +5038,13 @@ namespace spadas
 	/// 所有输出数据表
 	struct OutputTablesX
 	{
-		/// 信号数据
+		/// 信号数据表
 		SessionSignalTable signals;
 
-		/// 样本数据
+		/// 样本数据表
 		SessionGeneralSampleTable samples;
 
-		/// 矩阵数据
+		/// 矩阵数据表
 		SessionMatrixSampleTable matrices;
 
 		/// 默认构造函数
@@ -5250,17 +5250,18 @@ namespace spadas
 	public:
 		virtual ~ITimestampProvider() {}
 
-		/// @brief 创建时间戳
+		/// @brief 创建时间戳（计算时间偏置的优先级从高至低为：卫星Posix时间、授时服务器Posix时间、主机Posix时间、到达时CPU计数）
 		/// @param outputTimestamp 输出的时间戳
 		/// @param session 时间戳所在session
 		/// @param cpuTick 到达时CPU计数，0表示无效
+		/// @param hostPosix 主机Posix时间，单位毫秒，0表示无效
 		/// @param guestServerSync 客机是否已与授时服务器同步
 		/// @param guestPosix 客机Posix时间，单位毫秒，0表示无效
 		/// @param gnssPosix 卫星Posix时间，单位毫秒，0表示无效
 		/// @return 是否成功
-		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionID session, ULong cpuTick = 0, Bool guestServerSync = FALSE, ULong guestPosix = 0, ULong gnssPosix = 0);
+		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionID session, ULong cpuTick = 0, ULong hostPosix = 0, Bool guestServerSync = FALSE, ULong guestPosix = 0, ULong gnssPosix = 0);
 
-		/// @brief 根据基准时间戳与授时服务器或卫星时间进行二次同步（优先按卫星时间）
+		/// @brief 根据基准时间戳进行二次同步（重新计算时间偏置的优先级从高至低为：卫星Posix时间、授时服务器Posix时间）
 		/// @param srcTimestamp 基准时间戳
 		/// @param guestServerSync 客机是否已与授时服务器同步
 		/// @param guestPosix 非0则使用该输入作为基准时间戳的客机Posix时间
@@ -5713,7 +5714,7 @@ namespace spadas
 		/// @returns 返回是否成功预约发送一帧数据
 		virtual Bool transmitVideoFrameScheduled(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosix);
 
-		/// @brief [可选] 对视频设备进行额外设置（在open_video_device前被调用）
+		/// @brief [可选] 对视频设备进行额外设置（在openVideoDevice前被调用）
 		/// @param extra 配置信息
 		virtual void setVideoExtraConfig(String extra);
 
@@ -5812,10 +5813,11 @@ namespace spadas
 		/// @param subInputRoots Session的input子文件夹路径
 		/// @param generationRoot Generation的文件夹路径
 		/// @param jumpOffset 跳转至该时间偏置开始读取
+		/// @param timestampProvider 时间戳生成接口
 		/// @param basicInfo 文件读写基本信息
 		/// @param extInfo 输出文件扩展信息
 		/// @returns 返回是否成功初始化，无数据文件的情况也返回FALSE
-		virtual Bool openReadFiles(String readerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Double jumpOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo);
+		virtual Bool openReadFiles(String readerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Double jumpOffset, Interface<ITimestampProvider> timestampProvider, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo);
 
 		/// @brief [可选] 读取文件数据
 		/// @param readerName 读取器名称
@@ -5834,10 +5836,11 @@ namespace spadas
 		/// @param inputRoot Session的input文件夹路径
 		/// @param subInputRoots Session的input子文件夹路径
 		/// @param generationRoot Generation的文件夹路径
+		/// @param timestampProvider 时间戳生成接口
 		/// @param basicInfo 文件读写基本信息
 		/// @param extInfo 文件扩展信息
 		/// @returns 返回是否成功初始化
-		virtual Bool openWriteFiles(String writerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo);
+		virtual Bool openWriteFiles(String writerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Interface<ITimestampProvider> timestampProvider, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo);
 
 		/// @brief [可选] 写入文件数据
 		/// @param writerName 写入器名称
