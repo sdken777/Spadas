@@ -483,6 +483,20 @@ namespace spadas
 		virtual void updateStartTimeUTC(ULong posixTime, Double timeRatio);
 	};
 	typedef Interface<IFilePluginV102>(*GetFilePluginV102)();
+
+	class SPADAS_API IPluginV101
+	{
+	public:
+		virtual ~IPluginV101() {};
+		virtual String getPluginType();
+		virtual String getPluginVersion();
+		virtual void closePlugin();
+		virtual void onCrossData(String id, Binary data);
+		virtual void useCrossTransmitter(Interface<ICrossTransmitter> transmitter);
+		virtual Bool onCrossCall(String id, BaseObject context);
+		virtual void useCrossCaller(Interface<ICrossCaller> caller);
+	};
+	typedef Interface<IPluginV101>(*GetPluginV101)();
 }
 
 #endif

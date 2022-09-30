@@ -5529,11 +5529,11 @@ namespace spadas
 
 	// 插件API //////////////////////////////////////////////////////////////
 
-	/// 一般原生插件API 1.1
-	class SPADAS_API IPluginV101
+	/// 一般原生插件API 1.2
+	class SPADAS_API IPluginV102
 	{
 	public:
-		virtual ~IPluginV101() {};
+		virtual ~IPluginV102() {};
 
 		/// @brief 获取插件类型ID
 		/// @returns 插件类型ID
@@ -5564,10 +5564,25 @@ namespace spadas
 		/// @brief [可选] 设置使用指定的跨模块函数调用接口
 		/// @param caller 跨模块函数调用接口
 		virtual void useCrossCaller(Interface<ICrossCaller> caller);
+
+		/// @brief [可选] 在开始在线模式session时被调用
+		/// @param session 该在线模式session的ID
+		/// @param startCPUTick 该在线模式session启动时的基准CPU计数
+		virtual void onStartOnlineSession(SessionID session, ULong startCPUTick);
+
+		/// [可选] 在结束在线模式session时被调用
+		virtual void onStopOnlineSession();
+
+		/// @brief [可选] 启动独立的处理任务（一般仅在非session时段被调用）
+		/// @param taskName 任务名称，用于区分不同任务
+		/// @param config 该任务的配置信息
+		/// @param shouldEnd 任务是否应该中止，一般来自用户操作
+		/// @param callback 用于反馈任务处理状态、进度，以及返回值的接口
+		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
 	};
 
-	/// 获取插件通用接口，函数名应为get_plugin
-	typedef Interface<IPluginV101>(*GetPluginV101)();
+	/// 获取插件通用接口，函数名应为get_plugin_v102
+	typedef Interface<IPluginV102>(*GetPluginV102)();
 
 	/// 通用设备插件API 2.2
 	class SPADAS_API IDevicePluginV202
@@ -5727,11 +5742,6 @@ namespace spadas
 	public:
 		virtual ~IProcessorPluginV602() {};
 
-		// 数据流模式
-
-		/// 是否支持数据流模式
-		virtual Bool isDataStreamModeSupported();
-
 		/// [可选] 是否为在线限定的数据处理（默认为FALSE）
 		virtual Bool isProcessorOnlineOnly();
 
@@ -5766,18 +5776,6 @@ namespace spadas
 		/// @brief [可选] 设置使用指定的视频帧回注接口
 		/// @param videoTransmitter 视频帧回注接口
 		virtual void useVideoTransmitter(Interface<IVideoFrameTransmitter> videoTransmitter);
-
-		// 独立任务模式
-
-		/// 是否支持独立任务模式
-		virtual Bool isStandaloneTaskModeSupported();
-
-		/// @brief 启动独立的处理任务（一般仅在非session时段被调用）
-		/// @param taskName 任务名称，用于区分不同任务
-		/// @param config 该任务的配置信息
-		/// @param shouldEnd 任务是否应该中止，一般来自用户操作
-		/// @param callback 用于反馈任务处理状态、进度，以及返回值的接口
-		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
 	};
 
 	/// 获取数据处理插件接口，函数名应为get_processor_plugin_v602
@@ -5798,7 +5796,7 @@ namespace spadas
 		/// @returns 所有文件的最大时长，单位秒，若无文件或无数据则返回0
 		virtual Double getFilesDuration(String readerName, Path inputRoot, Array<Path> subInputRoots, Array<Path> generationRoots, FileIOBasicInfo basicInfo);
 
-		/// @brief [可选] 初始化读取原始数据文件（在开始session时被调用）
+		/// @brief [可选] 初始化读取原始数据文件
 		/// @param readerName 读取器名称
 		/// @param inputRoot Session的input文件夹路径
 		/// @param subInputRoots Session的input子文件夹路径
