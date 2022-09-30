@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 修正Linux下在部分文件系统中无法判断文件夹问题
+// 版本定义 // TODO
 #define SPADAS_VERSION_MAJOR 8
-#define SPADAS_VERSION_MINOR 3
-#define SPADAS_VERSION_BUILD 9
+#define SPADAS_VERSION_MINOR 4
+#define SPADAS_VERSION_BUILD 0
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.3.9\n
+* 本文档对应Spadas版本：8.4.0\n
 *
 * \n
 * \section top1 基本功能概述
@@ -65,122 +65,115 @@
 *
 * \n
 * \section top2 插件框架概述
-* \subsection p1 1. 一般原生插件实现方式
-*   - 一般原生插件的库文件名需要以"native_"或"libnative_"开头
-*   - 实现一个类继承 spadas::IPluginV101
-*   - 实现一个全局函数 spadas::GetPluginV101 ，返回上述类对象（定义该全局函数需要前缀SPADAS_DEFAULT_API）
+* \subsection p1 1. 插件实现方式
+*   - 插件库的文件名需要以指定关键字开头，并在库内提供一个或多个全局函数，返回对应的接口实现
+*   - 定义这些全局函数需要前缀SPADAS_DEFAULT_API
 *
-* \subsection p2 2. 插件通用定义
-* 全局函数格式为 spadas::GetPluginV101 \n
-* 需要实现以下接口函数：
-*   - spadas::IPluginV101::getPluginType
-*   - spadas::IPluginV101::getPluginVersion
+* \subsection p2 2. 插件接口种类
+*   - 通用功能插件接口: spadas::IPluginV102 ，对应的全局函数定义: spadas::GetPluginV102
+*   - 原生数据处理插件接口: spadas::IProcessorPluginV602 ，对应的全局函数定义: spadas::GetProcessorPluginV602
+*   - 一般设备插件接口: spadas::IDevicePluginV202 ，对应的全局函数定义: spadas::GetDevicePluginV202
+*   - 总线设备插件接口: spadas::IBusPluginV201 ，对应的全局函数定义: spadas::GetBusPluginV201
+*   - 视频设备插件接口: spadas::IVideoPluginV402 ，对应的全局函数定义: spadas::GetVideoPluginV402
+*   - 文件读写插件接口: spadas::IFilePluginV103 ，对应的全局函数定义: spadas::GetFilePluginV103
+*
+* \subsection p3 3. 插件库种类
+*   - 通用功能库: 关键字"native_"或"libnative_"，支持通用功能插件接口
+*   - 原生数据处理库: 关键字"proc_"或"libproc_"，支持通用功能插件接口、原生数据处理插件接口
+*   - 一般设备库: 关键字"dev_"或"libdev_"，支持通用功能插件接口、一般设备插件接口
+*   - 总线设备库: 关键字"bus_"或"libbus_"，支持通用功能插件接口、总线设备插件接口
+*   - 视频设备库: 关键字"video_"或"libvideo_"，支持通用功能插件接口、视频设备插件接口
+*   - 文件读写库: 关键字"file_"或"libfile_"，支持通用功能插件接口、文件读写插件接口
+*   - 混合设备库: 关键字"mix_"或"libmix_"，支持通用功能插件接口、一般设备插件接口、总线设备插件接口、视频设备插件接口
+*
+* \subsection p4 4. 实现通用功能插件接口
+* 以下接口函数必须实现：
+*   - spadas::IPluginV102::getPluginType
+*   - spadas::IPluginV102::getPluginVersion
 * 
-* 以下接口函数可根据实际需要选择是否实现：
-*   - spadas::IPluginV101::closePlugin
-*   - spadas::IPluginV101::onCrossData
-*   - spadas::IPluginV101::useCrossTransmitter
-*   - spadas::IPluginV101::onCrossCall
-*   - spadas::IPluginV101::useCrossCaller
+* 以下接口函数可选实现：
+*   - spadas::IPluginV102::closePlugin
+*   - spadas::IPluginV102::onCrossData
+*   - spadas::IPluginV102::useCrossTransmitter
+*   - spadas::IPluginV102::onCrossCall
+*   - spadas::IPluginV102::useCrossCaller
+*   - spadas::IPluginV102::onStartOnlineSession
+*   - spadas::IPluginV102::onStopOnlineSession
+*   - spadas::IPluginV102::runStandaloneTask
 *
-* \subsection p3 3. 扩展原生插件实现方式
-*   - 扩展原生插件的库文件名根据插件类型而不同（详见后续小节）
-*   - 实现一个类同时继承 spadas::IPluginV101 和扩展的插件接口
-*   - 实例化一个上述类的对象
-*   - 分别实现全局函数 spadas::GetPluginV101 和扩展插件接口对应的全局函数，都返回上述对象（定义该全局函数需要前缀SPADAS_DEFAULT_API）
+* \subsection p5 5. 实现原生数据处理插件接口
+* 以下接口函数必须实现：
+*   - spadas::IProcessorPluginV602::setProcessorConfig
+*   - spadas::IProcessorPluginV602::disableProcessor
+*   - spadas::IProcessorPluginV602::processData
 *
-* \subsection p4 4. 数据处理插件定义
-* 数据处理插件的库文件名需要以"proc_"或"libproc_"开头。\n
-* 数据处理插件对应的全局函数格式为 spadas::GetProcessorPluginV601 \n
-* 此类插件可支持数据流模式、独立任务模式、或两种同时支持。\n\n
+* 以下接口函数可选实现：
+*   - spadas::IProcessorPluginV602::isProcessorOnlineOnly
+*   - spadas::IProcessorPluginV602::isProcessorOfflineOnly
+*   - spadas::IProcessorPluginV602::useGeneralTransmitter
+*   - spadas::IProcessorPluginV602::useBusTransmitter
+*   - spadas::IProcessorPluginV602::useVideoTransmitter
 *
-* 数据流模式下，所有数据处理都在session中进行，需要实现以下接口函数：
-*   - spadas::IProcessorPluginV601::isDataStreamModeSupported （返回TRUE）
-*   - spadas::IProcessorPluginV601::isUsingSetProcessorConfigX
-*   - spadas::IProcessorPluginV601::setProcessorConfig 或 spadas::IProcessorPluginV601::setProcessorConfigX
-*   - spadas::IProcessorPluginV601::disableProcessor
-*   - spadas::IProcessorPluginV601::processData
+* \subsection p6 6. 实现一般设备插件接口
+* 以下接口函数必须实现：
+*   - spadas::IDevicePluginV202::setDeviceConnection
+*   - spadas::IDevicePluginV202::disconnectDevice
+*   - spadas::IDevicePluginV202::getDeviceStatus
+*   - spadas::IDevicePluginV202::getDeviceNewData
 *
-* 数据流模式下，以下接口函数可根据实际需要选择是否实现：
-*   - spadas::IProcessorPluginV601::updateStartTimeLocal
-*   - spadas::IProcessorPluginV601::updateStartTimeUTC
-*   - spadas::IProcessorPluginV601::useBusTransmitter
+* 以下接口函数可选实现：
+*   - spadas::IDevicePluginV202::getChildDeviceStatus
+*   - spadas::IDevicePluginV202::getTransmittableProtocols
+*   - spadas::IDevicePluginV202::transmitGeneralDataNow
 *
-* 独立任务模式下，数据处理在非session时段进行，需要实现以下接口函数：
-*   - spadas::IProcessorPluginV601::isStandaloneTaskModeSupported （返回TRUE）
-*   - spadas::IProcessorPluginV601::runStandaloneTask
+* \subsection p7 7. 实现总线设备插件接口
+* 以下接口函数必须实现：
+*   - spadas::IBusPluginV201::getBusDeviceList
+*   - spadas::IBusPluginV201::openBusDevice
+*   - spadas::IBusPluginV201::closeBusDevice
+*   - spadas::IBusPluginV201::receiveBusMessage
 *
-* \subsection p5 5. 通用设备插件定义
-* 通用设备插件的库文件名需要以"dev_"或"libdev_"开头。\n
-* 通用设备插件对应的全局函数格式为 spadas::GetDevicePluginV201 \n
-* 通用设备插件需要实现以下接口函数：
-*   - spadas::IDevicePluginV201::setDeviceConnection
-*   - spadas::IDevicePluginV201::disconnectDevice
-*   - spadas::IDevicePluginV201::getDeviceStatus
-*   - spadas::IDevicePluginV201::resetDeviceDataStream
-*   - spadas::IDevicePluginV201::closeDeviceDataStream
-*   - spadas::IDevicePluginV201::getDeviceNewData
+* 以下接口函数可选实现：
+*   - spadas::IBusPluginV201::transmitBusMessageNow
+*   - spadas::IBusPluginV201::transmitBusMessageScheduled
+*   - spadas::IBusPluginV201::setBusExtraConfig
+*   - spadas::IBusPluginV201::getBusPayload
 *
-* 以下接口函数可根据实际需要选择是否实现：
-*   - spadas::IDevicePluginV201::getChildDeviceStatus
-*   - spadas::IDevicePluginV201::useBusTransmitter
-*   - spadas::IDevicePluginV201::getBufferFilesLatestTime
-*   - spadas::IDevicePluginV201::clearBufferFiles
-*   - spadas::IDevicePluginV201::pickEvent
+* \subsection p8 8. 实现视频设备插件接口
+* 以下接口函数必须实现：
+*   - spadas::IVideoPluginV402::getVideoDeviceList
+*   - spadas::IVideoPluginV402::openVideoDevice
+*   - spadas::IVideoPluginV402::closeVideoDevice
+*   - spadas::IVideoPluginV402::queryVideoFrame
 *
-* \subsection p6 6. 总线设备插件定义
-* 总线设备插件的库文件名需要以"bus_"或"libbus_"开头。\n
-* 总线设备插件对应的全局函数格式为 spadas::GetBusPluginV200 \n
-* 总线设备插件需要实现以下接口函数：
-*   - spadas::IBusPluginV200::getBusDeviceList
-*   - spadas::IBusPluginV200::openBusDevice
-*   - spadas::IBusPluginV200::closeBusDevice
-*   - spadas::IBusPluginV200::receiveBusMessage
+* 以下接口函数可选实现：
+*   - spadas::IVideoPluginV402::transmitVideoFrameNow
+*   - spadas::IVideoPluginV402::transmitVideoFrameScheduled
+*   - spadas::IVideoPluginV402::setVideoExtraConfig
+*   - spadas::IVideoPluginV402::getVideoDeviceNewData
+*   - spadas::IVideoPluginV402::useVideoPreviewExpress
+*   - spadas::IVideoPluginV402::getExclusiveKeywords
 *
-* 以下接口函数可根据实际需要选择是否实现：
-*   - spadas::IBusPluginV200::transmitBusMessage
-*   - spadas::IBusPluginV200::setBusExtraConfig
-*   - spadas::IBusPluginV200::getBusPayload
-*
-* \subsection p7 7. 视频设备插件定义
-* 视频设备插件的库文件名需要以"video_"或"libvideo_"开头。\n
-* 视频设备插件对应的全局函数格式为 spadas::GetVideoPluginV401 \n
-* 视频设备插件需要实现以下接口函数：
-*   - spadas::IVideoPluginV401::getVideoDeviceList
-*   - spadas::IVideoPluginV401::openVideoDevice
-*   - spadas::IVideoPluginV401::closeVideoDevice
-*   - spadas::IVideoPluginV401::queryVideoFrame
-*
-* 以下接口函数可根据实际需要选择是否实现：
-*   - spadas::IVideoPluginV401::setVideoExtraConfig
-*   - spadas::IVideoPluginV401::getVideoDeviceNewData
-*   - spadas::IVideoPluginV401::useVideoPreviewExpress
-*   - spadas::IVideoPluginV401::getExclusiveKeywords
-*
-* \subsection p8 8. 文件读写插件定义
-* 文件读写插件的库文件名需要以"file_"或"libfile_"开头。\n
-* 文件读写插件对应的全局函数格式为 spadas::GetFilePluginV102 \n
+* \subsection p9 9. 实现文件读写插件接口
 * 此类插件可支持文件读取、文件写入、以及文件截取。\n\n
 *
 * 文件读取需要实现以下接口函数：
-*   - spadas::IFilePluginV102::getFilesDuration
-*   - spadas::IFilePluginV102::openReadFiles
-*   - spadas::IFilePluginV102::readFilesData
-*   - spadas::IFilePluginV102::closeReadFiles
+*   - spadas::IFilePluginV103::getFilesDuration
+*   - spadas::IFilePluginV103::openReadFiles
+*   - spadas::IFilePluginV103::readFilesData
+*   - spadas::IFilePluginV103::closeReadFiles
 *
 * 文件写入需要实现以下接口函数：
-*   - spadas::IFilePluginV102::openWriteFiles
-*   - spadas::IFilePluginV102::writeFilesData
-*   - spadas::IFilePluginV102::closeWriteFiles
+*   - spadas::IFilePluginV103::openWriteFiles
+*   - spadas::IFilePluginV103::writeFilesData
+*   - spadas::IFilePluginV103::closeWriteFiles
 *
 * 文件截取需要实现以下接口函数：
-*   - spadas::IFilePluginV102::hasDataFiles
-*   - spadas::IFilePluginV102::pickSession
+*   - spadas::IFilePluginV103::hasDataFiles
+*   - spadas::IFilePluginV103::pickSession
 *
-* 以下接口函数可根据实际需要选择是否实现：
-*   - spadas::IFilePluginV102::setFileExtraConfig
-*   - spadas::IFilePluginV102::updateStartTimeLocal
-*   - spadas::IFilePluginV102::updateStartTimeUTC
+* 以下接口函数可选实现：
+*   - spadas::IFilePluginV103::setFileExtraConfig
 */
 
 // CPU架构检查

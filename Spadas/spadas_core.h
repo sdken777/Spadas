@@ -4211,7 +4211,7 @@ namespace spadas
 	/// 信号数据表，key为信号ID，格式为"大类:小类:信号名称"。其中总线信号的情况下，大类为协议文件名，如vehicle.dbc；小类为报文本通道ID，如123
 	typedef Dictionary<Array<SessionSignal> > SessionSignalTable;
 
-	/// 通用设备输出原始数据
+	/// 一般设备输出原始数据
 	struct GeneralDeviceData
 	{
 		/// 到达时CPU计数
@@ -4510,7 +4510,7 @@ namespace spadas
 	/// 矩阵样本表，key为样本协议ID，一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始
 	typedef Dictionary<Array<SessionMatrixSample> > SessionMatrixSampleTable;
 
-	/// 通用设备状态
+	/// 一般设备状态
 	enum class GeneralDeviceStatus
 	{
 		/// 未设定为自动连接模式
@@ -5417,9 +5417,9 @@ namespace spadas
 	public:
 		virtual ~IGeneralDeviceDataOutput() {};
 
-		/// @brief 输出通用设备原始数据
+		/// @brief 输出一般设备原始数据
 		/// @param protocol 原始数据协议
-		/// @param data 通用设备原始数据
+		/// @param data 一般设备原始数据
 		virtual void outputGeneralDeviceData(String protocol, GeneralDeviceData data);
 	};
 
@@ -5525,11 +5525,13 @@ namespace spadas
 	public:
 		/// 默认构造函数
 		TimestampProvider();
+
+		// TODO
 	};
 
 	// 插件API //////////////////////////////////////////////////////////////
 
-	/// 一般原生插件API 1.2
+	/// 通用功能插件接口 1.2
 	class SPADAS_API IPluginV102
 	{
 	public:
@@ -5581,10 +5583,10 @@ namespace spadas
 		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
 	};
 
-	/// 获取插件通用接口，函数名应为get_plugin_v102
+	/// 获取通用功能插件接口的全局函数定义，函数名应为get_plugin_v102
 	typedef Interface<IPluginV102>(*GetPluginV102)();
 
-	/// 通用设备插件API 2.2
+	/// 一般设备插件接口 2.2
 	class SPADAS_API IDevicePluginV202
 	{
 	public:
@@ -5622,10 +5624,10 @@ namespace spadas
 		virtual Bool transmitGeneralDataNow(String protocol, Array<Double> vector, Binary binary);
 	};
 
-	/// 获取通用设备插件接口，函数名应为get_device_plugin_v202
+	/// 获取一般设备插件接口的全局函数定义，函数名应为get_device_plugin_v202
 	typedef Interface<IDevicePluginV202>(*GetDevicePluginV202)();
 
-	/// 总线设备插件API 2.1
+	/// 总线设备插件接口 2.1
 	class SPADAS_API IBusPluginV201
 	{
 	public:
@@ -5673,10 +5675,10 @@ namespace spadas
 		virtual Array<BusChannelPayload> getBusPayload();
 	};
 
-	/// 获取总线设备插件接口，函数名应为get_bus_plugin_v201
+	/// 获取总线设备插件接口的全局函数定义，函数名应为get_bus_plugin_v201
 	typedef Interface<IBusPluginV201>(*GetBusPluginV201)();
 
-	/// 视频设备插件API 4.2
+	/// 视频设备插件接口 4.2
 	class SPADAS_API IVideoPluginV402
 	{
 	public:
@@ -5733,10 +5735,10 @@ namespace spadas
 		virtual Array<String> getExclusiveKeywords();
 	};
 
-	/// 获取视频设备插件接口，函数名应为get_video_plugin_v402
+	/// 获取视频设备插件接口的全局函数定义，函数名应为get_video_plugin_v402
 	typedef Interface<IVideoPluginV402>(*GetVideoPluginV402)();
 
-	/// 数据处理插件API 6.2
+	/// 原生数据处理插件接口 6.2
 	class SPADAS_API IProcessorPluginV602
 	{
 	public:
@@ -5778,10 +5780,10 @@ namespace spadas
 		virtual void useVideoTransmitter(Interface<IVideoFrameTransmitter> videoTransmitter);
 	};
 
-	/// 获取数据处理插件接口，函数名应为get_processor_plugin_v602
+	/// 获取原生数据处理插件接口的全局函数定义，函数名应为get_processor_plugin_v602
 	typedef Interface<IProcessorPluginV602>(*GetProcessorPluginV602)();
 
-	/// 文件读写插件API 1.3
+	/// 文件读写插件接口 1.3
 	class SPADAS_API IFilePluginV103
 	{
 	public:
@@ -5867,7 +5869,7 @@ namespace spadas
 		virtual void setFileExtraConfig(String extra);
 	};
 
-	/// 获取文件读写插件接口，函数名应为get_file_plugin_v103
+	/// 获取文件读写插件接口的全局函数定义，函数名应为get_file_plugin_v103
 	typedef Interface<IFilePluginV103>(*GetFilePluginV103)();
 }
 

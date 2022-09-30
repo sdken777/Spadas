@@ -3366,6 +3366,14 @@ namespace spadas
 		}
 	}
 
+	template<typename Type>
+	SampleInterpolationResult SessionSampleBuffer::interpolate(Double offset, Type& interpolatedSample, UInt earlyThresh)
+	{
+		// TODO
+
+		return SampleInterpolationResult::OutOfRange;
+	}
+
 	///////////////////////////////////////////////////////
 	/// FlexVars函数的实现
 	///////////////////////////////////////////////////////
