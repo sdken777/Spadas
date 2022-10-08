@@ -110,6 +110,7 @@
 * 以下接口函数可选实现：
 *   - spadas::IProcessorPluginV602::isProcessorOnlineOnly
 *   - spadas::IProcessorPluginV602::isProcessorOfflineOnly
+*   - spadas::IProcessorPluginV602::useTimeServer
 *   - spadas::IProcessorPluginV602::useGeneralTransmitter
 *   - spadas::IProcessorPluginV602::useBusTransmitter
 *   - spadas::IProcessorPluginV602::useVideoTransmitter
@@ -174,6 +175,7 @@
 *
 * 以下接口函数可选实现：
 *   - spadas::IFilePluginV103::setFileExtraConfig
+*   - spadas::IFilePluginV103::useTimeServer
 */
 
 // CPU架构检查

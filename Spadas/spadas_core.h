@@ -4190,6 +4190,25 @@ namespace spadas
 		SPADAS_API String toString();
 	};
 
+	/// Session无关时间的类别
+	enum class TimeType
+	{
+		/// 到达时CPU计数
+		CPUTick = 0,
+
+		/// 到达时主机Posix时间
+		HostPosix = 1,
+
+		/// 客机Posix时间
+		GuestPosix = 2,
+
+		/// 授时服务器Posix时间
+		ServerPosix = 3,
+
+		/// 卫星Posix时间
+		GnssPosix = 4,
+	};
+
 	/// 信号
 	struct SessionSignal
 	{
@@ -4369,25 +4388,6 @@ namespace spadas
 		ParseError = 4,
 	};
 
-	/// 通用样本缓存中的搜索模式
-	enum class SampleSearchMode
-	{
-		/// 按到达时CPU计数搜索
-		CPUTick = 0,
-
-		/// 按到达时主机Posix时间搜索
-		HostPosix = 1,
-
-		/// 按客机Posix时间搜索
-		GuestPosix = 2,
-
-		/// 按授时服务器Posix时间搜索
-		ServerPosix = 3,
-
-		/// 按卫星Posix时间搜索
-		GnssPosix = 4,
-	};
-
 	/// 通用样本缓存
 	class SPADAS_API SessionSampleBuffer : public Object<class SessionSampleBufferVars>
 	{
@@ -4438,11 +4438,11 @@ namespace spadas
 		Bool getNearest(Double offset, SessionGeneralSample& sampleNearest);
 
 		/// @brief 根据时间戳寻找最近样本
-		/// @param mode 搜索模式
-		/// @param time 目标时间戳，不同模式下意义不同，详见 spadas::Timestamp
+		/// @param timeType 时间类别
+		/// @param time 目标时间
 		/// @param sampleNearest 输出离目标最近样本
 		/// @returns 若样本缓存为空，则返回FALSE
-		Bool getNearest(SampleSearchMode mode, ULong time, SessionGeneralSample& sampleNearest);
+		Bool getNearest(TimeType timeType, ULong time, SessionGeneralSample& sampleNearest);
 
 		/// @brief 根据时间偏置寻找前后两个样本
 		/// @param offset 目标时间偏置
@@ -4452,12 +4452,12 @@ namespace spadas
 		Bool search(Double offset, SessionGeneralSample& sampleBefore, SessionGeneralSample& sampleAfter);
 
 		/// @brief 根据时间戳寻找前后两个样本
-		/// @param mode 搜索模式
-		/// @param time 目标时间戳，不同模式下意义不同，详见 spadas::Timestamp
+		/// @param timeType 时间类别
+		/// @param time 目标时间
 		/// @param sampleBefore 输出比时间戳早的最近样本
 		/// @param sampleAfter 输出比时间戳晚的最近样本
 		/// @returns 若无则返回FALSE
-		Bool search(SampleSearchMode mode, ULong time, SessionGeneralSample& sampleBefore, SessionGeneralSample& sampleAfter);
+		Bool search(TimeType timeType, ULong time, SessionGeneralSample& sampleBefore, SessionGeneralSample& sampleAfter);
 
 		/// @brief 根据时间偏置寻找前后两个样本并插值
 		/// @param offset 目标时间偏置
@@ -4982,10 +4982,10 @@ namespace spadas
 	typedef Array<Array<SessionVideoProcData> > SessionVideoProcDataTable;
 
 	/// 视频预览图像的快速输出接口
-	class SPADAS_API IVideoDeviceExpress
+	class SPADAS_API IVideoPreviewExpressX
 	{
 	public:
-		virtual ~IVideoDeviceExpress() {};
+		virtual ~IVideoPreviewExpressX() {};
 
 		/// @brief 输出预览图像
 		/// @param cpuTick 视频帧的到达时CPU计数
@@ -5278,35 +5278,34 @@ namespace spadas
 		virtual Bool callNativeFunction(String pluginType, String id, BaseObject context);
 	};
 
-	/// 时间戳生成接口
-	class SPADAS_API ITimestampProvider
+	/// 时间相关服务接口
+	class SPADAS_API ITimeServer
 	{
 	public:
-		virtual ~ITimestampProvider() {}
+		virtual ~ITimeServer() {}
 
 		/// @brief 创建时间戳（计算时间偏置的优先级从高至低为：卫星Posix时间、授时服务器Posix时间、到达时CPU计数、到达时主机Posix时间）
 		/// @param outputTimestamp 输出的时间戳
 		/// @param session 时间戳所在session
 		/// @param cpuTick 到达时CPU计数，0表示无效
 		/// @param hostPosix 到达时主机Posix时间，单位毫秒，0表示无效
-		/// @param guestServerSync 客机是否已与授时服务器同步
 		/// @param guestPosix 客机Posix时间，单位毫秒，0表示无效
 		/// @param gnssPosix 卫星Posix时间，单位毫秒，0表示无效
 		/// @return 是否成功
-		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionID session, ULong cpuTick = 0, ULong hostPosix = 0, Bool guestServerSync = FALSE, ULong guestPosix = 0, ULong gnssPosix = 0);
+		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionID session, ULong cpuTick = 0, ULong hostPosix = 0, ULong guestPosix = 0, ULong gnssPosix = 0);
 
 		/// @brief 根据基准时间戳进行二次同步（重新计算时间偏置的优先级从高至低为：卫星Posix时间、授时服务器Posix时间）
 		/// @param srcTimestamp 基准时间戳
-		/// @param guestServerSync 客机是否已与授时服务器同步
 		/// @param guestPosix 非0则使用该输入作为基准时间戳的客机Posix时间
 		/// @param gnssPosix 非0则使用该输入作为基准时间戳的卫星Posix时间
 		/// @return 输出的时间戳
-		virtual FullTimestamp resyncTimestamp(FullTimestamp srcTimestamp, Bool guestServerSync = FALSE, ULong guestPosix = 0, ULong gnssPosix = 0);
+		virtual FullTimestamp resyncTimestamp(FullTimestamp srcTimestamp, ULong guestPosix = 0, ULong gnssPosix = 0);
 
 		/// @brief 根据基准时间戳的时间偏置反算CPU计数、主机Posix时间、客机及授时服务器Posix时间、卫星Posix时间等
 		/// @param srcTimestamp 基准时间戳
-		/// @return 输出的时间戳
-		virtual FullTimestamp fillTimestamp(ShortTimestamp srcTimestamp);
+		/// @param timeType 输出的时间类型
+		/// @return 输出的session无关时间
+		virtual ULong calcTime(ShortTimestamp srcTimestamp, TimeType timeType);
 	};
 
 	// 插件相关实用功能 //////////////////////////////////////////////////////////////
@@ -5418,9 +5417,8 @@ namespace spadas
 		virtual ~IGeneralDeviceDataOutput() {};
 
 		/// @brief 输出一般设备原始数据
-		/// @param protocol 原始数据协议
 		/// @param data 一般设备原始数据
-		virtual void outputGeneralDeviceData(String protocol, GeneralDeviceData data);
+		virtual void outputGeneralDeviceData(GeneralDeviceData data);
 	};
 
 	/// 时间戳搜索接口
@@ -5519,12 +5517,12 @@ namespace spadas
 		Bool isValid() { return FALSE; }
 	};
 
-	/// 时间戳生成器
-	class TimestampProvider : public Object<class TimestampProviderVars>, public ITimestampProvider
+	/// 时间相关服务
+	class TimeServer : public Object<class TimeServerVars>, public ITimeServer
 	{
 	public:
 		/// 默认构造函数
-		TimestampProvider();
+		TimeServer();
 
 		// TODO
 	};
@@ -5621,7 +5619,7 @@ namespace spadas
 		/// @param vector 数值数组数据
 		/// @param binary 二进制数据
 		/// @returns 返回是否成功发送一帧数据，若协议未在可发送的协议列表内则返回FALSE
-		virtual Bool transmitGeneralDataNow(String protocol, Array<Double> vector, Binary binary);
+		virtual Bool transmitGeneralData(String protocol, Array<Double> vector, Binary binary);
 	};
 
 	/// 获取一般设备插件接口的全局函数定义，函数名应为get_device_plugin_v202
@@ -5639,7 +5637,6 @@ namespace spadas
 
 		/// @brief 打开总线设备（在开始session时被调用）
 		/// @param configs 希望打开的总线设备通道列表及相关配置
-		/// @param sync 当前session的同步计时器
 		virtual Bool openBusDevice(Array<BusDeviceConfig> configs);
 
 		/// 关闭总线设备（在结束session时被调用）
@@ -5655,7 +5652,7 @@ namespace spadas
 		/// @param id 该通道内的报文ID
 		/// @param binary 报文数据
 		/// @returns 返回是否成功发送一帧数据
-		virtual Bool transmitBusMessageNow(UInt channel, UInt id, Binary binary);
+		virtual Bool transmitBusMessage(UInt channel, UInt id, Binary binary);
 
 		/// @brief [可选] 预约发送一帧数据（相同通道的预约发送时间已确保递增）
 		/// @param channel 总线通道，1~16
@@ -5690,7 +5687,6 @@ namespace spadas
 
 		/// @brief 打开视频设备（在开始session时被调用）
 		/// @param configs 希望打开的视频设备通道列表及相关配置
-		/// @param sync 当前session的同步计时器
 		virtual Bool openVideoDevice(Array<VideoDeviceConfigX> configs);
 
 		/// 关闭总线设备（在结束session时被调用）
@@ -5707,7 +5703,7 @@ namespace spadas
 		/// @param size 视频帧大小，像素单位
 		/// @param data 视频帧数据
 		/// @returns 返回是否成功发送一帧数据
-		virtual Bool transmitVideoFrameNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data);
+		virtual Bool transmitVideoFrame(UInt channel, VideoDataCodec codec, Size2D size, Binary data);
 
 		/// @brief [可选] 预约发送一帧数据（相同通道的预约发送时间已确保递增）
 		/// @param channel 视频通道，0~23，对应A~X
@@ -5728,7 +5724,7 @@ namespace spadas
 
 		/// @brief [可选] 设置使用指定的视频预览图像的快速输出接口
 		/// @param previewExpress 视频预览图像的快速输出接口
-		virtual void useVideoPreviewExpress(Interface<IVideoDeviceExpress> previewExpress);
+		virtual void useVideoPreviewExpress(Interface<IVideoPreviewExpressX> previewExpress);
 
 		/// @brief [可选] 获取视频设备独占关键字，其他插件匹配此关键字的视频设备将被禁用
 		/// @returns 返回视频设备独占关键字
@@ -5755,8 +5751,7 @@ namespace spadas
 		/// @param onlineMode 是否为在线模式，否则为离线模式或回放模式
 		/// @param recordMode 是否记录至文件（在线采集或离线生成）
 		/// @param inputRoots 各session对应的input文件夹路径，可用于读取设备自定义数据
-		/// @param timestampProvider 时间戳生成接口
-		virtual void setProcessorConfig(String config, Bool onlineMode, Bool recordMode, Map<SessionID, Path> inputRoots, Interface<ITimestampProvider> timestampProvider);
+		virtual void setProcessorConfig(String config, Bool onlineMode, Bool recordMode, Map<SessionID, Path> inputRoots);
 
 		/// 函数名disable_processor: 禁用数据处理功能（在结束session时被调用）
 		virtual void disableProcessor();
@@ -5766,6 +5761,10 @@ namespace spadas
 		/// @param sampleBuffers 样本缓存表
 		/// @param outputs 输出数据表
 		virtual void processData(InputTablesX inputs, SessionSampleBufferTable sampleBuffers, OutputTablesX outputs);
+
+		/// @brief [可选] 设置使用指定的时间相关服务接口
+		/// @param timeServer 时间相关服务接口
+		virtual void useTimeServer(Interface<ITimeServer> timeServer);
 
 		/// @brief [可选] 设置使用指定的通用原始数据发送接口
 		/// @param generalTransmitter 通用原始数据发送接口
@@ -5804,11 +5803,10 @@ namespace spadas
 		/// @param subInputRoots Session的input子文件夹路径
 		/// @param generationRoot Generation的文件夹路径
 		/// @param jumpOffset 跳转至该时间偏置开始读取
-		/// @param timestampProvider 时间戳生成接口
 		/// @param basicInfo 文件读写基本信息
 		/// @param extInfo 输出文件扩展信息
 		/// @returns 返回是否成功初始化，无数据文件的情况也返回FALSE
-		virtual Bool openReadFiles(String readerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Double jumpOffset, Interface<ITimestampProvider> timestampProvider, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo);
+		virtual Bool openReadFiles(String readerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Double jumpOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo);
 
 		/// @brief [可选] 读取文件数据
 		/// @param readerName 读取器名称
@@ -5827,11 +5825,10 @@ namespace spadas
 		/// @param inputRoot Session的input文件夹路径
 		/// @param subInputRoots Session的input子文件夹路径
 		/// @param generationRoot Generation的文件夹路径
-		/// @param timestampProvider 时间戳生成接口
 		/// @param basicInfo 文件读写基本信息
 		/// @param extInfo 文件扩展信息
 		/// @returns 返回是否成功初始化
-		virtual Bool openWriteFiles(String writerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Interface<ITimestampProvider> timestampProvider, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo);
+		virtual Bool openWriteFiles(String writerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo);
 
 		/// @brief [可选] 写入文件数据
 		/// @param writerName 写入器名称
@@ -5867,6 +5864,10 @@ namespace spadas
 		/// @brief [可选] 对文件读写进行额外设置（在各openXXXFiles函数前被调用）
 		/// @param extra 配置信息
 		virtual void setFileExtraConfig(String extra);
+
+		/// @brief [可选] 设置使用指定的时间相关服务接口
+		/// @param timeServer 时间相关服务接口
+		virtual void useTimeServer(Interface<ITimeServer> timeServer);
 	};
 
 	/// 获取文件读写插件接口的全局函数定义，函数名应为get_file_plugin_v103
