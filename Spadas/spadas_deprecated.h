@@ -5,6 +5,8 @@
 namespace spadas
 {
 	// 插件相关类型定义（旧） //////////////////////////////////////////////////////////////
+	typedef Time SessionID;
+	
 	struct GlobalTimestamp
 	{
 		SessionID base;

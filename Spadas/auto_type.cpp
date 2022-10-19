@@ -164,12 +164,28 @@ String GlobalTimestamp::toString()
 
 String ShortTimestamp::toString()
 {
-	return session.dateString(String()) + "-" + session.timeString("-") + "-" + String(offset, 6);
+	Array<String> comps(7);
+	comps[0] = session.year;
+	comps[1] = session.month;
+	comps[2] = session.day;
+	comps[3] = session.hour;
+	comps[4] = session.minute;
+	comps[5] = session.second;
+	comps[6] = String(offset, 6);
+	return String::mergeStrings(comps, "-");
 }
 
 String FullTimestamp::toString()
 {
-	return session.dateString(String()) + "-" + session.timeString("-") + "-" + String(offset, 6);
+	Array<String> comps(7);
+	comps[0] = session.year;
+	comps[1] = session.month;
+	comps[2] = session.day;
+	comps[3] = session.hour;
+	comps[4] = session.minute;
+	comps[5] = session.second;
+	comps[6] = String(offset, 6);
+	return String::mergeStrings(comps, "-");
 }
 
 ShortTimestamp FullTimestamp::toShort()

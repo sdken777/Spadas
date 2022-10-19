@@ -4115,8 +4115,8 @@ namespace spadas
 		SPADAS_API String toString();
 	};
 
-	/// Session ID
-	struct SessionID
+	/// Session标识符
+	struct SessionIdentifier
 	{
 		/// 年
 		Word year;
@@ -4137,19 +4137,19 @@ namespace spadas
 		Byte second;
 
 		/// 默认构造函数，全部置为0
-		SPADAS_API SessionID();
+		SPADAS_API SessionIdentifier();
 
 		/// 基于指定年月日时分秒初始化
-		SPADAS_API SessionID(Word year, Byte month, Byte day, Byte hour, Byte minute, Byte second);
+		SPADAS_API SessionIdentifier(Word year, Byte month, Byte day, Byte hour, Byte minute, Byte second);
 
 		/// 基于字符串(yyyy-MM-dd-HH-mm-ss)初始化，若失败则全部置为0
-		SPADAS_API SessionID(String idString);
+		SPADAS_API SessionIdentifier(String idString);
 
 		/// 是否等于
-		SPADAS_API Bool operator ==(SessionID id);
+		SPADAS_API Bool operator ==(SessionIdentifier id);
 
 		/// 是否不等于
-		SPADAS_API Bool operator !=(SessionID id);
+		SPADAS_API Bool operator !=(SessionIdentifier id);
 
 		/// 获取哈希值
 		SPADAS_API Word getHash();
@@ -4174,8 +4174,8 @@ namespace spadas
 	/// 简单时间戳
 	struct ShortTimestamp
 	{
-		/// Session ID
-		SessionID session;
+		/// Session标识符
+		SessionIdentifier session;
 
 		/// 时间偏置，单位秒，大于零有效
 		Double offset;
@@ -4184,19 +4184,19 @@ namespace spadas
 		ShortTimestamp() : offset(0)
 		{}
 
-		/// 基于Session ID和时间偏置初始化
-		ShortTimestamp(SessionID session, Double offset) : session(session), offset(offset)
+		/// 基于Session标识符和时间偏置初始化
+		ShortTimestamp(SessionIdentifier session, Double offset) : session(session), offset(offset)
 		{}
 
-		/// 转为字符串显示，格式为"Session年月日-时-分-秒-偏置"，如20190101-12-30-45-123.456789
+		/// 转为字符串显示，格式为"Session年月日-时-分-秒-偏置"，如2019-01-01-12-30-45-123.456789
 		SPADAS_API String toString();
 	};
 
 	/// 完整时间戳
 	struct FullTimestamp
 	{
-		/// Session ID
-		SessionID session;
+		/// Session标识符
+		SessionIdentifier session;
 
 		/// 时间偏置，单位秒，大于零有效
 		Double offset;
@@ -4226,7 +4226,7 @@ namespace spadas
 		/// 转为简单时间戳
 		SPADAS_API ShortTimestamp toShort();
 
-		/// 转为字符串显示，格式为"Session年月日-时-分-秒-偏置"，如20190101-12-30-45-123.456789
+		/// 转为字符串显示，格式为"Session年月日-时-分-秒-偏置"，如2019-01-01-12-30-45-123.456789
 		SPADAS_API String toString();
 	};
 
@@ -4468,8 +4468,8 @@ namespace spadas
 		/// 获取缓存中样本个数
 		UInt getSampleCount();
 
-		/// 获取当前session ID
-		SessionID getCurrentSession();
+		/// 获取当前Session的标识符
+		SessionIdentifier getCurrentSession();
 
 		/// @brief 获取最早样本
 		/// @param sampleEarliest 输出最早样本
@@ -5187,16 +5187,16 @@ namespace spadas
 	/// 数据截取任务参数
 	struct PickConfig
 	{
-		/// 截取源session的时间偏置范围
+		/// 截取源Session的时间偏置范围
 		Range srcRange;
 
-		/// 目标session ID
-		SessionID dstSession;
+		/// 目标Session的标识符 (与旧版本兼容，等效于SessionIdentifier)
+		Time dstSession;
 
-		/// 目标session的input文件夹路径
+		/// 目标Session的input文件夹路径
 		Path dstInputRoot;
 
-		/// 目标session的generation文件夹路径
+		/// 目标Session的generation文件夹路径
 		Path dstGenerationRoot;
 	};
 
@@ -5251,8 +5251,8 @@ namespace spadas
 	/// 文件读写基本信息
 	struct FileIOBasicInfo
 	{
-		/// Session ID
-		SessionID session;
+		/// Session标识符 (与旧版本兼容，等效于SessionIdentifier)
+		Time session;
 
 		/// 筛选项，空表示不进行筛选
 		Array<FileIOFilter> filter;
@@ -5341,13 +5341,13 @@ namespace spadas
 
 		/// @brief 创建时间戳（计算时间偏置的优先级从高至低为：卫星Posix时间、授时服务器Posix时间、到达时CPU计数、到达时主机Posix时间）
 		/// @param outputTimestamp 输出的时间戳
-		/// @param session 时间戳所在session
+		/// @param session 时间戳所在Session的标识符
 		/// @param cpuTick 到达时CPU计数，0表示无效
 		/// @param hostPosix 到达时主机Posix时间，单位毫秒，0表示无效
 		/// @param guestPosix 客机Posix时间，单位毫秒，0表示无效
 		/// @param gnssPosix 卫星Posix时间，单位毫秒，0表示无效
 		/// @return 是否成功
-		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionID session, ULong cpuTick = 0, ULong hostPosix = 0, ULong guestPosix = 0, ULong gnssPosix = 0);
+		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionIdentifier session, ULong cpuTick = 0, ULong hostPosix = 0, ULong guestPosix = 0, ULong gnssPosix = 0);
 
 		/// @brief 根据基准时间戳进行二次同步（重新计算时间偏置的优先级从高至低为：卫星Posix时间、授时服务器Posix时间）
 		/// @param srcTimestamp 基准时间戳
@@ -5359,7 +5359,7 @@ namespace spadas
 		/// @brief 根据基准时间戳的时间偏置反算CPU计数、主机Posix时间、客机及授时服务器Posix时间、卫星Posix时间等
 		/// @param srcTimestamp 基准时间戳
 		/// @param timeType 输出的时间类型
-		/// @return 输出的session无关时间
+		/// @return 输出的Session无关时间
 		virtual ULong calcTime(ShortTimestamp srcTimestamp, TimeType timeType);
 	};
 
@@ -5620,15 +5620,15 @@ namespace spadas
 		/// @param caller 跨模块函数调用接口
 		virtual void useCrossCaller(Interface<ICrossCaller> caller);
 
-		/// @brief [可选] 在开始在线模式session时被调用
-		/// @param session 该在线模式session的ID
-		/// @param startCPUTick 该在线模式session启动时的基准CPU计数
-		virtual void onStartOnlineSession(SessionID session, ULong startCPUTick);
+		/// @brief [可选] 在开始在线模式Session时被调用
+		/// @param session 该在线模式Session的标识符
+		/// @param startCPUTick 该在线模式Session启动时的基准CPU计数
+		virtual void onStartOnlineSession(SessionIdentifier session, ULong startCPUTick);
 
-		/// [可选] 在结束在线模式session时被调用
+		/// [可选] 在结束在线模式Session时被调用
 		virtual void onStopOnlineSession();
 
-		/// @brief [可选] 启动独立的处理任务（一般仅在非session时段被调用）
+		/// @brief [可选] 启动独立的处理任务（一般仅在非Session时段被调用）
 		/// @param taskName 任务名称，用于区分不同任务
 		/// @param config 该任务的配置信息
 		/// @param shouldEnd 任务是否应该中止，一般来自用户操作
@@ -5645,7 +5645,7 @@ namespace spadas
 	public:
 		virtual ~IDevicePluginV202() {};
 
-		/// @brief 配置设备，在函数内部根据配置实现连接、断开、或重连（仅在非session时段被调用）
+		/// @brief 配置设备，在函数内部根据配置实现连接、断开、或重连（仅在非Session时段被调用）
 		/// @param config 配置信息，应包含是否连接设备的配置
 		virtual void setDeviceConnection(String config);
 
@@ -5700,11 +5700,11 @@ namespace spadas
 		/// @returns 返回总线设备列表
 		virtual Array<BusDeviceInfoX> getBusDeviceList();
 
-		/// @brief 打开总线设备（在开始session时被调用）
+		/// @brief 打开总线设备（在开始Session时被调用）
 		/// @param configs 希望打开的总线设备通道列表及相关配置
 		virtual Bool openBusDevice(Array<BusDeviceConfig> configs);
 
-		/// 关闭总线设备（在结束session时被调用）
+		/// 关闭总线设备（在结束Session时被调用）
 		virtual void closeBusDevice();
 
 		/// @brief 获取一帧数据
@@ -5751,11 +5751,11 @@ namespace spadas
 		/// @returns 视频设备列表
 		virtual Array<VideoDeviceInfoX> getVideoDeviceList();
 
-		/// @brief 打开视频设备（在开始session时被调用）
+		/// @brief 打开视频设备（在开始Session时被调用）
 		/// @param configs 希望打开的视频设备通道列表及相关配置
 		virtual Bool openVideoDevice(Array<VideoDeviceConfigX> configs);
 
-		/// 关闭总线设备（在结束session时被调用）
+		/// 关闭总线设备（在结束Session时被调用）
 		virtual void closeVideoDevice();
 
 		/// @brief 获取一帧数据
@@ -5814,14 +5814,14 @@ namespace spadas
 		/// [可选] 是否为离线限定的数据处理（默认为FALSE）
 		virtual Bool isProcessorOfflineOnly();
 
-		/// @brief 配置数据处理及杂项数据路径表（在开始session时被调用）
+		/// @brief 配置数据处理及杂项数据路径表（在开始Session时被调用）
 		/// @param config 配置信息，应包含是否启用功能的配置
 		/// @param onlineMode 是否为在线模式，否则为离线模式或回放模式
 		/// @param recordMode 是否记录至文件（在线采集或离线生成）
-		/// @param inputRoots 各session对应的input文件夹路径，可用于读取设备自定义数据
-		virtual void setProcessorConfig(String config, Bool onlineMode, Bool recordMode, Map<SessionID, Path> inputRoots);
+		/// @param inputRoots 各Session对应的input文件夹路径，可用于读取设备自定义数据
+		virtual void setProcessorConfig(String config, Bool onlineMode, Bool recordMode, Map<SessionIdentifier, Path> inputRoots);
 
-		/// 函数名disable_processor: 禁用数据处理功能（在结束session时被调用）
+		/// 函数名disable_processor: 禁用数据处理功能（在结束Session时被调用）
 		virtual void disableProcessor();
 
 		/// @brief 处理数据，函数内部应该只对输出数据表作更改
@@ -5911,18 +5911,18 @@ namespace spadas
 
 		/// @brief [可选] 获取是否有适用于数据截取器的数据文件
 		/// @param pickerName 数据截取器名称
-		/// @param inputRoot 源session的input文件夹
-		/// @param subInputRoots 源session的input子文件夹路径
-		/// @param generationRoot 源session的generation文件夹
+		/// @param inputRoot 源Session的input文件夹
+		/// @param subInputRoots 源Session的input子文件夹路径
+		/// @param generationRoot 源Session的generation文件夹
 		/// @param basicInfo 文件读写基本信息
 		/// @returns 是否有适用于数据截取器的数据文件
 		virtual Bool hasDataFiles(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo);
 
 		/// @brief [可选] 离线截取数据，在数据截取独立任务中被调用
 		/// @param pickerName 数据截取器名称
-		/// @param inputRoot 源session的input文件夹
-		/// @param subInputRoots 源session的input子文件夹路径
-		/// @param generationRoot 源session的generation文件夹
+		/// @param inputRoot 源Session的input文件夹
+		/// @param subInputRoots 源Session的input子文件夹路径
+		/// @param generationRoot 源Session的generation文件夹
 		/// @param pick 截取任务参数
 		/// @param basicInfo 文件读写基本信息
 		/// @param shouldEnd 是否已被取消
