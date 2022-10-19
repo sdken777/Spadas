@@ -125,7 +125,8 @@
 * 以下接口函数可选实现：
 *   - spadas::IDevicePluginV202::getChildDeviceStatus
 *   - spadas::IDevicePluginV202::getTransmittableProtocols
-*   - spadas::IDevicePluginV202::transmitGeneralDataNow
+*   - spadas::IDevicePluginV202::transmitGeneralData
+*   - spadas::IDevicePluginV202::transmitGeneralDataScheduled
 *
 * \subsection p7 7. 实现总线设备插件接口
 * 以下接口函数必须实现：
@@ -135,7 +136,7 @@
 *   - spadas::IBusPluginV201::receiveBusMessage
 *
 * 以下接口函数可选实现：
-*   - spadas::IBusPluginV201::transmitBusMessageNow
+*   - spadas::IBusPluginV201::transmitBusMessage
 *   - spadas::IBusPluginV201::transmitBusMessageScheduled
 *   - spadas::IBusPluginV201::setBusExtraConfig
 *   - spadas::IBusPluginV201::getBusPayload
@@ -148,7 +149,7 @@
 *   - spadas::IVideoPluginV402::queryVideoFrame
 *
 * 以下接口函数可选实现：
-*   - spadas::IVideoPluginV402::transmitVideoFrameNow
+*   - spadas::IVideoPluginV402::transmitVideoFrame
 *   - spadas::IVideoPluginV402::transmitVideoFrameScheduled
 *   - spadas::IVideoPluginV402::setVideoExtraConfig
 *   - spadas::IVideoPluginV402::getVideoDeviceNewData

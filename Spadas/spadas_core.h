@@ -4116,7 +4116,47 @@ namespace spadas
 	};
 
 	/// Session ID
-	typedef Time SessionID;
+	struct SessionID
+	{
+		/// 年
+		Word year;
+
+		/// 月
+		Byte month;
+
+		/// 日
+		Byte day;
+
+		/// 时
+		Byte hour;
+
+		/// 分
+		Byte minute;
+
+		/// 秒
+		Byte second;
+
+		/// 默认构造函数，全部置为0
+		SPADAS_API SessionID();
+
+		/// 基于指定年月日时分秒初始化
+		SPADAS_API SessionID(Word year, Byte month, Byte day, Byte hour, Byte minute, Byte second);
+
+		/// 基于字符串(yyyy-MM-dd-HH-mm-ss)初始化，若失败则全部置为0
+		SPADAS_API SessionID(String idString);
+
+		/// 是否等于
+		SPADAS_API Bool operator ==(SessionID id);
+
+		/// 是否不等于
+		SPADAS_API Bool operator !=(SessionID id);
+
+		/// 获取哈希值
+		SPADAS_API Word getHash();
+
+		/// 转为字符串(yyyy-MM-dd-HH-mm-ss)
+		SPADAS_API String toString();
+	};
 
 	/// 时间偏置同步状态
 	enum class TimeOffsetSync
@@ -4290,12 +4330,22 @@ namespace spadas
 		/// @param binary 二进制数据
 		virtual void transmitNow(String protocol, Array<Double> vector, Binary binary);
 
-		/// @brief 按时间偏置预约发送数据
+		/// @brief 按时间偏置预约发送数据（将优先按服务器Posix时间预约发送，不满足条件则按CPU计数时间发送）
 		/// @param protocol 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
 		/// @param vector 数值数组数据
 		/// @param binary 二进制数据
 		/// @param offset 时间偏置，单位秒 (必须大于该协议的上一帧预约发送数据的时间戳)
-		virtual void transmitAtTimeOffset(String protocol, Array<Double> vector, Binary binary, Double offset);
+		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
+		virtual void transmitAtTimeOffset(String protocol, Array<Double> vector, Binary binary, Double offset, UInt tolerance);
+
+		/// @brief 指定按服务器Posix时间预约发送视频帧 (必须大于该协议的上一帧预约发送数据的时间戳)
+		/// @param protocol 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
+		/// @param vector 数值数组数据
+		/// @param binary 二进制数据
+		/// @param serverPosixMS 授时服务器Posix时间的毫秒部分
+		/// @param serverPosixNS 授时服务器Posix时间的纳秒部分
+		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
+		virtual void transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
 	};
 
 	/// 通用样本元素
@@ -4656,7 +4706,8 @@ namespace spadas
 		/// @param id 该通道内的报文ID
 		/// @param binary 报文数据
 		/// @param offset 时间偏置，单位秒 (必须大于该通道上一帧预约发送报文的时间戳)
-		virtual void transmitAtTimeOffset(UInt channel, UInt id, Binary binary, Double offset);
+		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
+		virtual void transmitAtTimeOffset(UInt channel, UInt id, Binary binary, Double offset, UInt tolerance);
 
 		/// @brief 指定按授时服务器Posix时间预约发送报文 (必须大于该通道上一帧预约发送报文的时间)
 		/// @param channel 总线通道，1~16
@@ -4664,7 +4715,8 @@ namespace spadas
 		/// @param binary 报文数据
 		/// @param serverPosixMS 授时服务器Posix时间的毫秒部分
 		/// @param serverPosixNS 授时服务器Posix时间的纳秒部分
-		virtual void transmitAtServerPosix(UInt channel, UInt id, Binary binary, ULong serverPosixMS, UInt serverPosixNS);
+		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
+		virtual void transmitAtServerPosix(UInt channel, UInt id, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
 	};
 
 	/// 总线设备ID
@@ -5013,15 +5065,18 @@ namespace spadas
 		/// @param size 视频帧的大小，像素单位
 		/// @param data 视频帧数据
 		/// @param offset 时间偏置，单位秒 (必须大于该通道上一帧预约发送报文的时间戳)
-		virtual void transmitAtTimeOffset(UInt channel, VideoDataCodec codec, Size2D size, Binary data, Double offset);
+		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
+		virtual void transmitAtTimeOffset(UInt channel, VideoDataCodec codec, Size2D size, Binary data, Double offset, UInt tolerance);
 
-		/// @brief 指定按服务器Posix时间预约发送视频帧
+		/// @brief 指定按服务器Posix时间预约发送视频帧 (必须大于该通道上一帧预约发送报文的时间)
 		/// @param channel 视频通道，0~23
 		/// @param codec 视频帧的编码格式
 		/// @param size 视频帧的大小，像素单位
 		/// @param data 视频帧数据
-		/// @param serverPosix 服务器Posix时间，单位毫秒 (必须大于该通道上一帧预约发送报文的时间)
-		virtual void transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosix);
+		/// @param serverPosixMS 授时服务器Posix时间的毫秒部分
+		/// @param serverPosixNS 授时服务器Posix时间的纳秒部分
+		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
+		virtual void transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
 	};
 
 	/// 所有输入数据表
@@ -5620,6 +5675,16 @@ namespace spadas
 		/// @param binary 二进制数据
 		/// @returns 返回是否成功发送一帧数据，若协议未在可发送的协议列表内则返回FALSE
 		virtual Bool transmitGeneralData(String protocol, Array<Double> vector, Binary binary);
+
+		/// @brief [可选] 预约发送一帧数据（相同协议的预约发送时间已确保递增）
+		/// @param protocol 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
+		/// @param vector 数值数组数据
+		/// @param binary 二进制数据
+		/// @param serverPosixMS 预约发送的授时服务器Posix时间的毫秒部分
+		/// @param serverPosixNS 预约发送的授时服务器Posix时间的纳秒部分
+		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
+		/// @returns 返回是否成功预约发送一帧数据，若协议未在可发送的协议列表内则返回FALSE
+		virtual Bool transmitGeneralDataScheduled(String protocol, Array<Double> vector, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
 	};
 
 	/// 获取一般设备插件接口的全局函数定义，函数名应为get_device_plugin_v202
@@ -5660,8 +5725,9 @@ namespace spadas
 		/// @param binary 报文数据
 		/// @param serverPosixMS 预约发送的授时服务器Posix时间的毫秒部分
 		/// @param serverPosixNS 预约发送的授时服务器Posix时间的纳秒部分
+		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// @returns 返回是否成功预约发送一帧数据
-		virtual Bool transmitBusMessageScheduled(UInt channel, UInt id, Binary binary, ULong serverPosixMS, UInt serverPosixNS);
+		virtual Bool transmitBusMessageScheduled(UInt channel, UInt id, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
 
 		/// @brief [可选] 对总线设备进行额外设置（在openBusDevice前被调用）
 		/// @param extra 配置信息
@@ -5710,9 +5776,11 @@ namespace spadas
 		/// @param codec 视频帧编码方式
 		/// @param size 视频帧大小，像素单位
 		/// @param data 视频帧数据
-		/// @param serverPosix 预约发送的授时服务器Posix时间，单位毫秒
+		/// @param serverPosixMS 预约发送的授时服务器Posix时间的毫秒部分
+		/// @param serverPosixNS 预约发送的授时服务器Posix时间的纳秒部分
+		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// @returns 返回是否成功预约发送一帧数据
-		virtual Bool transmitVideoFrameScheduled(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosix);
+		virtual Bool transmitVideoFrameScheduled(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
 
 		/// @brief [可选] 对视频设备进行额外设置（在openVideoDevice前被调用）
 		/// @param extra 配置信息
