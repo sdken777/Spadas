@@ -4137,10 +4137,12 @@ namespace spadas
 		Byte second;
 
 		/// 默认构造函数，全部置为0
-		SPADAS_API SessionIdentifier();
+		SessionIdentifier() : year(0), month(0), day(0), hour(0), minute(0), second(0)
+		{}
 
 		/// 基于指定年月日时分秒初始化
-		SPADAS_API SessionIdentifier(Word year, Byte month, Byte day, Byte hour, Byte minute, Byte second);
+		SessionIdentifier(Word year, Byte month, Byte day, Byte hour, Byte minute, Byte second) : year(year), month(month), day(day), hour(hour), minute(minute), second(second)
+		{}
 
 		/// 基于字符串(yyyy-MM-dd-HH-mm-ss)初始化，若失败则全部置为0
 		SPADAS_API SessionIdentifier(String idString);
@@ -4459,8 +4461,7 @@ namespace spadas
 
 		/// @brief 添加新样本
 		/// @param sample 新通用样本
-		/// @param maxSize 样本缓存的最大容量，若已满则移除最早样本再添加新样本
-		void addSample(SessionGeneralSample sample, UInt maxSize = 100);
+		void addSample(SessionGeneralSample sample);
 
 		/// 缓存是否为空
 		Bool isEmpty();
@@ -5359,7 +5360,7 @@ namespace spadas
 		/// @brief 根据基准时间戳的时间偏置反算CPU计数、主机Posix时间、客机及授时服务器Posix时间、卫星Posix时间等
 		/// @param srcTimestamp 基准时间戳
 		/// @param timeType 输出的时间类型
-		/// @return 输出的Session无关时间
+		/// @return 输出的Session无关时间，0表示失败
 		virtual ULong calcTime(ShortTimestamp srcTimestamp, TimeType timeType);
 	};
 
@@ -5570,16 +5571,6 @@ namespace spadas
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
-	};
-
-	/// 时间相关服务
-	class TimeServer : public Object<class TimeServerVars>, public ITimeServer
-	{
-	public:
-		/// 默认构造函数
-		TimeServer();
-
-		// TODO
 	};
 
 	// 插件API //////////////////////////////////////////////////////////////

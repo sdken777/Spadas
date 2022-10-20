@@ -8,5 +8,12 @@
         "*.vcxproj": true,
         "*.vcxproj.user": true,
         "*.vcxproj.filters": true
+    },
+    "files.associations": {
+        "bitset": "cpp",
+        "iomanip": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "chrono": "cpp"
     }
 }

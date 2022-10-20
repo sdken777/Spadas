@@ -236,3 +236,106 @@ Bool ICrossCaller::callNativeFunction(String pluginType, String id, BaseObject c
 {
 	return FALSE;
 }
+
+SessionIdentifier::SessionIdentifier(String idString) : year(0), month(0), day(0), hour(0), minute(0), second(0)
+{
+	Array<String> comps = idString.split("-");
+	if (comps.size() != 6) return;
+
+	auto year0 = comps[0].toInt().value(-1);
+	auto month0 = comps[1].toInt().value(-1);
+	auto day0 = comps[2].toInt().value(-1);
+	auto hour0 = comps[3].toInt().value(-1);
+	auto minute0 = comps[4].toInt().value(-1);
+	auto second0 = comps[5].toInt().value(-1);
+	if (year0 > 0 && year0 < 65536 && month0 >= 1 && month0 <= 12 && day0 >= 1 && day0 <= 31 &&
+		hour0 >= 0 && hour0 < 24 && minute0 >= 0 && minute0 < 60 && second0 >= 0 && second0 < 60)
+	{
+		year = (Word)year0;
+		month = (Byte)month0;
+		day = (Byte)day0;
+		hour = (Byte)hour0;
+		minute = (Byte)minute0;
+		second = (Byte)second0;
+	}
+}
+
+Bool SessionIdentifier::operator ==(SessionIdentifier id)
+{
+	return this->year == id.year &&
+		this->month == id.month &&
+		this->day == id.day &&
+		this->hour == id.hour &&
+		this->minute == id.minute &&
+		this->second == id.second;
+}
+
+Bool SessionIdentifier::operator !=(SessionIdentifier id)
+{
+	return !operator ==(id);
+}
+
+Word SessionIdentifier::getHash()
+{
+	return year ^ month ^ day ^ hour ^ minute ^ second;
+}
+
+String SessionIdentifier::toString()
+{
+	Array<String> comps(6);
+	comps[0] = year;
+	comps[1] = month;
+	comps[2] = day;
+	comps[3] = hour;
+	comps[4] = minute;
+	comps[5] = second;
+	return String::mergeStrings(comps, "-");
+}
+
+void IGeneralDataTransmitter::transmitNow(String protocol, Array<Double> vector, Binary binary)
+{
+}
+
+void IGeneralDataTransmitter::transmitAtTimeOffset(String protocol, Array<Double> vector, Binary binary, Double offset, UInt tolerance)
+{
+}
+
+void IGeneralDataTransmitter::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance)
+{
+}
+
+void IBusMessageTransmitter::transmitNow(UInt channel, UInt id, Binary binary)
+{
+}
+
+void IBusMessageTransmitter::transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval)
+{
+}
+
+void IBusMessageTransmitter::transmitAtTimeOffset(UInt channel, UInt id, Binary binary, Double offset, UInt tolerance)
+{
+}
+
+void IBusMessageTransmitter::transmitAtServerPosix(UInt channel, UInt id, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance)
+{
+}
+
+void IVideoPreviewExpressX::outputPreview(ULong cpuTick, UInt channel, ImagePointer preview)
+{
+}
+
+void IVideoFrameTransmitter::transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data)
+{
+}
+
+void IVideoFrameTransmitter::transmitAtTimeOffset(UInt channel, VideoDataCodec codec, Size2D size, Binary data, Double offset, UInt tolerance)
+{
+}
+
+void IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance)
+{
+}
+
+void IGeneralDeviceDataOutput::outputGeneralDeviceData(GeneralDeviceData data)
+{
+}

@@ -26,13 +26,41 @@ namespace spadas
 			nodes.collapse();
 		}
 	};
+	class SessionSampleBufferVars : public Vars
+	{
+	public:
+		SPADAS_VARS_DEF(SessionSampleBuffer, Vars)
+
+		String protocol;
+		Lock lock;
+		ListNode<SessionGeneralSample> nodes;
+		UInt nSamples;
+		Time currentBase;
+		Double maxTime;
+		Double bufferDuration; // sec
+
+		SessionSampleBufferVars() : bufferDuration(3.0)
+		{
+			nodes.joinNext(nodes);
+			nSamples = 0;
+			maxTime = -100000000;
+		}
+		~SessionSampleBufferVars()
+		{
+			nodes.collapse();
+		}
+	};
 }
 
 using namespace spadas;
 
 const String spadas::SampleBuffer::TypeName = "spadas.SampleBuffer";
+const String spadas::SessionSampleBuffer::TypeName = "spadas.SessionSampleBuffer";
 
 SampleBuffer::SampleBuffer() : Object<SampleBufferVars>(new SampleBufferVars, TRUE)
+{
+}
+SessionSampleBuffer::SessionSampleBuffer() : Object<SessionSampleBufferVars>(new SessionSampleBufferVars, TRUE)
 {
 }
 
@@ -40,8 +68,22 @@ void SampleBuffer::setProtocol(String protocol)
 {
 	vars->protocol = protocol;
 }
+void SessionSampleBuffer::setProtocol(String protocol)
+{
+	vars->protocol = protocol;
+}
 
 String SampleBuffer::getProtocol(Bool withChannel)
+{
+	Array<UInt> atIndices = vars->protocol.search("@");
+	if (atIndices.isEmpty()) return vars->protocol;
+	else
+	{
+		if (atIndices.size() != 1 || atIndices[0] == 0) return String();
+		else return withChannel ? vars->protocol : String(vars->protocol, Region(0, atIndices[0]));
+	}
+}
+String SessionSampleBuffer::getProtocol(Bool withChannel)
 {
 	Array<UInt> atIndices = vars->protocol.search("@");
 	if (atIndices.isEmpty()) return vars->protocol;

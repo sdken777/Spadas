@@ -2,7 +2,7 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // TODO
+// 版本定义 // Timer按CPU计数重构。SessionID改为SessionIdentifier。新增Short/FullTimestamp及相关Session开头结构体。新增Session无关TimeType。设备数据XXXDeviceData与Session无关。新增通用原始数据和视频数据发送接口。增加预约发送相关接口。新增VideoOutputMode和视频回注相关编码方式。新增ITimeServer，移除旧方式时间同步用接口。独立任务接口移动至通用功能插件。通用功能插件增加在线模式开始/停止响应接口。通用设备插件接口简化，不再考虑写数据文件。数据处理插件接口简化。过期API移动至spadas_deprecated头文件
 #define SPADAS_VERSION_MAJOR 8
 #define SPADAS_VERSION_MINOR 4
 #define SPADAS_VERSION_BUILD 0

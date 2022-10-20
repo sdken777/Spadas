@@ -8,37 +8,37 @@ using namespace spadas;
 SPADAS_DEFAULT_API void get_native_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 1;
-	minor = 1;
+	minor = 2;
 }
 
 SPADAS_DEFAULT_API void get_bus_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 2;
-	minor = 0;
+	minor = 1;
 }
 
 SPADAS_DEFAULT_API void get_video_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 4;
-	minor = 0;
+	minor = 2;
 }
 
 SPADAS_DEFAULT_API void get_dev_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 2;
-	minor = 1;
+	minor = 2;
 }
 
 SPADAS_DEFAULT_API void get_proc_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 6;
-	minor = 1;
+	minor = 2;
 }
 
 SPADAS_DEFAULT_API void get_file_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 1;
-	minor = 2;
+	minor = 3;
 }
 
 // 通用功能插件接口 1.0
@@ -81,6 +81,43 @@ Bool IPluginV101::onCrossCall(String id, BaseObject context)
 }
 
 void IPluginV101::useCrossCaller(Interface<ICrossCaller> caller)
+{}
+
+// 通用功能插件接口 1.2
+String IPluginV102::getPluginType()
+{
+	return String();
+}
+
+String IPluginV102::getPluginVersion()
+{
+	return String();
+}
+
+void IPluginV102::closePlugin()
+{}
+
+void IPluginV102::onCrossData(String id, Binary data)
+{}
+
+void IPluginV102::useCrossTransmitter(Interface<ICrossTransmitter> transmitter)
+{}
+
+Bool IPluginV102::onCrossCall(String id, BaseObject context)
+{
+	return FALSE;
+}
+
+void IPluginV102::useCrossCaller(Interface<ICrossCaller> caller)
+{}
+
+void IPluginV102::onStartOnlineSession(SessionIdentifier session, ULong startCPUTick)
+{}
+
+void IPluginV102::onStopOnlineSession()
+{}
+
+void IPluginV102::runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
 {}
 
 // 一般设备插件接口 2.0
@@ -156,6 +193,43 @@ void IDevicePluginV201::clearBufferFiles(SessionID session, Double freeTime)
 void IDevicePluginV201::pickEvent(SessionID srcSession, PickConfig pick, Interface<IStandaloneTaskCallback> callback)
 {}
 
+// 一般设备插件接口 2.2
+void IDevicePluginV202::setDeviceConnection(String config)
+{}
+
+void IDevicePluginV202::disconnectDevice()
+{}
+
+GeneralDeviceStatus IDevicePluginV202::getDeviceStatus(String& info)
+{
+	return GeneralDeviceStatus::NotConnect;
+}
+
+Array<GeneralDeviceStatus> IDevicePluginV202::getChildDeviceStatus()
+{
+	return Array<GeneralDeviceStatus>();
+}
+
+Array<GeneralDeviceData> IDevicePluginV202::getDeviceNewData()
+{
+	return Array<GeneralDeviceData>();
+}
+
+Array<String> IDevicePluginV202::getTransmittableProtocols()
+{
+	return Array<String>();
+}
+
+Bool IDevicePluginV202::transmitGeneralData(String protocol, Array<Double> vector, Binary binary)
+{
+	return FALSE;
+}
+
+Bool IDevicePluginV202::transmitGeneralDataScheduled(String protocol, Array<Double> vector, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance)
+{
+	return FALSE;
+}
+
 // 总线设备插件接口 2.0
 Array<BusDeviceInfo> IBusPluginV200::getBusDeviceList()
 {
@@ -184,6 +258,43 @@ void IBusPluginV200::setBusExtraConfig(String extra)
 {}
 
 Array<BusChannelPayload> IBusPluginV200::getBusPayload()
+{
+	return Array<BusChannelPayload>();
+}
+
+// 总线设备插件接口 2.1
+Array<BusDeviceInfoX> IBusPluginV201::getBusDeviceList()
+{
+	return Array<BusDeviceInfoX>();
+}
+
+Bool IBusPluginV201::openBusDevice(Array<BusDeviceConfig> configs)
+{
+	return FALSE;
+}
+
+void IBusPluginV201::closeBusDevice()
+{}
+
+Bool IBusPluginV201::receiveBusMessage(BusDeviceData& rxData)
+{
+	return FALSE;
+}
+
+Bool IBusPluginV201::transmitBusMessage(UInt channel, UInt id, Binary binary)
+{
+	return FALSE;
+}
+
+Bool IBusPluginV201::transmitBusMessageScheduled(UInt channel, UInt id, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance)
+{
+	return FALSE;
+}
+
+void IBusPluginV201::setBusExtraConfig(String extra)
+{}
+
+Array<BusChannelPayload> IBusPluginV201::getBusPayload()
 {
 	return Array<BusChannelPayload>();
 }
@@ -249,6 +360,51 @@ void IVideoPluginV401::useVideoPreviewExpress(Interface<IVideoPreviewExpress> pr
 {}
 
 Array<String> IVideoPluginV401::getExclusiveKeywords()
+{
+	return Array<String>();
+}
+
+// 视频设备插件接口 4.2
+Array<VideoDeviceInfoX> IVideoPluginV402::getVideoDeviceList()
+{
+	return Array<VideoDeviceInfoX>();
+}
+
+Bool IVideoPluginV402::openVideoDevice(Array<VideoDeviceConfigX> configs)
+{
+	return FALSE;
+}
+
+void IVideoPluginV402::closeVideoDevice()
+{}
+
+Bool IVideoPluginV402::queryVideoFrame(VideoDeviceData& frame)
+{
+	return FALSE;
+}
+
+Bool IVideoPluginV402::transmitVideoFrame(UInt channel, VideoDataCodec codec, Size2D size, Binary data)
+{
+	return FALSE;
+}
+
+Bool IVideoPluginV402::transmitVideoFrameScheduled(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance)
+{
+	return FALSE;
+}
+
+void IVideoPluginV402::setVideoExtraConfig(String extra)
+{}
+
+Array<GeneralDeviceData> IVideoPluginV402::getVideoDeviceNewData()
+{
+	return Array<GeneralDeviceData>();
+}
+
+void IVideoPluginV402::useVideoPreviewExpress(Interface<IVideoPreviewExpressX> previewExpress)
+{}
+
+Array<String> IVideoPluginV402::getExclusiveKeywords()
 {
 	return Array<String>();
 }
@@ -351,6 +507,38 @@ Bool IProcessorPluginV601::isStandaloneTaskModeSupported()
 }
 
 void IProcessorPluginV601::runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
+{}
+
+// 原生数据处理插件接口 6.2
+Bool IProcessorPluginV602::isProcessorOnlineOnly()
+{
+	return FALSE;
+}
+
+Bool IProcessorPluginV602::isProcessorOfflineOnly()
+{
+	return FALSE;
+}
+
+void IProcessorPluginV602::setProcessorConfig(String config, Bool onlineMode, Bool recordMode, Map<SessionIdentifier, Path> inputRoots)
+{}
+
+void IProcessorPluginV602::disableProcessor()
+{}
+
+void IProcessorPluginV602::processData(InputTablesX inputs, SessionSampleBufferTable sampleBuffers, OutputTablesX outputs)
+{}
+
+void IProcessorPluginV602::useTimeServer(Interface<ITimeServer> timeServer)
+{}
+
+void IProcessorPluginV602::useGeneralTransmitter(Interface<IGeneralDataTransmitter> generalTransmitter)
+{}
+
+void IProcessorPluginV602::useBusTransmitter(Interface<IBusMessageTransmitter> busTransmitter)
+{}
+
+void IProcessorPluginV602::useVideoTransmitter(Interface<IVideoFrameTransmitter> videoTransmitter)
 {}
 
 // 文件读写插件接口 1.0
@@ -492,4 +680,48 @@ void IFilePluginV102::updateStartTimeLocal(ULong posixTime, Double timeRatio)
 {}
 
 void IFilePluginV102::updateStartTimeUTC(ULong posixTime, Double timeRatio)
+{}
+
+// 文件读写插件接口 1.3
+Double IFilePluginV103::getFilesDuration(String readerName, Path inputRoot, Array<Path> subInputRoots, Array<Path> generationRoots, FileIOBasicInfo basicInfo)
+{
+	return 0;
+}
+
+Bool IFilePluginV103::openReadFiles(String readerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Double jumpOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo)
+{
+	return FALSE;
+}
+
+Bool IFilePluginV103::readFilesData(String readerName, InputTablesX inputs, Double targetOffset, Flag shouldEnd)
+{
+	return FALSE;
+}
+
+void IFilePluginV103::closeReadFiles(String readerName)
+{}
+
+Bool IFilePluginV103::openWriteFiles(String writerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo)
+{
+	return FALSE;
+}
+
+void IFilePluginV103::writeFilesData(String writerName, InputTablesX inputs, Array<SessionBusRawData> busMessages, Flag shouldEnd)
+{}
+
+void IFilePluginV103::closeWriteFiles(String writerName)
+{}
+
+Bool IFilePluginV103::hasDataFiles(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo)
+{
+	return FALSE;
+}
+
+void IFilePluginV103::pickSession(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
+{}
+
+void IFilePluginV103::setFileExtraConfig(String extra)
+{}
+
+void IFilePluginV103::useTimeServer(Interface<ITimeServer> timeServer)
 {}
