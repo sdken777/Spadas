@@ -105,7 +105,7 @@ Bool LibraryLoader::openWithPath(Path libPath, String& errorMessage)
 	system::addEnvironmentPath(rootDir);
 	chdir((Char*)rootDir.fullPath().bytes());
 
-	vars->handle = (Pointer)dlopen((Char*)libPath.fullPath().bytes(), RTLD_NOW | RTLD_GLOBAL);
+	vars->handle = (Pointer)dlopen((Char*)libPath.fullPath().bytes(), RTLD_NOW);
 	if (vars->handle == NULL)
 	{
 		errorMessage = dlerror();

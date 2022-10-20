@@ -192,11 +192,14 @@ void OscillatorVars::stopOscillator(UInt id)
 #elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include <pthread.h>
-#include <unistd.h>
+#include <sys/time.h>
 
 void spadas_internal::sleepTime(spadas::UInt time)
 {
-	usleep(time * 1000);
+	timeval interval;
+	interval.tv_sec = 0;
+	interval.tv_usec = time * 1000;
+	select(0, NULL, NULL, NULL, &interval);
 }
 
 volatile Bool oscillatorShouldEnd = FALSE;
