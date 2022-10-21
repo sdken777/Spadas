@@ -4158,6 +4158,9 @@ namespace spadas
 
 		/// 转为字符串(yyyy-MM-dd-HH-mm-ss)
 		SPADAS_API String toString();
+
+		/// 转为时间（方便旧版本兼容）
+		SPADAS_API Time toTime();
 	};
 
 	/// 时间偏置同步状态
@@ -4450,6 +4453,10 @@ namespace spadas
 		/// 创建样本缓存
 		SessionSampleBuffer();
 
+		/// @brief 设置缓存最大时长
+		/// @param length 最大时长，单位秒，范围1~60秒，默认3秒
+		void setBufferLength(Double length);
+
 		/// @brief 设置对应的通用样本协议
 		/// @param protocol 通用样本协议ID
 		void setProtocol(String protocol);
@@ -4510,17 +4517,19 @@ namespace spadas
 		/// @returns 若无则返回FALSE
 		Bool search(TimeType timeType, ULong time, SessionGeneralSample& sampleBefore, SessionGeneralSample& sampleAfter);
 
+#if !defined(SPADAS_DEPRECATED_HIDE)
 		/// @brief 根据时间偏置寻找前后两个样本并插值
 		/// @param offset 目标时间偏置
 		/// @param interpolatedSample 输出插值完成的样本
 		/// @param earlyThresh 用于判断缓存范围是否过早的阈值，参考 SampleInterpolationResult::TooEarly
 		/// @details 该模板类型必须实现以下函数：\n
-		/// - Bool fromGeneralSample(SessionGeneralSample); \n
-		/// - Bool fromGeneralSample(String protocol, SessionGeneralSample); \n
+		/// - Bool fromGeneralSample(GeneralSample); \n
+		/// - Bool fromGeneralSample(String protocol, GeneralSample); \n
 		/// - static Bool supportInterpolation(); \n
-		/// - static Type interpolate(Type& s1, Double w1, Type& s2, Double w2, Timestamp);
+		/// - static Type interpolate(Type& s1, Double w1, Type& s2, Double w2, GlobalTimestamp time);
 		template <typename Type>
 		SampleInterpolationResult interpolate(Double offset, Type& interpolatedSample, UInt earlyThresh = 1000/* ms */);
+#endif
 
 	private:
 		Bool isNull() { return FALSE; }
@@ -5808,11 +5817,9 @@ namespace spadas
 		/// @brief 配置数据处理及杂项数据路径表（在开始Session时被调用）
 		/// @param config 配置信息，应包含是否启用功能的配置
 		/// @param onlineMode 是否为在线模式，否则为离线模式或回放模式
-		/// @param recordMode 是否记录至文件（在线采集或离线生成）
-		/// @param inputRoots 各Session对应的input文件夹路径，可用于读取设备自定义数据
-		virtual void setProcessorConfig(String config, Bool onlineMode, Bool recordMode, Map<SessionIdentifier, Path> inputRoots);
+		virtual void setProcessorConfig(String config, Bool onlineMode);
 
-		/// 函数名disable_processor: 禁用数据处理功能（在结束Session时被调用）
+		/// 禁用数据处理功能（在结束Session时被调用）
 		virtual void disableProcessor();
 
 		/// @brief 处理数据，函数内部应该只对输出数据表作更改

@@ -520,7 +520,7 @@ Bool IProcessorPluginV602::isProcessorOfflineOnly()
 	return FALSE;
 }
 
-void IProcessorPluginV602::setProcessorConfig(String config, Bool onlineMode, Bool recordMode, Map<SessionIdentifier, Path> inputRoots)
+void IProcessorPluginV602::setProcessorConfig(String config, Bool onlineMode)
 {}
 
 void IProcessorPluginV602::disableProcessor()

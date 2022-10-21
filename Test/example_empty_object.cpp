@@ -1,9 +1,10 @@
 ﻿
+#define SPADAS_DEPRECATED_HIDE
 #include "spadas.h"
 
 using namespace spadas;
 
-class NoVarsObject : public EmptyObject, public IPlugin
+class NoVarsObject : public EmptyObject, public IPluginV102
 {
 public:
 	String getPluginType() { return "MyPlugin"; }
@@ -12,6 +13,6 @@ public:
 
 void exampleEmptyObject()
 {
-	Interface<IPlugin> plugin = NoVarsObject();
+	Interface<IPluginV102> plugin = NoVarsObject();
 	console::print(plugin->getPluginType() + " " + plugin->getPluginVersion());
 }

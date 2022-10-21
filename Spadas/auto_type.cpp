@@ -292,6 +292,11 @@ String SessionIdentifier::toString()
 	return String::mergeStrings(comps, "-");
 }
 
+Time SessionIdentifier::toTime()
+{
+	return Time(year, month, day, hour, minute, second);
+}
+
 void IGeneralDataTransmitter::transmitNow(String protocol, Array<Double> vector, Binary binary)
 {
 }

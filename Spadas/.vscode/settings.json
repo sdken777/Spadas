@@ -14,6 +14,8 @@
         "iomanip": "cpp",
         "istream": "cpp",
         "ostream": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "optional": "cpp",
+        "system_error": "cpp"
     }
 }

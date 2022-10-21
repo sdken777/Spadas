@@ -2,9 +2,7 @@
 #ifndef SPADAS_TEMPLATE_H
 #define SPADAS_TEMPLATE_H
 
-///////////////////////////////////////////////////////
-/// 内部模块 (NOT FOR USER)
-///////////////////////////////////////////////////////
+///内部模块 (NOT FOR USER) ///////////////////////////////////////////////////////
 namespace spadas_internal
 {
 	using namespace spadas;
@@ -206,9 +204,7 @@ namespace spadas
 	const UInt ARRAYX_SEGMENT_LIMIT = 65536;
 	const UInt MAP_INDEX_LIMIT = 65536;
 
-	///////////////////////////////////////////////////////////
-	// 引用计数实现
-	///////////////////////////////////////////////////////////
+	// 引用计数实现 ///////////////////////////////////////////////////////////
 	template <typename VarsType>
 	Object<VarsType>::Object() : vars(0)
 	{}
@@ -527,9 +523,7 @@ namespace spadas
 		return &this->vars->val;
 	}
 
-	///////////////////////////////////////////////////////
-	/// 数组实现
-	///////////////////////////////////////////////////////
+	// 数组实现 ///////////////////////////////////////////////////////
 	template<typename Type> class ArrayVars : public Vars
 	{
 	public:
@@ -916,9 +910,7 @@ namespace spadas
 		idx++;
 	}
 
-	///////////////////////////////////////////////////////
-	/// 链表节点实现
-	///////////////////////////////////////////////////////
+	// 链表节点实现 ///////////////////////////////////////////////////////
 	template <typename Type> class ListNodeVars : public Vars
 	{
 	public:
@@ -1278,9 +1270,7 @@ namespace spadas
 		}
 	}
 
-	///////////////////////////////////////////////////////
-	/// 树节点实现
-	///////////////////////////////////////////////////////
+	/// 树节点实现 ///////////////////////////////////////////////////////
 	template <typename Type> class TreeNodeVars : public Vars
 	{
 	public:
@@ -1565,10 +1555,8 @@ namespace spadas
 			this->vars->release();
 		}
 	}
-
-	///////////////////////////////////////////////////////
-	/// 图节点实现
-	///////////////////////////////////////////////////////
+	
+	/// 图节点实现 ///////////////////////////////////////////////////////
 	template<typename NType, typename LType> class GraphNodeVars : public Vars
 	{
 	public:
@@ -1777,9 +1765,7 @@ namespace spadas
 		delete[] linkedNodes;
 	}
 
-	///////////////////////////////////////////////////////
-	/// 自动变长数组实现
-	///////////////////////////////////////////////////////
+	/// 自动变长数组实现 ///////////////////////////////////////////////////////
 	template<typename Type> class ArrayXVars : public Vars
 	{
 	public:
@@ -2061,9 +2047,7 @@ namespace spadas
 		return toArray(Region(0, size()));
 	}
 
-	///////////////////////////////////////////////////////
-	/// 链表实现
-	///////////////////////////////////////////////////////
+	/// 链表实现 ///////////////////////////////////////////////////////
 	template<typename Type> class ListVars : public Vars
 	{
 	public:
@@ -2373,9 +2357,7 @@ namespace spadas
 		this->vars->list.getVars()->size--;
 	}
 
-	///////////////////////////////////////////////////////
-	/// 数据流实现
-	///////////////////////////////////////////////////////
+	/// 数据流实现 ///////////////////////////////////////////////////////
 	template<typename Type> class StreamVars : public Vars
 	{
 	public:
@@ -2663,9 +2645,7 @@ namespace spadas
 		this->vars->lock.leave();
 	}
 
-	///////////////////////////////////////////////////////
-	/// 映射与字典实现
-	///////////////////////////////////////////////////////
+	/// 映射与字典实现 ///////////////////////////////////////////////////////
 	template<typename Type>
 	NumericKey<Type>::NumericKey()
 	{}
@@ -3132,9 +3112,7 @@ namespace spadas
 		return map;
 	}
 
-	///////////////////////////////////////////////////////
-	/// 字符串模板函数实现
-	///////////////////////////////////////////////////////
+	/// 字符串模板函数实现 ///////////////////////////////////////////////////////
 	template <typename Type>
 	String::String(Type obj)
 	{
@@ -3151,9 +3129,7 @@ namespace spadas
 		return mergeStrings(strs, separator);
 	}
 
-	///////////////////////////////////////////////////////
-	/// 枚举类实现
-	///////////////////////////////////////////////////////
+	/// 枚举类实现 ///////////////////////////////////////////////////////
 	template <typename Type>
 	Enum<Type>::Enum() : val(Type::defaultValue())
 	{ }
@@ -3200,9 +3176,7 @@ namespace spadas
 		return out.isEmpty() ? "Unknown" : out;
 	}
 
-	///////////////////////////////////////////////////////
-	/// 数学相关函数的实现
-	///////////////////////////////////////////////////////
+	/// 数学相关函数的实现 ///////////////////////////////////////////////////////
 	template<typename Type>
 	Type spadas::math::min(Type a, Type b)
 	{
@@ -3269,9 +3243,7 @@ namespace spadas
 		else spadas_internal::sortInsertion(data, &data[size]);
 	}
 
-	///////////////////////////////////////////////////////
-	/// 实用工具相关函数的实现
-	///////////////////////////////////////////////////////
+	/// 实用工具相关函数的实现 ///////////////////////////////////////////////////////
 	template<typename SrcType, typename DstType>
 	DstType spadas::utility::valueCast(SrcType val)
 	{
@@ -3307,68 +3279,7 @@ namespace spadas
 		return out;
 	}
 
-	///////////////////////////////////////////////////////
-	/// SampleBuffer函数的实现
-	///////////////////////////////////////////////////////
-	template<typename Type>
-	SampleInterpolationResult SampleBuffer::interpolate(GlobalTimestamp time, Type& interpolatedSample, UInt earlyThresh)
-	{
-		if (this->isEmpty()) return SampleInterpolationResult::OutOfRange;
-		if (this->getCurrentSession() != time.base) return SampleInterpolationResult::OutOfRange;
-
-		GeneralSample sFirst, sLast;
-		this->getEarliest(sFirst);
-		this->getLatest(sLast);
-
-		if (time.offset > sFirst.timeStamp.offset && time.offset <= sLast.timeStamp.offset)
-		{
-			GeneralSample sg1, sg2;
-			if (!this->search(time, sg1, sg2)) return SampleInterpolationResult::OutOfRange;
-
-			Double delta = sg2.timeStamp.offset - sg1.timeStamp.offset;
-			Double w1 = (sg2.timeStamp.offset - time.offset) / delta;
-			Double w2 = (time.offset - sg1.timeStamp.offset) / delta;
-
-			String protocol = getProtocol(FALSE);
-
-			if (!Type::supportInterpolation())
-			{
-				Bool parseResult;
-				if (protocol.isEmpty()) parseResult = interpolatedSample.fromGeneralSample(w1 > w2 ? sg1 : sg2);
-				else parseResult = interpolatedSample.fromGeneralSample(protocol, w1 > w2 ? sg1 : sg2);
-				return parseResult ? SampleInterpolationResult::NearestInstead : SampleInterpolationResult::ParseError;
-			}
-
-			Type s1, s2;
-			Bool parseResultS1, parseResultS2;
-			if (protocol.isEmpty())
-			{
-				parseResultS1 = s1.fromGeneralSample(sg1);
-				parseResultS2 = s2.fromGeneralSample(sg2);
-			}
-			else
-			{
-				parseResultS1 = s1.fromGeneralSample(protocol, sg1);
-				parseResultS2 = s2.fromGeneralSample(protocol, sg2);
-			}
-			if (!parseResultS1 || !parseResultS2) return SampleInterpolationResult::ParseError;
-
-			interpolatedSample = Type::interpolate(s1, w1, s2, w2, time);
-			return SampleInterpolationResult::OK;
-		}
-		else if (time.offset > sLast.timeStamp.offset && time.offset < sLast.timeStamp.offset + 0.001 * earlyThresh)
-		{
-			return SampleInterpolationResult::TooEarly;
-		}
-		else
-		{
-			return SampleInterpolationResult::OutOfRange;
-		}
-	}
-
-	///////////////////////////////////////////////////////
-	/// FlexVars函数的实现
-	///////////////////////////////////////////////////////
+	/// FlexVars函数的实现 ///////////////////////////////////////////////////////
 	template <typename Type>
 	FlexVars<Type>::FlexVars(Array<Int> validFlagIndices)
 	{
