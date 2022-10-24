@@ -4906,8 +4906,8 @@ namespace spadas
 		/// 到达时CPU计数
 		ULong cpuTick;
 
-		/// 已与授时服务器同步的客机Posix时间，0表示无效
-		ULong serverPosix;
+		/// 客机Posix时间，0表示无效
+		ULong guestPosix;
 
 		/// 卫星Posix时间，0表示无效
 		ULong gnssPosix;
@@ -4928,7 +4928,7 @@ namespace spadas
 		ImagePointer preview;
 
 		/// 默认构造函数
-		VideoDeviceData() : cpuTick(0), serverPosix(0), gnssPosix(0), channel(0), hasPreview(FALSE)
+		VideoDeviceData() : cpuTick(0), guestPosix(0), gnssPosix(0), channel(0), hasPreview(FALSE)
 		{}
 	};
 
@@ -5356,19 +5356,21 @@ namespace spadas
 		/// @param hostPosix 到达时主机Posix时间，单位毫秒，0表示无效
 		/// @param guestPosix 客机Posix时间，单位毫秒，0表示无效
 		/// @param gnssPosix 卫星Posix时间，单位毫秒，0表示无效
+		/// @param protocol 样本协议ID，将据此确定客机是否已与授时服务器同步（一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始）
 		/// @return 是否成功
-		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionIdentifier session, ULong cpuTick = 0, ULong hostPosix = 0, ULong guestPosix = 0, ULong gnssPosix = 0);
+		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionIdentifier session, ULong cpuTick = 0, ULong hostPosix = 0, ULong guestPosix = 0, ULong gnssPosix = 0, String protocol = String());
 
 		/// @brief 根据基准时间戳进行二次同步（重新计算时间偏置的优先级从高至低为：卫星Posix时间、授时服务器Posix时间）
 		/// @param srcTimestamp 基准时间戳
 		/// @param guestPosix 非0则使用该输入作为基准时间戳的客机Posix时间
 		/// @param gnssPosix 非0则使用该输入作为基准时间戳的卫星Posix时间
+		/// @param protocol 样本协议ID，将据此确定客机是否已与授时服务器同步（一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始）
 		/// @return 输出的时间戳
-		virtual FullTimestamp resyncTimestamp(FullTimestamp srcTimestamp, ULong guestPosix = 0, ULong gnssPosix = 0);
+		virtual FullTimestamp resyncTimestamp(FullTimestamp srcTimestamp, ULong guestPosix = 0, ULong gnssPosix = 0, String protocol = String());
 
-		/// @brief 根据基准时间戳的时间偏置反算CPU计数、主机Posix时间、客机及授时服务器Posix时间、卫星Posix时间等
+		/// @brief 根据基准时间戳的时间偏置反算CPU计数、主机Posix时间、授时服务器Posix时间、卫星Posix时间等
 		/// @param srcTimestamp 基准时间戳
-		/// @param timeType 输出的时间类型
+		/// @param timeType 输出的时间类型，不支持 spadas::TimeType::GuestPosix
 		/// @return 输出的Session无关时间，0表示失败
 		virtual ULong calcTime(ShortTimestamp srcTimestamp, TimeType timeType);
 	};
