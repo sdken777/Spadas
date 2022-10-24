@@ -4649,10 +4649,10 @@ namespace spadas
 		/// 客机时间偏置，单位秒，0表示无效
 		Double bridgeTimeOffset;
 
-		/// 已与授时服务器同步的客机Posix时间的毫秒部分，0表示无效
+		/// 客机Posix时间的毫秒部分，0表示无效
 		ULong bridgeGuestPosixMS;
 
-		/// 已与授时服务器同步的客机Posix时间的纳秒部分
+		/// 客机Posix时间的纳秒部分
 		UInt bridgeGuestPosixNS;
 
 		/// 总线通道，1~16
