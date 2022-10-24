@@ -5860,8 +5860,9 @@ namespace spadas
 		/// @param subInputRoots Session的input子文件夹路径
 		/// @param generationRoots Session的所有generation文件夹路径
 		/// @param basicInfo 文件读写基本信息
+		/// @param timeServer 时间相关服务接口（仅限当前读取Session）
 		/// @returns 所有文件的最大时长，单位秒，若无文件或无数据则返回0
-		virtual Double getFilesDuration(String readerName, Path inputRoot, Array<Path> subInputRoots, Array<Path> generationRoots, FileIOBasicInfo basicInfo);
+		virtual Double getFilesDuration(String readerName, Path inputRoot, Array<Path> subInputRoots, Array<Path> generationRoots, FileIOBasicInfo basicInfo, Interface<ITimeServer> timeServer);
 
 		/// @brief [可选] 初始化读取原始数据文件
 		/// @param readerName 读取器名称
@@ -5871,8 +5872,9 @@ namespace spadas
 		/// @param jumpOffset 跳转至该时间偏置开始读取
 		/// @param basicInfo 文件读写基本信息
 		/// @param extInfo 输出文件扩展信息
+		/// @param timeServer 时间相关服务接口（仅限当前读取Session）
 		/// @returns 返回是否成功初始化，无数据文件的情况也返回FALSE
-		virtual Bool openReadFiles(String readerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Double jumpOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo);
+		virtual Bool openReadFiles(String readerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Double jumpOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo, Interface<ITimeServer> timeServer);
 
 		/// @brief [可选] 读取文件数据
 		/// @param readerName 读取器名称
@@ -5893,8 +5895,9 @@ namespace spadas
 		/// @param generationRoot Generation的文件夹路径
 		/// @param basicInfo 文件读写基本信息
 		/// @param extInfo 文件扩展信息
+		/// @param timeServer 时间相关服务接口（仅限当前写入Session）
 		/// @returns 返回是否成功初始化
-		virtual Bool openWriteFiles(String writerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo);
+		virtual Bool openWriteFiles(String writerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo, Interface<ITimeServer> timeServer);
 
 		/// @brief [可选] 写入文件数据
 		/// @param writerName 写入器名称
@@ -5925,15 +5928,12 @@ namespace spadas
 		/// @param basicInfo 文件读写基本信息
 		/// @param shouldEnd 是否已被取消
 		/// @param callback 任务的反馈接口，主要用于通知任务进度
-		virtual void pickSession(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
+		/// @param timeServer 时间相关服务接口（仅限当前源Session和目标Session）
+		virtual void pickSession(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback, Interface<ITimeServer> timeServer);
 
 		/// @brief [可选] 对文件读写进行额外设置（在各openXXXFiles函数前被调用）
 		/// @param extra 配置信息
 		virtual void setFileExtraConfig(String extra);
-
-		/// @brief [可选] 设置使用指定的时间相关服务接口
-		/// @param timeServer 时间相关服务接口
-		virtual void useTimeServer(Interface<ITimeServer> timeServer);
 	};
 
 	/// 获取文件读写插件接口的全局函数定义，函数名应为get_file_plugin_v103

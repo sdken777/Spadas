@@ -683,12 +683,12 @@ void IFilePluginV102::updateStartTimeUTC(ULong posixTime, Double timeRatio)
 {}
 
 // 文件读写插件接口 1.3
-Double IFilePluginV103::getFilesDuration(String readerName, Path inputRoot, Array<Path> subInputRoots, Array<Path> generationRoots, FileIOBasicInfo basicInfo)
+Double IFilePluginV103::getFilesDuration(String readerName, Path inputRoot, Array<Path> subInputRoots, Array<Path> generationRoots, FileIOBasicInfo basicInfo, Interface<ITimeServer> timeServer)
 {
 	return 0;
 }
 
-Bool IFilePluginV103::openReadFiles(String readerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Double jumpOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo)
+Bool IFilePluginV103::openReadFiles(String readerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Double jumpOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo, Interface<ITimeServer> timeServer)
 {
 	return FALSE;
 }
@@ -701,7 +701,7 @@ Bool IFilePluginV103::readFilesData(String readerName, InputTablesX inputs, Doub
 void IFilePluginV103::closeReadFiles(String readerName)
 {}
 
-Bool IFilePluginV103::openWriteFiles(String writerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo)
+Bool IFilePluginV103::openWriteFiles(String writerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo, Interface<ITimeServer> timeServer)
 {
 	return FALSE;
 }
@@ -717,11 +717,8 @@ Bool IFilePluginV103::hasDataFiles(String pickerName, Path inputRoot, Array<Path
 	return FALSE;
 }
 
-void IFilePluginV103::pickSession(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
+void IFilePluginV103::pickSession(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback, Interface<ITimeServer> timeServer)
 {}
 
 void IFilePluginV103::setFileExtraConfig(String extra)
-{}
-
-void IFilePluginV103::useTimeServer(Interface<ITimeServer> timeServer)
 {}
