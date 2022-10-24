@@ -4439,6 +4439,7 @@ namespace spadas
 		CANFD_4M = 104,
 		CANFD_8M = 105,
 		CANFD_6M = 106,
+		CANFD_2d5M = 107,
 
 		LIN_1k = 201,
 		LIN_9d6k = 202, // default
