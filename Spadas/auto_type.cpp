@@ -275,6 +275,24 @@ Bool SessionIdentifier::operator !=(SessionIdentifier id)
 	return !operator ==(id);
 }
 
+Bool SessionIdentifier::operator >(SessionIdentifier time)
+{
+	ULong t1 = ((ULong)this->year << 40) + ((ULong)this->month << 32) + ((ULong)this->day << 24) + 
+		((ULong)this->hour << 16) + ((ULong)this->minute << 8) + (ULong)this->second;
+	ULong t2 = ((ULong)time.year << 40) + ((ULong)time.month << 32) + ((ULong)time.day << 24) + 
+		((ULong)time.hour << 16) + ((ULong)time.minute << 8) + (ULong)time.second;
+	return t1 > t2;
+}
+
+Bool SessionIdentifier::operator <(SessionIdentifier time)
+{
+	ULong t1 = ((ULong)this->year << 40) + ((ULong)this->month << 32) + ((ULong)this->day << 24) + 
+		((ULong)this->hour << 16) + ((ULong)this->minute << 8) + (ULong)this->second;
+	ULong t2 = ((ULong)time.year << 40) + ((ULong)time.month << 32) + ((ULong)time.day << 24) + 
+		((ULong)time.hour << 16) + ((ULong)time.minute << 8) + (ULong)time.second;
+	return t1 < t2;
+}
+
 Word SessionIdentifier::getHash()
 {
 	return (((Byte)year << 8) | ((Word)month << 5) | ((Word)day)) ^ (((Word)hour << 11) | ((Word)minute << 6) | (Word)second);

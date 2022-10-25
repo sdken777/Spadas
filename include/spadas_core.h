@@ -4157,6 +4157,12 @@ namespace spadas
 		/// 是否不等于
 		SPADAS_API Bool operator !=(SessionIdentifier id);
 
+		/// 是否大于
+		SPADAS_API Bool operator >(SessionIdentifier time);
+
+		/// 是否小于
+		SPADAS_API Bool operator <(SessionIdentifier time);
+
 		/// 获取哈希值
 		SPADAS_API Word getHash();
 
@@ -5353,7 +5359,7 @@ namespace spadas
 	public:
 		virtual ~ITimeServer() {}
 
-		/// @brief 创建时间戳（计算时间偏置的优先级从高至低为：卫星Posix时间、授时服务器Posix时间、到达时CPU计数、到达时主机Posix时间）
+		/// @brief 创建时间戳（计算时间偏置的优先级从高至低为：卫星Posix时间、授时服务器Posix时间、到达时主机Posix时间、到达时CPU计数）
 		/// @param outputTimestamp 输出的时间戳
 		/// @param session 时间戳所在Session的标识符
 		/// @param cpuTick 到达时CPU计数，0表示无效
