@@ -4225,13 +4225,13 @@ namespace spadas
 		/// 到达时主机Posix时间，单位毫秒，0表示无效
 		ULong hostPosix;
 
-		/// 客机Posix时间，单位毫秒，0表示无效
+		/// 采样时客机Posix时间，单位毫秒，0表示无效
 		ULong guestPosix;
 
-		/// 授时服务器Posix时间，单位毫秒，0表示无效
+		/// 采样时授时服务器Posix时间，单位毫秒，0表示无效
 		ULong serverPosix;
 
-		/// 卫星Posix时间，单位毫秒，0表示无效
+		/// 采样时卫星Posix时间，单位毫秒，0表示无效
 		ULong gnssPosix;
 
 		/// 默认构造函数
@@ -4254,13 +4254,13 @@ namespace spadas
 		/// 到达时主机Posix时间
 		HostPosix = 1,
 
-		/// 客机Posix时间
+		/// 采样时客机Posix时间
 		GuestPosix = 2,
 
-		/// 授时服务器Posix时间
+		/// 采样时授时服务器Posix时间
 		ServerPosix = 3,
 
-		/// 卫星Posix时间
+		/// 采样时卫星Posix时间
 		GnssPosix = 4,
 	};
 
@@ -4288,7 +4288,7 @@ namespace spadas
 	/// 一般设备输出原始数据
 	struct GeneralDeviceData
 	{
-		/// 到达时CPU计数
+		/// 到达主机时的CPU计数
 		ULong cpuTick;
 
 		/// 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
@@ -4653,16 +4653,16 @@ namespace spadas
 	/// 总线设备输出原始数据
 	struct BusDeviceData
 	{
-		/// 到达时CPU计数
+		/// 到达主机时的CPU计数
 		ULong cpuTick;
 
-		/// 客机时间偏置，单位秒，0表示无效
+		/// 到达总线设备时其上的时间偏置，单位秒，0表示无效
 		Double bridgeTimeOffset;
 
-		/// 客机Posix时间的毫秒部分，0表示无效
+		/// 到达总线设备时其上的Posix时间的毫秒部分，0表示无效
 		ULong bridgeGuestPosixMS;
 
-		/// 客机Posix时间的纳秒部分
+		/// 到达总线设备时其上的Posix时间的纳秒部分
 		UInt bridgeGuestPosixNS;
 
 		/// 总线通道，1~16
@@ -4913,13 +4913,13 @@ namespace spadas
 	/// 视频设备输出原始数据
 	struct VideoDeviceData
 	{
-		/// 到达时CPU计数
+		/// 到达主机时的CPU计数
 		ULong cpuTick;
 
-		/// 客机Posix时间，0表示无效
+		/// 采样时客机Posix时间，0表示无效
 		ULong guestPosix;
 
-		/// 卫星Posix时间，0表示无效
+		/// 采样时卫星Posix时间，0表示无效
 		ULong gnssPosix;
 
 		/// 视频通道，0~23，对应A~X
