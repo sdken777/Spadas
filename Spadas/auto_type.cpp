@@ -277,7 +277,7 @@ Bool SessionIdentifier::operator !=(SessionIdentifier id)
 
 Word SessionIdentifier::getHash()
 {
-	return year ^ month ^ day ^ hour ^ minute ^ second;
+	return (((Byte)year << 8) | ((Word)month << 5) | ((Word)day)) ^ (((Word)hour << 11) | ((Word)minute << 6) | (Word)second);
 }
 
 String SessionIdentifier::toString()
