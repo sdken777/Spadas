@@ -4144,6 +4144,10 @@ namespace spadas
 		SessionIdentifier(Word year, Byte month, Byte day, Byte hour, Byte minute, Byte second) : year(year), month(month), day(day), hour(hour), minute(minute), second(second)
 		{}
 
+		/// 基于日期初始化
+		SessionIdentifier(Time time) : year((Word)time.year), month((Byte)time.month), day((Byte)time.day), hour((Byte)time.hour), minute((Byte)time.minute), second((Byte)time.second)
+		{}
+
 		/// 基于字符串(yyyy-MM-dd-HH-mm-ss)初始化，若失败则全部置为0
 		SPADAS_API SessionIdentifier(String idString);
 
