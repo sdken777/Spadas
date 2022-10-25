@@ -4,7 +4,6 @@
 using namespace spadas;
 
 // 插件版本接口
-
 SPADAS_DEFAULT_API void get_native_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 1;
@@ -20,7 +19,7 @@ SPADAS_DEFAULT_API void get_bus_plugin_api_version(UInt& major, UInt& minor)
 SPADAS_DEFAULT_API void get_video_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 4;
-	minor = 0;
+	minor = 1;
 }
 
 SPADAS_DEFAULT_API void get_dev_plugin_api_version(UInt& major, UInt& minor)
@@ -39,6 +38,79 @@ SPADAS_DEFAULT_API void get_file_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 1;
 	minor = 2;
+}
+
+// 一般原生插件接口兼容性
+class CompatiblePluginVars : public Vars
+{
+public:
+	UInt version;
+	Interface<IPluginV101> i101;
+};
+
+class CompatiblePlugin : public Object<CompatiblePluginVars>, public IPlugin
+{
+public:
+	CompatiblePlugin()
+	{}
+	CompatiblePlugin(Interface<IPluginV101> i) : Object<CompatiblePluginVars>(new CompatiblePluginVars, TRUE)
+	{
+		vars->version = 101;
+		vars->i101 = i;
+	}
+	String getPluginType() override
+	{
+		switch (vars->version)
+		{
+		case 101:
+			return vars->i101->getPluginType();
+		default:
+			return String();
+		}
+	}
+	String getPluginVersion() override
+	{
+		switch (vars->version)
+		{
+		case 101:
+			return vars->i101->getPluginVersion();
+		default:
+			return String();
+		}
+	}
+	void closePlugin() override
+	{
+		switch (vars->version)
+		{
+		case 101:
+			vars->i101->closePlugin();
+			break;
+		default:
+			break;
+		}
+	}
+};
+
+SPADAS_DEFAULT_API Interface<IPlugin> get_compatible_plugin(Pointer func, UInt minor)
+{
+	if (!func) return Interface<IPlugin>();
+	switch (minor)
+	{
+	case 0:
+	{
+		GetPlugin getPlugin = (GetPlugin)func;
+		return getPlugin();
+	}
+	case 1:
+	{
+		GetPluginV101 getPlugin = (GetPluginV101)func;
+		auto i = getPlugin();
+		if (i.isValid()) return CompatiblePlugin(i);
+		else return Interface<IPlugin>();
+	}
+	default:
+		return Interface<IPlugin>();
+	}
 }
 
 // 一般原生插件API 1.0
