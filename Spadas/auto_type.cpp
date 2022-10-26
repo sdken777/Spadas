@@ -315,48 +315,58 @@ Time SessionIdentifier::toTime()
 	return Time(year, month, day, hour, minute, second);
 }
 
-void IGeneralDataTransmitter::transmitNow(String protocol, Array<Double> vector, Binary binary)
+OptionalBool IGeneralDataTransmitter::transmitNow(String protocol, Array<Double> vector, Binary binary)
 {
+	return OptionalBool();
 }
 
-void IGeneralDataTransmitter::transmitAtTimeOffset(String protocol, Array<Double> vector, Binary binary, Double offset, UInt tolerance)
+OptionalBool IGeneralDataTransmitter::transmitAtTimeOffset(String protocol, Array<Double> vector, Binary binary, Double offset, UInt tolerance)
 {
+	return OptionalBool();
 }
 
-void IGeneralDataTransmitter::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance)
+OptionalBool IGeneralDataTransmitter::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance)
 {
+	return OptionalBool();
 }
 
-void IBusMessageTransmitter::transmitNow(UInt channel, UInt id, Binary binary)
+OptionalBool IBusMessageTransmitter::transmitNow(UInt channel, UInt id, Binary binary)
 {
+	return OptionalBool();
 }
 
-void IBusMessageTransmitter::transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval)
+OptionalBool IBusMessageTransmitter::transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval)
 {
+	return OptionalBool();
 }
 
-void IBusMessageTransmitter::transmitAtTimeOffset(UInt channel, UInt id, Binary binary, Double offset, UInt tolerance)
+OptionalBool IBusMessageTransmitter::transmitAtTimeOffset(UInt channel, UInt id, Binary binary, Double offset, UInt tolerance)
 {
+	return OptionalBool();
 }
 
-void IBusMessageTransmitter::transmitAtServerPosix(UInt channel, UInt id, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance)
+OptionalBool IBusMessageTransmitter::transmitAtServerPosix(UInt channel, UInt id, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance)
 {
+	return OptionalBool();
 }
 
 void IVideoPreviewExpressX::outputPreview(ULong cpuTick, UInt channel, ImagePointer preview)
 {
 }
 
-void IVideoFrameTransmitter::transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data)
+OptionalBool IVideoFrameTransmitter::transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data)
 {
+	return OptionalBool();
 }
 
-void IVideoFrameTransmitter::transmitAtTimeOffset(UInt channel, VideoDataCodec codec, Size2D size, Binary data, Double offset, UInt tolerance)
+OptionalBool IVideoFrameTransmitter::transmitAtTimeOffset(UInt channel, VideoDataCodec codec, Size2D size, Binary data, Double offset, UInt tolerance)
 {
+	return OptionalBool();
 }
 
-void IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance)
+OptionalBool IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance)
 {
+	return OptionalBool();
 }
 
 void IGeneralDeviceDataOutput::outputGeneralDeviceData(GeneralDeviceData data)

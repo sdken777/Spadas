@@ -317,6 +317,11 @@ Array<String> IDevicePluginV202::getTransmittableProtocols()
 	return Array<String>();
 }
 
+Array<String> IDevicePluginV202::getScheduledTransmittableProtocols()
+{
+	return Array<String>();
+}
+
 Bool IDevicePluginV202::transmitGeneralData(String protocol, Array<Double> vector, Binary binary)
 {
 	return FALSE;

@@ -4343,7 +4343,8 @@ namespace spadas
 		/// @param protocol 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
 		/// @param vector 数值数组数据
 		/// @param binary 二进制数据
-		virtual void transmitNow(String protocol, Array<Double> vector, Binary binary);
+		/// @returns 是否成功发送，无效表示不确定
+		virtual OptionalBool transmitNow(String protocol, Array<Double> vector, Binary binary);
 
 		/// @brief 按时间偏置预约发送数据（将优先按服务器Posix时间预约发送，不满足条件则按CPU计数时间发送）
 		/// @param protocol 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
@@ -4351,7 +4352,8 @@ namespace spadas
 		/// @param binary 二进制数据
 		/// @param offset 时间偏置，单位秒 (必须大于该协议的上一帧预约发送数据的时间戳)
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
-		virtual void transmitAtTimeOffset(String protocol, Array<Double> vector, Binary binary, Double offset, UInt tolerance);
+		/// @returns 是否成功预约发送，无效表示不确定
+		virtual OptionalBool transmitAtTimeOffset(String protocol, Array<Double> vector, Binary binary, Double offset, UInt tolerance);
 
 		/// @brief 指定按服务器Posix时间预约发送视频帧 (必须大于该协议的上一帧预约发送数据的时间戳)
 		/// @param protocol 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
@@ -4360,7 +4362,8 @@ namespace spadas
 		/// @param serverPosixMS 授时服务器Posix时间的毫秒部分
 		/// @param serverPosixNS 授时服务器Posix时间的纳秒部分
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
-		virtual void transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
+		/// @returns 是否成功预约发送，无效表示不确定
+		virtual OptionalBool transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
 	};
 
 	/// 通用样本元素
@@ -4713,14 +4716,16 @@ namespace spadas
 		/// @param channel 总线通道，1~16
 		/// @param id 该通道内的报文ID
 		/// @param binary 报文数据
-		virtual void transmitNow(UInt channel, UInt id, Binary binary);
+		/// @returns 是否成功发送，无效表示不确定
+		virtual OptionalBool transmitNow(UInt channel, UInt id, Binary binary);
 
 		/// @brief 设定重复发送报文
 		/// @param channel 总线通道，1~16
 		/// @param id 该通道内的报文ID
 		/// @param binary 报文数据
 		/// @param interval 发送周期[ms]，有效范围10~1000ms
-		virtual void transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval);
+		/// @returns 是否成功设定重复发送，无效表示不确定
+		virtual OptionalBool transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval);
 
 		/// @brief 按时间偏置预约发送报文（将优先按授时服务器Posix时间预约发送，不满足条件则按CPU计数时间发送）
 		/// @param channel 总线通道，1~16
@@ -4728,7 +4733,8 @@ namespace spadas
 		/// @param binary 报文数据
 		/// @param offset 时间偏置，单位秒 (必须大于该通道上一帧预约发送报文的时间戳)
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
-		virtual void transmitAtTimeOffset(UInt channel, UInt id, Binary binary, Double offset, UInt tolerance);
+		/// @returns 是否成功预约发送，无效表示不确定
+		virtual OptionalBool transmitAtTimeOffset(UInt channel, UInt id, Binary binary, Double offset, UInt tolerance);
 
 		/// @brief 指定按授时服务器Posix时间预约发送报文 (必须大于该通道上一帧预约发送报文的时间)
 		/// @param channel 总线通道，1~16
@@ -4737,7 +4743,8 @@ namespace spadas
 		/// @param serverPosixMS 授时服务器Posix时间的毫秒部分
 		/// @param serverPosixNS 授时服务器Posix时间的纳秒部分
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
-		virtual void transmitAtServerPosix(UInt channel, UInt id, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
+		/// @returns 是否成功预约发送，无效表示不确定
+		virtual OptionalBool transmitAtServerPosix(UInt channel, UInt id, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
 	};
 
 	/// 总线设备ID
@@ -5078,7 +5085,8 @@ namespace spadas
 		/// @param codec 视频帧的编码格式
 		/// @param size 视频帧的大小，像素单位
 		/// @param data 视频帧数据
-		virtual void transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data);
+		/// @returns 是否成功发送，无效表示不确定
+		virtual OptionalBool transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data);
 
 		/// @brief 按时间偏置预约发送视频帧（将优先按服务器Posix时间预约发送，不满足条件则按CPU计数时间发送）
 		/// @param channel 视频通道，0~23
@@ -5087,7 +5095,8 @@ namespace spadas
 		/// @param data 视频帧数据
 		/// @param offset 时间偏置，单位秒 (必须大于该通道上一帧预约发送报文的时间戳)
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
-		virtual void transmitAtTimeOffset(UInt channel, VideoDataCodec codec, Size2D size, Binary data, Double offset, UInt tolerance);
+		/// @returns 是否成功预约发送，无效表示不确定
+		virtual OptionalBool transmitAtTimeOffset(UInt channel, VideoDataCodec codec, Size2D size, Binary data, Double offset, UInt tolerance);
 
 		/// @brief 指定按服务器Posix时间预约发送视频帧 (必须大于该通道上一帧预约发送报文的时间)
 		/// @param channel 视频通道，0~23
@@ -5097,7 +5106,8 @@ namespace spadas
 		/// @param serverPosixMS 授时服务器Posix时间的毫秒部分
 		/// @param serverPosixNS 授时服务器Posix时间的纳秒部分
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
-		virtual void transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
+		/// @returns 是否成功预约发送，无效表示不确定
+		virtual OptionalBool transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
 	};
 
 	/// 所有输入数据表
@@ -5682,9 +5692,13 @@ namespace spadas
 		/// @returns 返回新获取的数据
 		virtual Array<GeneralDeviceData> getDeviceNewData();
 
-		/// @brief [可选] 获取可发送的数据协议列表
+		/// @brief [可选] 获取可立即发送的数据协议列表
 		/// @return 可发送的数据协议列表
 		virtual Array<String> getTransmittableProtocols();
+
+		/// @brief [可选] 获取可预约发送的数据协议列表
+		/// @return 可发送的数据协议列表
+		virtual Array<String> getScheduledTransmittableProtocols();
 
 		/// @brief [可选] 立即发送一帧数据
 		/// @param protocol 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
