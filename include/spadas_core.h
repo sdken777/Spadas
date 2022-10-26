@@ -4638,6 +4638,7 @@ namespace spadas
 		CANFD_4M = 104,
 		CANFD_8M = 105,
 		CANFD_6M = 106,
+		CANFD_2d5M = 107,
 
 		LIN_1k = 201,
 		LIN_9d6k = 202, // default
@@ -5639,6 +5640,10 @@ namespace spadas
 
 		/// [可选] 在结束在线模式Session时被调用
 		virtual void onStopOnlineSession();
+
+		/// @brief [可选] 获取支持的独立任务名称列表
+		/// @return 支持的独立任务名称列表
+		virtual Array<String> getStandaloneTaskNames();
 
 		/// @brief [可选] 启动独立的处理任务（一般仅在非Session时段被调用）
 		/// @param taskName 任务名称，用于区分不同任务

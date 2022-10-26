@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 新增SessionIdentifier大于/小于重载
+// 版本定义 // 新增IPluginV102::getStandaloneTaskNames
 #define SPADAS_VERSION_MAJOR 8
 #define SPADAS_VERSION_MINOR 4
-#define SPADAS_VERSION_BUILD 5
+#define SPADAS_VERSION_BUILD 6
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.4.5\n
+* 本文档对应Spadas版本：8.4.6\n
 *
 * \n
 * \section top1 基本功能概述
@@ -99,6 +99,7 @@
 *   - spadas::IPluginV102::useCrossCaller
 *   - spadas::IPluginV102::onStartOnlineSession
 *   - spadas::IPluginV102::onStopOnlineSession
+*   - spadas::IPluginV102::getStandaloneTaskNames
 *   - spadas::IPluginV102::runStandaloneTask
 *
 * \subsection p5 5. 实现原生数据处理插件接口

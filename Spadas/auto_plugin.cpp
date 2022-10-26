@@ -4,7 +4,6 @@
 using namespace spadas;
 
 // 插件版本接口
-
 SPADAS_DEFAULT_API void get_native_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 1;
@@ -41,7 +40,100 @@ SPADAS_DEFAULT_API void get_file_plugin_api_version(UInt& major, UInt& minor)
 	minor = 3;
 }
 
-// 通用功能插件接口 1.0
+// 一般原生插件接口兼容性
+class CompatiblePluginVars : public Vars
+{
+public:
+	UInt version;
+	Interface<IPluginV101> i101;
+	Interface<IPluginV102> i102;
+};
+
+class CompatiblePlugin : public Object<CompatiblePluginVars>, public IPlugin
+{
+public:
+	CompatiblePlugin()
+	{}
+	CompatiblePlugin(Interface<IPluginV101> i) : Object<CompatiblePluginVars>(new CompatiblePluginVars, TRUE)
+	{
+		vars->version = 101;
+		vars->i101 = i;
+	}
+	CompatiblePlugin(Interface<IPluginV102> i) : Object<CompatiblePluginVars>(new CompatiblePluginVars, TRUE)
+	{
+		vars->version = 102;
+		vars->i102 = i;
+	}
+	String getPluginType() override
+	{
+		switch (vars->version)
+		{
+		case 101:
+			return vars->i101->getPluginType();
+		case 102:
+			return vars->i102->getPluginType();
+		default:
+			return String();
+		}
+	}
+	String getPluginVersion() override
+	{
+		switch (vars->version)
+		{
+		case 101:
+			return vars->i101->getPluginVersion();
+		case 102:
+			return vars->i102->getPluginVersion();
+		default:
+			return String();
+		}
+	}
+	void closePlugin() override
+	{
+		switch (vars->version)
+		{
+		case 101:
+			vars->i101->closePlugin();
+			break;
+		case 102:
+			vars->i102->closePlugin();
+			break;
+		default:
+			break;
+		}
+	}
+};
+
+SPADAS_DEFAULT_API Interface<IPlugin> get_compatible_plugin(Pointer func, UInt minor)
+{
+	if (!func) return Interface<IPlugin>();
+	switch (minor)
+	{
+	case 0:
+	{
+		GetPlugin getPlugin = (GetPlugin)func;
+		return getPlugin();
+	}
+	case 1:
+	{
+		GetPluginV101 getPlugin = (GetPluginV101)func;
+		auto i = getPlugin();
+		if (i.isValid()) return CompatiblePlugin(i);
+		else return Interface<IPlugin>();
+	}
+	case 2:
+	{
+		GetPluginV102 getPlugin = (GetPluginV102)func;
+		auto i = getPlugin();
+		if (i.isValid()) return CompatiblePlugin(i);
+		else return Interface<IPlugin>();
+	}
+	default:
+		return Interface<IPlugin>();
+	}
+}
+
+// 一般原生插件API 1.0
 String IPlugin::getPluginType()
 {
 	return String();
@@ -116,6 +208,11 @@ void IPluginV102::onStartOnlineSession(SessionIdentifier session, ULong startCPU
 
 void IPluginV102::onStopOnlineSession()
 {}
+
+Array<String> IPluginV102::getStandaloneTaskNames()
+{
+	return Array<String>();
+}
 
 void IPluginV102::runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
 {}
