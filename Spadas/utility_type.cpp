@@ -148,7 +148,7 @@ void TimeWithMS::substract(TimeWithMS time, Int& week, Int& day, Int& hour, Int&
 	millisecond = positive * (diff % 1000);
 }
 
-ULong TimeWithMS::localTimeToPosix()
+MilliPosix TimeWithMS::localTimeToPosix()
 {
 	tm t;
 	utility::memorySet(0, &t, sizeof(t));
@@ -168,7 +168,7 @@ namespace time_ms_internal
 	Long diff = 0;
 }
 
-ULong TimeWithMS::utcTimeToPosix()
+MilliPosix TimeWithMS::utcTimeToPosix()
 {
 	if (!time_ms_internal::inited)
 	{
@@ -190,7 +190,7 @@ ULong TimeWithMS::utcTimeToPosix()
 	return (ULong)t1 * 1000 + milliseconds + time_ms_internal::diff;
 }
 
-void TimeWithMS::localTimeFromPosix(ULong posixTime)
+void TimeWithMS::localTimeFromPosix(MilliPosix posixTime)
 {
 	time_t t1 = (time_t)(posixTime / 1000);
 	tm t;
@@ -209,7 +209,7 @@ void TimeWithMS::localTimeFromPosix(ULong posixTime)
 	milliseconds = posixTime % 1000;
 }
 
-void TimeWithMS::utcTimeFromPosix(ULong posixTime)
+void TimeWithMS::utcTimeFromPosix(MilliPosix posixTime)
 {
 	time_t t1 = (time_t)(posixTime / 1000);
 	tm t;

@@ -325,7 +325,7 @@ OptionalBool IGeneralDataTransmitter::transmitAtTimeOffset(String protocol, Arra
 	return OptionalBool();
 }
 
-OptionalBool IGeneralDataTransmitter::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance)
+OptionalBool IGeneralDataTransmitter::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance)
 {
 	return OptionalBool();
 }
@@ -345,7 +345,7 @@ OptionalBool IBusMessageTransmitter::transmitAtTimeOffset(UInt channel, UInt id,
 	return OptionalBool();
 }
 
-OptionalBool IBusMessageTransmitter::transmitAtServerPosix(UInt channel, UInt id, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance)
+OptionalBool IBusMessageTransmitter::transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance)
 {
 	return OptionalBool();
 }
@@ -364,7 +364,7 @@ OptionalBool IVideoFrameTransmitter::transmitAtTimeOffset(UInt channel, VideoDat
 	return OptionalBool();
 }
 
-OptionalBool IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance)
+OptionalBool IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance)
 {
 	return OptionalBool();
 }

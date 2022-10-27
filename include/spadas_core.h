@@ -3575,7 +3575,13 @@ namespace spadas
 		static Int defaultValue();
 	};
 
-	/// 时间
+	/// Posix时间，毫秒单位
+	typedef ULong MilliPosix;
+
+	/// Posix时间，纳秒单位
+	typedef ULong NanoPosix;
+
+	/// 日期时间
 	struct Time
 	{
 		/// 年
@@ -3664,16 +3670,16 @@ namespace spadas
 		SPADAS_API void substract(TimeWithMS time, Int& week, Int& day, Int& hour, Int& minute, Int& second, Int& millisecond);
 
 		/// 分量时间（按本地时间）转Posix时间
-		SPADAS_API ULong localTimeToPosix();
+		SPADAS_API MilliPosix localTimeToPosix();
 
 		/// 分量时间（按国际协调时间）转Posix时间
-		SPADAS_API ULong utcTimeToPosix();
+		SPADAS_API MilliPosix utcTimeToPosix();
 
 		/// Posix时间转分量时间（按本地时间）
-		SPADAS_API void localTimeFromPosix(ULong posixTime);
+		SPADAS_API void localTimeFromPosix(MilliPosix posixTime);
 
 		/// Posix时间转分量时间（按国际协调时间）
-		SPADAS_API void utcTimeFromPosix(ULong posixTime);
+		SPADAS_API void utcTimeFromPosix(MilliPosix posixTime);
 
 		/// 基于分隔符转为字符串
 		SPADAS_API String toString(String dateSeparator = "/", String timeSeparator = ":", String dateTimeSeparator = " ", String msSeparator = ".");
@@ -4222,17 +4228,17 @@ namespace spadas
 		/// 到达时CPU计数，0表示无效
 		ULong cpuTick;
 
-		/// 到达时主机Posix时间，单位毫秒，0表示无效
-		ULong hostPosix;
+		/// 到达时主机Posix时间，单位纳秒，0表示无效
+		NanoPosix hostPosix;
 
-		/// 采样时客机Posix时间，单位毫秒，0表示无效
-		ULong guestPosix;
+		/// 采样时客机Posix时间，单位纳秒，0表示无效
+		NanoPosix guestPosix;
 
-		/// 采样时授时服务器Posix时间，单位毫秒，0表示无效
-		ULong serverPosix;
+		/// 采样时授时服务器Posix时间，单位纳秒，0表示无效
+		NanoPosix serverPosix;
 
-		/// 采样时卫星Posix时间，单位毫秒，0表示无效
-		ULong gnssPosix;
+		/// 采样时卫星Posix时间，单位纳秒，0表示无效
+		NanoPosix gnssPosix;
 
 		/// 默认构造函数
 		FullTimestamp() : offset(0), offsetSync(TimeOffsetSync::None), cpuTick(0), hostPosix(0), guestPosix(0), serverPosix(0), gnssPosix(0)
@@ -4251,16 +4257,16 @@ namespace spadas
 		/// 到达时CPU计数
 		CPUTick = 0,
 
-		/// 到达时主机Posix时间
+		/// 到达时主机Posix时间，单位纳秒
 		HostPosix = 1,
 
-		/// 采样时客机Posix时间
+		/// 采样时客机Posix时间，单位纳秒
 		GuestPosix = 2,
 
-		/// 采样时授时服务器Posix时间
+		/// 采样时授时服务器Posix时间，单位纳秒
 		ServerPosix = 3,
 
-		/// 采样时卫星Posix时间
+		/// 采样时卫星Posix时间，单位纳秒
 		GnssPosix = 4,
 	};
 
@@ -4359,11 +4365,10 @@ namespace spadas
 		/// @param protocol 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
 		/// @param vector 数值数组数据
 		/// @param binary 二进制数据
-		/// @param serverPosixMS 授时服务器Posix时间的毫秒部分
-		/// @param serverPosixNS 授时服务器Posix时间的纳秒部分
+		/// @param serverPosix 授时服务器Posix时间，单位纳秒
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// @returns 是否成功预约发送，无效表示不确定
-		virtual OptionalBool transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
+		virtual OptionalBool transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance);
 	};
 
 	/// 通用样本元素
@@ -4663,11 +4668,8 @@ namespace spadas
 		/// 到达总线设备时其上的时间偏置，单位秒，0表示无效
 		Double bridgeTimeOffset;
 
-		/// 到达总线设备时其上的Posix时间的毫秒部分，0表示无效
-		ULong bridgeGuestPosixMS;
-
-		/// 到达总线设备时其上的Posix时间的纳秒部分
-		UInt bridgeGuestPosixNS;
+		/// 到达总线设备时其上的Posix时间，单位纳秒，0表示无效
+		NanoPosix bridgeGuestPosix;
 
 		/// 总线通道，1~16
 		UInt channel;
@@ -4679,7 +4681,7 @@ namespace spadas
 		Binary binary;
 
 		/// 默认构造函数
-		BusDeviceData() : cpuTick(0), bridgeTimeOffset(0), bridgeGuestPosixMS(0), bridgeGuestPosixNS(0), channel(0), id(0)
+		BusDeviceData() : cpuTick(0), bridgeTimeOffset(0), bridgeGuestPosix(0), channel(0), id(0)
 		{}
 	};
 
@@ -4740,11 +4742,10 @@ namespace spadas
 		/// @param channel 总线通道，1~16
 		/// @param id 该通道内的报文ID
 		/// @param binary 报文数据
-		/// @param serverPosixMS 授时服务器Posix时间的毫秒部分
-		/// @param serverPosixNS 授时服务器Posix时间的纳秒部分
+		/// @param serverPosix 授时服务器Posix时间，单位纳秒
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// @returns 是否成功预约发送，无效表示不确定
-		virtual OptionalBool transmitAtServerPosix(UInt channel, UInt id, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
+		virtual OptionalBool transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance);
 	};
 
 	/// 总线设备ID
@@ -4924,11 +4925,11 @@ namespace spadas
 		/// 到达主机时的CPU计数
 		ULong cpuTick;
 
-		/// 采样时客机Posix时间，0表示无效
-		ULong guestPosix;
+		/// 采样时客机Posix时间，单位纳秒，0表示无效
+		NanoPosix guestPosix;
 
-		/// 采样时卫星Posix时间，0表示无效
-		ULong gnssPosix;
+		/// 采样时卫星Posix时间，单位纳秒，0表示无效
+		NanoPosix gnssPosix;
 
 		/// 视频通道，0~23，对应A~X
 		UInt channel;
@@ -5103,11 +5104,10 @@ namespace spadas
 		/// @param codec 视频帧的编码格式
 		/// @param size 视频帧的大小，像素单位
 		/// @param data 视频帧数据
-		/// @param serverPosixMS 授时服务器Posix时间的毫秒部分
-		/// @param serverPosixNS 授时服务器Posix时间的纳秒部分
+		/// @param serverPosix 授时服务器Posix时间，单位纳秒
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// @returns 是否成功预约发送，无效表示不确定
-		virtual OptionalBool transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
+		virtual OptionalBool transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
 	};
 
 	/// 所有输入数据表
@@ -5374,20 +5374,20 @@ namespace spadas
 		/// @param outputTimestamp 输出的时间戳
 		/// @param session 时间戳所在Session的标识符
 		/// @param cpuTick 到达时CPU计数，0表示无效
-		/// @param hostPosix 到达时主机Posix时间，单位毫秒，0表示无效
-		/// @param guestPosix 客机Posix时间，单位毫秒，0表示无效
-		/// @param gnssPosix 卫星Posix时间，单位毫秒，0表示无效
+		/// @param hostPosix 到达时主机Posix时间，单位纳秒，0表示无效
+		/// @param guestPosix 客机Posix时间，单位纳秒，0表示无效
+		/// @param gnssPosix 卫星Posix时间，单位纳秒，0表示无效
 		/// @param protocol 样本协议ID，将据此确定客机是否已与授时服务器同步（一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始）
 		/// @return 是否成功
-		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionIdentifier session, ULong cpuTick = 0, ULong hostPosix = 0, ULong guestPosix = 0, ULong gnssPosix = 0, String protocol = String());
+		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionIdentifier session, ULong cpuTick = 0, NanoPosix hostPosix = 0, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, String protocol = String());
 
 		/// @brief 根据基准时间戳进行二次同步（重新计算时间偏置的优先级从高至低为：授时服务器Posix时间、卫星Posix时间）
 		/// @param srcTimestamp 基准时间戳
-		/// @param guestPosix 非0则使用该输入作为基准时间戳的客机Posix时间
-		/// @param gnssPosix 非0则使用该输入作为基准时间戳的卫星Posix时间
+		/// @param guestPosix 非0则使用该输入作为基准时间戳的客机Posix时间，单位纳秒
+		/// @param gnssPosix 非0则使用该输入作为基准时间戳的卫星Posix时间，单位纳秒
 		/// @param protocol 样本协议ID，将据此确定客机是否已与授时服务器同步（一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始）
 		/// @return 输出的时间戳
-		virtual FullTimestamp resyncTimestamp(FullTimestamp srcTimestamp, ULong guestPosix = 0, ULong gnssPosix = 0, String protocol = String());
+		virtual FullTimestamp resyncTimestamp(FullTimestamp srcTimestamp, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, String protocol = String());
 
 		/// @brief 根据基准时间戳的时间偏置反算CPU计数、主机Posix时间、授时服务器Posix时间、卫星Posix时间等
 		/// @param srcTimestamp 基准时间戳
@@ -5711,11 +5711,10 @@ namespace spadas
 		/// @param protocol 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
 		/// @param vector 数值数组数据
 		/// @param binary 二进制数据
-		/// @param serverPosixMS 预约发送的授时服务器Posix时间的毫秒部分
-		/// @param serverPosixNS 预约发送的授时服务器Posix时间的纳秒部分
+		/// @param serverPosix 预约发送的授时服务器Posix时间，单位纳秒
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// @returns 返回是否成功预约发送一帧数据，若协议未在可发送的协议列表内则返回FALSE
-		virtual Bool transmitGeneralDataScheduled(String protocol, Array<Double> vector, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
+		virtual Bool transmitGeneralDataScheduled(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance);
 	};
 
 	/// 获取一般设备插件接口的全局函数定义，函数名应为get_device_plugin_v202
@@ -5754,11 +5753,10 @@ namespace spadas
 		/// @param channel 总线通道，1~16
 		/// @param id 该通道内的报文ID
 		/// @param binary 报文数据
-		/// @param serverPosixMS 预约发送的授时服务器Posix时间的毫秒部分
-		/// @param serverPosixNS 预约发送的授时服务器Posix时间的纳秒部分
+		/// @param serverPosix 预约发送的授时服务器Posix时间，单位纳秒
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// @returns 返回是否成功预约发送一帧数据
-		virtual Bool transmitBusMessageScheduled(UInt channel, UInt id, Binary binary, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
+		virtual Bool transmitBusMessageScheduled(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance);
 
 		/// @brief [可选] 对总线设备进行额外设置（在openBusDevice前被调用）
 		/// @param extra 配置信息
@@ -5807,11 +5805,10 @@ namespace spadas
 		/// @param codec 视频帧编码方式
 		/// @param size 视频帧大小，像素单位
 		/// @param data 视频帧数据
-		/// @param serverPosixMS 预约发送的授时服务器Posix时间的毫秒部分
-		/// @param serverPosixNS 预约发送的授时服务器Posix时间的纳秒部分
+		/// @param serverPosix 预约发送的授时服务器Posix时间，单位纳秒
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// @returns 返回是否成功预约发送一帧数据
-		virtual Bool transmitVideoFrameScheduled(UInt channel, VideoDataCodec codec, Size2D size, Binary data, ULong serverPosixMS, UInt serverPosixNS, UInt tolerance);
+		virtual Bool transmitVideoFrameScheduled(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
 
 		/// @brief [可选] 对视频设备进行额外设置（在openVideoDevice前被调用）
 		/// @param extra 配置信息

@@ -3,12 +3,12 @@
 
 using namespace spadas;
 
-Bool ITimeServer::createTimestamp(FullTimestamp& outputTimestamp, SessionIdentifier session, ULong cpuTick, ULong hostPosix, ULong guestPosix, ULong gnssPosix, String protocol)
+Bool ITimeServer::createTimestamp(FullTimestamp& outputTimestamp, SessionIdentifier session, ULong cpuTick, NanoPosix hostPosix, NanoPosix guestPosix, NanoPosix gnssPosix, String protocol)
 {
     return FALSE;
 }
 
-FullTimestamp ITimeServer::resyncTimestamp(FullTimestamp srcTimestamp, ULong guestPosix, ULong gnssPosix, String protocol)
+FullTimestamp ITimeServer::resyncTimestamp(FullTimestamp srcTimestamp, NanoPosix guestPosix, NanoPosix gnssPosix, String protocol)
 {
     return srcTimestamp;
 }
