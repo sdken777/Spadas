@@ -5370,7 +5370,7 @@ namespace spadas
 	public:
 		virtual ~ITimeServer() {}
 
-		/// @brief 创建时间戳（计算时间偏置的优先级从高至低为：卫星Posix时间、授时服务器Posix时间、到达时主机Posix时间、到达时CPU计数）
+		/// @brief 创建时间戳（计算时间偏置的优先级从高至低为：授时服务器Posix时间、卫星Posix时间、到达时主机Posix时间、到达时CPU计数）
 		/// @param outputTimestamp 输出的时间戳
 		/// @param session 时间戳所在Session的标识符
 		/// @param cpuTick 到达时CPU计数，0表示无效
@@ -5381,7 +5381,7 @@ namespace spadas
 		/// @return 是否成功
 		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionIdentifier session, ULong cpuTick = 0, ULong hostPosix = 0, ULong guestPosix = 0, ULong gnssPosix = 0, String protocol = String());
 
-		/// @brief 根据基准时间戳进行二次同步（重新计算时间偏置的优先级从高至低为：卫星Posix时间、授时服务器Posix时间）
+		/// @brief 根据基准时间戳进行二次同步（重新计算时间偏置的优先级从高至低为：授时服务器Posix时间、卫星Posix时间）
 		/// @param srcTimestamp 基准时间戳
 		/// @param guestPosix 非0则使用该输入作为基准时间戳的客机Posix时间
 		/// @param gnssPosix 非0则使用该输入作为基准时间戳的卫星Posix时间
