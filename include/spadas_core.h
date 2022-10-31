@@ -5072,7 +5072,9 @@ namespace spadas
 		/// @param cpuTick 视频帧的到达时CPU计数
 		/// @param channel 视频通道，0~23，对应A~X
 		/// @param preview 预览图像，640x(360-480)分辨率的BGR图像
-		virtual void outputPreview(ULong cpuTick, UInt channel, ImagePointer preview);
+		/// @param guestPosix 视频帧的采样时客机Posix时间，单位纳秒，0表示无效
+		/// @param gnssPosix 视频帧的采样时卫星Posix时间，单位纳秒，0表示无效
+		virtual void outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0);
 	};
 
 	/// 视频帧回注接口

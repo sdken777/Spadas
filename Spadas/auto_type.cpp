@@ -350,7 +350,7 @@ OptionalBool IBusMessageTransmitter::transmitAtServerPosix(UInt channel, UInt id
 	return OptionalBool();
 }
 
-void IVideoPreviewExpressX::outputPreview(ULong cpuTick, UInt channel, ImagePointer preview)
+void IVideoPreviewExpressX::outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix, NanoPosix gnssPosix)
 {
 }
 
