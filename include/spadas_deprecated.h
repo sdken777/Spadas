@@ -558,63 +558,6 @@ namespace spadas
 			return SampleInterpolationResult::OutOfRange;
 		}
 	}
-
-	template<typename Type>
-	SampleInterpolationResult SessionSampleBuffer::interpolate(Double offset, Type& interpolatedSample, UInt earlyThresh)
-	{
-		if (this->isEmpty()) return SampleInterpolationResult::OutOfRange;
-
-		SessionGeneralSample sFirst, sLast;
-		this->getEarliest(sFirst);
-		this->getLatest(sLast);
-
-		if (offset > sFirst.timestamp.offset && offset <= sLast.timestamp.offset)
-		{
-			SessionGeneralSample sgs1, sgs2;
-			if (!this->search(offset, sgs1, sgs2)) return SampleInterpolationResult::OutOfRange;
-
-			Double delta = sgs2.timestamp.offset - sgs1.timestamp.offset;
-			Double w1 = (sgs2.timestamp.offset - offset) / delta;
-			Double w2 = (offset - sgs1.timestamp.offset) / delta;
-
-			String protocol = getProtocol(FALSE);
-			GeneralSample sg1(sgs1);
-			GeneralSample sg2(sgs2);
-
-			if (!Type::supportInterpolation())
-			{
-				Bool parseResult;
-				if (protocol.isEmpty()) parseResult = interpolatedSample.fromGeneralSample(w1 > w2 ? sg1 : sg2);
-				else parseResult = interpolatedSample.fromGeneralSample(protocol, w1 > w2 ? sg1 : sg2);
-				return parseResult ? SampleInterpolationResult::NearestInstead : SampleInterpolationResult::ParseError;
-			}
-
-			Type s1, s2;
-			Bool parseResultS1, parseResultS2;
-			if (protocol.isEmpty())
-			{
-				parseResultS1 = s1.fromGeneralSample(sg1);
-				parseResultS2 = s2.fromGeneralSample(sg2);
-			}
-			else
-			{
-				parseResultS1 = s1.fromGeneralSample(protocol, sg1);
-				parseResultS2 = s2.fromGeneralSample(protocol, sg2);
-			}
-			if (!parseResultS1 || !parseResultS2) return SampleInterpolationResult::ParseError;
-
-			interpolatedSample = Type::interpolate(s1, w1, s2, w2, GlobalTimestamp(this->getCurrentSession().toTime(), offset));
-			return SampleInterpolationResult::OK;
-		}
-		else if (offset > sLast.timestamp.offset && offset < sLast.timestamp.offset + 0.001 * earlyThresh)
-		{
-			return SampleInterpolationResult::TooEarly;
-		}
-		else
-		{
-			return SampleInterpolationResult::OutOfRange;
-		}
-	}
 }
 
 #endif

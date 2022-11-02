@@ -3328,6 +3328,67 @@ namespace spadas
 		SPADAS_ERROR_RETURNVAL(handler.isNull(), *(new Type));
 		return *(Type*)data.data();
 	}
+
+	// SampleBuffer函数的实现 /////////////////////////////////////////////////////////
+	template<typename Type>
+	SampleInterpolationResult SessionSampleBuffer::interpolate(Double offset, Type& interpolatedSample, UInt earlyThresh)
+	{
+		if (this->isEmpty()) return SampleInterpolationResult::OutOfRange;
+
+		String protocol = getProtocol(FALSE);
+		if (protocol.isEmpty()) return SampleInterpolationResult::NoProtocol;
+
+		SessionGeneralSample sFirst, sLast;
+		this->getEarliest(sFirst);
+		this->getLatest(sLast);
+
+		if (offset > sFirst.timestamp.offset && offset <= sLast.timestamp.offset)
+		{
+			SessionGeneralSample sgs1, sgs2;
+			if (!this->search(offset, sgs1, sgs2)) return SampleInterpolationResult::OutOfRange;
+
+			Double delta = sgs2.timestamp.offset - sgs1.timestamp.offset;
+			Double w1 = (sgs2.timestamp.offset - offset) / delta;
+			Double w2 = (offset - sgs1.timestamp.offset) / delta;
+
+			if (!Type::supportInterpolation())
+			{
+				Bool parseResult = interpolatedSample.fromGeneralSample(protocol, w1 > w2 ? sgs1 : sgs2);
+				return parseResult ? SampleInterpolationResult::NearestInstead : SampleInterpolationResult::ParseError;
+			}
+
+			Type s1, s2;
+			Bool parseResultS1 = s1.fromGeneralSample(protocol, sgs1);
+			Bool parseResultS2 = s2.fromGeneralSample(protocol, sgs2);
+			if (!parseResultS1 || !parseResultS2) return SampleInterpolationResult::ParseError;
+
+			FullTimestamp timestamp;
+			timestamp.session = this->getCurrentSession();
+			timestamp.offset = offset;
+			timestamp.offsetSync = sgs1.timestamp.offsetSync == sgs2.timestamp.offsetSync ? sgs1.timestamp.offsetSync : TimeOffsetSync::None;
+
+			ULong *sgs1Times = (ULong*)&sgs1.timestamp.cpuTick;
+			ULong *sgs2Times = (ULong*)&sgs2.timestamp.cpuTick;
+			ULong *dstTimes = (ULong*)&timestamp.cpuTick;
+			for (UInt i = 0; i < 5; i++)
+			{
+				ULong sgs1Time = sgs1Times[i], sgs2Time = sgs2Times[i];
+				Long diffTime = (Long)sgs2Time - (Long)sgs1Time;
+				dstTimes[i] = sgs1Time + (Long)(w2 * diffTime);
+			}
+
+			interpolatedSample = Type::interpolate(s1, w1, s2, w2, timestamp);
+			return SampleInterpolationResult::OK;
+		}
+		else if (offset > sLast.timestamp.offset && offset < sLast.timestamp.offset + 0.001 * earlyThresh)
+		{
+			return SampleInterpolationResult::TooEarly;
+		}
+		else
+		{
+			return SampleInterpolationResult::OutOfRange;
+		}
+	}
 }
 
 #endif

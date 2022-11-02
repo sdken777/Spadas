@@ -4486,6 +4486,9 @@ namespace spadas
 
 		/// 通用样本解析错误
 		ParseError = 4,
+
+		/// 未设置样本缓存的协议
+		NoProtocol = 5,
 	};
 
 	/// 通用样本缓存
@@ -4562,19 +4565,16 @@ namespace spadas
 		/// @returns 若无则返回FALSE
 		Bool search(TimeType timeType, ULong time, SessionGeneralSample& sampleBefore, SessionGeneralSample& sampleAfter);
 
-#if !defined(SPADAS_DEPRECATED_HIDE)
 		/// @brief 根据时间偏置寻找前后两个样本并插值
 		/// @param offset 目标时间偏置
 		/// @param interpolatedSample 输出插值完成的样本
 		/// @param earlyThresh 用于判断缓存范围是否过早的阈值，参考 SampleInterpolationResult::TooEarly
 		/// @details 该模板类型必须实现以下函数：\n
-		/// - Bool fromGeneralSample(GeneralSample); \n
-		/// - Bool fromGeneralSample(String protocol, GeneralSample); \n
+		/// - Bool fromGeneralSample(String protocol, SessionGeneralSample); \n
 		/// - static Bool supportInterpolation(); \n
-		/// - static Type interpolate(Type& s1, Double w1, Type& s2, Double w2, GlobalTimestamp time);
+		/// - static Type interpolate(Type& s1, Double w1, Type& s2, Double w2, FullTimestamp timestamp);
 		template <typename Type>
 		SampleInterpolationResult interpolate(Double offset, Type& interpolatedSample, UInt earlyThresh = 1000/* ms */);
-#endif
 
 	private:
 		Bool isNull() { return FALSE; }
