@@ -162,6 +162,28 @@ String GlobalTimestamp::toString()
 	return base.dateString(String()) + "-" + base.timeString("-") + "-" + String(offset, 6);
 }
 
+Bool ShortTimestamp::operator ==(ShortTimestamp timestamp)
+{
+	return session == timestamp.session && offset == timestamp.offset;
+}
+
+Bool ShortTimestamp::operator !=(ShortTimestamp timestamp)
+{
+	return session != timestamp.session || offset != timestamp.offset;
+}
+
+Bool ShortTimestamp::operator >(ShortTimestamp timestamp)
+{
+	if (session == timestamp.session) return offset > timestamp.offset;
+	else return session > timestamp.session;
+}
+
+Bool ShortTimestamp::operator <(ShortTimestamp timestamp)
+{
+	if (session == timestamp.session) return offset < timestamp.offset;
+	else return session < timestamp.session;
+}
+
 String ShortTimestamp::toString()
 {
 	Array<String> comps(7);
@@ -173,6 +195,28 @@ String ShortTimestamp::toString()
 	comps[5] = session.second;
 	comps[6] = String(offset, 6);
 	return String::mergeStrings(comps, "-");
+}
+
+Bool FullTimestamp::operator ==(FullTimestamp timestamp)
+{
+	return session == timestamp.session && offset == timestamp.offset;
+}
+
+Bool FullTimestamp::operator !=(FullTimestamp timestamp)
+{
+	return session != timestamp.session || offset != timestamp.offset;
+}
+
+Bool FullTimestamp::operator >(FullTimestamp timestamp)
+{
+	if (session == timestamp.session) return offset > timestamp.offset;
+	else return session > timestamp.session;
+}
+
+Bool FullTimestamp::operator <(FullTimestamp timestamp)
+{
+	if (session == timestamp.session) return offset < timestamp.offset;
+	else return session < timestamp.session;
 }
 
 String FullTimestamp::toString()
@@ -260,6 +304,12 @@ SessionIdentifier::SessionIdentifier(String idString) : year(0), month(0), day(0
 	}
 }
 
+Bool SessionIdentifier::isValid()
+{
+	return year > 0 && month >= 1 && month <= 12 && day >= 1 && day <= 31 &&
+		hour >= 0 && hour < 24 && minute >= 0 && minute < 60 && second >= 0 && second < 60;
+}
+
 Bool SessionIdentifier::operator ==(SessionIdentifier id)
 {
 	return this->year == id.year &&
@@ -275,21 +325,21 @@ Bool SessionIdentifier::operator !=(SessionIdentifier id)
 	return !operator ==(id);
 }
 
-Bool SessionIdentifier::operator >(SessionIdentifier time)
+Bool SessionIdentifier::operator >(SessionIdentifier id)
 {
 	ULong t1 = ((ULong)this->year << 40) + ((ULong)this->month << 32) + ((ULong)this->day << 24) + 
 		((ULong)this->hour << 16) + ((ULong)this->minute << 8) + (ULong)this->second;
-	ULong t2 = ((ULong)time.year << 40) + ((ULong)time.month << 32) + ((ULong)time.day << 24) + 
-		((ULong)time.hour << 16) + ((ULong)time.minute << 8) + (ULong)time.second;
+	ULong t2 = ((ULong)id.year << 40) + ((ULong)id.month << 32) + ((ULong)id.day << 24) + 
+		((ULong)id.hour << 16) + ((ULong)id.minute << 8) + (ULong)id.second;
 	return t1 > t2;
 }
 
-Bool SessionIdentifier::operator <(SessionIdentifier time)
+Bool SessionIdentifier::operator <(SessionIdentifier id)
 {
 	ULong t1 = ((ULong)this->year << 40) + ((ULong)this->month << 32) + ((ULong)this->day << 24) + 
 		((ULong)this->hour << 16) + ((ULong)this->minute << 8) + (ULong)this->second;
-	ULong t2 = ((ULong)time.year << 40) + ((ULong)time.month << 32) + ((ULong)time.day << 24) + 
-		((ULong)time.hour << 16) + ((ULong)time.minute << 8) + (ULong)time.second;
+	ULong t2 = ((ULong)id.year << 40) + ((ULong)id.month << 32) + ((ULong)id.day << 24) + 
+		((ULong)id.hour << 16) + ((ULong)id.minute << 8) + (ULong)id.second;
 	return t1 < t2;
 }
 

@@ -4157,6 +4157,9 @@ namespace spadas
 		/// 基于字符串(yyyy-MM-dd-HH-mm-ss)初始化，若失败则全部置为0
 		SPADAS_API SessionIdentifier(String idString);
 
+		/// 是否有效
+		SPADAS_API Bool isValid();
+
 		/// 是否等于
 		SPADAS_API Bool operator ==(SessionIdentifier id);
 
@@ -4164,10 +4167,10 @@ namespace spadas
 		SPADAS_API Bool operator !=(SessionIdentifier id);
 
 		/// 是否大于
-		SPADAS_API Bool operator >(SessionIdentifier time);
+		SPADAS_API Bool operator >(SessionIdentifier id);
 
 		/// 是否小于
-		SPADAS_API Bool operator <(SessionIdentifier time);
+		SPADAS_API Bool operator <(SessionIdentifier id);
 
 		/// 获取哈希值
 		SPADAS_API Word getHash();
@@ -4209,6 +4212,18 @@ namespace spadas
 		ShortTimestamp(SessionIdentifier session, Double offset) : session(session), offset(offset)
 		{}
 
+		/// 是否等于
+		SPADAS_API Bool operator ==(ShortTimestamp timestamp);
+
+		/// 是否不等于
+		SPADAS_API Bool operator !=(ShortTimestamp timestamp);
+
+		/// 是否大于
+		SPADAS_API Bool operator >(ShortTimestamp timestamp);
+
+		/// 是否小于
+		SPADAS_API Bool operator <(ShortTimestamp timestamp);
+
 		/// 转为字符串显示，格式为"Session年月日-时-分-秒-偏置"，如2019-01-01-12-30-45-123.456789
 		SPADAS_API String toString();
 	};
@@ -4243,6 +4258,18 @@ namespace spadas
 		/// 默认构造函数
 		FullTimestamp() : offset(0), offsetSync(TimeOffsetSync::None), cpuTick(0), hostPosix(0), guestPosix(0), serverPosix(0), gnssPosix(0)
 		{}
+
+		/// 是否等于（仅比较Session标识符和时间偏置）
+		SPADAS_API Bool operator ==(FullTimestamp timestamp);
+
+		/// 是否不等于（仅比较Session标识符和时间偏置）
+		SPADAS_API Bool operator !=(FullTimestamp timestamp);
+
+		/// 是否大于（仅比较Session标识符和时间偏置）
+		SPADAS_API Bool operator >(FullTimestamp timestamp);
+
+		/// 是否小于（仅比较Session标识符和时间偏置）
+		SPADAS_API Bool operator <(FullTimestamp timestamp);
 
 		/// 转为简单时间戳
 		SPADAS_API ShortTimestamp toShort();
