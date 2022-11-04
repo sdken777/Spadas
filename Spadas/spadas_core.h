@@ -4122,64 +4122,47 @@ namespace spadas
 	};
 
 	/// Session标识符
-	struct SessionIdentifier
+	class SPADAS_API SessionIdentifier
 	{
-		/// 年
-		Word year;
-
-		/// 月
-		Byte month;
-
-		/// 日
-		Byte day;
-
-		/// 时
-		Byte hour;
-
-		/// 分
-		Byte minute;
-
-		/// 秒
-		Byte second;
-
-		/// 默认构造函数，全部置为0
-		SessionIdentifier() : year(0), month(0), day(0), hour(0), minute(0), second(0)
-		{}
+	public:
+		/// 创建无效标识符
+		SessionIdentifier();
 
 		/// 基于指定年月日时分秒初始化
-		SessionIdentifier(Word year, Byte month, Byte day, Byte hour, Byte minute, Byte second) : year(year), month(month), day(day), hour(hour), minute(minute), second(second)
-		{}
+		SessionIdentifier(Word year, Byte month, Byte day, Byte hour, Byte minute, Byte second);
 
 		/// 基于日期初始化
-		SessionIdentifier(Time time) : year((Word)time.year), month((Byte)time.month), day((Byte)time.day), hour((Byte)time.hour), minute((Byte)time.minute), second((Byte)time.second)
-		{}
+		SessionIdentifier(Time time);
 
-		/// 基于字符串(yyyy-MM-dd-HH-mm-ss)初始化，若失败则全部置为0
-		SPADAS_API SessionIdentifier(String idString);
+		/// 基于字符串(yyyy-MM-dd-HH-mm-ss)初始化，若失败则置为0
+		SessionIdentifier(String idString);
 
 		/// 是否有效
-		SPADAS_API Bool isValid();
+		Bool isValid();
 
 		/// 是否等于
-		SPADAS_API Bool operator ==(SessionIdentifier id);
+		Bool operator ==(SessionIdentifier id);
 
 		/// 是否不等于
-		SPADAS_API Bool operator !=(SessionIdentifier id);
+		Bool operator !=(SessionIdentifier id);
 
 		/// 是否大于
-		SPADAS_API Bool operator >(SessionIdentifier id);
+		Bool operator >(SessionIdentifier id);
 
 		/// 是否小于
-		SPADAS_API Bool operator <(SessionIdentifier id);
+		Bool operator <(SessionIdentifier id);
 
 		/// 获取哈希值
-		SPADAS_API Word getHash();
+		Word getHash();
 
 		/// 转为字符串(yyyy-MM-dd-HH-mm-ss)
-		SPADAS_API String toString();
+		String toString();
 
 		/// 转为时间（方便旧版本兼容）
-		SPADAS_API Time toTime();
+		Time toTime();
+
+	private:
+		ULong value;
 	};
 
 	/// 时间偏置同步状态

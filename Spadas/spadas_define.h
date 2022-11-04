@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 实现SessionSampleBuffer::interpolate
+// 版本定义 // SessionIdentifier改为基于单个ULong的class，并修正toString
 #define SPADAS_VERSION_MAJOR 8
 #define SPADAS_VERSION_MINOR 4
-#define SPADAS_VERSION_BUILD 11
+#define SPADAS_VERSION_BUILD 12
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.4.11\n
+* 本文档对应Spadas版本：8.4.12\n
 *
 * \n
 * \section top1 基本功能概述

@@ -16,6 +16,7 @@
         "ostream": "cpp",
         "chrono": "cpp",
         "optional": "cpp",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "__locale": "cpp"
     }
 }
