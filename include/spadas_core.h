@@ -5389,7 +5389,7 @@ namespace spadas
 		/// @param hostPosix 到达时主机Posix时间，单位纳秒，0表示无效
 		/// @param guestPosix 客机Posix时间，单位纳秒，0表示无效
 		/// @param gnssPosix 卫星Posix时间，单位纳秒，0表示无效
-		/// @param protocol 样本协议ID，将据此确定客机是否已与授时服务器同步（一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始）
+		/// @param protocol 原始数据协议ID，将据此确定客机是否已与授时服务器同步（一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本）
 		/// @return 是否成功
 		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionIdentifier session, ULong cpuTick = 0, NanoPosix hostPosix = 0, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, String protocol = String());
 
@@ -5397,7 +5397,7 @@ namespace spadas
 		/// @param srcTimestamp 基准时间戳
 		/// @param guestPosix 非0则使用该输入作为基准时间戳的客机Posix时间，单位纳秒
 		/// @param gnssPosix 非0则使用该输入作为基准时间戳的卫星Posix时间，单位纳秒
-		/// @param protocol 样本协议ID，将据此确定客机是否已与授时服务器同步（一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始）
+		/// @param protocol 原始数据协议ID，将据此确定客机是否已与授时服务器同步（一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本）
 		/// @return 输出的时间戳
 		virtual FullTimestamp resyncTimestamp(FullTimestamp srcTimestamp, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, String protocol = String());
 
@@ -5429,7 +5429,7 @@ namespace spadas
 		SPADAS_API BusMessageID();
 
 		/// 按总线协议ID和本通道报文ID初始化
-		SPADAS_API BusMessageID(BusProtocolID dbc, UInt message);
+		SPADAS_API BusMessageID(BusProtocolID protocol, UInt message);
 
 		/// 按总线报文ID字符串初始化
 		SPADAS_API BusMessageID(String text);
@@ -5454,7 +5454,7 @@ namespace spadas
 		SPADAS_API BusSignalID();
 
 		/// 按总线协议ID，本通道报文ID，以及信号名称初始化
-		SPADAS_API BusSignalID(BusProtocolID dbc, UInt message, String signal);
+		SPADAS_API BusSignalID(BusProtocolID protocol, UInt message, String signal);
 
 		/// 按总线信号ID字符串初始化
 		SPADAS_API BusSignalID(String text);
