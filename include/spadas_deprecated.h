@@ -116,7 +116,7 @@ namespace spadas
 	{
 		SessionID base;
 		Array<Array<BusRawData> > channelDatas;
-		BusRawDataTable() : channelDatas(16)
+		BusRawDataTable() : channelDatas(BC_NUM)
 		{}
 		SPADAS_API void clear();
 	};

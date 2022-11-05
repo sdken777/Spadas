@@ -5150,7 +5150,7 @@ namespace spadas
 		SessionMatrixSampleTable matrices;
 
 		/// 默认构造函数
-		InputTablesX()
+		InputTablesX() : busRawDatas(BC_NUM), videoRawDatas(VC_NUM), videoProcDatas(VC_NUM)
 		{}
 
 		/// 清空所有数据
@@ -5161,9 +5161,9 @@ namespace spadas
 			signals.clear();
 			samples.clear();
 			matrices.clear();
-			busRawDatas = SessionBusRawDataTable(busRawDatas.size());
-			videoRawDatas = SessionVideoRawDataTable(videoRawDatas.size());
-			videoProcDatas = SessionVideoProcDataTable(videoProcDatas.size());
+			busRawDatas = SessionBusRawDataTable(BC_NUM);
+			videoRawDatas = SessionVideoRawDataTable(VC_NUM);
+			videoProcDatas = SessionVideoProcDataTable(VC_NUM);
 		}
 	};
 

@@ -3,7 +3,7 @@
 
 using namespace spadas;
 
-VideoRawDataTable::VideoRawDataTable() : channelDatas(24)
+VideoRawDataTable::VideoRawDataTable() : channelDatas(VC_NUM)
 {}
 
 void VideoRawDataTable::clear()
@@ -21,7 +21,7 @@ Bool VideoRawDataTable::isEmpty()
 	return TRUE;
 }
 
-VideoProcDataTable::VideoProcDataTable() : channelDatas(24)
+VideoProcDataTable::VideoProcDataTable() : channelDatas(VC_NUM)
 {}
 
 void VideoProcDataTable::clear()

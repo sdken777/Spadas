@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // SessionIdentifier改为基于单个ULong的class，并修正toString
+// 版本定义 // 增加BC_NUM、VC_NUM定义，并修正InputTablesX未初始化问题
 #define SPADAS_VERSION_MAJOR 8
 #define SPADAS_VERSION_MINOR 4
-#define SPADAS_VERSION_BUILD 12
+#define SPADAS_VERSION_BUILD 13
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.4.12\n
+* 本文档对应Spadas版本：8.4.13\n
 *
 * \n
 * \section top1 基本功能概述
@@ -293,6 +293,10 @@
 #define SPADAS_BINARY_DUMMY_BYTES 12
 #define SPADAS_STRING_DUMMY_BYTES 16
 #endif
+
+// 通道数量定义
+#define BC_NUM 16 // 总线
+#define VC_NUM 24 // 视频
 
 // OpenCV兼容性
 typedef struct _IplImage IplImage;
