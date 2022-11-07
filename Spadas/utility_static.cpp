@@ -173,11 +173,8 @@ TimeWithMS spadas::system::getTimeWithMS()
 void spadas::system::wait(UInt time)
 {
 #if defined(SPADAS_ENV_WINDOWS)
-	if (wc.sampleCount.get() >= 100)
-	{
-		if (wc.failCount.get() > 1) Flag(time).waitSet();
-		else sleepTime(time);
-	}
+	if (wc.failCount.get() > 1) Flag(time).waitSet();
+	else if (wc.sampleCount.get() >= 100) sleepTime(time);
 	else
 	{
 		Timer timer;
