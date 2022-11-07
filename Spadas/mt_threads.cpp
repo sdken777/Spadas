@@ -286,7 +286,7 @@ Pointer threadFunc(Pointer param)
 		// wait
 		if (timeInterval < 1000)
 		{
-			Flag(timeInterval).waitSet();
+			system::wait(timeInterval);
 		}
 		else
 		{
@@ -303,11 +303,11 @@ Pointer threadFunc(Pointer param)
 				Float longWaitTimerCheck = (Float)longWaitTimer.check();
 				if (longWaitTimerCheck + 1000.0f < (Float)timeInterval)
 				{
-					Flag(1000).waitSet();
+					system::wait(1000);
 				}
 				else
 				{
-					if (longWaitTimerCheck < (Float)timeInterval) Flag((UInt)((Float)timeInterval - longWaitTimerCheck)).waitSet();
+					if (longWaitTimerCheck < (Float)timeInterval) system::wait((UInt)((Float)timeInterval - longWaitTimerCheck));
 					break;
 				}
 			}
@@ -492,7 +492,7 @@ void Threads::run(Interface<IWorkflow> workflow, Flag interrupt)
     {
         workflow->onThreadLoop(0, interrupt);
         if (interrupt.check()) break;
-        Flag(workflow->getTimeInterval(0)).waitSet();
+        system::wait(workflow->getTimeInterval(0));
     }
     
     workflow->onThreadEnd(0);

@@ -1,5 +1,6 @@
 ﻿
 #include "spadas.h"
+#include "oscillator.h"
 
 #include <memory.h>
 #include <time.h>
@@ -8,7 +9,18 @@
 
 #define MEMOP_THRESH 16
 
+namespace spadas_internal
+{
+	struct WindowsWaitContext
+	{
+		Atom sampleCount;
+		Atom failCount;
+	}
+	wc;
+}
+
 using namespace spadas;
+using namespace spadas_internal;
 
 // isBigEndian
 Bool spadas::system::isBigEndian()
@@ -156,6 +168,29 @@ TimeWithMS spadas::system::getTimeWithMS()
 	return out;
 }
 #endif
+
+// wait
+void spadas::system::wait(UInt time)
+{
+#if defined(SPADAS_ENV_WINDOWS)
+	if (wc.sampleCount.get() >= 100)
+	{
+		if (wc.failCount.get() > 1) Flag(time).waitSet();
+		else sleepTime(time);
+	}
+	else
+	{
+		Timer timer;
+		sleepTime(1);
+		Bool failed = timer.check() >= 10.0;
+		if (wc.sampleCount.increase() <= 100 && failed) wc.failCount.increase();
+		sleepTime(time);
+	}
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+	sleepTime(time);
+#endif
+}
+
 
 // addEnvironmentPath
 #if defined(SPADAS_ENV_WINDOWS)

@@ -105,7 +105,7 @@ Pointer taskThreadFunc(Pointer param)
 			currentNode = currentNode.next();
 		}
 		vars->threadsLock.leave();
-		Flag(1).waitSet();
+		system::wait(1);
 	}
 
 	targetNode.value().valid.set();
@@ -202,7 +202,7 @@ Bool TaskManager::stop(Interface<ITask> task, UInt timeout)
 
 		if (!found) return TRUE;
 
-		Flag(10).waitSet();
+		system::wait(10);
 	}
 
 	return FALSE;
@@ -246,7 +246,7 @@ Bool TaskManager::waitAll(Flag interrupt)
 	{
 		LockProxy p(vars->threadsLock);
 		if (vars->threads.next() == vars->threads) return TRUE;
-		Flag(10).waitSet();
+		system::wait(10);
 	}
 	return FALSE;
 }
@@ -279,6 +279,6 @@ void TaskManagerVars::stopAll(UInt timeout)
 			return;
 		}
 		threadsLock.leave();
-		Flag(10).waitSet();
+		system::wait(10);
 	}
 }

@@ -3919,6 +3919,9 @@ namespace spadas
 		/// 获得当前主机时间（本地时区），带毫秒信息
 		SPADAS_API TimeWithMS getTimeWithMS();
 
+		/// 等待指定时间，单位毫秒（系统负载高时精度可能会降至5~10毫秒）
+		SPADAS_API void wait(UInt time);
+
 		/// 执行一个控制台命令
 		SPADAS_API void command(String cmd);
 

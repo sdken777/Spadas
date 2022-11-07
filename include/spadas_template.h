@@ -2473,7 +2473,7 @@ namespace spadas
 		SPADAS_ERROR_RETURN(this->vars->terminated);
 		if (!this->vars->discardable)
 		{
-			while (this->vars->nElements == this->vars->capacity) Flag(1).waitSet();
+			while (this->vars->nElements == this->vars->capacity) system::wait(1);
 		}
 		this->vars->lock.enter();
 		this->vars->origin.insertPrevious(newElement);
@@ -2496,7 +2496,7 @@ namespace spadas
 			while (this->vars->nElements == this->vars->capacity)
 			{
 				if (interrupt.check()) return FALSE;
-				Flag(1).waitSet();
+				system::wait(1);
 			}
 		}
 		this->vars->lock.enter();
@@ -2521,7 +2521,7 @@ namespace spadas
 		if (!this->vars->discardable)
 		{
 			SPADAS_ERROR_RETURN(elemSize > this->vars->capacity);
-			while (this->vars->nElements + elemSize - 1 >= this->vars->capacity) Flag(1).waitSet();
+			while (this->vars->nElements + elemSize - 1 >= this->vars->capacity) system::wait(1);
 		}
 		this->vars->lock.enter();
 		for (UInt i = 0; i < elemSize; i++)
@@ -2550,7 +2550,7 @@ namespace spadas
 			while (this->vars->nElements + elemSize - 1 >= this->vars->capacity)
 			{
 				if (interrupt.check()) return FALSE;
-				Flag(1).waitSet();
+				system::wait(1);
 			}
 		}
 		this->vars->lock.enter();
@@ -2614,7 +2614,7 @@ namespace spadas
 		while (this->vars->nElements != 0)
 		{
 			if (interrupt.check()) return FALSE;
-			Flag(1).waitSet();
+			system::wait(1);
 		}
 		return TRUE;
 	}

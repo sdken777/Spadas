@@ -222,7 +222,7 @@ Enum<Key> spadas::console::waitKey()
 		scanningLock.leave();
 		while (TRUE)
 		{
-			Flag(10).waitSet();
+			system::wait(10);
 			LockProxy p(scanningLock);
 			if (scanning) continue;
 			else if ((out = cs->checkKey()) != Key::None) break;
