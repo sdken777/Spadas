@@ -176,6 +176,7 @@ void SessionSampleBuffer::addSample(SessionGeneralSample sample)
 			{
 				vars->nodes.insertPrevious(sample);
 				vars->maxTime = timeOffset;
+				vars->nSamples++;
 
 				Double lowerBound = timeOffset - vars->bufferLength;
 				ListNode<SessionGeneralSample> targetNode = vars->nodes.next();
@@ -184,6 +185,7 @@ void SessionSampleBuffer::addSample(SessionGeneralSample sample)
 					if (targetNode->timestamp.offset >= lowerBound) break;
 					targetNode.goNext();
 					targetNode.removePrevious();
+					vars->nSamples--;
 				}
 			}
 			else
@@ -202,9 +204,8 @@ void SessionSampleBuffer::addSample(SessionGeneralSample sample)
 				{
 					vars->nodes.insertNext(sample);
 				}
+				vars->nSamples++;
 			}
-			
-			vars->nSamples++;
 		}
 	}
 	vars->lock.leave();
