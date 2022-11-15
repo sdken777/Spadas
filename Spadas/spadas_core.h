@@ -4245,6 +4245,10 @@ namespace spadas
 		FullTimestamp() : offset(0), offsetSync(TimeOffsetSync::None), cpuTick(0), hostPosix(0), guestPosix(0), serverPosix(0), gnssPosix(0)
 		{}
 
+		/// 从简单时间戳构造，无同步信息或Session无关时间信息
+		FullTimestamp(ShortTimestamp timestamp) : session(timestamp.session), offset(timestamp.offset), offsetSync(TimeOffsetSync::None), cpuTick(0), hostPosix(0), guestPosix(0), serverPosix(0), gnssPosix(0)
+		{}
+
 		/// 是否等于（仅比较Session标识符和时间偏置）
 		SPADAS_API Bool operator ==(FullTimestamp timestamp);
 
@@ -4332,7 +4336,7 @@ namespace spadas
 	struct SessionGeneralRawData
 	{
 		/// 时间戳
-		ShortTimestamp timestamp;
+		FullTimestamp timestamp;
 
 		/// 数值数组数据
 		Array<Double> vector;
@@ -4345,7 +4349,7 @@ namespace spadas
 		{}
 
 		/// 基于时间戳和数据初始化
-		SessionGeneralRawData(ShortTimestamp timestamp, Array<Double> vector, Binary binary) : timestamp(timestamp), vector(vector), binary(binary)
+		SessionGeneralRawData(FullTimestamp timestamp, Array<Double> vector, Binary binary) : timestamp(timestamp), vector(vector), binary(binary)
 		{}
 	};
 
