@@ -998,6 +998,9 @@ namespace spadas
 
 		/// 在数组末尾扩展1个元素
 		void append(Type val);
+
+		/// 在数组末尾扩展多个元素
+		void append(Array<Type> vals);
 		
 		/// 从定长数组对象的某个子区域拷贝至本数组的某个位置 (若越过了数组边界，则扩展大小至满足条件)
 		void copyFromArray(Array<Type> src, Region srcRegion, UInt thisOffset);

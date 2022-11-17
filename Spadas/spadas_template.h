@@ -1971,6 +1971,15 @@ namespace spadas
 	}
 
 	template<typename Type>
+	void ArrayX<Type>::append(Array<Type> vals)
+	{
+		for (auto e = vals.firstElem(); e.valid(); ++e)
+		{
+			append(e.value());
+		}
+	}
+
+	template<typename Type>
 	void ArrayX<Type>::copyFromArray(Array<Type> src, Region srcRegion, UInt thisOffset)
 	{
 		UInt srcSize = src.size();
