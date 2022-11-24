@@ -5,7 +5,7 @@
 /// Spadas根命名空间
 namespace spadas
 {
-	// 值类型与常数 //////////////////////////////////////////////////////////////
+	// 值类型 //////////////////////////////////////////////////////////////
 
 	/// 布尔类型
 	typedef bool Bool;
@@ -48,6 +48,8 @@ namespace spadas
 	
 	/// 兼容指针的整数类型
 	typedef ULong PointerInt;
+
+	// 常数 //////////////////////////////////////////////////////////////
 	
 	/// 布尔值真
 	const Bool TRUE = true;
@@ -73,30 +75,32 @@ namespace spadas
 	/// spadas::Long 类型负无限 (亦可用于表示无效数值)
 	const Long NLINF = 0x8000000000000000ll;
 
-	// 字符串（前置声明）
+	// 前置声明 //////////////////////////////////////////////////////////////
+
+	// 字符串
 	class SPADAS_API String;
 
-	// 可空对象（前置声明）
+	// 可空对象
 	template <typename Type> class Optional;
 
-	// 数组（前置声明）
+	// 数组
 	template <typename Type> class Array;
 
-	// 链表节点（前置声明）
+	// 链表节点
 	template <typename Type> class ListNode;
 
-	// Int矩阵（前置声明）
+	// Int矩阵
 	class SPADAS_API IntMat;
 
-	// Float矩阵（前置声明）
+	// Float矩阵
 	class SPADAS_API FloatMat;
 
-	// Double矩阵（前置声明）
+	// Double矩阵
 	class SPADAS_API DoubleMat;
 
-	// 标志位（前置声明）
+	// 标志位
 	class SPADAS_API Flag;
-	
+
 	// 空间与索引 //////////////////////////////////////////////////////////////
 
 	/// 2维尺寸
