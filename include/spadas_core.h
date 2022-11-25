@@ -752,9 +752,13 @@ namespace spadas
 		/// @returns 合并后的数组
 		static Array<Type> merge(Array<Array<Type> > arrs);
 
-		/// 转换为基类对象或派生类对象的数组
+		/// 转换为基类对象的数组
 		template <typename TargetType>
 		Array<TargetType> asArray();
+
+		/// 转换为派生类对象的数组
+		template <typename TargetType>
+		Array<Optional<TargetType> > castArray();
 
 	private:
 		Bool isNull() { return FALSE; }

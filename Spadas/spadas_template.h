@@ -865,6 +865,16 @@ namespace spadas
 	}
 
 	template<typename Type>
+	template<typename TargetType>
+	Array<Optional<TargetType> > Array<Type>::castArray()
+	{
+		if (!this->vars) return Array<Optional<TargetType> >();
+		Array<Optional<TargetType> > output = Array<Optional<TargetType> >::createUninitialized(this->vars->size);
+		for (UInt i = 0; i < this->vars->size; i++) output.initialize(i, this->vars->data[i].template cast<TargetType>());
+		return output;
+	}
+
+	template<typename Type>
 	ArrayElem<Type>::ArrayElem(Array<Type> arr0, UInt index0) : arr(arr0), data(arr.data()), size(arr.size()), idx(index0)
 	{}
 
