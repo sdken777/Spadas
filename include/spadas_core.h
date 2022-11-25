@@ -3934,6 +3934,9 @@ namespace spadas
 		/// 取得Magic数字
 		UInt getNumber();
 
+		/// 获取哈希值
+		Word getHash();
+
 		/// 四字符转换为字符串
 		String toString();
 

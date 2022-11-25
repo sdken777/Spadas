@@ -66,6 +66,12 @@ UInt MagicNumber::getNumber()
 	return *(UInt*)vars->magic;
 }
 
+Word MagicNumber::getHash()
+{
+	if (!vars) return 0;
+	return (Byte)vars->magic[0] ^ (Byte)vars->magic[1] ^ (Byte)vars->magic[2] ^ (Byte)vars->magic[3];
+}
+
 String MagicNumber::toString()
 {
 	if (!vars) return String();
