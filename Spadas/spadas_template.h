@@ -748,6 +748,64 @@ namespace spadas
 	}
 
 	template<typename Type>
+	Bool Array<Type>::containAs(typename InOut<Type, Bool>::Function func)
+	{
+		if (!this->vars) return FALSE;
+		UInt size = this->vars->size;
+		Type *data = this->vars->data;
+		for (UInt i = 0; i < size; i++)
+		{
+			if (func(data[i])) return TRUE;
+		}
+		return FALSE;
+	}
+
+	template<typename Type>
+	Array<UInt> Array<Type>::search(Type val)
+	{
+		if (!this->vars) return Array<UInt>();
+		UInt size = this->vars->size;
+		Type *data = this->vars->data;
+		Array<UInt> bufIndices(size);
+		UInt nBufIndices = 0;
+		for (UInt i = 0; i < size; i++)
+		{
+			if (data[i] == val) bufIndices[nBufIndices++] = i;
+		}
+		bufIndices.trim(nBufIndices);
+		return bufIndices;
+	}
+
+	template<typename Type>
+	Array<UInt> Array<Type>::searchAs(typename InOut<Type, Bool>::Function func)
+	{
+		if (!this->vars) return Array<UInt>();
+		UInt size = this->vars->size;
+		Type *data = this->vars->data;
+		Array<UInt> bufIndices(size);
+		UInt nBufIndices = 0;
+		for (UInt i = 0; i < size; i++)
+		{
+			if (func(data[i])) bufIndices[nBufIndices++] = i;
+		}
+		bufIndices.trim(nBufIndices);
+		return bufIndices;
+	}
+
+	template<typename Type>
+	template <typename TargetType>
+	Array<TargetType> Array<Type>::convert(typename InOut<Type, TargetType>::Function func)
+	{
+		if (!this->vars) return Array<TargetType>();
+		Array<TargetType> output = Array<TargetType>::createUninitialized(this->vars->size);
+		for (UInt i = 0; i < this->vars->size; i++)
+		{
+			output.initialize(i, func(this->vars->data[i]));
+		}
+		return output;
+	}
+
+	template<typename Type>
 	Array<Array<Type> > Array<Type>::split(Array<UInt> sizes)
 	{
 		if (!this->vars) return Array<Array<Type> >();

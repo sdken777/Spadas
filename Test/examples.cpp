@@ -9,6 +9,7 @@ void exampleString();
 void exampleCreate();
 void exampleBaseObject();
 void exampleForElement();
+void exampleLambda();
 void exampleArrayX();
 void examplePointTo();
 void exampleEqual();
@@ -35,6 +36,9 @@ void runExamples()
 
     print("\n-- Example: For Element --");
     exampleForElement();
+
+    print("\n-- Example: Lambda --");
+    exampleLambda();
 
     print("\n-- Example: ArrayX --");
     exampleArrayX(); // GDB调试时析构可能耗时特别长

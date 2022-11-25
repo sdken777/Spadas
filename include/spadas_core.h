@@ -101,6 +101,56 @@ namespace spadas
 	// 标志位
 	class SPADAS_API Flag;
 
+	// 函数模板 //////////////////////////////////////////////////////////////
+
+	/// 无参数无返回值函数模板
+	class Void
+	{
+	public:
+		/// 无参数无返回值函数
+		typedef void (*Function)();
+	};
+
+	/// 无参数带返回值函数模板
+	template <typename RetType> class Out
+	{
+	public:
+		/// 无参数带返回值函数
+		typedef RetType (*Function)();
+	};
+
+	/// 单参数无返回值函数模板
+	template <typename ArgType> class In
+	{
+	public:
+		/// 单参数无返回值函数
+		typedef void (*Function)(ArgType arg);
+	};
+
+	/// 单参数带返回值函数模板
+	template <typename ArgType, typename RetType> class InOut
+	{
+	public:
+		/// 单参数带返回值函数
+		typedef RetType (*Function)(ArgType arg);
+	};
+
+	/// 双参数无返回值函数模板
+	template <typename ArgType1, typename ArgType2> class In2
+	{
+	public:
+		/// 双参数无返回值函数
+		typedef void (*Function)(ArgType1 arg1, ArgType2 arg2);
+	};
+
+	/// 双参数带返回值函数模板
+	template <typename ArgType1, typename ArgType2, typename RetType> class In2Out
+	{
+	public:
+		/// 双参数带返回值函数
+		typedef RetType (*Function)(ArgType1 arg1, ArgType2 arg2);
+	};
+
 	// 空间与索引 //////////////////////////////////////////////////////////////
 
 	/// 2维尺寸
@@ -718,6 +768,19 @@ namespace spadas
 		
 		/// 数组中是否包含某个值
 		Bool contain(Type val);
+
+		/// 数组中是否包含指定函数返回TRUE的某个值
+		Bool containAs(typename InOut<Type, Bool>::Function func);
+
+		/// 返回数组中所有等于某个值的元素序号
+		Array<UInt> search(Type val);
+
+		/// 返回数组中所有指定函数返回TRUE的元素序号
+		Array<UInt> searchAs(typename InOut<Type, Bool>::Function func);
+
+		/// 按指定函数转换为其他类型数组
+		template <typename TargetType>
+		Array<TargetType> convert(typename InOut<Type, TargetType>::Function func);
 		
 		/// @brief 根据指定的大小分割为多个数组
 		/// @param sizes 将分割成的每个数组的大小

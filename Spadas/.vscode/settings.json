@@ -17,6 +17,7 @@
         "chrono": "cpp",
         "optional": "cpp",
         "system_error": "cpp",
-        "__locale": "cpp"
+        "__locale": "cpp",
+        "cmath": "cpp"
     }
 }
