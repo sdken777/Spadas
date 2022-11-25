@@ -24,7 +24,9 @@ namespace spadas
 		// to string
 		String toString() override
 		{
-			return Binary(data, length);
+			String str;
+			str.setVars(this, FALSE);
+			return str;
 		}
 	};
 }

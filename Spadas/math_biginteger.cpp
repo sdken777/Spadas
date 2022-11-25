@@ -1385,6 +1385,12 @@ namespace spadas
 
 		Bool sign; // TRUE: positive or zero, FALSE: negative
 		BigInt::Rossi rossi;
+
+		String toString() override
+		{
+			if (sign) return rossi.toStrDec().data();
+			else return (String)"-" + rossi.toStrDec().data();
+		}
 	};
 }
 

@@ -3,27 +3,6 @@
 
 #include "file.h"
 
-namespace spadas
-{
-	class PathVars : public Vars
-	{
-    public:
-		SPADAS_VARS_DEF(Path, Vars)
-
-		Bool isFolder;
-		ListNode<String> components;
-		PathVars()
-		{
-			isFolder = FALSE;
-			components.joinNext(components);
-		}
-		~PathVars()
-		{
-			components.collapse();
-		}
-	};
-}
-
 namespace file_internal
 {
 	Bool/* isValid */ getContentsString(String pathString, Bool& isAbsolute, String& rootString, String& contentsString, Char separator)
@@ -148,6 +127,31 @@ namespace file_internal
 		workPathComponents.collapse();
 	}
 	PathsInfo pathsInfo;
+}
+
+namespace spadas
+{
+	class PathVars : public Vars
+	{
+    public:
+		SPADAS_VARS_DEF(Path, Vars)
+
+		Bool isFolder;
+		ListNode<String> components;
+		PathVars()
+		{
+			isFolder = FALSE;
+			components.joinNext(components);
+		}
+		~PathVars()
+		{
+			components.collapse();
+		}
+		String toString() override
+		{
+			return file_internal::generateFullPath(components, isFolder);
+		}
+	};
 }
 
 using namespace spadas;

@@ -13,6 +13,10 @@ namespace spadas
 		{
 			*(UInt*)magic = 0;
 		}
+		String toString() override
+		{
+			return Binary((Byte*)magic, 4);
+		}
 	};
 }
 

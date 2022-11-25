@@ -18,6 +18,11 @@
         "optional": "cpp",
         "system_error": "cpp",
         "__locale": "cpp",
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "*.tcc": "cpp",
+        "sstream": "cpp",
+        "array": "cpp",
+        "string": "cpp",
+        "string_view": "cpp"
     }
 }
