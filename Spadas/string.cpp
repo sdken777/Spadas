@@ -699,7 +699,7 @@ UInt String::byteSize()
 
 Array<Char> String::chars()
 {
-	if (isEmpty()) return Array<Char>();
+	if (isEmpty()) return Array<Char>::scalar(0);
 
 	Array<Char> output(vars->length * 2 + 1);
 	UInt outputLength = utf8ToChar((Char*)vars->data, vars->length, output.data(), output.size());
@@ -710,7 +710,7 @@ Array<Char> String::chars()
 
 Array<WChar> String::wchars()
 {
-	if (isEmpty()) return Array<WChar>();
+	if (isEmpty()) return Array<WChar>::scalar(0);
 
 	Array<WChar> output(vars->length + 1);
 	UInt outputLength = utf8ToWChar((Char*)vars->data, vars->length, output.data(), output.size());
