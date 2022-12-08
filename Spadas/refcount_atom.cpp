@@ -38,12 +38,12 @@ Int Atom::decrease()
 #if defined(SPADAS_ENV_LINUX)
 Int Atom::increase()
 {
-	return __sync_add_and_fetch((volatile int *)&val, 1);
+	return __atomic_add_fetch((volatile int *)&val, 1, __ATOMIC_ACQ_REL);
 }
 
 Int Atom::decrease()
 {
-	return __sync_sub_and_fetch((volatile int *)&val, 1);
+	return __atomic_sub_fetch((volatile int *)&val, 1, __ATOMIC_ACQ_REL);
 }
 #endif
 
@@ -53,12 +53,12 @@ Int Atom::decrease()
 
 Int Atom::increase()
 {
-	return (Int)OSAtomicIncrement32((volatile int32_t *)&val);
+	return (Int)OSAtomicIncrement32Barrier((volatile int32_t *)&val);
 }
 
 Int Atom::decrease()
 {
-	return (Int)OSAtomicDecrement32((volatile int32_t *)&val);
+	return (Int)OSAtomicDecrement32Barrier((volatile int32_t *)&val);
 }
 
 #endif
