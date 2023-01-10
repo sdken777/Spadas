@@ -20,6 +20,9 @@ namespace spadas
 		Flag allBegin, allEnd;
         Flag shouldEnd;
         Lock lock;
+
+		ThreadsVars() : lock(TRUE)
+		{}
 	};
     
     class ThreadsManager
@@ -280,7 +283,7 @@ Pointer threadFunc(Pointer param)
 		status.averageProcessTime = status.averageProcessTime.isValid() ? updateTime(status.averageProcessTime.value(), thisProcessTime) : thisProcessTime;
 		UInt timeInterval;
 		if (status.userTimeInterval.isValid()) timeInterval = status.userTimeInterval.value();
-		else timeInterval = math::max(1u, vars->workflow->getTimeInterval(threadIndex));
+		else timeInterval = vars->workflow->getTimeInterval(threadIndex);
 		vars->lock.leave();
 
 		// wait
@@ -296,7 +299,7 @@ Pointer threadFunc(Pointer param)
 				// get time interval
 				vars->lock.enter();
 				if (status.userTimeInterval.isValid()) timeInterval = status.userTimeInterval.value();
-				else timeInterval = math::max(1u, vars->workflow->getTimeInterval(threadIndex));
+				else timeInterval = vars->workflow->getTimeInterval(threadIndex);
 				vars->lock.leave();
 
 				// wait
@@ -408,7 +411,7 @@ void Threads::useUserTimeInterval(UInt threadIndex, UInt interval)
 	SPADAS_ERROR_RETURN(!vars->workflow->supportUserTimeInterval(threadIndex));
 
 	vars->lock.enter();
-    vars->status.threadStatus[threadIndex].userTimeInterval = math::max(1u, interval);
+    vars->status.threadStatus[threadIndex].userTimeInterval = interval;
 	vars->lock.leave();
 }
 

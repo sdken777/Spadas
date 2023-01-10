@@ -459,6 +459,12 @@ namespace spadas
 
 		/// 设定当前值
 		void set(Int val);
+
+		/// 加/减数并返回新值
+		Int add(Int number);
+
+		/// 若为旧值则设定为新值并返回TRUE，否则返回FALSE
+		Bool cas(Int oldVal, Int newVal);
 		
 	private:
 		Int val;
@@ -1208,11 +1214,14 @@ namespace spadas
 	template <typename Type> class Stream : public Object<StreamVars<Type> >
 	{
 	public:
-		/// 创建容量为1的数据流，且其元素可丢弃
+		/// 创建容量为1的数据流，且其元素可丢弃，其多线程安全由非自旋锁保障
 		Stream();
 		
-		/// 创建指定容量的数据流，并指定其“元素可丢弃属性”（推入新元素时若超出容量，则将最早推入的元素舍弃）
+		/// 创建指定容量的数据流，并指定其元素是否可丢弃，其多线程安全由非自旋锁保障
 		Stream(UInt capacity, Bool discardable = TRUE);
+
+		/// 创建指定容量的数据流，并指定其元素是否可丢弃，以及其多线程安全是否由自旋锁保障
+		Stream(UInt capacity, Bool discardable, Bool spin);
 
 		/// 更新数据流的容量，并舍弃多余的元素
 		void setCapacity(UInt capacity);
@@ -1250,7 +1259,7 @@ namespace spadas
 		/// 批量推入新元素
 		void enqueue(Array<Type> newElements);
 
-		/// 批量推入新元素
+		/// 批量推入新元素，若推入过程中检测到interrupt则返回FALSE(此时可能已推入部分元素)
 		Bool enqueue(Array<Type> newElements, Flag interrupt);
 
 		/// 尝试取出指定数量的元素，实际取出数量以返回对象为准 (返回的数组中序号0的元素为最早)
@@ -3364,8 +3373,14 @@ namespace spadas
 		/// 类名称
 		static const String TypeName;
 
-		/// 创建对象 (默认为未进入)
+		/// 创建非自旋锁对象 (默认为未进入)
 		Lock();
+
+		/// 创建自旋锁或非自旋锁对象 (默认为未进入)
+		Lock(Bool spin);
+
+		/// 是否为自旋锁
+		Bool isSpin();
 
 		/// 进入/加锁
 		void enter();
@@ -3815,15 +3830,19 @@ namespace spadas
 		/// 无效对象
 		Tick();
 
-		/// 创建一个振荡器，并指定名称、响应接口和振荡周期（毫秒）。线程启动后将按该周期调用响应接口
+		/// 创建一个非自旋振荡器，并指定名称、响应接口和振荡周期（毫秒）。线程启动后将按该周期调用响应接口
 		Tick(String name, Interface<ITickHandler> handler, UInt period);
 
+		/// 创建一个振荡器，并指定名称、响应接口、振荡周期（毫秒）、以及是否自旋。线程启动后将按该周期调用响应接口
+		Tick(String name, Interface<ITickHandler> handler, UInt period, Bool spin);
+
 	private:
-		String getWorkflowName();
-		Array<String> getThreadNames();
-		Bool onThreadBegin(UInt threadIndex);
-		void onThreadLoop(UInt threadIndex, Flag shouldEnd);
-		void onThreadEnd(UInt threadIndex);
+		String getWorkflowName() override;
+		Array<String> getThreadNames() override;
+		UInt getTimeInterval(UInt threadIndex) override;
+		Bool onThreadBegin(UInt threadIndex) override;
+		void onThreadLoop(UInt threadIndex, Flag shouldEnd) override;
+		void onThreadEnd(UInt threadIndex) override;
 	};
 
 	/// 内存映射管理，用于硬件驱动和多进程通讯等
@@ -3998,6 +4017,9 @@ namespace spadas
 
 		/// 等待指定时间，单位毫秒（系统负载高时精度可能会降至5~10毫秒）
 		SPADAS_API void wait(UInt time);
+
+		/// 等待指定时间，单位微秒
+		SPADAS_API void waitSpin(UInt timeUS);
 
 		/// 执行一个控制台命令
 		SPADAS_API void command(String cmd);

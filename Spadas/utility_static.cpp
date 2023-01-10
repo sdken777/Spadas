@@ -172,6 +172,7 @@ TimeWithMS spadas::system::getTimeWithMS()
 // wait
 void spadas::system::wait(UInt time)
 {
+	if (time == 0) return;
 #if defined(SPADAS_ENV_WINDOWS)
 	if (wc.failCount.get() > 1) Flag(time).waitSet();
 	else if (wc.sampleCount.get() >= 100) sleepTime(time);
@@ -188,6 +189,13 @@ void spadas::system::wait(UInt time)
 #endif
 }
 
+// waitSpin
+void spadas::system::waitSpin(UInt timeUS)
+{
+	if (timeUS == 0) return;
+	ULong target = Timer::cpuTick() + Timer::cpuTicksPerSecond() * timeUS / 1000000;
+	while (Timer::cpuTick() < target) {}
+}
 
 // addEnvironmentPath
 #if defined(SPADAS_ENV_WINDOWS)

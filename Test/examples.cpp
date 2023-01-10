@@ -17,6 +17,7 @@ void exampleMap();
 void exampleTrim();
 void exampleConsole();
 void exampleFile();
+void exampleLock();
 void exampleTask();
 void exampleMatrix();
 
@@ -60,6 +61,9 @@ void runExamples()
 
     print("\n-- Example: File --");
     exampleFile();
+
+    print("\n-- Example: Lock --");
+    exampleLock();
 
     print("\n-- Example: Task --");
     exampleTask();

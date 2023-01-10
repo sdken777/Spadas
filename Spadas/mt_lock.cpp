@@ -56,13 +56,15 @@ namespace spadas
 
 		volatile UInt threadID;
 		LockContext context;
-		LockVars() : threadID(0)
+		Atom spinLock;
+		Bool isSpin;
+		LockVars(Bool isSpin) : threadID(0), isSpin(isSpin)
 		{
-			initLock(&context);
+			if (!isSpin) initLock(&context);
 		}
 		~LockVars()
 		{
-			releaseLock(&context);
+			if (!isSpin) releaseLock(&context);
 		}
 	};
 }
@@ -71,25 +73,50 @@ using namespace spadas;
 
 const String spadas::Lock::TypeName = "spadas.Lock";
 
-Lock::Lock() : Object<class LockVars>(new LockVars(), TRUE)
+Lock::Lock() : Object<class LockVars>(new LockVars(FALSE), TRUE)
 {
+}
+
+Lock::Lock(Bool spin) : Object<class LockVars>(new LockVars(spin), TRUE)
+{
+}
+
+Bool Lock::isSpin()
+{
+	return vars->isSpin;
 }
 
 void Lock::enter()
 {
-	UInt threadID = Threads::getCurrentThreadID();
-	SPADAS_ERROR_RETURN(vars->threadID == threadID);
-
-	enterLock(&vars->context);
-	vars->threadID = threadID;
+	if (vars->isSpin)
+	{
+		while (!vars->spinLock.cas(0, 1)) {}
+	}
+	else
+	{
+		UInt threadID = Threads::getCurrentThreadID();
+		SPADAS_ERROR_RETURN(vars->threadID == threadID);
+		enterLock(&vars->context);
+		vars->threadID = threadID;
+	}
 }
 
 void Lock::leave()
 {
-	SPADAS_ERROR_RETURN(vars->threadID != Threads::getCurrentThreadID());
-
-	vars->threadID = 0;
-	leaveLock(&vars->context);
+	if (vars->isSpin)
+	{
+		while (TRUE)
+		{
+			Int oldVal = vars->spinLock.get();
+			if (oldVal != 1 || vars->spinLock.cas(1, 0)) break;
+		}
+	}
+	else
+	{
+		SPADAS_ERROR_RETURN(vars->threadID != Threads::getCurrentThreadID());
+		vars->threadID = 0;
+		leaveLock(&vars->context);
+	}
 }
 
 LockProxy::LockProxy(Lock lock0) : lock(lock0), released(FALSE)

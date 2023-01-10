@@ -22,7 +22,7 @@ void exampleTask()
 	TestThreads task;
 
 	UInt count = 0;
-	while (count < 10)
+	while (count < 5)
 	{
 		tm.start(task);
 		tm.stop(task);

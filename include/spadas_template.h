@@ -2447,7 +2447,7 @@ namespace spadas
 		Bool terminated;
 		ListNode<Type> origin;
 		Lock lock;
-		StreamVars() : nEnqueued(0), nDequeued(0), nDiscarded(0), nElements(0), capacity(0), discardable(FALSE), terminated(FALSE)
+		StreamVars(Bool spin) : nEnqueued(0), nDequeued(0), nDiscarded(0), nElements(0), capacity(0), discardable(FALSE), terminated(FALSE), lock(spin)
 		{
 			origin.joinNext(origin);
 		}
@@ -2458,14 +2458,21 @@ namespace spadas
 	};
 
 	template<typename Type>
-	Stream<Type>::Stream() : Object<StreamVars<Type> >(new StreamVars<Type>(), TRUE)
+	Stream<Type>::Stream() : Object<StreamVars<Type> >(new StreamVars<Type>(FALSE), TRUE)
 	{
 		this->vars->capacity = 1;
 		this->vars->discardable = TRUE;
 	}
 
 	template<typename Type>
-	Stream<Type>::Stream(UInt capacity, Bool discardable) : Object<StreamVars<Type> >(new StreamVars<Type>(), TRUE)
+	Stream<Type>::Stream(UInt capacity, Bool discardable) : Object<StreamVars<Type> >(new StreamVars<Type>(FALSE), TRUE)
+	{
+		this->vars->capacity = math::max(1u, capacity);
+		this->vars->discardable = discardable;
+	}
+
+	template<typename Type>
+	Stream<Type>::Stream(UInt capacity, Bool discardable, Bool spin) : Object<StreamVars<Type> >(new StreamVars<Type>(spin), TRUE)
 	{
 		this->vars->capacity = math::max(1u, capacity);
 		this->vars->discardable = discardable;
@@ -2527,32 +2534,55 @@ namespace spadas
 	template<typename Type>
 	Type Stream<Type>::first()
 	{
-		if (this->vars->nElements == 0) return Type();
 		this->vars->lock.enter();
-		Type output = this->vars->origin.next().value();
-		this->vars->lock.leave();
-		return output;
+		if (this->vars->nElements == 0)
+		{
+			this->vars->lock.leave();
+			return Type();
+		}
+		else
+		{
+			Type output = this->vars->origin.next().value();
+			this->vars->lock.leave();
+			return output;
+		}
 	}
 
 	template<typename Type>
 	Type Stream<Type>::last()
 	{
-		if (this->vars->nElements == 0) return Type();
 		this->vars->lock.enter();
-		Type output = this->vars->origin.previous().value();
-		this->vars->lock.leave();
-		return output;
+		if (this->vars->nElements == 0)
+		{
+			this->vars->lock.leave();
+			return Type();
+		}
+		else
+		{
+			Type output = this->vars->origin.previous().value();
+			this->vars->lock.leave();
+			return output;
+		}
 	}
 
 	template<typename Type>
 	void Stream<Type>::enqueue(Type newElement)
 	{
 		SPADAS_ERROR_RETURN(this->vars->terminated);
+		this->vars->lock.enter();
 		if (!this->vars->discardable)
 		{
-			while (this->vars->nElements == this->vars->capacity) system::wait(1);
+			while (this->vars->nElements == this->vars->capacity)
+			{
+				this->vars->lock.leave();
+				if (this->vars->lock.isSpin())
+				{
+					while (this->vars->nElements == this->vars->capacity) {}
+				}
+				else system::wait(1);
+				this->vars->lock.enter();
+			}
 		}
-		this->vars->lock.enter();
 		this->vars->origin.insertPrevious(newElement);
 		this->vars->nEnqueued++;
 		if (this->vars->nElements == this->vars->capacity)
@@ -2568,15 +2598,27 @@ namespace spadas
 	Bool Stream<Type>::enqueue(Type newElement, Flag interrupt)
 	{
 		SPADAS_ERROR_RETURNVAL(this->vars->terminated, FALSE);
+		this->vars->lock.enter();
 		if (!this->vars->discardable)
 		{
 			while (this->vars->nElements == this->vars->capacity)
 			{
-				if (interrupt.check()) return FALSE;
-				system::wait(1);
+				this->vars->lock.leave();
+				if (this->vars->lock.isSpin())
+				{
+					while (this->vars->nElements == this->vars->capacity)
+					{
+						if (interrupt.check()) return FALSE;
+					}
+				}
+				else
+				{
+					if (interrupt.check()) return FALSE;
+					system::wait(1);
+				}
+				this->vars->lock.enter();
 			}
 		}
-		this->vars->lock.enter();
 		this->vars->origin.insertPrevious(newElement);
 		this->vars->nEnqueued++;
 		if (this->vars->nElements == this->vars->capacity)
@@ -2597,22 +2639,27 @@ namespace spadas
 		UInt elemSize = newElements.size();
 		if (!this->vars->discardable)
 		{
-			SPADAS_ERROR_RETURN(elemSize > this->vars->capacity);
-			while (this->vars->nElements + elemSize - 1 >= this->vars->capacity) system::wait(1);
-		}
-		this->vars->lock.enter();
-		for (UInt i = 0; i < elemSize; i++)
-		{
-			this->vars->origin.insertPrevious(newElements[i]);
-			this->vars->nEnqueued++;
-			if (this->vars->nElements == this->vars->capacity)
+			for (UInt i = 0; i < elemSize; i++)
 			{
-				this->vars->origin.removeNext();
-				this->vars->nDiscarded++;
+				enqueue(newElements[i]);
 			}
-			else this->vars->nElements++;
 		}
-		this->vars->lock.leave();
+		else
+		{
+			this->vars->lock.enter();
+			for (UInt i = 0; i < elemSize; i++)
+			{
+				this->vars->origin.insertPrevious(newElements[i]);
+				this->vars->nEnqueued++;
+				if (this->vars->nElements == this->vars->capacity)
+				{
+					this->vars->origin.removeNext();
+					this->vars->nDiscarded++;
+				}
+				else this->vars->nElements++;
+			}
+			this->vars->lock.leave();
+		}
 	}
 
 	template<typename Type>
@@ -2623,27 +2670,29 @@ namespace spadas
 		UInt elemSize = newElements.size();
 		if (!this->vars->discardable)
 		{
-			SPADAS_ERROR_RETURNVAL(elemSize > this->vars->capacity, FALSE);
-			while (this->vars->nElements + elemSize - 1 >= this->vars->capacity)
+			for (UInt i = 0; i < elemSize; i++)
 			{
-				if (interrupt.check()) return FALSE;
-				system::wait(1);
+				if (!enqueue(newElements[i], interrupt)) return FALSE;
 			}
+			return TRUE;
 		}
-		this->vars->lock.enter();
-		for (UInt i = 0; i < elemSize; i++)
+		else
 		{
-			this->vars->origin.insertPrevious(newElements[i]);
-			this->vars->nEnqueued++;
-			if (this->vars->nElements == this->vars->capacity)
+			this->vars->lock.enter();
+			for (UInt i = 0; i < elemSize; i++)
 			{
-				this->vars->origin.removeNext();
-				this->vars->nDiscarded++;
+				this->vars->origin.insertPrevious(newElements[i]);
+				this->vars->nEnqueued++;
+				if (this->vars->nElements == this->vars->capacity)
+				{
+					this->vars->origin.removeNext();
+					this->vars->nDiscarded++;
+				}
+				else this->vars->nElements++;
 			}
-			else this->vars->nElements++;
+			this->vars->lock.leave();
+			return TRUE;
 		}
-		this->vars->lock.leave();
-		return TRUE;
 	}
 
 	template<typename Type>
