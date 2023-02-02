@@ -7,7 +7,7 @@ using namespace spadas;
 SPADAS_DEFAULT_API void get_native_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 1;
-	minor = 2;
+	minor = 3;
 }
 
 SPADAS_DEFAULT_API void get_bus_plugin_api_version(UInt& major, UInt& minor)
@@ -47,6 +47,7 @@ public:
 	UInt version;
 	Interface<IPluginV101> i101;
 	Interface<IPluginV102> i102;
+	Interface<IPluginV103> i103;
 };
 
 class CompatiblePlugin : public Object<CompatiblePluginVars>, public IPlugin
@@ -64,6 +65,11 @@ public:
 		vars->version = 102;
 		vars->i102 = i;
 	}
+	CompatiblePlugin(Interface<IPluginV103> i) : Object<CompatiblePluginVars>(new CompatiblePluginVars, TRUE)
+	{
+		vars->version = 103;
+		vars->i103 = i;
+	}
 	String getPluginType() override
 	{
 		switch (vars->version)
@@ -72,6 +78,8 @@ public:
 			return vars->i101->getPluginType();
 		case 102:
 			return vars->i102->getPluginType();
+		case 103:
+			return vars->i103->getPluginType();
 		default:
 			return String();
 		}
@@ -84,6 +92,8 @@ public:
 			return vars->i101->getPluginVersion();
 		case 102:
 			return vars->i102->getPluginVersion();
+		case 103:
+			return vars->i103->getPluginVersion();
 		default:
 			return String();
 		}
@@ -97,6 +107,9 @@ public:
 			break;
 		case 102:
 			vars->i102->closePlugin();
+			break;
+		case 103:
+			vars->i103->closePlugin();
 			break;
 		default:
 			break;
@@ -124,6 +137,13 @@ SPADAS_DEFAULT_API Interface<IPlugin> get_compatible_plugin(Pointer func, UInt m
 	case 2:
 	{
 		GetPluginV102 getPlugin = (GetPluginV102)func;
+		auto i = getPlugin();
+		if (i.isValid()) return CompatiblePlugin(i);
+		else return Interface<IPlugin>();
+	}
+	case 3:
+	{
+		GetPluginV103 getPlugin = (GetPluginV103)func;
 		auto i = getPlugin();
 		if (i.isValid()) return CompatiblePlugin(i);
 		else return Interface<IPlugin>();
@@ -215,6 +235,51 @@ Array<String> IPluginV102::getStandaloneTaskNames()
 }
 
 void IPluginV102::runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
+{}
+
+// 通用功能插件接口 1.3
+String IPluginV103::getPluginType()
+{
+	return String();
+}
+
+String IPluginV103::getPluginVersion()
+{
+	return String();
+}
+
+void IPluginV103::closePlugin()
+{}
+
+void IPluginV103::initLanguage(String languageCode)
+{}
+
+void IPluginV103::onCrossData(String id, Binary data)
+{}
+
+void IPluginV103::useCrossTransmitter(Interface<ICrossTransmitter> transmitter)
+{}
+
+Bool IPluginV103::onCrossCall(String id, BaseObject context)
+{
+	return FALSE;
+}
+
+void IPluginV103::useCrossCaller(Interface<ICrossCaller> caller)
+{}
+
+void IPluginV103::onStartOnlineSession(SessionIdentifier session, ULong startCPUTick)
+{}
+
+void IPluginV103::onStopOnlineSession()
+{}
+
+Array<String> IPluginV103::getStandaloneTaskNames()
+{
+	return Array<String>();
+}
+
+void IPluginV103::runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
 {}
 
 // 一般设备插件接口 2.0

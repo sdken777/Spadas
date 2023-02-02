@@ -502,6 +502,24 @@ namespace spadas
 	};
 	typedef Interface<IPluginV101>(*GetPluginV101)();
 
+	class SPADAS_API IPluginV102
+	{
+	public:
+		virtual ~IPluginV102() {};
+		virtual String getPluginType();
+		virtual String getPluginVersion();
+		virtual void closePlugin();
+		virtual void onCrossData(String id, Binary data);
+		virtual void useCrossTransmitter(Interface<ICrossTransmitter> transmitter);
+		virtual Bool onCrossCall(String id, BaseObject context);
+		virtual void useCrossCaller(Interface<ICrossCaller> caller);
+		virtual void onStartOnlineSession(SessionIdentifier session, ULong startCPUTick);
+		virtual void onStopOnlineSession();
+		virtual Array<String> getStandaloneTaskNames();
+		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
+	};
+	typedef Interface<IPluginV102>(*GetPluginV102)();
+
 	// SampleBuffer函数的实现 /////////////////////////////////////////////////////////
 	template<typename Type>
 	SampleInterpolationResult SampleBuffer::interpolate(GlobalTimestamp time, Type& interpolatedSample, UInt earlyThresh)

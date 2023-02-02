@@ -5741,11 +5741,11 @@ namespace spadas
 
 	// 插件API //////////////////////////////////////////////////////////////
 
-	/// 通用功能插件接口 1.2
-	class SPADAS_API IPluginV102
+	/// 通用功能插件接口 1.3
+	class SPADAS_API IPluginV103
 	{
 	public:
-		virtual ~IPluginV102() {};
+		virtual ~IPluginV103() {};
 
 		/// @brief 获取插件类型ID
 		/// @returns 插件类型ID
@@ -5757,6 +5757,10 @@ namespace spadas
 
 		/// [可选] 在程序结束前被调用，用于停止背景线程等
 		virtual void closePlugin();
+
+		/// @brief [可选] 在初始化语言时被调用
+		/// @param languageCode 语言代号，"en"表示英文，"ch"表示中文
+		virtual void initLanguage(String languageCode);
 
 		/// @brief [可选] 在收到其他模块发送的数据时被调用（应确保微秒级别的运行时间）
 		/// @param id 数据ID
@@ -5797,8 +5801,8 @@ namespace spadas
 		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
 	};
 
-	/// 获取通用功能插件接口的全局函数定义，函数名应为get_plugin_v102
-	typedef Interface<IPluginV102>(*GetPluginV102)();
+	/// 获取通用功能插件接口的全局函数定义，函数名应为get_plugin_v103
+	typedef Interface<IPluginV103>(*GetPluginV103)();
 
 	/// 一般设备插件接口 2.2
 	class SPADAS_API IDevicePluginV202
