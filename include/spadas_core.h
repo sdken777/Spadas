@@ -829,6 +829,12 @@ namespace spadas
 		template <typename TargetType>
 		Array<Optional<TargetType> > castArray();
 
+		/// 按从小到大排序，需要Type支持>重载符
+		void sort();
+
+		/// 根据指定函数(判断是否大于)，按从小到大排序
+		void sortAs(typename In2Out<Type&, Type&, Bool>::Function func);
+
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
@@ -1377,7 +1383,7 @@ namespace spadas
 		/// 取得所有键
 		Array<KeyType> keys();
 
-		/// 取得排序后的所有键，需要KeyType支持>和<重载符
+		/// 取得排序后的所有键，需要KeyType支持>重载符
 		Array<KeyType> keysSorted();
 
 		/// 取得所有值
@@ -1386,13 +1392,13 @@ namespace spadas
 		/// 取得所有键值对
 		Array<KeyValue<KeyType, ValueType> > keyValues();
 
-		/// 取得排序后的所有键值对，需要KeyType支持>和<重载符
+		/// 取得排序后的所有键值对，需要KeyType支持>重载符
 		Array<KeyValue<KeyType, ValueType> > keyValuesSorted();
 
 		/// 同时取得所有键和所有值
 		void pairs(Array<KeyType>& keys, Array<ValueType>& values);
 
-		/// 同时取得排序后的所有键和所有值，需要KeyType支持>和<重载符
+		/// 同时取得排序后的所有键和所有值，需要KeyType支持>重载符
 		void pairsSorted(Array<KeyType>& keys, Array<ValueType>& values);
 
 		/// 是否包含指定键的映射
@@ -3340,10 +3346,6 @@ namespace spadas
 
 		/// 生成介于0.0至1.0的随机数，数量由参数指定
 		SPADAS_API Array<Double> randomD(UInt size);
-
-		/// 排序（需要Type提供大于、小于和等于方法）
-		template <typename Type>
-		void sort(Array<Type> arr);
 
 		/// SVD分解 (src=u*s*v.transpose())
 		SPADAS_API void decomposeSVD(FloatMat src, FloatMat& u, FloatMat& s, FloatMat& v);

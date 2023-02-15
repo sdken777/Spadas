@@ -4,6 +4,13 @@
 
 namespace spadas
 {
+	// 数学（旧） //////////////////////////////////////////////////////////////
+	namespace math
+	{
+		template <typename Type>
+		void sort(Array<Type> arr);
+	}
+
 	// 插件相关类型定义（旧） //////////////////////////////////////////////////////////////
 	typedef Time SessionID;
 	
@@ -519,6 +526,13 @@ namespace spadas
 		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
 	};
 	typedef Interface<IPluginV102>(*GetPluginV102)();
+
+	// sort函数的实现 ///////////////////////////////////////////////////////
+	template<typename Type>
+	void spadas::math::sort(Array<Type> arr)
+	{
+		arr.sort();
+	}
 
 	// SampleBuffer函数的实现 /////////////////////////////////////////////////////////
 	template<typename Type>

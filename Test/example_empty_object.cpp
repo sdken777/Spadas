@@ -4,7 +4,9 @@
 
 using namespace spadas;
 
-class NoVarsObject : public EmptyObject, public IPluginV102
+typedef IPluginV103 IPluginLatest;
+
+class NoVarsObject : public EmptyObject, public IPluginLatest
 {
 public:
 	String getPluginType() { return "MyPlugin"; }
@@ -13,6 +15,6 @@ public:
 
 void exampleEmptyObject()
 {
-	Interface<IPluginV102> plugin = NoVarsObject();
+	Interface<IPluginLatest> plugin = NoVarsObject();
 	console::print(plugin->getPluginType() + " " + plugin->getPluginVersion());
 }

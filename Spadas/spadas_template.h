@@ -63,126 +63,6 @@ namespace spadas_internal
 		}
 	};
 
-	template<typename Type>
-	void sortAdjustHeap(Type *first, Long index, Long len, Type val)
-	{
-		Long top = index, second = 2 * index + 2;
-		while (second < len)
-		{
-			if (*(first + second) < *(first + (second - 1))) second--;
-			*(first + index) = *(first + second);
-			index = second;
-			second = 2 * (second + 1);
-		}
-		if (second == len)
-		{
-			*(first + index) = *(first + (second - 1));
-			index = second - 1;
-		}
-		Long parent = (index - 1) / 2;
-		while (index > top && *(first + parent) < val)
-		{
-			*(first + index) = *(first + parent);
-			index = parent;
-			parent = (index - 1) / 2;
-		}
-		*(first + index) = val;
-	}
-
-	template<typename Type>
-	void sortLoop(Type *first, Type *last, UInt depthLimit)
-	{
-		while (last - first > 16)
-		{
-			if (depthLimit == 0)
-			{
-				if (last - first < 2) return;
-				Long size = last - first;
-				Long parent = (size - 2) / 2;
-				while (true)
-				{
-					sortAdjustHeap(first, parent, size, *(first + parent));
-					if (parent == 0) break;
-					parent--;
-				}
-				while (last - first > 1)
-				{
-					*(last - 1) = *first;
-					sortAdjustHeap(first, (Long)0, (Long)(last - first - 1), *(last - 1));
-					last--;
-				}
-				return;
-			}
-			depthLimit--;
-			Type& firstRef = *first;
-			Type& midRef = *(first + (last - first) / 2);
-			Type& lastRef = *(last - 1);
-			Type median;
-			if (firstRef < midRef)
-			if (midRef < lastRef)
-				median = midRef;
-			else if (firstRef < lastRef)
-				median = lastRef;
-			else
-				median = firstRef;
-			else if (firstRef < lastRef)
-				median = firstRef;
-			else if (midRef < lastRef)
-				median = lastRef;
-			else
-				median = midRef;
-			Type *first0 = first, *last0 = last, *cut = 0;
-			while (true)
-			{
-				while (*first0 < median) first0++;
-				last0--;
-				while (median < *last0) last0--;
-				if (!(first0 < last0))
-				{
-					cut = first0;
-					break;
-				}
-				Type tmp = *first0;
-				*first0 = *last0;
-				*last0 = tmp;
-				first0++;
-			}
-			sortLoop(cut, last, depthLimit);
-			last = cut;
-		}
-	}
-
-	template<typename Type>
-	void sortLinear(Type *last, Type val)
-	{
-		Type *next = last;
-		next--;
-		while (val < *next)
-		{
-			*last = *next;
-			last = next;
-			next--;
-		}
-		*last = val;
-	}
-
-	template<typename Type>
-	void sortInsertion(Type *first, Type *last)
-	{
-		if (first == last) return;
-		for (Type *i = first + 1; i != last; i++)
-		{
-			Type val = *i;
-			if (val < *first)
-			{
-				Type *last0 = i, *result0 = i + 1;
-				while (first != last0) *--result0 = *--last0;
-				*first = val;
-			}
-			else sortLinear(i, val);
-		}
-	}
-
     template <typename Type> class FlexHandler : public EmptyObject, public IFlexHandler
     {
     public:
@@ -933,6 +813,44 @@ namespace spadas
 	}
 
 	template<typename Type>
+	void Array<Type>::sort()
+	{
+		if (!this->vars) return;
+		const Int n = this->vars->size;
+		for (Int i = 0; i < n - 1; i++)
+		{
+			for (Int j = 0; j < n - i - 1; j++)
+			{
+				if (this->vars->data[j] > this->vars->data[j + 1])
+				{
+					Type tmp = this->vars->data[j];
+					this->vars->data[j] = this->vars->data[j + 1];
+					this->vars->data[j + 1] = tmp;
+				}
+			}
+		}
+	}
+
+	template<typename Type>
+	void Array<Type>::sortAs(typename In2Out<Type&, Type&, Bool>::Function func)
+	{
+		if (!this->vars) return;
+		const Int n = this->vars->size;
+		for (Int i = 0; i < n - 1; i++)
+		{
+			for (Int j = 0; j < n - i - 1; j++)
+			{
+				if (func(this->vars->data[j], this->vars->data[j + 1]))
+				{
+					Type tmp = this->vars->data[j];
+					this->vars->data[j] = this->vars->data[j + 1];
+					this->vars->data[j + 1] = tmp;
+				}
+			}
+		}
+	}
+
+	template<typename Type>
 	ArrayElem<Type>::ArrayElem(Array<Type> arr0, UInt index0) : arr(arr0), data(arr.data()), size(arr.size()), idx(index0)
 	{}
 
@@ -1338,7 +1256,7 @@ namespace spadas
 		}
 	}
 
-	/// 树节点实现 ///////////////////////////////////////////////////////
+	// 树节点实现 ///////////////////////////////////////////////////////
 	template <typename Type> class TreeNodeVars : public Vars
 	{
 	public:
@@ -1624,7 +1542,7 @@ namespace spadas
 		}
 	}
 	
-	/// 图节点实现 ///////////////////////////////////////////////////////
+	// 图节点实现 ///////////////////////////////////////////////////////
 	template<typename NType, typename LType> class GraphNodeVars : public Vars
 	{
 	public:
@@ -1833,7 +1751,7 @@ namespace spadas
 		delete[] linkedNodes;
 	}
 
-	/// 自动变长数组实现 ///////////////////////////////////////////////////////
+	// 自动变长数组实现 ///////////////////////////////////////////////////////
 	template<typename Type> class ArrayXVars : public Vars
 	{
 	public:
@@ -2124,7 +2042,7 @@ namespace spadas
 		return toArray(Region(0, size()));
 	}
 
-	/// 链表实现 ///////////////////////////////////////////////////////
+	// 链表实现 ///////////////////////////////////////////////////////
 	template<typename Type> class ListVars : public Vars
 	{
 	public:
@@ -2434,7 +2352,7 @@ namespace spadas
 		this->vars->list.getVars()->size--;
 	}
 
-	/// 数据流实现 ///////////////////////////////////////////////////////
+	// 数据流实现 ///////////////////////////////////////////////////////
 	template<typename Type> class StreamVars : public Vars
 	{
 	public:
@@ -2771,7 +2689,7 @@ namespace spadas
 		this->vars->lock.leave();
 	}
 
-	/// 映射与字典实现 ///////////////////////////////////////////////////////
+	// 映射与字典实现 ///////////////////////////////////////////////////////
 	template<typename Type>
 	NumericKey<Type>::NumericKey()
 	{}
@@ -2946,7 +2864,7 @@ namespace spadas
 	Array<KeyType> Map<KeyType, ValueType>::keysSorted()
 	{
 		Array<KeyType> output = keys();
-		math::sort(output);
+		output.sort();
 		return output;
 	}
 
@@ -2998,7 +2916,7 @@ namespace spadas
 	Array<KeyValue<KeyType, ValueType> > Map<KeyType, ValueType>::keyValuesSorted()
 	{
 		Array<KeyValue<KeyType, ValueType> > output = keyValues();
-		math::sort(output);
+		output.sort();
 		return output;
 	}
 
@@ -3048,7 +2966,7 @@ namespace spadas
 			mapKeys[i].key = keysRaw[i];
 			mapKeys[i].index = i;
 		}
-		math::sort(mapKeys);
+		mapKeys.sort();
 		keys = Array<KeyType>::createUninitialized(mapKeys.size());
 		values = Array<ValueType>::createUninitialized(mapKeys.size());
 		for (UInt i = 0; i < mapKeys.size(); i++)
@@ -3238,7 +3156,7 @@ namespace spadas
 		return map;
 	}
 
-	/// 字符串模板函数实现 ///////////////////////////////////////////////////////
+	// 字符串模板函数实现 ///////////////////////////////////////////////////////
 	template <typename Type>
 	String::String(Type obj)
 	{
@@ -3255,7 +3173,7 @@ namespace spadas
 		return mergeStrings(strs, separator);
 	}
 
-	/// 枚举类实现 ///////////////////////////////////////////////////////
+	// 枚举类实现 ///////////////////////////////////////////////////////
 	template <typename Type>
 	Enum<Type>::Enum() : val(Type::defaultValue())
 	{ }
@@ -3302,7 +3220,7 @@ namespace spadas
 		return out.isEmpty() ? "Unknown" : out;
 	}
 
-	/// 数学相关函数的实现 ///////////////////////////////////////////////////////
+	// 数学相关函数的实现 ///////////////////////////////////////////////////////
 	template<typename Type>
 	Type spadas::math::min(Type a, Type b)
 	{
@@ -3350,26 +3268,7 @@ namespace spadas
 		return min(upper, max(lower, number));
 	}
 
-	template<typename Type>
-	void spadas::math::sort(Array<Type> arr)
-	{
-		if (arr.isEmpty()) return;
-		UInt size = arr.size();
-		Type *data = arr.data();
-		if (size <= 1) return;
-		UInt depthLimit = 0;
-		for (UInt n = size; n != 1; n >>= 1) depthLimit++;
-		depthLimit *= 2;
-		spadas_internal::sortLoop(data, &data[size], depthLimit);
-		if (size > 16)
-		{
-			spadas_internal::sortInsertion(data, data + 16);
-			for (Type *i = data + 16; i != &data[size]; i++) spadas_internal::sortLinear(i, *i);
-		}
-		else spadas_internal::sortInsertion(data, &data[size]);
-	}
-
-	/// 实用工具相关函数的实现 ///////////////////////////////////////////////////////
+	// 实用工具相关函数的实现 ///////////////////////////////////////////////////////
 	template<typename SrcType, typename DstType>
 	DstType spadas::utility::valueCast(SrcType val)
 	{
@@ -3405,7 +3304,7 @@ namespace spadas
 		return out;
 	}
 
-	/// FlexVars函数的实现 ///////////////////////////////////////////////////////
+	// FlexVars函数的实现 ///////////////////////////////////////////////////////
 	template <typename Type>
 	FlexVars<Type>::FlexVars(Array<Int> validFlagIndices)
 	{
