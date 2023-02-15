@@ -5379,7 +5379,7 @@ namespace spadas
 		/// 无特殊模式
 		Normal = 0,
 
-		/// 在线采集模式
+		/// 采集模式
 		OnlineMode = 1,
 
 		/// 离线处理模式
@@ -5400,6 +5400,9 @@ namespace spadas
 
 		/// 离线回放模式下，从generation读取
 		ReplayModeFromGeneration = 3,
+
+		/// 远程采集模式下，从远程主机读取
+		FromRemote = 4,
 	};
 
 	/// 文件读写筛选
