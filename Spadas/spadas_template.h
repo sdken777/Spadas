@@ -2359,7 +2359,7 @@ namespace spadas
 		UInt nEnqueued;
 		UInt nDequeued;
 		UInt nDiscarded;
-		UInt nElements;
+		volatile UInt nElements;
 		UInt capacity;
 		Bool discardable;
 		Bool terminated;
@@ -2658,7 +2658,7 @@ namespace spadas
 		while (this->vars->nElements != 0)
 		{
 			if (interrupt.check()) return FALSE;
-			system::wait(1);
+			if (!this->vars->lock.isSpin()) system::wait(1);
 		}
 		return TRUE;
 	}
