@@ -2362,7 +2362,7 @@ namespace spadas
 		volatile UInt nElements;
 		UInt capacity;
 		Bool discardable;
-		Bool terminated;
+		volatile Bool terminated;
 		ListNode<Type> origin;
 		Lock lock;
 		StreamVars(Bool spin) : nEnqueued(0), nDequeued(0), nDiscarded(0), nElements(0), capacity(0), discardable(FALSE), terminated(FALSE), lock(spin)
@@ -2486,7 +2486,6 @@ namespace spadas
 	template<typename Type>
 	void Stream<Type>::enqueue(Type newElement)
 	{
-		SPADAS_ERROR_RETURN(this->vars->terminated);
 		this->vars->lock.enter();
 		if (!this->vars->discardable)
 		{
@@ -2495,11 +2494,24 @@ namespace spadas
 				this->vars->lock.leave();
 				if (this->vars->lock.isSpin())
 				{
-					while (this->vars->nElements == this->vars->capacity) {}
+					while (this->vars->nElements == this->vars->capacity)
+					{
+						SPADAS_WARNING_RETURN(this->vars->terminated);
+					}
 				}
-				else system::wait(1);
+				else
+				{
+					SPADAS_WARNING_RETURN(this->vars->terminated);
+					system::wait(1);
+				}
 				this->vars->lock.enter();
 			}
+		}
+		if (this->vars->terminated)
+		{
+			SPADAS_WARNING_MSG("this->vars->terminated");
+			this->vars->lock.leave();
+			return;
 		}
 		this->vars->origin.insertPrevious(newElement);
 		this->vars->nEnqueued++;
@@ -2515,7 +2527,6 @@ namespace spadas
 	template<typename Type>
 	Bool Stream<Type>::enqueue(Type newElement, Flag interrupt)
 	{
-		SPADAS_ERROR_RETURNVAL(this->vars->terminated, FALSE);
 		this->vars->lock.enter();
 		if (!this->vars->discardable)
 		{
@@ -2526,16 +2537,21 @@ namespace spadas
 				{
 					while (this->vars->nElements == this->vars->capacity)
 					{
-						if (interrupt.check()) return FALSE;
+						if (this->vars->terminated || interrupt.check()) return FALSE;
 					}
 				}
 				else
 				{
-					if (interrupt.check()) return FALSE;
+					if (this->vars->terminated || interrupt.check()) return FALSE;
 					system::wait(1);
 				}
 				this->vars->lock.enter();
 			}
+		}
+		if (this->vars->terminated)
+		{
+			this->vars->lock.leave();
+			return FALSE;
 		}
 		this->vars->origin.insertPrevious(newElement);
 		this->vars->nEnqueued++;
@@ -2553,18 +2569,24 @@ namespace spadas
 	void Stream<Type>::enqueue(Array<Type> newElements)
 	{
 		if (newElements.isEmpty()) return;
-		SPADAS_ERROR_RETURN(this->vars->terminated);
 		UInt elemSize = newElements.size();
 		if (!this->vars->discardable)
 		{
 			for (UInt i = 0; i < elemSize; i++)
 			{
+				SPADAS_WARNING_RETURN(this->vars->terminated);
 				enqueue(newElements[i]);
 			}
 		}
 		else
 		{
 			this->vars->lock.enter();
+			if (this->vars->terminated)
+			{
+				SPADAS_WARNING_MSG("this->vars->terminated");
+				this->vars->lock.leave();
+				return;
+			}
 			for (UInt i = 0; i < elemSize; i++)
 			{
 				this->vars->origin.insertPrevious(newElements[i]);
@@ -2584,7 +2606,6 @@ namespace spadas
 	Bool Stream<Type>::enqueue(Array<Type> newElements, Flag interrupt)
 	{
 		if (newElements.isEmpty()) return TRUE;
-		SPADAS_ERROR_RETURNVAL(this->vars->terminated, FALSE);
 		UInt elemSize = newElements.size();
 		if (!this->vars->discardable)
 		{
@@ -2597,6 +2618,11 @@ namespace spadas
 		else
 		{
 			this->vars->lock.enter();
+			if (this->vars->terminated)
+			{
+				this->vars->lock.leave();
+				return FALSE;
+			}
 			for (UInt i = 0; i < elemSize; i++)
 			{
 				this->vars->origin.insertPrevious(newElements[i]);
@@ -2666,7 +2692,9 @@ namespace spadas
 	template<typename Type>
 	void Stream<Type>::terminate()
 	{
+		this->vars->lock.enter();
 		this->vars->terminated = TRUE;
+		this->vars->lock.leave();
 	}
 
 	template<typename Type>
