@@ -5541,6 +5541,17 @@ namespace spadas
 		virtual ULong calcTime(ShortTimestamp srcTimestamp, TimeType timeType);
 	};
 
+	/// 记录调试信息接口
+	class SPADAS_API ILogger
+	{
+	public:
+		virtual ~ILogger() {}
+
+		/// @brief 记录调试信息
+		/// @param text 调试信息
+		virtual void print(String text);
+	};
+
 	// 插件相关实用功能 //////////////////////////////////////////////////////////////
 
 	/// 总线协议ID (形如XXX.dbc)
@@ -5752,11 +5763,11 @@ namespace spadas
 
 	// 插件API //////////////////////////////////////////////////////////////
 
-	/// 通用功能插件接口 1.3
-	class SPADAS_API IPluginV103
+	/// 通用功能插件接口 1.4
+	class SPADAS_API IPluginV104
 	{
 	public:
-		virtual ~IPluginV103() {};
+		virtual ~IPluginV104() {};
 
 		/// @brief 获取插件类型ID
 		/// @returns 插件类型ID
@@ -5772,6 +5783,10 @@ namespace spadas
 		/// @brief [可选] 在初始化语言时被调用
 		/// @param languageCode 语言代号，"en"表示英文，"ch"表示中文
 		virtual void initLanguage(String languageCode);
+
+		/// @brief [可选] 设置使用指定的接口记录调试信息
+		/// @param logger 记录调试信息接口
+		virtual void useLogger(Interface<ILogger> logger);
 
 		/// @brief [可选] 在收到其他模块发送的数据时被调用（应确保微秒级别的运行时间）
 		/// @param id 数据ID
@@ -5812,8 +5827,8 @@ namespace spadas
 		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
 	};
 
-	/// 获取通用功能插件接口的全局函数定义，函数名应为get_plugin_v103
-	typedef Interface<IPluginV103>(*GetPluginV103)();
+	/// 获取通用功能插件接口的全局函数定义，函数名应为get_plugin_v104
+	typedef Interface<IPluginV104>(*GetPluginV104)();
 
 	/// 一般设备插件接口 2.2
 	class SPADAS_API IDevicePluginV202
