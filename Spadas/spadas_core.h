@@ -5035,7 +5035,7 @@ namespace spadas
 	/// 视频数据流输入模式
 	struct VideoInputMode
 	{
-		/// 图像大大
+		/// 图像大小
 		Size2D size;
 
 		/// 编码方式
