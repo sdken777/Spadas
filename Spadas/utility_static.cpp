@@ -113,15 +113,17 @@ Time spadas::system::getTime()
 {
 	time_t longTime;
 	time(&longTime);
-	tm *timeNow = localtime(&longTime);
+
+	tm timeNow;
+	localtime_r(&longTime, &timeNow);
 
 	Time out;
-	out.year = timeNow->tm_year + 1900;
-	out.month = timeNow->tm_mon + 1;
-	out.day = timeNow->tm_mday;
-	out.hour = timeNow->tm_hour;
-	out.minute = timeNow->tm_min;
-	out.second = timeNow->tm_sec;
+	out.year = timeNow.tm_year + 1900;
+	out.month = timeNow.tm_mon + 1;
+	out.day = timeNow.tm_mday;
+	out.hour = timeNow.tm_hour;
+	out.minute = timeNow.tm_min;
+	out.second = timeNow.tm_sec;
 
 	return out;
 }
@@ -154,15 +156,16 @@ TimeWithMS spadas::system::getTimeWithMS()
 	timeb nowTime;
 	ftime(&nowTime);
 
-	tm *timeNow = localtime(&nowTime.time);
+	tm timeNow;
+	localtime_r(&nowTime.time, &timeNow);
 
 	TimeWithMS out;
-	out.dateTime.year = timeNow->tm_year + 1900;
-	out.dateTime.month = timeNow->tm_mon + 1;
-	out.dateTime.day = timeNow->tm_mday;
-	out.dateTime.hour = timeNow->tm_hour;
-	out.dateTime.minute = timeNow->tm_min;
-	out.dateTime.second = timeNow->tm_sec;
+	out.dateTime.year = timeNow.tm_year + 1900;
+	out.dateTime.month = timeNow.tm_mon + 1;
+	out.dateTime.day = timeNow.tm_mday;
+	out.dateTime.hour = timeNow.tm_hour;
+	out.dateTime.minute = timeNow.tm_min;
+	out.dateTime.second = timeNow.tm_sec;
 	out.milliseconds = nowTime.millitm;
 
 	return out;
