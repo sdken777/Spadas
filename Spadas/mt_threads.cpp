@@ -2,6 +2,7 @@
 #include "spadas.h"
 
 #include "oscillator.h"
+#include "console.h"
 
 namespace spadas
 {
@@ -259,7 +260,8 @@ Pointer threadFunc(Pointer param)
 
     // get thread ID
     ThreadStatus& status = vars->status.threadStatus[threadIndex];
-    status.threadID = Threads::getCurrentThreadID();
+	UInt curThreadID = Threads::getCurrentThreadID();
+    status.threadID = curThreadID;
 	vars->lock.leave();
 	
 	// thread initialization
@@ -341,6 +343,9 @@ Pointer threadFunc(Pointer param)
 		sleepTime(1);
 		threadsManager.remove(vars->status.workflowID);
     }
+
+	// clear thread logger
+	lm.clearLogger(curThreadID);
     
 	return 0;
 }

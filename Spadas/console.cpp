@@ -8,6 +8,8 @@
 namespace spadas_internal
 {
 	Interface<IConsole> cs = DefaultConsole();
+	LoggerManager lm;
+
 	Bool scanning;
 	Lock scanningLock;
 	Bool keyWaiting;
@@ -160,6 +162,11 @@ Enum<Key> IConsole::checkKey()
 	return Key::None;
 }
 
+// ILogger
+void ILogger::print(String text)
+{
+}
+
 // namespace console
 Interface<IConsole> spadas::console::useConsole(Interface<IConsole> target)
 {
@@ -170,13 +177,25 @@ Interface<IConsole> spadas::console::useConsole(Interface<IConsole> target)
 	return oldCS;
 }
 
+Interface<ILogger> spadas::console::useThreadLogger(Interface<ILogger> target)
+{
+	UInt threadID = Threads::getCurrentThreadID();
+	return lm.useLogger(threadID, target);
+}
+
 void spadas::console::print(String text)
 {
-    cs->print(text, MessageLevel::Debug);
+	UInt threadID = Threads::getCurrentThreadID();
+	if (!lm.print(threadID, text)) cs->print(text, MessageLevel::Debug);
 }
 void spadas::console::print(String text, Enum<MessageLevel> level)
 {
-	cs->print(text, level);
+	if (level == MessageLevel::Debug)
+	{
+		UInt threadID = Threads::getCurrentThreadID();
+		if (!lm.print(threadID, text)) cs->print(text, MessageLevel::Debug);
+	}
+	else cs->print(text, level);
 }
 
 String spadas::console::scan()

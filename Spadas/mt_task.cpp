@@ -1,5 +1,6 @@
 ﻿
 #include "spadas.h"
+#include "console.h"
 
 namespace spadas
 {
@@ -114,6 +115,8 @@ Pointer taskThreadFunc(Pointer param)
 	vars->threadsLock.enter();
 	targetNode.removeSelf();
 	vars->threadsLock.leave();
+
+	lm.clearLogger(Threads::getCurrentThreadID());
 
 	return 0;
 }

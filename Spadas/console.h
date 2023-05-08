@@ -13,4 +13,19 @@ namespace spadas_internal
 		Enum<Key> checkKey();
 	};
 	extern Interface<IConsole> cs;
+
+	// logger manager
+	class LoggerManager
+	{
+	public:
+		LoggerManager();
+		~LoggerManager();
+		Interface<ILogger> useLogger(UInt threadID, Interface<ILogger> target);
+		void clearLogger(UInt threadID);
+		Bool print(UInt threadID, String message);
+	private:
+		Interface<ILogger>** loggers;
+		Lock lock;
+	};
+	extern LoggerManager lm;
 }

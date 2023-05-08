@@ -2013,13 +2013,24 @@ namespace spadas
 		virtual Enum<Key> checkKey();
 	};
 
+	/// 记录调试信息接口
+	class SPADAS_API ILogger
+	{
+	public:
+		virtual ~ILogger() {}
+
+		/// @brief 记录调试信息
+		/// @param text 调试信息
+		virtual void print(String text);
+	};
+
 	/// 控制台函数命名空间
 	namespace console
 	{
 		/// 弹出小窗口显示文本信息（阻塞）
 		SPADAS_API void popup(String text);
 		
-		/// 打印文本信息
+		/// 打印调试级别文本信息
 		SPADAS_API void print(String text);
 
 		/// 按指定消息级别打印文本信息
@@ -2034,8 +2045,11 @@ namespace spadas
 		/// 是否有按键输入，若有则返回该按键，无则返回 Key::None
 		SPADAS_API Enum<Key> checkKey();
 
-		/// 重定向控制台接口并返回旧接口 (若输入无效接口则使用默认控制台)
+		/// 重定向控制台接口并返回旧接口，重定向后 spadas::console::print 、 spadas::console::scan 、 spadas::console::waitKey 、 spadas::console::checkKey 将使用该接口执行 (默认为无效接口，使用默认控制台)
 		SPADAS_API Interface<IConsole> useConsole(Interface<IConsole> target);
+
+		/// 重定向当前线程的记录调试信息接口并返回旧接口，重定向后调试级别的 spadas::console::print 将使用该接口打印 (默认为无效接口，使用IConsole接口打印)
+		SPADAS_API Interface<ILogger> useThreadLogger(Interface<ILogger> target);
 	}
 
 	// 文件系统 //////////////////////////////////////////////////////////////
@@ -5542,17 +5556,6 @@ namespace spadas
 		virtual ULong calcTime(ShortTimestamp srcTimestamp, TimeType timeType);
 	};
 
-	/// 记录调试信息接口
-	class SPADAS_API ILogger
-	{
-	public:
-		virtual ~ILogger() {}
-
-		/// @brief 记录调试信息
-		/// @param text 调试信息
-		virtual void print(String text);
-	};
-
 	// 插件相关实用功能 //////////////////////////////////////////////////////////////
 
 	/// 总线协议ID (形如XXX.dbc)
@@ -5785,7 +5788,7 @@ namespace spadas
 		/// @param languageCode 语言代号，"en"表示英文，"ch"表示中文
 		virtual void initLanguage(String languageCode);
 
-		/// @brief [可选] 设置使用指定的接口记录调试信息
+		/// @brief [可选] 设置使用指定的接口记录调试信息（主要用于在子线程中调用 spadas::console::useThreadLogger ）
 		/// @param logger 记录调试信息接口
 		virtual void useLogger(Interface<ILogger> logger);
 

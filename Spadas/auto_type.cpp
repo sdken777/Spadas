@@ -432,7 +432,3 @@ OptionalBool IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, VideoDa
 void IGeneralDeviceDataOutput::outputGeneralDeviceData(GeneralDeviceData data)
 {
 }
-
-void ILogger::print(String text)
-{
-}
