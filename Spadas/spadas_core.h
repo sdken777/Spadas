@@ -4751,11 +4751,14 @@ namespace spadas
 		/// LIN总线，报文数据即payload，1～8字节
 		Lin = 3,
 
-		/// Flexray总线，报文数据由标志位字节(从低至高为startup,sync,null)、cycle字节和payload构成，2～256字节
+		/// Flexray总线，报文数据由标志位字节(从低至高为startup,sync,null)、cycle字节和payload构成(共2～256字节)，报文ID即Slot ID
 		Flexray = 4,
 
-		/// 以太网总线，报文数据为包含链路层等等协议的完整以太网帧数据
+		/// 以太网总线，报文数据为包含链路层等等协议的完整以太网帧数据，报文ID定义为源MAC的后四字节(小字序)
 		Ethernet = 5,
+
+		/// SOME/IP车载以太网总线，报文数据为包含链路层等等协议的完整以太网帧数据，报文ID即Message ID(由Service ID和Method ID组成)
+		SomeIP = 6,
 	};
 
 	/// 总线波特率
