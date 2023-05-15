@@ -2,10 +2,10 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 新增BusChannelType::SomeIP
+// 版本定义 // 修正String(Type)
 #define SPADAS_VERSION_MAJOR 8
 #define SPADAS_VERSION_MINOR 8
-#define SPADAS_VERSION_BUILD 1
+#define SPADAS_VERSION_BUILD 2
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
