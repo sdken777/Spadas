@@ -9,7 +9,7 @@
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.8.1\n
+* 本文档对应Spadas版本：8.8.2\n
 *
 * \n
 * \section top1 基本功能概述

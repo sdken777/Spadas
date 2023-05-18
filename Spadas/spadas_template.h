@@ -3189,8 +3189,7 @@ namespace spadas
 	String::String(Type obj)
 	{
 		String objString = obj.toString();
-		if (objString.isEmpty()) objString = "(null)";
-		setVars(objString.vars, FALSE);
+		if (!objString.isEmpty()) setVars(objString.vars, FALSE);
 	}
 
 	template <typename Type>
