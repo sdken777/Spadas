@@ -546,6 +546,26 @@ namespace spadas
 	};
 	typedef Interface<IPluginV103>(*GetPluginV103)();
 
+	class SPADAS_API IPluginV104
+	{
+	public:
+		virtual ~IPluginV104() {};
+		virtual String getPluginType();
+		virtual String getPluginVersion();
+		virtual void closePlugin();
+		virtual void initLanguage(String languageCode);
+		virtual void useLogger(Interface<ILogger> logger);
+		virtual void onCrossData(String id, Binary data);
+		virtual void useCrossTransmitter(Interface<ICrossTransmitter> transmitter);
+		virtual Bool onCrossCall(String id, BaseObject context);
+		virtual void useCrossCaller(Interface<ICrossCaller> caller);
+		virtual void onStartOnlineSession(SessionIdentifier session, ULong startCPUTick);
+		virtual void onStopOnlineSession();
+		virtual Array<String> getStandaloneTaskNames();
+		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
+	};
+	typedef Interface<IPluginV104>(*GetPluginV104)();
+
 	// sort函数的实现 ///////////////////////////////////////////////////////
 	template<typename Type>
 	void spadas::math::sort(Array<Type> arr)

@@ -5540,17 +5540,17 @@ namespace spadas
 		/// @param hostPosix 到达时主机Posix时间，单位纳秒，0表示无效
 		/// @param guestPosix 客机Posix时间，单位纳秒，0表示无效
 		/// @param gnssPosix 卫星Posix时间，单位纳秒，0表示无效
-		/// @param protocol 原始数据协议ID，将据此确定客机是否已与授时服务器同步（一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本）
+		/// @param guestSyncID 客机同步ID，将据此确定客机是否已与授时服务器同步（格式为"xxx.yyy"，xxx为插件类型ID，yyy为客机同步通道名）
 		/// @return 是否成功
-		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionIdentifier session, ULong cpuTick = 0, NanoPosix hostPosix = 0, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, String protocol = String());
+		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionIdentifier session, ULong cpuTick = 0, NanoPosix hostPosix = 0, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, String guestSyncID = String());
 
 		/// @brief 根据基准时间戳进行二次同步（重新计算时间偏置的优先级从高至低为：授时服务器Posix时间、卫星Posix时间）
 		/// @param srcTimestamp 基准时间戳
 		/// @param guestPosix 非0则使用该输入作为基准时间戳的客机Posix时间，单位纳秒
 		/// @param gnssPosix 非0则使用该输入作为基准时间戳的卫星Posix时间，单位纳秒
-		/// @param protocol 原始数据协议ID，将据此确定客机是否已与授时服务器同步（一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本）
+		/// @param guestSyncID 客机同步ID，将据此确定客机是否已与授时服务器同步（格式为"xxx.yyy"，xxx为插件类型ID，yyy为客机同步通道名称）
 		/// @return 输出的时间戳
-		virtual FullTimestamp resyncTimestamp(FullTimestamp srcTimestamp, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, String protocol = String());
+		virtual FullTimestamp resyncTimestamp(FullTimestamp srcTimestamp, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, String guestSyncID = String());
 
 		/// @brief 根据基准时间戳的时间偏置反算CPU计数、主机Posix时间、授时服务器Posix时间、卫星Posix时间等
 		/// @param srcTimestamp 基准时间戳
@@ -5770,11 +5770,11 @@ namespace spadas
 
 	// 插件API //////////////////////////////////////////////////////////////
 
-	/// 通用功能插件接口 1.4
-	class SPADAS_API IPluginV104
+	/// 通用功能插件接口 1.5
+	class SPADAS_API IPluginV105
 	{
 	public:
-		virtual ~IPluginV104() {};
+		virtual ~IPluginV105() {};
 
 		/// @brief 获取插件类型ID
 		/// @returns 插件类型ID
@@ -5794,6 +5794,10 @@ namespace spadas
 		/// @brief [可选] 设置使用指定的接口记录调试信息（主要用于在子线程中调用 spadas::console::useThreadLogger ）
 		/// @param logger 记录调试信息接口
 		virtual void useLogger(Interface<ILogger> logger);
+
+		/// @brief [可选] 设置应用程序外部文件(如插件库文件等在plugin子文件夹)存放的根路径
+		/// @param path 应用程序外部文件存放的根路径
+		virtual void setAppFilesPath(Path path);
 
 		/// @brief [可选] 在收到其他模块发送的数据时被调用（应确保微秒级别的运行时间）
 		/// @param id 数据ID
@@ -5832,10 +5836,14 @@ namespace spadas
 		/// @param shouldEnd 任务是否应该中止，一般来自用户操作
 		/// @param callback 用于反馈任务处理状态、进度，以及返回值的接口
 		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
+
+		/// @brief [可选] 获取客机同步通道名称列表
+		/// @return 客机同步通道名称列表
+		virtual Array<String> getGuestSyncChannelNames();
 	};
 
-	/// 获取通用功能插件接口的全局函数定义，函数名应为get_plugin_v104
-	typedef Interface<IPluginV104>(*GetPluginV104)();
+	/// 获取通用功能插件接口的全局函数定义，函数名应为get_plugin_v105
+	typedef Interface<IPluginV105>(*GetPluginV105)();
 
 	/// 一般设备插件接口 2.2
 	class SPADAS_API IDevicePluginV202

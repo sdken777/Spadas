@@ -4,7 +4,7 @@
 
 using namespace spadas;
 
-typedef IPluginV103 IPluginLatest;
+typedef IPluginV105 IPluginLatest;
 
 class NoVarsObject : public EmptyObject, public IPluginLatest
 {
