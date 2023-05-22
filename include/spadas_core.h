@@ -5540,7 +5540,7 @@ namespace spadas
 		/// @param hostPosix 到达时主机Posix时间，单位纳秒，0表示无效
 		/// @param guestPosix 客机Posix时间，单位纳秒，0表示无效
 		/// @param gnssPosix 卫星Posix时间，单位纳秒，0表示无效
-		/// @param guestSyncID 客机同步ID，将据此确定客机是否已与授时服务器同步（格式为"xxx.yyy"，xxx为插件类型ID，yyy为客机同步通道名）
+		/// @param guestSyncID 客机同步ID，将据此确定客机是否已与授时服务器同步（视频通道格式为video@x，x为通道序号0~23；插件相关通道格式为"xxx.yyy"，xxx为插件类型ID，yyy为客机同步通道名称）
 		/// @return 是否成功
 		virtual Bool createTimestamp(FullTimestamp& outputTimestamp, SessionIdentifier session, ULong cpuTick = 0, NanoPosix hostPosix = 0, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, String guestSyncID = String());
 
@@ -5548,7 +5548,7 @@ namespace spadas
 		/// @param srcTimestamp 基准时间戳
 		/// @param guestPosix 非0则使用该输入作为基准时间戳的客机Posix时间，单位纳秒
 		/// @param gnssPosix 非0则使用该输入作为基准时间戳的卫星Posix时间，单位纳秒
-		/// @param guestSyncID 客机同步ID，将据此确定客机是否已与授时服务器同步（格式为"xxx.yyy"，xxx为插件类型ID，yyy为客机同步通道名称）
+		/// @param guestSyncID 客机同步ID，将据此确定客机是否已与授时服务器同步（视频通道格式为video@x，x为通道序号0~23；插件相关通道格式为"xxx.yyy"，xxx为插件类型ID，yyy为客机同步通道名称）
 		/// @return 输出的时间戳
 		virtual FullTimestamp resyncTimestamp(FullTimestamp srcTimestamp, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, String guestSyncID = String());
 
