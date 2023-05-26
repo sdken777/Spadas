@@ -95,6 +95,7 @@
 *   - spadas::IPluginVxxx::closePlugin
 *   - spadas::IPluginVxxx::initLanguage
 *   - spadas::IPluginVxxx::useLogger
+*   - spadas::IPluginVxxx::setAppFilesPath
 *   - spadas::IPluginVxxx::onCrossData
 *   - spadas::IPluginVxxx::useCrossTransmitter
 *   - spadas::IPluginVxxx::onCrossCall
@@ -103,6 +104,7 @@
 *   - spadas::IPluginVxxx::onStopOnlineSession
 *   - spadas::IPluginVxxx::getStandaloneTaskNames
 *   - spadas::IPluginVxxx::runStandaloneTask
+*   - spadas::IPluginVxxx::getGuestSyncChannelNames
 *
 * \subsection p5 5. 实现原生数据处理插件接口
 * 以下接口函数必须实现：
