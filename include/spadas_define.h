@@ -191,7 +191,7 @@
 #if !defined(SPADAS_ARCH_ARM)
 #error Not for Arm architecture.
 #endif
-#elif
+#else
 #error Unsupported CPU architecture.
 #endif
 
