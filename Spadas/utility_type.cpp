@@ -1,36 +1,9 @@
 ﻿
 #include "spadas.h"
-
 #include <time.h>
 
 using namespace spadas;
 using namespace spadas::math;
-
-// Environment
-Bool Environment::isValid(Int val)
-{
-    return val >= Environment::Unknown && val <= Environment::Windows;
-}
-String Environment::toString(Int val)
-{
-    switch (val)
-    {
-        case Environment::Unknown:
-            return "Unknown";
-        case Environment::Linux:
-            return "Linux";
-        case Environment::Windows:
-            return "Windows";
-		case Environment::MacOS:
-			return "MacOS";
-        default:
-			return String();
-    }
-}
-Int Environment::defaultValue()
-{
-    return Environment::Unknown;
-}
 
 // Time
 Time::Time()
@@ -133,7 +106,7 @@ Long TimeWithMS::operator -(TimeWithMS time)
 	return posixTime1 - posixTime2;
 }
 
-void TimeWithMS::substract(TimeWithMS time, Int& week, Int& day, Int& hour, Int& minute, Int& second, Int& millisecond)
+void TimeWithMS::minus(TimeWithMS time, Int& week, Int& day, Int& hour, Int& minute, Int& second, Int& millisecond)
 {
 	Long posixTime1 = (Long)localTimeToPosix();
 	Long posixTime2 = (Long)time.localTimeToPosix();
@@ -196,7 +169,7 @@ void TimeWithMS::localTimeFromPosix(MilliPosix posixTime)
 	tm t;
 #if defined(SPADAS_ENV_WINDOWS)
 	localtime_s(&t, &t1);
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
 	localtime_r(&t1, &t);
 #endif
 
@@ -215,7 +188,7 @@ void TimeWithMS::utcTimeFromPosix(MilliPosix posixTime)
 	tm t;
 #if defined(SPADAS_ENV_WINDOWS)
 	gmtime_s(&t, &t1);
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
 	gmtime_r(&t1, &t);
 #endif
 

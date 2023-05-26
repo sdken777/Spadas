@@ -4,9 +4,11 @@
 using namespace spadas;
 
 Atom globalObjectCounter;
+String objectNamePostfix = " object";
+
 const String BaseObject::TypeName = "spadas.BaseObject";
 
-Vars::Vars() :nRefs(1)
+Vars::Vars() : nRefs(1)
 {
 	globalObjectCounter.increase();
 }
@@ -27,6 +29,22 @@ UInt Vars::getRefCount()
 	return (UInt)nRefs.get();
 }
 
+void Vars::spinEnter()
+{
+	Int curThreadID = (Int)Threads::getCurrentThreadID();
+	SPADAS_ERROR_RETURN(curThreadID == 0);
+	SPADAS_ERROR_RETURN(curThreadID == varSpinLock.get());
+	while (!varSpinLock.cas(0, curThreadID)) {}
+}
+
+void Vars::spinLeave()
+{
+	Int curThreadID = (Int)Threads::getCurrentThreadID();
+	SPADAS_ERROR_RETURN(curThreadID == 0);
+	SPADAS_ERROR_RETURN(curThreadID != varSpinLock.get());
+	varSpinLock.set(0);
+}
+
 UInt Vars::getObjectCount()
 {
 	return (UInt)math::max(0, globalObjectCounter.get());
@@ -37,19 +55,22 @@ String Vars::getTypeName()
 	return BaseObject::TypeName;
 }
 
-ListNode<String> Vars::getBaseChain()
+Bool Vars::isType(ULong typeID)
 {
-	return ListNode<String>();
+	return typeID == BaseObject::TypeName.getID();
 }
 
-ListNode<String> Vars::genBaseChain(String baseType, ListNode<String> baseBaseChain)
+Bool Vars::isType(String typeName)
 {
-	if (baseType.isEmpty()) return ListNode<String>();
-	if (!baseBaseChain->isEmpty()) return baseBaseChain.joinPrevious(baseType);
-	else return ListNode<String>(baseType);
+	return typeName == BaseObject::TypeName;
 }
 
 String Vars::toString()
 {
-	return getTypeName() + " object";
+	return getTypeName() + objectNamePostfix;
+}
+
+Bool Vars::isSpinLockManaged()
+{
+	return FALSE;
 }

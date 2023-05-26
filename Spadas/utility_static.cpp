@@ -1,7 +1,5 @@
 ﻿
-#include "spadas.h"
 #include "oscillator.h"
-
 #include <memory.h>
 #include <time.h>
 #include <stdlib.h>
@@ -9,8 +7,14 @@
 
 #define MEMOP_THRESH 16
 
-namespace spadas_internal
+#if !defined(SPADAS_ENV_NILRT)
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
+namespace utility_internal
 {
+	using namespace spadas;
+	
 	struct WindowsWaitContext
 	{
 		Atom sampleCount;
@@ -19,8 +23,10 @@ namespace spadas_internal
 	wc;
 }
 
+
 using namespace spadas;
-using namespace spadas_internal;
+using namespace oscillator_internal;
+using namespace utility_internal;
 
 // isBigEndian
 Bool spadas::system::isBigEndian()
@@ -54,13 +60,15 @@ void spadas::utility::memorySet(Byte value, Pointer dst, UInt setSize)
 Enum<Environment> spadas::system::getEnv()
 {
 #if defined(SPADAS_ENV_LINUX)
-	return Environment::Linux;
+	return Environment::Value::Linux;
 #elif defined(SPADAS_ENV_WINDOWS)
-	return Environment::Windows;
+	return Environment::Value::Windows;
 #elif defined(SPADAS_ENV_MACOS)
-	return Environment::MacOS;
+	return Environment::Value::MacOS;
+#elif defined(SPADAS_ENV_NILRT)
+	return Environment::Value::NILRT;
 #else
-	return Environment::Unknown;
+	return Environment::Value::Unknown;
 #endif
 }
 
@@ -71,7 +79,7 @@ void spadas::system::command(String cmd)
 }
 
 // memoryCopy
-void spadas::utility::memoryCopy(const Pointer src, Pointer dst, UInt copySize)
+void spadas::utility::memoryCopy(ConstPointer src, Pointer dst, UInt copySize)
 {
 	if (copySize < MEMOP_THRESH)
 	{
@@ -83,7 +91,7 @@ void spadas::utility::memoryCopy(const Pointer src, Pointer dst, UInt copySize)
 	{
 #if defined(SPADAS_ENV_WINDOWS)
 		memcpy_s(dst, (rsize_t)copySize, src, (rsize_t)copySize);
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
 		memcpy(dst, src, (size_t)copySize);
 #endif
 	}
@@ -108,7 +116,7 @@ Time spadas::system::getTime()
 
 	return out;
 }
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
 Time spadas::system::getTime()
 {
 	time_t longTime;
@@ -150,7 +158,7 @@ TimeWithMS spadas::system::getTimeWithMS()
 
 	return out;
 }
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
 TimeWithMS spadas::system::getTimeWithMS()
 {
 	timeb nowTime;
@@ -187,7 +195,7 @@ void spadas::system::wait(UInt time)
 		if (wc.sampleCount.increase() <= 100 && failed) wc.failCount.increase();
 		sleepTime(time);
 	}
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
 	sleepTime(time);
 #endif
 }
@@ -212,34 +220,37 @@ void spadas::system::addEnvironmentPath(Path path)
 	String src(buffer);
 
 	String target = path.fullPath();
-	Array<String> srcComps = src.split(";");
-	if (srcComps.contain(target)) return;
+	Array<StringSpan> srcComps = src.split(";");
+	if (srcComps.containAs([target](StringSpan& span){ return span == target; })) return;
 
 	String newVar = src + ";" + target;
 	SetEnvironmentVariableW(L"Path", newVar.wchars().data());
 }
-#elif defined(SPADAS_ENV_LINUX)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
 void spadas::system::addEnvironmentPath(Path path)
 {
 	SPADAS_ERROR_RETURN(path.isNull() || !path.isFolder());
 
 	String targetFolder = path.fullPath();
-	targetFolder = String(targetFolder, Region(0, targetFolder.length() - 1));
+	targetFolder = targetFolder.subString(0, targetFolder.length() - 1);
+
+	auto k = [targetFolder](StringSpan comp){ return comp == targetFolder; };
 
 	String env = getenv("PATH");
-	Array<String> envComps = env.split(":");
-	if (!envComps.contain(targetFolder))
+	Array<StringSpan> envComps = env.split(":");
+
+	if (!envComps.containAs([targetFolder](StringSpan& span){ return span == targetFolder; }))
 	{
 		env += (String)":" + targetFolder;
-		setenv("PATH", (Char*)env.bytes(), 1);
+		setenv("PATH", env.chars().data(), 1);
 	}
 
 	env = getenv("LD_LIBRARY_PATH");
 	envComps = env.split(":");
-	if (!envComps.contain(targetFolder))
+	if (!envComps.containAs([targetFolder](StringSpan& span){ return span == targetFolder; }))
 	{
 		env += (String)":" + targetFolder;
-		setenv("LD_LIBRARY_PATH", (Char*)env.bytes(), 1);
+		setenv("LD_LIBRARY_PATH", env.chars().data(), 1);
 	}
 }
 #elif defined(SPADAS_ENV_MACOS)
@@ -248,22 +259,22 @@ void spadas::system::addEnvironmentPath(Path path)
 	SPADAS_ERROR_RETURN(path.isNull() || !path.isFolder());
 
 	String targetFolder = path.fullPath();
-	targetFolder = String(targetFolder, Region(0, targetFolder.length() - 1));
+	targetFolder = targetFolder.subString(0, targetFolder.length() - 1);
 
 	String env = getenv("PATH");
-	Array<String> envComps = env.split(":");
-	if (!envComps.contain(targetFolder))
+	Array<StringSpan> envComps = env.split(":");
+	if (!envComps.containAs([targetFolder](StringSpan& span){ return span == targetFolder; }))
 	{
 		env += (String)":" + targetFolder;
-		setenv("PATH", (Char*)env.bytes(), 1);
+		setenv("PATH", env.chars().data(), 1);
 	}
 
 	env = getenv("DYLD_LIBRARY_PATH");
 	envComps = env.split(":");
-	if (!envComps.contain(targetFolder))
+	if (!envComps.containAs([targetFolder](StringSpan& span){ return span == targetFolder; }))
 	{
 		env += (String)":" + targetFolder;
-		setenv("DYLD_LIBRARY_PATH", (Char*)env.bytes(), 1);
+		setenv("DYLD_LIBRARY_PATH", env.chars().data(), 1);
 	}
 }
 #endif

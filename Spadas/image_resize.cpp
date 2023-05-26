@@ -1,7 +1,5 @@
 ﻿
-#include "spadas.h"
-
-#include "image_bz.h"
+#include "image.h"
 
 using namespace image_internal;
 using namespace spadas::math;
@@ -29,10 +27,10 @@ void areaResizeColor(Image src, Image& dst, Float widthRatio, Float heightRatio,
 			Float srcUMax = srcUMin + widthRatio;
 			Float srcVMin = (dstVNorm - 0.5f) * heightRatio + srcCenterV;
 			Float srcVMax = srcVMin + heightRatio;
-			Int srcUMinI = floor(srcUMin + 0.501f);
-			Int srcUMaxI = ceil(srcUMax - 0.501f);
-			Int srcVMinI = floor(srcVMin + 0.501f);
-			Int srcVMaxI = ceil(srcVMax - 0.501f);
+			Int srcUMinI = math::floor(srcUMin + 0.501f);
+			Int srcUMaxI = math::ceil(srcUMax - 0.501f);
+			Int srcVMinI = math::floor(srcVMin + 0.501f);
+			Int srcVMaxI = math::ceil(srcVMax - 0.501f);
 			Float weightSum = 0.0f;
             for (UInt n = 0; n < nChannels; n++) intensitySum[n] = 0.0f;
 			
@@ -113,10 +111,10 @@ void areaResizeGray(Image src, Image& dst, Float widthRatio, Float heightRatio)
 			Float srcUMax = srcUMin + widthRatio;
 			Float srcVMin = (dstVNorm - 0.5f) * heightRatio + srcCenterV;
 			Float srcVMax = srcVMin + heightRatio;
-			Int srcUMinI = floor(srcUMin + 0.501f);
-			Int srcUMaxI = ceil(srcUMax - 0.501f);
-			Int srcVMinI = floor(srcVMin + 0.501f);
-			Int srcVMaxI = ceil(srcVMax - 0.501f);
+			Int srcUMinI = math::floor(srcUMin + 0.501f);
+			Int srcUMaxI = math::ceil(srcUMax - 0.501f);
+			Int srcVMinI = math::floor(srcVMin + 0.501f);
+			Int srcVMaxI = math::ceil(srcVMax - 0.501f);
 			Float intensitySum = 0.0f;
 			Float weightSum = 0.0f;
 			
@@ -200,7 +198,7 @@ void image_internal::areaResizeGrayFloat(Image src, Image& dst, Float widthRatio
 template <typename Type>
 void resizeColorWithScale(Image src, Image& dst, Enum<ResizeScale> scale, UInt nChannels)
 {
-	if (scale == ResizeScale::Quarter)
+	if (scale == ResizeScale::Value::Quarter)
 	{
 		UInt width = src.width() / 4, height = src.height() / 4;
         UInt uSrcStep = 3 * nChannels;
@@ -225,7 +223,7 @@ void resizeColorWithScale(Image src, Image& dst, Enum<ResizeScale> scale, UInt n
 		}
 	}
 	
-	if (scale == ResizeScale::Half)
+	if (scale == ResizeScale::Value::Half)
 	{
 		UInt width = src.width() / 2, height = src.height() / 2;
 		for (UInt v = 0; v < height; v++)
@@ -244,7 +242,7 @@ void resizeColorWithScale(Image src, Image& dst, Enum<ResizeScale> scale, UInt n
 		}
 	}
 	
-	if (scale == ResizeScale::Double)
+	if (scale == ResizeScale::Value::Double)
 	{
 		UInt width = src.width(), height = src.height();
 		
@@ -309,7 +307,7 @@ void resizeColorWithScale(Image src, Image& dst, Enum<ResizeScale> scale, UInt n
 template <typename Type>
 void resizeGrayWithScale(Image src, Image& dst, Enum<ResizeScale> scale)
 {
-	if (scale == ResizeScale::Quarter)
+	if (scale == ResizeScale::Value::Quarter)
 	{
 		UInt width = src.width() / 4, height = src.height() / 4;
 		for (UInt v = 0; v < height; v++)
@@ -329,7 +327,7 @@ void resizeGrayWithScale(Image src, Image& dst, Enum<ResizeScale> scale)
 		}
 	}
 	
-	if (scale == ResizeScale::Half)
+	if (scale == ResizeScale::Value::Half)
 	{
 		UInt width = src.width() / 2, height = src.height() / 2;
 		for (UInt v = 0; v < height; v++)
@@ -344,7 +342,7 @@ void resizeGrayWithScale(Image src, Image& dst, Enum<ResizeScale> scale)
 		}
 	}
 	
-	if (scale == ResizeScale::Double)
+	if (scale == ResizeScale::Value::Double)
 	{
 		UInt width = src.width(), height = src.height();
 		

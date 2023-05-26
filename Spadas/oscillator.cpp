@@ -1,9 +1,7 @@
 ﻿
-#include "spadas.h"
-
 #include "oscillator.h"
 
-namespace spadas_internal
+namespace oscillator_internal
 {
     using namespace spadas;
     
@@ -28,7 +26,6 @@ namespace spadas_internal
 	class OscillatorVars : public Vars
 	{
 	public:
-		Lock lock;
 		OscillatorEvent *head, *tail;
 		Timer timer;
 		OscillatorVars()
@@ -68,6 +65,7 @@ namespace spadas_internal
 	}
 	Oscillator *OscillatorManager::obj()
 	{
+		if (oscillator) return oscillator;
 		lock.enter();
 		if (!oscillator) oscillator = new Oscillator;
 		lock.leave();
@@ -77,7 +75,7 @@ namespace spadas_internal
 }
 
 using namespace spadas;
-using namespace spadas_internal;
+using namespace oscillator_internal;
 
 Oscillator::Oscillator() : Object<class OscillatorVars>(new OscillatorVars(), TRUE)
 {
@@ -85,18 +83,18 @@ Oscillator::Oscillator() : Object<class OscillatorVars>(new OscillatorVars(), TR
 
 void Oscillator::add(Flag trigger, UInt period, Bool disposable, Bool toSet)
 {
-	vars->lock.enter();
+	vars->spinEnter();
 	{
 		OscillatorEvent* newEvent = new OscillatorEvent(disposable, toSet, (ULong)period, trigger, vars->head, vars->head->next);
 		newEvent->prev->next = newEvent;
 		newEvent->next->prev = newEvent;
 	}
-	vars->lock.leave();
+	vars->spinLeave();
 }
 
 void Oscillator::remove(Flag trigger)
 {
-	vars->lock.enter();
+	vars->spinEnter();
 	{
 		OscillatorEvent *ptr = vars->head->next;
 		while (ptr != vars->tail)
@@ -113,12 +111,12 @@ void Oscillator::remove(Flag trigger)
 			ptr = ptr->next;
 		}
 	}
-	vars->lock.leave();
+	vars->spinLeave();
 }
 
 void Oscillator::pulse()
 {
-	vars->lock.enter();
+	vars->spinEnter();
 	{
 		ULong count = (ULong)vars->timer.check();
 		OscillatorEvent *ptr = vars->head->next;
@@ -150,14 +148,14 @@ void Oscillator::pulse()
 			ptr = ptr->next;
 		}
 	}
-	vars->lock.leave();
+	vars->spinLeave();
 }
 
 #if defined(SPADAS_ENV_WINDOWS)
 
 #include <windows.h>
 
-void spadas_internal::sleepTime(spadas::UInt time)
+void oscillator_internal::sleepTime(spadas::UInt time)
 {
 	Sleep((DWORD)time);
 }
@@ -189,12 +187,14 @@ void OscillatorVars::stopOscillator(UInt id)
 	timeKillEvent(id);
 }
 
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
 
 #include <pthread.h>
 #include <sys/time.h>
+#undef NULL
+#define NULL 0
 
-void spadas_internal::sleepTime(spadas::UInt time)
+void oscillator_internal::sleepTime(spadas::UInt time)
 {
 	timeval interval;
 	interval.tv_sec = 0;

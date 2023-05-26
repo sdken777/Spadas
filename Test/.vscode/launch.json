@@ -18,55 +18,26 @@
     "configurations": [
         {
             "name": "调试运行",
-            "type": "cppdbg",
+            "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/test",
             "args": [],
-            "stopAtEntry": false,
             "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/",
-            "environment": [],
             "preLaunchTask": "调试构建",
-            "setupCommands": [
-                {
-                    "description": "为 gdb 启用整齐打印",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ],
             "windows": {
-                "externalConsole": true,
-                "MIMode": "gdb",
-            },
-            "linux": {
-                "externalConsole": false,
-                "MIMode": "gdb",
-            },
-            "osx": {
-                "externalConsole": true,
-                "MIMode": "lldb",
+                "env": { "_NO_DEBUG_HEAP": "1" },
             },
         },
         {
             "name": "发布运行",
-            "type": "cppdbg",
+            "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/../${input:helper_platform_bin_name}/test",
             "args": [],
-            "stopAtEntry": false,
             "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/",
-            "environment": [],
             "preLaunchTask": "发布构建",
             "windows": {
-                "externalConsole": true,
-                "MIMode": "gdb",
-            },
-            "linux": {
-                "externalConsole": false,
-                "MIMode": "gdb",
-            },
-            "osx": {
-                "externalConsole": true,
-                "MIMode": "lldb",
+                "env": { "_NO_DEBUG_HEAP": "1" },
             },
         },
     ]

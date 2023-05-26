@@ -1,17 +1,15 @@
 ﻿
-#include "spadas.h"
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
 
 #include "console.h"
-#include "string_encoding.h"
-
-#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
-
 #include <stdio.h>
 #include <wchar.h>
 #include <string.h>
 #include <cstdlib>
 #include <unistd.h>
 #include <termios.h>
+#undef NULL
+#define NULL 0
 
 #if defined(SPADAS_ENV_MACOS)
 #include <CoreFoundation/CoreFoundation.h>
@@ -68,37 +66,37 @@ namespace console_internal
 		return keyIn == 0 ? FALSE : TRUE;
 	}
 
-	Int intToKey(int key)
+	Key::Value intToKey(int key)
 	{
 		switch (key)
 		{
 			case 10:
-				return Key::Enter;
+				return Key::Value::Enter;
 			case 32:
-				return Key::Space;
+				return Key::Value::Space;
 			case 9:
-				return Key::Tab;
+				return Key::Value::Tab;
 			case 44:
-				return Key::Comma;
+				return Key::Value::Comma;
 			case 46:
-				return Key::Period;
+				return Key::Value::Period;
 			case 127:
-				return Key::Back;
+				return Key::Value::Back;
 			case 126:
-				return Key::Delete;
+				return Key::Value::Delete;
 
 			case 27:
 			{
-#if defined(SPADAS_ENV_LINUX)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
 				if (stdin->_IO_read_ptr == stdin->_IO_read_end)
 				{
-					return Key::Esc;
+					return Key::Value::Esc;
 				}
 #endif
 #if defined(SPADAS_ENV_MACOS)
 				if (stdin->_r <= 0)
 				{
-					return Key::Esc;
+					return Key::Value::Esc;
 				}
 #endif
 				switch (getch())
@@ -108,17 +106,17 @@ namespace console_internal
 						switch (getch())
 						{
 							case 72:
-								return Key::Home;
+								return Key::Value::Home;
 							case 70:
-								return Key::End;
+								return Key::Value::End;
 							case 80:
-								return Key::F1;
+								return Key::Value::F1;
 							case 81:
-								return Key::F2;
+								return Key::Value::F2;
 							case 82:
-								return Key::F3;
+								return Key::Value::F3;
 							case 83:
-								return Key::F4;
+								return Key::Value::F4;
 						}
 					}
 					case 91:
@@ -127,93 +125,97 @@ namespace console_internal
 						{
 							case 50:
 								getch();
-								return Key::Insert;
+								return Key::Value::Insert;
 							case 51:
 								getch();
-								return Key::Delete;
+								return Key::Value::Delete;
 							case 53:
 								getch();
-								return Key::PageUp;
+								return Key::Value::PageUp;
 							case 54:
 								getch();
-								return Key::PageDown;
+								return Key::Value::PageDown;
 							case 65:
-								return Key::Up;
+								return Key::Value::Up;
 							case 66:
-								return Key::Down;
+								return Key::Value::Down;
 							case 67:
-								return Key::Right;
+								return Key::Value::Right;
 							case 68:
-								return Key::Left;
+								return Key::Value::Left;
 							case 49:
 							{
 								switch (getch())
 								{
 									case 53:
 										getch();
-										return Key::F5;
+										return Key::Value::F5;
 									case 55:
 										getch();
-										return Key::F6;
+										return Key::Value::F6;
 									case 56:
 										getch();
-										return Key::F7;
+										return Key::Value::F7;
 									case 57:
 										getch();
-										return Key::F8;
+										return Key::Value::F8;
 								}
 							}
 						}
 					}
 				}
-				return Key::Unknown;
+				return Key::Value::Unknown;
 			}
 
 			default:
 			{
 				if (key >= 48 && key <= 57)
 				{
-					return key - 28;
+					return (Key::Value)(key - 28);
 				}
 				if (key >= 65 && key <= 90)
 				{
-					return key - 35;
+					return (Key::Value)(key - 35);
 				}
 				if (key >= 97 && key <= 122)
 				{
-					return key - 67;
+					return (Key::Value)(key - 67);
 				}
-				return Key::Unknown;
+				return Key::Value::Unknown;
 			}
 		}
-		return Key::Unknown;
+		return Key::Value::Unknown;
 	}
 }
 
 using namespace spadas;
-using namespace spadas_internal;
 using namespace console_internal;
-using namespace string_internal;
 
 #if defined(SPADAS_ENV_LINUX)
 void console::popup(String text)
 {
 	String cmd = (String)"xmessage -center \"" + text + "\"";
-	if (::system((Char*)cmd.bytes())) {}
+	if (::system(cmd.chars().data())) {}
 }
 #endif
 #if defined(SPADAS_ENV_MACOS)
 void console::popup(String text)
 {
-	CFStringRef cfString = CFStringCreateWithBytes(NULL, (UInt8*)text.bytes(), text.length(), kCFStringEncodingUTF8, false);
+	CFStringRef cfString = CFStringCreateWithBytes(NULL, (UInt8*)text.chars().data(), text.length(), kCFStringEncodingUTF8, false);
 	CFUserNotificationDisplayAlert(0, kCFUserNotificationNoteAlertLevel, NULL, NULL, NULL, CFSTR(""), cfString, NULL, NULL, NULL, NULL);
 	CFRelease(cfString);
+}
+#endif
+#if defined(SPADAS_ENV_NILRT)
+void console::popup(String text)
+{
+	console::print(SS"[console::popup] " + text);
 }
 #endif
 
 void DefaultConsole::print(String text, Enum<MessageLevel> level)
 {
-	printf("%s\n", (Char*)text.bytes());
+	printf("%s\n", text.chars().data());
 }
 
 String DefaultConsole::scan()
@@ -253,7 +255,7 @@ Enum<Key> DefaultConsole::checkKey()
 {
 	Bool keyIn = kbhit();
 	if (keyIn) return intToKey(getch());
-	else return Key::None;
+	else return Key::Value::None;
 }
 
 #endif

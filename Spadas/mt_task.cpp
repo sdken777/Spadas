@@ -32,11 +32,15 @@ namespace spadas
 			stopAll(1200);
 			threads.collapse();
 		}
+		Bool isSpinLockManaged() override
+		{
+			return TRUE;
+		}
 	};
 }
 
 using namespace spadas;
-using namespace spadas_internal;
+using namespace console_internal;
 
 const String spadas::TaskManager::TypeName = "spadas.TaskManager";
 
@@ -57,12 +61,12 @@ void taskThreadCreate(TaskManagerVars *vars)
 
 UInt __stdcall taskThreadFunc(Pointer param)
 
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
 
 #include <pthread.h>
 #include <unistd.h>
 
-#if defined(SPADAS_ENV_LINUX)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
 #include <linux/unistd.h>
 #endif
 
@@ -214,7 +218,7 @@ Bool TaskManager::stop(Interface<ITask> task, UInt timeout)
 Array<Interface<ITask> > TaskManager::getTasks()
 {
 	ArrayX<Interface<ITask> > list;
-	LockProxy p(vars->threadsLock);
+	LockProxy lock(vars->threadsLock);
 
 	ListNode<TaskThreadContext> currentNode = vars->threads.next();
 	while (currentNode != vars->threads)
@@ -231,7 +235,7 @@ Bool TaskManager::isTaskRunning(Interface<ITask> task)
 	SPADAS_ERROR_RETURNVAL(task.isNull(), FALSE)
 
 	ArrayX<Interface<ITask> > list;
-	LockProxy p(vars->threadsLock);
+	LockProxy lock(vars->threadsLock);
 
 	ListNode<TaskThreadContext> currentNode = vars->threads.next();
 	while (currentNode != vars->threads)
@@ -247,7 +251,7 @@ Bool TaskManager::waitAll(Flag interrupt)
 {
 	while (!interrupt.check())
 	{
-		LockProxy p(vars->threadsLock);
+		LockProxy lock(vars->threadsLock);
 		if (vars->threads.next() == vars->threads) return TRUE;
 		system::wait(10);
 	}

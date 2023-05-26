@@ -53,6 +53,9 @@ void exampleBaseObject()
 	// 转换回MyObject
 	console::print("- 2 -");
 
-	Optional<MyObject> myObj = objs[2].cast<MyObject>();
-	if (myObj.isValid()) console::print(SS"The number is: " + myObj->getNumber());
+	if (objs[2].is<MyObject>())
+	{
+		MyObject myObj = objs[2].as<MyObject>();
+		console::print(SS"The number is: " + myObj.getNumber());
+	}
 }

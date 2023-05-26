@@ -1,11 +1,9 @@
 ﻿
-#include "spadas.h"
-
 #include "console.h"
 #include <stdio.h>
 #include <wchar.h>
 
-namespace spadas_internal
+namespace console_internal
 {
 	Interface<IConsole> cs = DefaultConsole();
 	LoggerManager lm;
@@ -17,127 +15,14 @@ namespace spadas_internal
 }
 
 using namespace spadas;
-using namespace spadas_internal;
-
-// MessageLevel
-Bool MessageLevel::isValid(Int val)
-{
-	return val >= MessageLevel::Debug && val <= MessageLevel::Error;
-}
-
-String MessageLevel::toString(Int val)
-{
-	switch (val)
-	{
-	case MessageLevel::Error:
-		return "Error level";
-	case MessageLevel::Warning:
-		return "Warning level";
-	case MessageLevel::Info:
-		return "Info level";
-	case MessageLevel::Debug:
-		return "Debug level";
-	default:
-		return String();
-	}
-}
-
-Int MessageLevel::defaultValue()
-{
-	return MessageLevel::Debug;
-}
-
-// Key
-Bool Key::isValid(Int val)
-{
-    return (val >= Key::None && val <= Key::F8) || val == Key::Unknown;
-}
-String Key::toString(Int val)
-{
-	if (Key::isValid(val))
-	{
-		if (val < Key::None || val > Key::F8)
-		{
-			if (val == Key::Unknown) return "Unknown Key";
-			else return String();
-		}
-		else
-		{
-			if (val < Key::Key0)
-			{
-				switch (val)
-				{
-				case Key::None:
-					return "None";
-				case Key::Enter:
-					return "Key Enter";
-				case Key::Space:
-					return "Key Space";
-				case Key::Back:
-					return "Key Backspace";
-				case Key::Esc:
-					return "Key Esc";
-				case Key::Tab:
-					return "Key Tab";
-				case Key::Shift:
-					return "Key Shift";
-				case Key::Ctrl:
-					return "Key Ctrl";
-				case Key::Insert:
-					return "Key Insert";
-				case Key::Delete:
-					return "Key Delete";
-				case Key::Home:
-					return "Key Home";
-				case Key::End:
-					return "Key End";
-				case Key::PageUp:
-					return "Key PageUp";
-				case Key::PageDown:
-					return "Key PageDown";
-				case Key::Up:
-					return "Key Up";
-				case Key::Down:
-					return "Key Down";
-				case Key::Left:
-					return "Key Left";
-				case Key::Right:
-					return "Key Right";
-				case Key::Comma:
-					return "Key Comma";
-				case Key::Period:
-					return "Key Period";
-				default:
-					return String();
-				}
-			}
-			else if (val < Key::A)
-			{
-				return (String)"Key " + (val - Key::Key0);
-			}
-			else if (val < Key::F1)
-			{
-				return (String)"Key " + (Char)(65 + val - Key::A);
-			}
-			else
-			{
-				return (String)"Key F" + (val - Key::F1 + 1);
-			}
-		}
-	}
-    else return String();
-}
-Int Key::defaultValue()
-{
-	return Key::None;
-}
+using namespace console_internal;
 
 // IConsole
 void IConsole::print(String text, Enum<MessageLevel> level)
 {
 #if defined(SPADAS_ENV_WINDOWS)
 	wprintf_s(L"[SPADAS IConsole::print] Unimplemented method called. (Maybe the interface is invalid)\n");
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
     printf("[SPADAS IConsole::print] Unimplemented method called. (Maybe the interface is invalid)\n");
 #endif
 }
@@ -159,7 +44,7 @@ Bool IConsole::supportCheckKey()
 
 Enum<Key> IConsole::checkKey()
 {
-	return Key::None;
+	return Key::Value::None;
 }
 
 // ILogger
@@ -186,14 +71,14 @@ Interface<ILogger> spadas::console::useThreadLogger(Interface<ILogger> target)
 void spadas::console::print(String text)
 {
 	UInt threadID = Threads::getCurrentThreadID();
-	if (!lm.print(threadID, text)) cs->print(text, MessageLevel::Debug);
+	if (!lm.print(threadID, text)) cs->print(text, MessageLevel::Value::Debug);
 }
 void spadas::console::print(String text, Enum<MessageLevel> level)
 {
-	if (level == MessageLevel::Debug)
+	if (level == MessageLevel::Value::Debug)
 	{
 		UInt threadID = Threads::getCurrentThreadID();
-		if (!lm.print(threadID, text)) cs->print(text, MessageLevel::Debug);
+		if (!lm.print(threadID, text)) cs->print(text, MessageLevel::Value::Debug);
 	}
 	else cs->print(text, level);
 }
@@ -235,16 +120,16 @@ Enum<Key> spadas::console::waitKey()
 			while (TRUE)
 			{
 				out = cs->checkKey();
-				if (out == Key::None) break;
+				if (out == Key::Value::None) break;
 			}
 		}
 		scanningLock.leave();
 		while (TRUE)
 		{
 			system::wait(10);
-			LockProxy p(scanningLock);
+			LockProxy lock(scanningLock);
 			if (scanning) continue;
-			else if ((out = cs->checkKey()) != Key::None) break;
+			else if ((out = cs->checkKey()) != Key::Value::None) break;
 		}
 		
 		keyWaitingLock.enter();
@@ -255,7 +140,7 @@ Enum<Key> spadas::console::waitKey()
 	}
 	else
 	{
-		return Key::None;
+		return Key::Value::None;
 	}
 }
 
@@ -263,16 +148,16 @@ Enum<Key> spadas::console::checkKey()
 {
 	if (cs->supportCheckKey())
 	{
-		LockProxy p1(keyWaitingLock);
-		if (keyWaiting) return Key::None;
+		LockProxy lock1(keyWaitingLock);
+		if (keyWaiting) return Key::Value::None;
 		
-		LockProxy p2(scanningLock);
-		if (scanning) return Key::None;
+		LockProxy lock2(scanningLock);
+		if (scanning) return Key::Value::None;
 		
 		return cs->checkKey();
 	}
 	else
 	{
-		return Key::None;
+		return Key::Value::None;
 	}
 }

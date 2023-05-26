@@ -22,6 +22,10 @@ namespace spadas
         {
             flagCircle0.collapse();
         }
+		Bool isSpinLockManaged() override
+		{
+			return TRUE;
+		}
 	};
 }
 
@@ -49,7 +53,7 @@ void Barrier::setStrength(UInt strength)
 
 Bool Barrier::against(Flag interrupt)
 {
-	LockProxy p(vars->lock);
+	LockProxy lock(vars->lock);
 	
 	if (vars->strength == 0) return TRUE;
 	
@@ -63,14 +67,14 @@ Bool Barrier::against(Flag interrupt)
 		}
 		vars->flagCircle0.collapse();
 		vars->flagCircle0.joinNext(vars->flagCircle0);
-		vars->nJoined= 0;
+		vars->nJoined = 0;
 		return TRUE;
 	}
 
 	Flag flag;
 	vars->flagCircle0.insertPrevious(flag);
 	vars->nJoined++;
-	p.releaseLock();
+	lock.releaseLock();
 	
 	while (!interrupt.check())
 	{

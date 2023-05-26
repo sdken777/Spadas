@@ -1,115 +1,735 @@
 ﻿
-#if defined(SPADAS_DEBUG)
-#undef SPADAS_DEBUG
-#endif
+#include "string_spadas.h"
 
-#include "spadas.h"
-
-#include "string_bz.h"
-
-using namespace spadas;
-using namespace spadas::math;
-using namespace spadas_internal;
-
-Byte staticZeroByte = 0;
-
-Bool spadas_internal::doubleToPrettyString(Double val, Char output[48], Int& length)
+namespace string_internal
 {
-	if (val > 1000000000000000000.0 || val < -1000000000000000000.0) return FALSE;
+	ULong tenPowers[20];
+	UInt tenPowersInited = FALSE;
 
-	Int len = printToString(output, 48, "%.16f", val);
-	if (len <= 0) return FALSE;
-
-	Int dotIndex = -1;
-	for (Int i = 0; i < len; i++)
+	void initTenPowers()
 	{
-		if (output[i] == '.')
+		if (tenPowersInited) return;
+		for (UInt n = 0; n < 20; n++)
 		{
-			dotIndex = i;
-			break;
+			ULong coef = 1;
+			for (UInt i = 0; i < n; i++) coef *= 10;
+			tenPowers[n] = coef;
 		}
+		tenPowersInited = TRUE;
 	}
 
-	Int firstTargetIndex = -1;
-	Bool targetNine = FALSE;
-	if (dotIndex > 0)
+	UInt lengthChar(const Char *chars)
 	{
-		Int notZeroIndex = -1;
-		for (Int i = dotIndex + 1; i < len; i++)
+		if (!chars) return 0;
+		ULong length = 0;
+		while (TRUE)
 		{
-			if (output[i] > '0')
-			{
-				notZeroIndex = i;
-				break;
-			}
+			if(chars[length] == 0) break;
+			length++;
 		}
-		if (notZeroIndex < 0)
+		return length;
+	}
+
+	UInt lengthWChar(const WChar *chars)
+	{
+		if (!chars) return 0;
+		ULong length = 0;
+		while (TRUE)
 		{
-			firstTargetIndex = dotIndex + 1;
+			if(chars[length] == 0) break;
+			length++;
+		}
+		return length;
+	}
+
+	Int compareString(const Byte *data1, UInt length1, const Byte *data2, UInt length2)
+	{
+		UInt overlapLength = math::min(length1, length2);
+		for (UInt i = 0; i < overlapLength; i++)
+		{
+			if (data1[i] == data2[i]) continue;
+			return data1[i] > data2[i] ? 1 : -1;
+		}
+		if (length1 == length2) return 0;
+		else return length1 > length2 ? 1 : -1;
+	}
+
+	UInt writeIntPart(Char *data, Bool negative, UInt intValPos, UInt& intDigits) // 写Float的符号位和整数部分
+	{
+		intDigits = 1;
+		if (intValPos >= 100)
+		{
+			if (intValPos >= 10000)
+			{
+				if (intValPos >= 100000) intDigits = 6;
+				else intDigits = 5;
+			}
+			else
+			{
+				if (intValPos >= 1000) intDigits = 4;
+				else intDigits = 3;
+			}
 		}
 		else
 		{
-			for (Int i = notZeroIndex; i <= len - 4; i++)
+			if (intValPos >= 10) intDigits = 2;
+		}
+
+		UInt curIndex = 0;
+		if (negative) data[curIndex++] = '-';
+		for (Int i = intDigits - 1; i >= 0; i--)
+		{
+			data[curIndex + i] = intValPos % 10 + 48;
+			intValPos /= 10;
+		}
+		curIndex += intDigits;
+		return curIndex;
+	}
+
+	UInt writeIntPart(Char *data, Bool negative, ULong intValPos, UInt& intDigits) // 写Double的符号位和整数部分
+	{
+		intDigits = 1;
+		if (intValPos >= 10000ull)
+		{
+			if (intValPos >= 1000000ull)
 			{
-				if (output[i] == '0' && output[i + 1] == '0' && output[i + 2] == '0' && output[i + 3] == '0')
+				if (intValPos >= 100000000ull)
 				{
-					firstTargetIndex = i;
+					if (intValPos >= 1000000000ull) intDigits = 10;
+					else intDigits = 9;
+				}
+				else
+				{
+					if (intValPos >= 10000000ull) intDigits = 8;
+					else intDigits = 7;
+				}
+			}
+			else
+			{
+				if (intValPos >= 100000ull) intDigits = 6;
+				else intDigits = 5;
+			}
+		}
+		else
+		{
+			if (intValPos >= 100ull)
+			{
+				if (intValPos >= 1000ull) intDigits = 4;
+				else intDigits = 3;
+			}
+			else
+			{
+				if (intValPos >= 10ull) intDigits = 2;
+			}
+		}
+
+		UInt curIndex = 0;
+		if (negative) data[curIndex++] = '-';
+		for (Int i = intDigits - 1; i >= 0; i--)
+		{
+			data[curIndex + i] = intValPos % 10 + 48;
+			intValPos /= 10;
+		}
+		curIndex += intDigits;
+		return curIndex;
+	}
+
+	Int trimFloat(Char *floatData, Int floatDigits) // 返回0表示无小数部分，-1表示无小数部分但整数部分需要+1，>0表示实际的有效位数
+	{
+		Int firstNotZeroIndex = -1;
+		for (Int i = 0; i < floatDigits; i++)
+		{
+			if (floatData[i] > '0')
+			{
+				firstNotZeroIndex = i;
+				break;
+			}
+		}
+
+		Int trimIndex = -1;
+		Bool targetNine = FALSE;
+		if (firstNotZeroIndex < 0)
+		{
+			trimIndex = 0;
+		}
+		else
+		{
+			for (Int i = firstNotZeroIndex; i <= floatDigits - 4; i++)
+			{
+				if (floatData[i] == '0' && floatData[i + 1] == '0' && floatData[i + 2] == '0' && floatData[i + 3] == '0')
+				{
+					trimIndex = i;
 					break;
 				}
-				else if (output[i] == '9' && output[i + 1] == '9' && output[i + 2] == '9' && output[i + 3] == '9')
+				else if (floatData[i] == '9' && floatData[i + 1] == '9' && floatData[i + 2] == '9' && floatData[i + 3] == '9')
 				{
-					firstTargetIndex = i;
+					trimIndex = i;
 					targetNine = TRUE;
 					break;
 				}
 			}
 		}
-	}
 
-	if (firstTargetIndex <= dotIndex)
-	{
-		length = len;
-	}
-	else if (firstTargetIndex == dotIndex + 1)
-	{
-		if (targetNine)
+		if (trimIndex == -1)
 		{
-			Long valInt = (Long)val + 1;
-			length = printToString(output, 48, "%lld", valInt);
+			Int trailZeroIndex = -1;
+			for (Int i = floatDigits - 1; i >= 0; i--)
+			{
+				if (floatData[i] == '0') trailZeroIndex = i;
+				else break;
+			}
+			return trailZeroIndex == -1 ? floatDigits : trailZeroIndex;
+		}
+		else if (trimIndex == 0)
+		{
+			return targetNine ? -1 : 0;
 		}
 		else
 		{
-			output[dotIndex] = 0;
-			length = dotIndex;
+			floatData[trimIndex - 1] += (Char)targetNine;
+			return trimIndex;
 		}
 	}
-	else
+
+	inline UInt writeBool(Bool val, Byte *data)
 	{
-		output[firstTargetIndex] = 0;
-		output[firstTargetIndex - 1] += (Char)targetNine;
-		length = firstTargetIndex;
+		if (val)
+		{
+			data[0] = 'T';
+			data[1] = 'R';
+			data[2] = 'U';
+			data[3] = 'E';
+			return 4;
+		}
+		else
+		{
+			data[0] = 'F';
+			data[1] = 'A';
+			data[2] = 'L';
+			data[3] = 'S';
+			data[4] = 'E';
+			return 5;
+		}
 	}
 
-	return TRUE;
+	inline UInt writeByte(Byte val, Byte *data)
+	{
+		Int lastIndex = 0;
+		if (val >= 100) lastIndex = 2;
+		else if (val >= 10) lastIndex = 1;
+
+		for (Int i = lastIndex; i >= 0; i--)
+		{
+			data[i] = val % 10 + 48;
+			val /= 10;
+		}
+		return lastIndex + 1;
+	}
+
+	inline UInt writeWord(Word val, Byte *data)
+	{
+		Int lastIndex = 0;
+		if (val >= 1000)
+		{
+			if (val >= 10000) lastIndex = 4;
+			else lastIndex = 3;
+		}
+		else
+		{
+			if (val >= 100) lastIndex = 2;
+			else if (val >= 10) lastIndex = 1;
+		}
+
+		for (Int i = lastIndex; i >= 0; i--)
+		{
+			data[i] = val % 10 + 48;
+			val /= 10;
+		}
+		return lastIndex + 1;
+	}
+
+	inline UInt writeUInt(UInt val, Byte *data)
+	{
+		Int lastIndex = 0;
+		if (val >= 100000)
+		{
+			if (val >= 10000000)
+			{
+				if (val >= 1000000000) lastIndex = 9;
+				else if (val >= 100000000) lastIndex = 8;
+				else lastIndex = 7;
+			}
+			else
+			{
+				if (val >= 1000000) lastIndex = 6;
+				else lastIndex = 5;
+			}
+		}
+		else
+		{
+			if (val >= 1000)
+			{
+				if (val >= 10000) lastIndex = 4;
+				else lastIndex = 3;
+			}
+			else
+			{
+				if (val >= 100) lastIndex = 2;
+				else if (val >= 10) lastIndex = 1;
+			}
+		}
+
+		for (Int i = lastIndex; i >= 0; i--)
+		{
+			data[i] = val % 10 + 48;
+			val /= 10;
+		}
+		return lastIndex + 1;
+	}
+
+	inline UInt writeULong(ULong val, Byte *data)
+	{
+		Int lastIndex = 0;
+		if (val >= 10000000000ull)
+		{
+			if (val >= 1000000000000000ull)
+			{
+				if (val >= 100000000000000000ull)
+				{
+					if (val >= 10000000000000000000ull) lastIndex = 19;
+					else if (val >= 1000000000000000000ull) lastIndex = 18;
+					else lastIndex = 17;
+				}
+				else
+				{
+					if (val >= 10000000000000000ull) lastIndex = 16;
+					else lastIndex = 15;
+				}
+			}
+			else
+			{
+				if (val >= 10000000000000ull)
+				{
+					if (val >= 100000000000000ull) lastIndex = 14;
+					else lastIndex = 13;
+				}
+				else
+				{
+					if (val >= 1000000000000ull) lastIndex = 12;
+					else if (val >= 100000000000ull) lastIndex = 11;
+					else lastIndex = 10;
+				}
+			}
+		}
+		else
+		{
+			if (val >= 100000ull)
+			{
+				if (val >= 10000000ull)
+				{
+					if (val >= 1000000000ull) lastIndex = 9;
+					else if (val >= 100000000ull) lastIndex = 8;
+					else lastIndex = 7;
+				}
+				else
+				{
+					if (val >= 1000000ull) lastIndex = 6;
+					else lastIndex = 5;
+				}
+			}
+			else
+			{
+				if (val >= 1000ull)
+				{
+					if (val >= 10000ull) lastIndex = 4;
+					else lastIndex = 3;
+				}
+				else
+				{
+					if (val >= 100ull) lastIndex = 2;
+					else if (val >= 10ull) lastIndex = 1;
+				}
+			}
+		}
+
+		for (Int i = lastIndex; i >= 0; i--)
+		{
+			data[i] = val % 10 + 48;
+			val /= 10;
+		}
+		return lastIndex + 1;
+	}
+
+	inline UInt writeShort(Short val, Byte *data)
+	{
+		Word valPos = (Word)math::abs(val);
+
+		Int lastIndex = 0;
+		if (valPos >= 1000)
+		{
+			if (valPos >= 10000) lastIndex = 4;
+			else lastIndex = 3;
+		}
+		else
+		{
+			if (valPos >= 100) lastIndex = 2;
+			else if (valPos >= 10) lastIndex = 1;
+		}
+
+		Int lowerBound = 0;
+		if (val < 0)
+		{
+			data[0] = (Byte)'-';
+			lastIndex++;
+			lowerBound++;
+		}
+
+		for (Int i = lastIndex; i >= lowerBound; i--)
+		{
+			data[i] = valPos % 10 + 48;
+			valPos /= 10;
+		}
+		return lastIndex + 1;
+	}
+
+	inline UInt writeInt(Int val, Byte *data)
+	{
+		Int valPos = (Int)math::abs(val);
+
+		Int lastIndex = 0;
+		if (valPos >= 100000)
+		{
+			if (valPos >= 10000000)
+			{
+				if (valPos >= 1000000000) lastIndex = 9;
+				else if (valPos >= 100000000) lastIndex = 8;
+				else lastIndex = 7;
+			}
+			else
+			{
+				if (valPos >= 1000000) lastIndex = 6;
+				else lastIndex = 5;
+			}
+		}
+		else
+		{
+			if (valPos >= 1000)
+			{
+				if (valPos >= 10000) lastIndex = 4;
+				else lastIndex = 3;
+			}
+			else
+			{
+				if (valPos >= 100) lastIndex = 2;
+				else if (valPos >= 10) lastIndex = 1;
+			}
+		}
+
+		Int lowerBound = 0;
+		if (val < 0)
+		{
+			data[0] = (Byte)'-';
+			lastIndex++;
+			lowerBound++;
+		}
+
+		for (Int i = lastIndex; i >= lowerBound; i--)
+		{
+			data[i] = valPos % 10 + 48;
+			valPos /= 10;
+		}
+		return lastIndex + 1;
+	}
+
+	inline UInt writeLong(Long val, Byte *data)
+	{
+		ULong valPos = (ULong)math::abs(val);
+
+		Int lastIndex = 0;
+		if (valPos >= 10000000000ull)
+		{
+			if (valPos >= 1000000000000000ull)
+			{
+				if (valPos >= 100000000000000000ull)
+				{
+					if (valPos >= 10000000000000000000ull) lastIndex = 19;
+					else if (valPos >= 1000000000000000000ull) lastIndex = 18;
+					else lastIndex = 17;
+				}
+				else
+				{
+					if (valPos >= 10000000000000000ull) lastIndex = 16;
+					else lastIndex = 15;
+				}
+			}
+			else
+			{
+				if (valPos >= 10000000000000ull)
+				{
+					if (valPos >= 100000000000000ull) lastIndex = 14;
+					else lastIndex = 13;
+				}
+				else
+				{
+					if (valPos >= 1000000000000ull) lastIndex = 12;
+					else if (valPos >= 100000000000ull) lastIndex = 11;
+					else lastIndex = 10;
+				}
+			}
+		}
+		else
+		{
+			if (valPos >= 100000ull)
+			{
+				if (valPos >= 10000000ull)
+				{
+					if (valPos >= 1000000000ull) lastIndex = 9;
+					else if (valPos >= 100000000ull) lastIndex = 8;
+					else lastIndex = 7;
+				}
+				else
+				{
+					if (valPos >= 1000000ull) lastIndex = 6;
+					else lastIndex = 5;
+				}
+			}
+			else
+			{
+				if (valPos >= 1000ull)
+				{
+					if (valPos >= 10000ull) lastIndex = 4;
+					else lastIndex = 3;
+				}
+				else
+				{
+					if (valPos >= 100ull) lastIndex = 2;
+					else if (valPos >= 10ull) lastIndex = 1;
+				}
+			}
+		}
+
+		Int lowerBound = 0;
+		if (val < 0)
+		{
+			data[0] = (Byte)'-';
+			lastIndex++;
+			lowerBound++;
+		}
+
+		for (Int i = lastIndex; i >= lowerBound; i--)
+		{
+			data[i] = valPos % 10 + 48;
+			valPos /= 10;
+		}
+		return lastIndex + 1;
+	}
+
+	inline UInt writeFloat(Float val, Float valPos, Byte *data)
+	{
+		if (valPos >= 1000000.0f)
+		{
+			return printToString((Char*)data, 32, "%.6e", val);
+		}
+
+		UInt intValPos = (UInt)valPos;
+		Float floatValPos = valPos - intValPos;
+		UInt intDigits = 0;
+		UInt curIndex = writeIntPart((Char*)data, val < 0, intValPos, intDigits);
+		Int floatDigits = intValPos == 0 ? 11 : (6 - intDigits);
+		if (floatDigits == 0 || floatValPos == 0)
+		{
+			return curIndex;
+		}
+
+		initTenPowers();
+
+		data[curIndex++] = '.';
+
+		ULong floatValPosClip = (ULong)math::round(floatValPos * tenPowers[floatDigits]);
+		if (floatValPosClip >= tenPowers[floatDigits]) floatValPosClip = tenPowers[floatDigits] - 1;
+
+		Int clipDigits = 1;
+		if (floatValPosClip >= 10000ull)
+		{
+			if (floatValPosClip >= 100000000ull)
+			{
+				if (floatValPosClip >= 10000000000ull) clipDigits = 11;
+				else if (floatValPosClip >= 1000000000ull) clipDigits = 10;
+				else clipDigits = 9;
+			}
+			else
+			{
+				if (floatValPosClip >= 1000000ull)
+				{
+					if (floatValPosClip >= 10000000ull) clipDigits = 8;
+					else clipDigits = 7;
+				}
+				else
+				{
+					if (floatValPosClip >= 100000ull) clipDigits = 6;
+					else clipDigits = 5;
+				}
+			}
+		}
+		else
+		{
+			if (floatValPosClip >= 100ull)
+			{
+				if (floatValPosClip >= 1000ull) clipDigits = 4;
+				else clipDigits = 3;
+			}
+			else
+			{
+				if (floatValPosClip >= 10ull) clipDigits = 2;
+			}
+		}
+
+		Int discardDigits = math::max(0, clipDigits - 6);
+		if (discardDigits > 0)
+		{
+			floatValPosClip /= tenPowers[discardDigits];
+			floatDigits = math::max(1, floatDigits - discardDigits);
+		}
+
+		for (Int i = floatDigits - 1; i >= 0; i--)
+		{
+			data[curIndex + i] = floatValPosClip % 10 + 48;
+			floatValPosClip /= 10;
+		}
+
+		floatDigits = trimFloat((Char*)&data[curIndex], floatDigits);
+		if (floatDigits > 0) return curIndex + floatDigits;
+		else if (floatDigits == 0) return curIndex - 1;
+		else return writeIntPart((Char*)data, val < 0, intValPos + 1, intDigits);
+	}
+
+	inline UInt writeDouble(Double val, Double valPos, Byte *data)
+	{
+		if (valPos >= 10000000000.0)
+		{
+			return printToString((Char*)data, 64, "%le", val);
+		}
+
+		ULong intValPos = (ULong)valPos;
+		Double floatValPos = valPos - intValPos;
+		UInt intDigits = 0;
+		UInt curIndex = writeIntPart((Char*)data, val < 0, intValPos, intDigits);
+		Int floatDigits = intValPos == 0 ? 18 : (10 - intDigits);
+		if (floatDigits == 0 || floatValPos == 0)
+		{
+			return curIndex;
+		}
+
+		initTenPowers();
+
+		data[curIndex++] = '.';
+
+		ULong floatValPosClip = (ULong)math::round(floatValPos * tenPowers[floatDigits]);
+		if (floatValPosClip >= tenPowers[floatDigits]) floatValPosClip = tenPowers[floatDigits] - 1;
+
+		Int clipDigits = 1;
+		if (floatValPosClip >= 10000000000ull)
+		{
+			if (floatValPosClip >= 1000000000000000ull)
+			{
+				if (floatValPosClip >= 100000000000000000ull)
+				{
+					if (floatValPosClip >= 1000000000000000000ull) clipDigits = 19;
+					else clipDigits = 18;
+				}
+				else
+				{
+					if (floatValPosClip >= 10000000000000000ull) clipDigits = 17;
+					else clipDigits = 16;
+				}
+			}
+			else
+			{
+				if (floatValPosClip >= 10000000000000ull)
+				{
+					if (floatValPosClip >= 100000000000000ull) clipDigits = 15;
+					else clipDigits = 14;
+				}
+				else
+				{
+					if (floatValPosClip >= 1000000000000ull) clipDigits = 13;
+					else if (floatValPosClip >= 100000000000ull) clipDigits = 12;
+					else clipDigits = 11;
+				}
+			}
+		}
+		else
+		{
+			if (floatValPosClip >= 100000)
+			{
+				if (floatValPosClip >= 10000000)
+				{
+					if (floatValPosClip >= 1000000000) clipDigits = 10;
+					else if (floatValPosClip >= 100000000) clipDigits = 9;
+					else clipDigits = 8;
+				}
+				else
+				{
+					if (floatValPosClip >= 1000000) clipDigits = 7;
+					else clipDigits = 6;
+				}
+			}
+			else
+			{
+				if (floatValPosClip >= 1000)
+				{
+					if (floatValPosClip >= 10000) clipDigits = 5;
+					else clipDigits = 4;
+				}
+				else
+				{
+					if (floatValPosClip >= 100) clipDigits = 3;
+					else if (floatValPosClip >= 10) clipDigits = 2;
+				}
+			}
+		}
+
+		Int discardDigits = math::max(0, clipDigits - 10);
+		if (discardDigits > 0)
+		{
+			floatValPosClip /= tenPowers[discardDigits];
+			floatDigits = math::max(1, floatDigits - discardDigits);
+		}
+
+		for (Int i = floatDigits - 1; i >= 0; i--)
+		{
+			data[curIndex + i] = floatValPosClip % 10 + 48;
+			floatValPosClip /= 10;
+		}
+
+		floatDigits = trimFloat((Char*)&data[curIndex], floatDigits);
+		if (floatDigits > 0) return curIndex + floatDigits;
+		else if (floatDigits == 0) return curIndex - 1;
+		else return writeIntPart((Char*)data, val < 0, intValPos + 1, intDigits);
+	}
 }
+
+using namespace spadas;
+using namespace string_internal;
 
 const String spadas::String::TypeName = "spadas.String";
 
 String::String()
 {}
 
+void String::initBuffer(UInt dataSize)
+{
+	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
+	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
+	setVars(newVars, TRUE);
+}
+
 String::String(Char character)
 {
 	if (character == 0) return;
 
-	const UInt dataSize = 2;
-
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
+	initBuffer(4);
 	vars->data[0] = (Byte)character;
-	vars->data[1] = 0;
 	vars->length = 1;
 }
 
@@ -119,26 +739,14 @@ String::String(WChar character)
 	{
 		if (character == 0) return;
 
-		const UInt dataSize = 2;
-
-		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-		setVars(newVars, TRUE);
-
+		initBuffer(4);
 		vars->data[0] = (Byte)character;
-		vars->data[1] = 0;
 		vars->length = 1;
 	}
 	else
 	{
-		const UInt dataSize = 5;
-
-		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-		setVars(newVars, TRUE);
-
-		vars->length = math::min(vars->size - 1, wCharToUTF8(&character, 1, (Char*)vars->data, vars->size));
-		vars->data[vars->length] = 0;
+		initBuffer(8);
+		vars->length = wCharToUTF8(&character, 1, (Char*)vars->data, vars->size);
 	}
 }
 
@@ -151,26 +759,15 @@ String::String(Char text[])
 	{
 		if (textLength == 0) return;
 
-		const UInt dataSize = 2;
-
-		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-		setVars(newVars, TRUE);
-
+		initBuffer(4);
 		vars->data[0] = (Byte)text[0];
-		vars->data[1] = 0;
 		vars->length = 1;
 	}
 	else
 	{
-		UInt dataSize = textLength * 2 + 1;
-
-		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-		setVars(newVars, TRUE);
-
-		vars->length = math::min(vars->size - 1, charToUTF8(text, textLength, (Char*)vars->data, vars->size));
-		vars->data[vars->length] = 0;
+		initBuffer(textLength);
+		utility::memoryCopy(text, vars->data, textLength);
+		vars->length = textLength;
 	}
 }
 
@@ -183,26 +780,15 @@ String::String(const Char text[])
 	{
 		if (textLength == 0) return;
 
-		const UInt dataSize = 2;
-
-		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-		setVars(newVars, TRUE);
-
+		initBuffer(4);
 		vars->data[0] = (Byte)text[0];
-		vars->data[1] = 0;
 		vars->length = 1;
 	}
 	else
 	{
-		UInt dataSize = textLength * 2 + 1;
-
-		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-		setVars(newVars, TRUE);
-
-		vars->length = math::min(vars->size - 1, charToUTF8(text, textLength, (Char*)vars->data, vars->size));
-		vars->data[vars->length] = 0;
+		initBuffer(textLength);
+		utility::memoryCopy((Pointer)&text[0], vars->data, textLength);
+		vars->length = textLength;
 	}
 }
 
@@ -215,26 +801,14 @@ String::String(WChar text[])
 
 	if (textLength == 1 && (UInt)text[0] < 256)
 	{
-		const UInt dataSize = 2;
-
-		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-		setVars(newVars, TRUE);
-
+		initBuffer(4);
 		vars->data[0] = (Byte)text[0];
-		vars->data[1] = 0;
 		vars->length = 1;
 	}
 	else
 	{
-		UInt dataSize = textLength * 4 + 1;
-
-		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-		setVars(newVars, TRUE);
-
-		vars->length = math::min(vars->size - 1, wCharToUTF8(text, textLength, (Char*)vars->data, vars->size));
-		vars->data[vars->length] = 0;
+		initBuffer(textLength * 4 + 4);
+		vars->length = wCharToUTF8(text, textLength, (Char*)vars->data, vars->size);
 	}
 }
 
@@ -247,26 +821,14 @@ String::String(const WChar text[])
 
 	if (textLength == 1 && (UInt)text[0] < 256)
 	{
-		const UInt dataSize = 2;
-
-		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-		setVars(newVars, TRUE);
-
+		initBuffer(4);
 		vars->data[0] = (Byte)text[0];
-		vars->data[1] = 0;
 		vars->length = 1;
 	}
 	else
 	{
-		UInt dataSize = textLength * 4 + 1;
-
-		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-		setVars(newVars, TRUE);
-
-		vars->length = math::min(vars->size - 1, wCharToUTF8(text, textLength, (Char*)vars->data, vars->size));
-		vars->data[vars->length] = 0;
+		initBuffer(textLength * 4 + 4);
+		vars->length = wCharToUTF8(text, textLength, (Char*)vars->data, vars->size);
 	}
 }
 
@@ -274,18 +836,17 @@ String::String(Array<Char> text)
 {
 	if (text.isEmpty()) return;
 
-	Char* textData = text.data();
-	UInt textLength = text.size();
+	UInt textLength = 0;
+	Char *textData = text.data();
+	for (; textLength < text.size(); textLength++)
+	{
+		if (textData[textLength] == 0) break;
+	}
+	if (textLength == 0) return;
 
-	UInt dataSize = textLength * 2 + 1;
-
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	vars->length = math::min(vars->size - 1, charToUTF8(textData, textLength, (Char*)vars->data, vars->size));
-	vars->data[vars->length] = 0;
-	vars->length = lengthChar((Char*)vars->data);
+	initBuffer(textLength);
+	utility::memoryCopy(text.data(), vars->data, textLength);
+	vars->length = textLength;
 }
 
 String::String(Array<WChar> text)
@@ -295,428 +856,466 @@ String::String(Array<WChar> text)
 	WChar *textData = text.data();
 	UInt textLength = text.size();
 
-	UInt dataSize = textLength * 4 + 1;
-
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	vars->length = math::min(vars->size - 1, wCharToUTF8(textData, textLength, (Char*)vars->data, vars->size));
-	vars->data[vars->length] = 0;
-	vars->length = lengthChar((Char*)vars->data);
+	initBuffer(textLength * 4 + 4);
+	vars->length = wCharToUTF8(textData, textLength, (Char*)vars->data, vars->size);
 }
 
 String::String(Bool val)
 {
-	const UInt dataSize = 6;
-
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	if (val)
-	{
-		vars->data[0] = 'T';
-		vars->data[1] = 'R';
-		vars->data[2] = 'U';
-		vars->data[3] = 'E';
-		vars->data[4] = 0;
-		vars->length = 4;
-	}
-	else
-	{
-		vars->data[0] = 'F';
-		vars->data[1] = 'A';
-		vars->data[2] = 'L';
-		vars->data[3] = 'S';
-		vars->data[4] = 'E';
-		vars->data[5] = 0;
-		vars->length = 5;
-	}
+	initBuffer(8);
+	vars->length = writeBool(val, vars->data);
 }
 
 String::String(Byte val)
 {
-	const UInt dataSize = 16;
-
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	UInt length = printToString((Char*)vars->data, 16, "%u", (UInt)val);
-	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
+	initBuffer(4);
+	vars->length = writeByte(val, vars->data);
 }
 
 String::String(Word val)
 {
-	const UInt dataSize = 16;
-
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	UInt length = printToString((Char*)vars->data, 16, "%u", (UInt)val);
-	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
+	initBuffer(8);
+	vars->length = writeWord(val, vars->data);
 }
 
 String::String(UInt val)
 {
-	const UInt dataSize = 16;
-
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	UInt length = printToString((Char*)vars->data, 16, "%u", val);
-	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
+	initBuffer(16);
+	vars->length = writeUInt(val, vars->data);
 }
 
 String::String(UInt val, UInt nDigits)
 {
-	UInt dataSize = nDigits + 1;
+	SPADAS_ERROR_RETURN(nDigits == 0 || nDigits > 10);
 
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	UInt *units = new UInt[nDigits];
-	for (UInt i = 0; i < nDigits; i++)
+	UInt validDigits = 1;
+	if (val >= 100000)
 	{
-		units[i] = val % 10;
+		if (val >= 10000000)
+		{
+			if (val >= 1000000000) validDigits = 10;
+			else if (val >= 100000000) validDigits = 9;
+			else validDigits = 8;
+		}
+		else
+		{
+			if (val >= 1000000) validDigits = 7;
+			else validDigits = 6;
+		}
+	}
+	else
+	{
+		if (val >= 1000)
+		{
+			if (val >= 10000) validDigits = 5;
+			else validDigits = 4;
+		}
+		else
+		{
+			if (val >= 100) validDigits = 3;
+			else if (val >= 10) validDigits = 2;
+		}
+	}
+	SPADAS_ERROR_RETURN(validDigits > nDigits);
+
+	initBuffer(nDigits);
+	for (UInt i = 0; i < nDigits - validDigits; i++)
+	{
+		vars->data[i] = 48;
+	}
+	for (UInt i = 0; i < validDigits; i++)
+	{
+		vars->data[nDigits - 1 - i] = val % 10 + 48;
 		val /= 10;
 	}
-
-	for (UInt i = 0; i < nDigits; i++)
-	{
-		vars->data[i] = (Char)(units[nDigits - i - 1] + 48);
-	}
-	vars->data[nDigits] = 0;
 	vars->length = nDigits;
-
-	delete[] units;
 }
 
 String::String(ULong val)
 {
-	const UInt dataSize = 32;
-
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	UInt length = printToString((Char*)vars->data, 32, "%llu", val);
-	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
+	initBuffer(32);
+	vars->length = writeULong(val, vars->data);
 }
 
 String::String(ULong val, UInt nDigits)
 {
-	UInt dataSize = nDigits + 1;
+	SPADAS_ERROR_RETURN(nDigits == 0 || nDigits > 20);
 
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	UInt *units = new UInt[nDigits];
-	for (UInt i = 0; i < nDigits; i++)
+	UInt validDigits = 1;
+	if (val >= 10000000000ull)
 	{
-		units[i] = (UInt)(val % 10);
+		if (val >= 1000000000000000ull)
+		{
+			if (val >= 100000000000000000ull)
+			{
+				if (val >= 10000000000000000000ull) validDigits = 20;
+				else if (val >= 1000000000000000000ull) validDigits = 19;
+				else validDigits = 18;
+			}
+			else
+			{
+				if (val >= 10000000000000000ull) validDigits = 17;
+				else validDigits = 16;
+			}
+		}
+		else
+		{
+			if (val >= 10000000000000ull)
+			{
+				if (val >= 100000000000000ull) validDigits = 15;
+				else validDigits = 14;
+			}
+			else
+			{
+				if (val >= 1000000000000ull) validDigits = 13;
+				else if (val >= 100000000000ull) validDigits = 12;
+				else validDigits = 11;
+			}
+		}
+	}
+	else
+	{
+		if (val >= 100000ull)
+		{
+			if (val >= 10000000ull)
+			{
+				if (val >= 1000000000ull) validDigits = 10;
+				else if (val >= 100000000ull) validDigits = 9;
+				else validDigits = 8;
+			}
+			else
+			{
+				if (val >= 1000000ull) validDigits = 7;
+				else validDigits = 6;
+			}
+		}
+		else
+		{
+			if (val >= 1000ull)
+			{
+				if (val >= 10000ull) validDigits = 5;
+				else validDigits = 4;
+			}
+			else
+			{
+				if (val >= 100ull) validDigits = 3;
+				else if (val >= 10ull) validDigits = 2;
+			}
+		}
+	}
+	SPADAS_ERROR_RETURN(validDigits > nDigits);
+
+	initBuffer(nDigits);
+	for (UInt i = 0; i < nDigits - validDigits; i++)
+	{
+		vars->data[i] = 48;
+	}
+	for (UInt i = 0; i < validDigits; i++)
+	{
+		vars->data[nDigits - 1 - i] = val % 10 + 48;
 		val /= 10;
 	}
-
-	for (UInt i = 0; i < nDigits; i++)
-	{
-		vars->data[i] = (Char)(units[nDigits - i - 1] + 48);
-	}
-	vars->data[nDigits] = 0;
 	vars->length = nDigits;
-
-	delete[] units;
 }
 
 String::String(Short val)
 {
-	const UInt dataSize = 16;
-
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	UInt length = printToString((Char*)vars->data, 16, "%d", (Int)val);
-	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
+	initBuffer(8);
+	vars->length = writeShort(val, vars->data);
 }
 
 String::String(Int val)
 {
-	const UInt dataSize = 16;
-
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	UInt length = printToString((Char*)vars->data, 16, "%d", val);
-	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
+	initBuffer(16);
+	vars->length = writeInt(val, vars->data);
 }
 
 String::String(Long val)
 {
-	const UInt dataSize = 32;
-
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	UInt length = printToString((Char*)vars->data, 32, "%lld", val);
-	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
+	initBuffer(32);
+	vars->length = writeLong(val, vars->data);
 }
 
 String::String(Float val)
 {
-	const UInt dataSize = 32;
-
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	UInt length = printToString((Char*)vars->data, 32, "%.3f", val);
-	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
+	Float valPos = math::abs(val);
+	if (valPos <= 0.000001f)
+	{
+		initBuffer(4);
+		vars->data[0] = (Byte)'0';
+		vars->length = 1;
+	}
+	else
+	{
+		initBuffer(32);
+		vars->length = writeFloat(val, valPos, vars->data);
+	}
 }
 
 String::String(Double val)
 {
-	const UInt dataSize = 64;
-
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	UInt length = printToString((Char*)vars->data, 64, "%.3lf", val);
-	vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
+	Double valPos = math::abs(val);
+	if (valPos <= 0.0000000001)
+	{
+		initBuffer(4);
+		vars->data[0] = (Byte)'0';
+		vars->length = 1;
+	}
+	else
+	{
+		initBuffer(64);
+		vars->length = writeDouble(val, valPos, vars->data);
+	}
 }
 
 String::String(Float val, UInt nDigits)
 {
-	const UInt dataSize = 48;
+	SPADAS_ERROR_RETURN(nDigits == 0 || nDigits > 9);
 
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	if (nDigits == UINF)
+	Float valPos = math::abs(val);
+	if (valPos >= 1000000.0f)
 	{
-		Int length = 0;
-		if (doubleToPrettyString((Double)val, (Char*)vars->data, length))
+		initBuffer(64);
+		Char format[16];
+		printToString(format, 16, "%%.%df", nDigits);
+		vars->length = printToString((Char*)vars->data, 64, format, val);
+		return;
+	}
+
+	initBuffer(32);
+
+	UInt intValPos = (UInt)valPos;
+	Float floatValPos = valPos - intValPos;
+	UInt intDigits = 1;
+	if (intValPos >= 100)
+	{
+		if (intValPos >= 10000)
 		{
-			vars->length = length;
+			if (intValPos >= 100000) intDigits = 6;
+			else intDigits = 5;
 		}
 		else
 		{
-			if (val >= 0) val = FINF;
-			else val = NFINF;
-			printToString((Char*)vars->data, 48, "%f", val);
+			if (intValPos >= 1000) intDigits = 4;
+			else intDigits = 3;
 		}
 	}
 	else
 	{
-		Char format[16];
-		printToString(format, 16, "%%.%df", math::min(nDigits, 10u));
-
-		UInt length = printToString((Char*)vars->data, 48, format, val);
-		vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
+		if (intValPos >= 10) intDigits = 2;
 	}
+
+	UInt curIndex = 0;
+	if (val < 0) vars->data[curIndex++] = '-';
+	for (Int i = intDigits - 1; i >= 0; i--)
+	{
+		vars->data[curIndex + i] = intValPos % 10 + 48;
+		intValPos /= 10;
+	}
+	curIndex += intDigits;
+
+	if (nDigits == 0)
+	{
+		vars->length = curIndex;
+		return;
+	}
+
+	initTenPowers();
+
+	vars->data[curIndex++] = '.';
+
+	ULong floatValPosClip = (ULong)math::round(floatValPos * tenPowers[nDigits]);
+	if (floatValPosClip >= tenPowers[nDigits]) floatValPosClip = tenPowers[nDigits] - 1;
+
+	for (Int i = (Int)nDigits - 1; i >= 0; i--)
+	{
+		vars->data[curIndex + i] = floatValPosClip % 10 + 48;
+		floatValPosClip /= 10;
+	}
+	curIndex += nDigits;
+
+	vars->length = curIndex;
 }
 
 String::String(Double val, UInt nDigits)
 {
-	const UInt dataSize = 64;
+	SPADAS_ERROR_RETURN(nDigits == 0 || nDigits > 18);
 
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	if (nDigits == UINF)
+	Double valPos = math::abs(val);
+	if (valPos >= 1000000000000000.0)
 	{
-		Int length = 0;
-		if (doubleToPrettyString(val, (Char*)vars->data, length))
+		initBuffer(384);
+		Char format[16];
+		printToString(format, 16, "%%.%dlf", nDigits);
+		vars->length = printToString((Char*)vars->data, 384, format, val);
+		return;
+	}
+
+	initBuffer(64);
+
+	ULong intValPos = (ULong)valPos;
+	Double floatValPos = valPos - intValPos;
+	UInt intDigits = 1;
+	if (intValPos >= 10000ull)
+	{
+		if (intValPos >= 100000000ull)
 		{
-			vars->length = length;
+			if (intValPos >= 1000000000000ull)
+			{
+				if (intValPos >= 100000000000000ull) intDigits = 15;
+				else if (intValPos >= 10000000000000ull) intDigits = 14;
+				else intDigits = 13;
+			}
+			else
+			{
+				if (intValPos >= 10000000000ull)
+				{
+					if (intValPos >= 100000000000ull) intDigits = 12;
+					else intDigits = 11;
+				}
+				else
+				{
+					if (intValPos >= 1000000000ull) intDigits = 10;
+					else intDigits = 9;
+				}
+			}
 		}
 		else
 		{
-			if (val >= 0) val = DINF;
-			else val = NDINF;
-			printToString((Char*)vars->data, 64, "%lf", val);
+			if (intValPos >= 1000000ull)
+			{
+				if (intValPos >= 10000000ull) intDigits = 8;
+				else intDigits = 7;
+			}
+			else
+			{
+				if (intValPos >= 100000ull) intDigits = 6;
+				else intDigits = 5;
+			}
 		}
 	}
 	else
 	{
-		Char format[16];
-		printToString(format, 16, "%%.%dlf", math::min(nDigits, 20u));
-
-		UInt length = printToString((Char*)vars->data, 64, format, val);
-		vars->length = length == UINF ? lengthChar((Char*)vars->data) : length;
+		if (intValPos >= 100ull)
+		{
+			if (intValPos >= 1000ull) intDigits = 4;
+			else intDigits = 3;
+		}
+		else
+		{
+			if (intValPos >= 10ull) intDigits = 2;
+		}
 	}
+
+	UInt curIndex = 0;
+	if (val < 0) vars->data[curIndex++] = '-';
+	for (Int i = intDigits - 1; i >= 0; i--)
+	{
+		vars->data[curIndex + i] = intValPos % 10 + 48;
+		intValPos /= 10;
+	}
+	curIndex += intDigits;
+
+	if (nDigits == 0)
+	{
+		vars->length = curIndex;
+		return;
+	}
+
+	initTenPowers();
+
+	vars->data[curIndex++] = '.';
+
+	ULong floatValPosClip = (ULong)math::round(floatValPos * tenPowers[nDigits]);
+	if (floatValPosClip >= tenPowers[nDigits]) floatValPosClip = tenPowers[nDigits] - 1;
+
+	for (Int i = (Int)nDigits - 1; i >= 0; i--)
+	{
+		vars->data[curIndex + i] = floatValPosClip % 10 + 48;
+		floatValPosClip /= 10;
+	}
+	curIndex += nDigits;
+
+	vars->length = curIndex;
 }
 
 String::String(Binary binary)
 {
     if (binary.isEmpty()) return;
 
-	Byte* binData = binary.data();
-	UInt binSize = binary.size();
+	UInt textLength = 0;
+	Byte *textData = binary.data();
+	for (; textLength < binary.size(); textLength++)
+	{
+		if (textData[textLength] == 0) break;
+	}
+	if (textLength == 0) return;
 
-	UInt dataSize = binSize + 1;
-
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	utility::memoryCopy(binData, vars->data, binSize);
-	vars->data[binSize] = 0;
-	vars->length = lengthChar((Char*)vars->data);
-}
-
-String::String(String src, Region region)
-{
-	if (src.isEmpty()) return;
-
-	UInt srcLength = src.length();
-    Int startIndex = region.offset, endIndex = (region.size == UINF ? INF : (region.offset + (Int)region.size - 1));
-	if (region.size == 0 || startIndex >= (Int)srcLength || endIndex < 0) return;
-    
-    startIndex = math::max(0, startIndex);
-    endIndex = math::min((Int)srcLength - 1, endIndex);
-    Int length = endIndex + 1 - startIndex;
-	if (length <= 0) return;
-
-	UInt dataSize = length + 1;
-
-	Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-	StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-	setVars(newVars, TRUE);
-
-	utility::memoryCopy(&src.vars->data[startIndex], vars->data, length);
-	vars->data[length] = 0;
-    vars->length = length;
+	initBuffer(textLength);
+	utility::memoryCopy(binary.data(), vars->data, textLength);
+	vars->length = textLength;
 }
 
 Bool String::operator ==(String string)
 {
-	if (isEmpty())
+	if (length() == 0)
 	{
-		return string.isEmpty();
+		return string.length() == 0;
 	}
 	else
 	{
-		if (string.isEmpty()) return FALSE;
-		else return compareString((Char*)vars->data, (Char*)string.vars->data) == 0;
+		if (string.length() == 0) return FALSE;
+		else return compareString(vars->data, vars->length, string.vars->data, string.vars->length) == 0;
 	}
 }
 
 Bool String::operator !=(String string)
 {
-	if (isEmpty())
+	if (length() == 0)
 	{
-		return !string.isEmpty();
+		return string.length() != 0;
 	}
 	else
 	{
-		if (string.isEmpty()) return TRUE;
-		else return compareString((Char*)vars->data, (Char*)string.vars->data) != 0;
+		if (string.length() == 0) return TRUE;
+		else return compareString(vars->data, vars->length, string.vars->data, string.vars->length) != 0;
 	}
 }
 
 Bool String::operator >(String string)
 {
-	if (isEmpty())
+	if (length() == 0)
 	{
 		return FALSE;
 	}
 	else
 	{
-		if (string.isEmpty()) return TRUE;
-		else return compareString((Char*)vars->data, (Char*)string.vars->data) > 0;
+		if (string.length() == 0) return TRUE;
+		else return compareString(vars->data, vars->length, string.vars->data, string.vars->length) > 0;
 	}
 }
 
 Bool String::operator <(String string)
 {
-	if (isEmpty())
+	if (length() == 0)
 	{
-		return !string.isEmpty();
+		return string.length() != 0;
 	}
 	else
 	{
-		if (string.isEmpty()) return FALSE;
-		else return compareString((Char*)vars->data, (Char*)string.vars->data) < 0;
+		if (string.length() == 0) return FALSE;
+		else return compareString(vars->data, vars->length, string.vars->data, string.vars->length) < 0;
 	}
 }
 
 Word String::getHash()
 {
-	if (isEmpty()) return 0;
-	UInt hash = 0;
-	for (UInt i = 0; i < vars->length; i++)
-	{
-		hash += (UInt)vars->data[i];
-		hash *= 3;
-	}
-	return (Word)(hash & 0x0000ffff);
+	return getHashCode();
 }
 
-String String::clone()
+const Byte *String::bytes()
 {
-	if (isEmpty()) return String();
-
-	UInt length = vars->length;
-	String out = String::createWithSize(length + 1);
-	Byte* dstData = out.vars->data;
-	utility::memoryCopy(vars->data, dstData, length);
-	dstData[length] = 0;
-	out.vars->length = length;
-	return out;
-}
-
-void String::updateLength()
-{
-	if (!vars) return;
-	vars->length = lengthChar((Char*)vars->data);
-}
-
-Byte *String::bytes()
-{
-	if (!vars)
-	{
-		staticZeroByte = 0;
-		return &staticZeroByte;
-	}
-	else return vars->data;
-}
-
-UInt String::byteSize()
-{
-	return vars ? vars->size : 0;
-}
-
-Array<Char> String::chars()
-{
-	if (isEmpty()) return Array<Char>::scalar(0);
-
-	Array<Char> output(vars->length * 2 + 1);
-	UInt outputLength = utf8ToChar((Char*)vars->data, vars->length, output.data(), output.size());
-	output[outputLength] = 0;
-	output.trim(outputLength + 1);
-	return output;
-}
-
-Array<WChar> String::wchars()
-{
-	if (isEmpty()) return Array<WChar>::scalar(0);
-
-	Array<WChar> output(vars->length + 1);
-	UInt outputLength = utf8ToWChar((Char*)vars->data, vars->length, output.data(), output.size());
-	output[outputLength] = 0;
-	output.trim(outputLength + 1);
-	return output;
+	return vars ? vars->data : NULL;
 }
 
 UInt String::length()
@@ -724,311 +1323,306 @@ UInt String::length()
 	return vars ? vars->length : 0;
 }
 
-Bool String::isEmpty()
+void String::ensureBuffer(UInt appendSize)
 {
-	return !vars || vars->length == 0/* like createWithSize, updateLength, etc. */;
-}
-
-void String::operator +=(String append)
-{
-	if (append.isEmpty()) return;
-
-	UInt appendLength = append.vars->length;
 	if (!vars)
 	{
-		UInt dataSize = appendLength + 1;
-
-		Byte* newVarsRaw = new Byte[sizeof(StringVars) + dataSize];
-		StringVars* newVars = new (newVarsRaw)StringVars(dataSize, &newVarsRaw[sizeof(StringVars)]);
-		setVars(newVars, TRUE);
-
-		utility::memoryCopy(append.vars->data, vars->data, appendLength);
-		vars->data[appendLength] = 0;
-		vars->length = appendLength;
-
+		initBuffer(appendSize);
 		return;
 	}
 
 	UInt originLength = vars->length;
-	UInt totalLength = originLength + appendLength;
-	if (totalLength + 1 > vars->size)
+	UInt totalLength = originLength + appendSize;
+	if (totalLength > vars->size)
 	{
-		Byte *dstData = new Byte[(totalLength + 1) * 2];
+		Byte *dstData = new Byte[totalLength * 2];
 		utility::memoryCopy(vars->data, dstData, originLength);
 		if (vars->extData) delete[] vars->extData;
 		vars->data = vars->extData = dstData;
-		vars->size = (totalLength + 1) * 2;
+		vars->size = totalLength * 2;
 	}
+}
 
+void String::operator +=(String append)
+{
+	UInt appendLength = append.length();
+	if (appendLength == 0) return;
+
+	UInt originLength = length();
+	
+	ensureBuffer(appendLength);
 	utility::memoryCopy(append.vars->data, &vars->data[originLength], appendLength);
-	vars->data[totalLength] = 0;
-	vars->length = totalLength;
+	vars->length = originLength + appendLength;
 }
 
-String String::operator +(String append)
+void String::operator +=(StringSpan span)
 {
-	if (isEmpty()) return append.clone();
-	if (append.isEmpty()) return clone();
+	UInt appendLength = span.length();
+	if (appendLength == 0) return;
 
-	UInt originLength = vars->length;
-	UInt appendLength = append.vars->length;
-	UInt totalLength = originLength + appendLength;
-
-	String out = String::createWithSize(originLength + appendLength + 1);
-	utility::memoryCopy(vars->data, out.vars->data, originLength);
-	utility::memoryCopy(append.vars->data, &out.vars->data[originLength], appendLength);
-	out.vars->data[totalLength] = 0;
-	out.vars->length = totalLength;
-	return out;
+	UInt originLength = length();
+	
+	ensureBuffer(appendLength);
+	utility::memoryCopy(span.bytes(), &vars->data[originLength], appendLength);
+	vars->length = originLength + appendLength;
 }
 
-Optional<Int> String::toInt()
+void String::operator +=(Char character)
 {
-	if (isEmpty()) return Optional<Int>();
+	if (character == 0) return;
 
-	Int val;
-	if (scanFromString((Char*)vars->data, vars->size, "%d", &val)) return val;
-	else return Optional<Int>();
+	UInt originLength = vars ? vars->length : 0;
+	ensureBuffer(4);
+	vars->data[originLength] = (Byte)character;
+	vars->length = originLength + 1;
 }
 
-Optional<Long> String::toLong()
+void String::operator +=(WChar character)
 {
-	if (isEmpty()) return Optional<Long>();
-
-	Long val;
-	if (scanFromString((Char*)vars->data, vars->size, "%lld", &val)) return val;
-	else return Optional<Long>();
-}
-
-Optional<Float> String::toFloat()
-{
-	if (isEmpty()) return Optional<Float>();
-
-	Float val;
-	if (scanFromString((Char*)vars->data, vars->size, "%f", &val)) return val;
-	else return Optional<Float>();
-}
-
-Optional<Double> String::toDouble()
-{
-	if (isEmpty()) return Optional<Double>();
-
-	Double val;
-	if (scanFromString((Char*)vars->data, vars->size, "%lf", &val)) return val;
-	else return Optional<Double>();
-}
-
-String String::toUpper()
-{
-	if (isEmpty()) return String();
-
-	String out = clone();
-	Byte *data = out.vars->data;
-	UInt length = vars->length;
-	for (UInt i = 0; i < length; i++)
+	if ((UInt)character < 256)
 	{
-		if (data[i] >= 97 && data[i] <= 122) data[i] -= 32;
+		if (character == 0) return;
+
+		UInt originLength = vars ? vars->length : 0;
+		ensureBuffer(4);
+		vars->data[originLength] = (Byte)character;
+		vars->length = originLength + 1;
 	}
-	return out;
+	else
+	{
+		UInt originLength = vars ? vars->length : 0;
+		ensureBuffer(8);
+		vars->length = originLength + wCharToUTF8(&character, 1, (Char*)&vars->data[originLength], vars->size - originLength);
+	}
 }
 
-String String::toLower()
+void String::operator +=(Char text[])
 {
-	if (isEmpty()) return String();
+	if (text == 0) return;
 
-	String out = clone();
-	Byte *data = out.vars->data;
-	UInt length = vars->length;
-	for (UInt i = 0; i < length; i++)
+	UInt textLength = lengthChar(text);
+	if (textLength <= 1)
 	{
-		if (data[i] >= 65 && data[i] <= 90) data[i] += 32;
+		if (textLength == 0) return;
+
+		UInt originLength = vars ? vars->length : 0;
+		ensureBuffer(4);
+		vars->data[originLength] = (Byte)text[0];
+		vars->length = originLength + 1;
 	}
-	return out;
+	else
+	{
+		UInt originLength = vars ? vars->length : 0;
+		ensureBuffer(textLength);
+		utility::memoryCopy(text, &vars->data[originLength], textLength);
+		vars->length = originLength + textLength;
+	}
 }
 
-Bool String::startsWith(String target)
+void String::operator +=(const Char text[])
 {
-	if (isEmpty() || target.isEmpty()) return FALSE;
+	if (text == 0) return;
 
-	UInt srcLength = vars->length;
-	UInt targetLength = target.vars->length;
-	if (targetLength == 0 || targetLength > srcLength) return FALSE;
-
-	Byte *srcData = vars->data;
-	Byte *targetData = target.vars->data;
-	for (UInt i = 0; i < targetLength; i++)
+	UInt textLength = lengthChar(text);
+	if (textLength <= 1)
 	{
-		if (srcData[i] != targetData[i]) return FALSE;
+		if (textLength == 0) return;
+
+		UInt originLength = vars ? vars->length : 0;
+		ensureBuffer(4);
+		vars->data[originLength] = (Byte)text[0];
+		vars->length = originLength + 1;
 	}
-	return TRUE;
+	else
+	{
+		UInt originLength = vars ? vars->length : 0;
+		ensureBuffer(textLength);
+		utility::memoryCopy((Pointer)&text[0], &vars->data[originLength], textLength);
+		vars->length = originLength + textLength;
+	}
 }
 
-Bool String::endsWith(String target)
+void String::operator +=(WChar text[])
 {
-	if (isEmpty() || target.isEmpty()) return FALSE;
+	if (text == 0) return;
 
-	UInt srcLength = vars->length;
-	UInt targetLength = target.vars->length;
-	if (targetLength == 0 || targetLength > srcLength) return FALSE;
+	UInt textLength = lengthWChar(text);
+	if (textLength == 0) return;
 
-	Byte *srcData = vars->data;
-	Byte *targetData = target.vars->data;
-	UInt offset = srcLength - targetLength;
-	for (UInt i = 0; i < targetLength; i++)
+	UInt originLength = vars ? vars->length : 0;
+	if (textLength == 1 && (UInt)text[0] < 256)
 	{
-		if (srcData[offset + i] != targetData[i]) return FALSE;
+		ensureBuffer(4);
+		vars->data[originLength] = (Byte)text[0];
+		vars->length = originLength + 1;
 	}
-	return TRUE;
+	else
+	{
+		ensureBuffer(textLength * 4 + 4);
+		vars->length = originLength + wCharToUTF8(text, textLength, (Char*)&vars->data[originLength], vars->size - originLength);
+	}
 }
 
-Binary String::toBinary()
+void String::operator +=(const WChar text[])
 {
-	if (isEmpty()) return Binary();
-	else return Binary(vars->data, vars->length);
+	if (text == 0) return;
+
+	UInt textLength = lengthWChar(text);
+	if (textLength == 0) return;
+
+	UInt originLength = vars ? vars->length : 0;
+	if (textLength == 1 && (UInt)text[0] < 256)
+	{
+		ensureBuffer(4);
+		vars->data[originLength] = (Byte)text[0];
+		vars->length = originLength + 1;
+	}
+	else
+	{
+		ensureBuffer(textLength * 4 + 4);
+		vars->length = originLength + wCharToUTF8(text, textLength, (Char*)&vars->data[originLength], vars->size - originLength);
+	}
 }
 
-Array<UInt> String::search(String string)
+void String::operator +=(Array<Char> text)
 {
-	if (isEmpty()) return Array<UInt>();
+	if (text.isEmpty()) return;
 
-	SPADAS_ERROR_RETURNVAL(string.isEmpty(), Array<UInt>());
-
-	UInt subLength = string.vars->length;
-	Byte *subData = string.vars->data;
-
-	UInt srcLength = vars->length;
-
-	if (subLength > srcLength) return Array<UInt>();
-
-	Array<UInt> bufIndices(srcLength);
-	UInt nBufIndices = 0;
-
-	for (UInt i = 0; i <= srcLength - subLength; i++)
+	UInt textLength = 0;
+	Char *textData = text.data();
+	for (; textLength < text.size(); textLength++)
 	{
-		Bool match = TRUE;
-		for (UInt n = 0, j = i; n < subLength; n++, j++)
-		{
-			if (vars->data[j] != subData[n])
-			{
-				match = FALSE;
-				break;
-			}
-		}
-
-		if (match)
-		{
-			bufIndices[nBufIndices++] = i;
-		}
+		if (textData[textLength] == 0) break;
 	}
+	if (textLength == 0) return;
 
-	bufIndices.trim(nBufIndices);
-
-	return bufIndices;
+	UInt originLength = vars ? vars->length : 0;
+	ensureBuffer(textLength);
+	utility::memoryCopy(text.data(), &vars->data[originLength], textLength);
+	vars->length = originLength + textLength;
 }
 
-Array<String> String::split(String string)
+void String::operator +=(Array<WChar> text)
 {
-	if (isEmpty()) return Array<String>();
-	SPADAS_ERROR_RETURNVAL(string.isEmpty(), Array<String>());
+	if (text.isEmpty()) return;
 
-	UInt length = string.vars->length;
+	WChar *textData = text.data();
+	UInt textLength = text.size();
 
-	Array<UInt> rawMatches = search(string);
-	
-	UInt nRawMatches = rawMatches.size();
-	if (nRawMatches == 0) return Array<String>::scalar(clone());
-	
-	Array<UInt> matches(nRawMatches);
-	UInt nMatches = 0;
-	matches[nMatches++] = rawMatches[0];
-	for (UInt i = 1; i < nRawMatches; i++)
-	{
-		if (rawMatches[i] < matches[nMatches - 1] + length) continue;
-		matches[nMatches++] = rawMatches[i];
-	}
-	matches.trim(nMatches);
-	
-	UInt outSize = nMatches + 1;
-	Array<String> out = Array<String>::createUninitialized(outSize);
-	
-	UInt index = 0;
-	out.initialize(index++, String(*this, Region(0, matches[0])));
-	for (UInt i = 0; i < nMatches - 1; i++)
-	{
-		out.initialize(index++, String(*this, Region(matches[i] + length, math::max((Int)matches[i+1] - (Int)matches[i] - (Int)length, 0))));
-	}
-	out.initialize(index++, String(*this, Region(matches[nMatches-1] + length, UINF)));
-	
-	return out;
+	UInt originLength = vars ? vars->length : 0;
+	ensureBuffer(textLength * 4 + 4);
+	vars->length = originLength + wCharToUTF8(textData, textLength, (Char*)&vars->data[originLength], vars->size - originLength);
 }
 
-String String::replace(String oldString, String newString)
+void String::operator +=(Bool val)
 {
-	if (isEmpty()) return String();
-	SPADAS_ERROR_RETURNVAL(oldString.isEmpty(), *this);
+	UInt originLength = vars ? vars->length : 0;
+	ensureBuffer(8);
+	vars->length = originLength + writeBool(val, &vars->data[originLength]);
+}
 
-	UInt srcStringLength = vars->length;
-	UInt oldStringLength = oldString.vars->length;
-	UInt newStringLength = newString.length(); // vars可能为空
-	
-	Array<UInt> rawMatches = search(oldString);
-	
-	UInt nRawMatches = rawMatches.size();
-	if (nRawMatches == 0) return clone();
-	
-	Array<UInt> matches(nRawMatches);
-	UInt nMatches = 0;
-	matches[nMatches++] = rawMatches[0];
-	for (UInt i = 1; i < nRawMatches; i++)
-	{
-		if (rawMatches[i] < matches[nMatches-1] + oldStringLength) continue;
-		matches[nMatches++] = rawMatches[i];
-	}
-	matches.trim(nMatches);
-	
-	String out = String::createWithSize(srcStringLength + nMatches * newStringLength - nMatches * oldStringLength + 1);
-	out.vars->length = srcStringLength + nMatches * newStringLength - nMatches * oldStringLength;
+void String::operator +=(Byte val)
+{
+	UInt originLength = vars ? vars->length : 0;
+	ensureBuffer(4);
+	vars->length = originLength + writeByte(val, &vars->data[originLength]);
+}
 
-	Byte *srcStringData = vars->data;
-	Byte *newStringData = newString.bytes(); // vars可能为空
-	Byte *outData = out.vars->data;
+void String::operator +=(Word val)
+{
+	UInt originLength = vars ? vars->length : 0;
+	ensureBuffer(8);
+	vars->length = originLength + writeWord(val, &vars->data[originLength]);
+}
 
-	UInt outIndex = 0;
-	if (matches[0] != 0)
+void String::operator +=(UInt val)
+{
+	UInt originLength = vars ? vars->length : 0;
+	ensureBuffer(16);
+	vars->length = originLength + writeUInt(val, &vars->data[originLength]);
+}
+
+void String::operator +=(ULong val)
+{
+	UInt originLength = vars ? vars->length : 0;
+	ensureBuffer(32);
+	vars->length = originLength + writeULong(val, &vars->data[originLength]);
+}
+
+void String::operator +=(Short val)
+{
+	UInt originLength = vars ? vars->length : 0;
+	ensureBuffer(8);
+	vars->length = originLength + writeShort(val, &vars->data[originLength]);
+}
+
+void String::operator +=(Int val)
+{
+	UInt originLength = vars ? vars->length : 0;
+	ensureBuffer(16);
+	vars->length = originLength + writeInt(val, &vars->data[originLength]);
+}
+
+void String::operator +=(Long val)
+{
+	UInt originLength = vars ? vars->length : 0;
+	ensureBuffer(32);
+	vars->length = originLength + writeLong(val, &vars->data[originLength]);
+}
+
+void String::operator +=(Float val)
+{
+	Float valPos = math::abs(val);
+	UInt originLength = vars ? vars->length : 0;
+	if (valPos <= 0.000001f)
 	{
-		utility::memoryCopy(&srcStringData[0], &outData[outIndex], matches[0]);
-		outIndex += matches[0];
+		ensureBuffer(4);
+		vars->data[originLength] = (Byte)'0';
+		vars->length = originLength + 1;
 	}
-	
-	for (UInt i = 0; i < nMatches - 1; i++)
+	else
 	{
-		if (newStringLength != 0)
-		{
-			utility::memoryCopy(newStringData, &outData[outIndex], newStringLength);
-			outIndex += newStringLength;
-		}
-		
-		UInt copySize = math::max((Int)matches[i+1] - (Int)matches[i] - (Int)oldStringLength, 0);
-		if (copySize != 0)
-		{
-			utility::memoryCopy(&srcStringData[matches[i] + oldStringLength], &outData[outIndex], copySize);
-			outIndex += copySize;
-		}
+		ensureBuffer(32);
+		vars->length = originLength + writeFloat(val, valPos, &vars->data[originLength]);
 	}
-	
-	if (newStringLength != 0)
+}
+
+void String::operator +=(Double val)
+{
+	Double valPos = math::abs(val);
+	UInt originLength = vars ? vars->length : 0;
+	if (valPos <= 0.0000000001)
 	{
-		utility::memoryCopy(newStringData, &outData[outIndex], newStringLength);
-		outIndex += newStringLength;
+		ensureBuffer(4);
+		vars->data[originLength] = (Byte)'0';
+		vars->length = originLength + 1;
 	}
-	
-	UInt copySize = math::max((Int)srcStringLength - (Int)matches[nMatches-1] - (Int)oldStringLength, 0);
-	if (copySize != 0)
+	else
 	{
-		utility::memoryCopy(&srcStringData[matches[nMatches-1] + oldStringLength], &outData[outIndex], copySize);
-		outIndex += copySize;
+		ensureBuffer(64);
+		vars->length = originLength + writeDouble(val, valPos, &vars->data[originLength]);
 	}
-	
-	outData[outIndex] = 0;
-	return out;
+}
+
+void String::operator +=(Binary binary)
+{
+    if (binary.isEmpty()) return;
+
+	UInt textLength = 0;
+	Byte *textData = binary.data();
+	for (; textLength < binary.size(); textLength++)
+	{
+		if (textData[textLength] == 0) break;
+	}
+	if (textLength == 0) return;
+
+	UInt originLength = vars ? vars->length : 0;
+	ensureBuffer(textLength);
+	utility::memoryCopy(binary.data(), &vars->data[originLength], textLength);
+	vars->length = originLength + textLength;
+}
+
+StringSpan String::genStringSpan(UInt index, UInt length)
+{
+	return StringSpan(*this, index, length);
 }

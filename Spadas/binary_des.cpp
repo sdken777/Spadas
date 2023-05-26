@@ -1,13 +1,5 @@
 ﻿
-#if defined(SPADAS_DEBUG)
-#undef SPADAS_DEBUG
-#endif
-
-#include "spadas.h"
-
 #include "binary.h"
-
-#include <iostream>
 #include <bitset>
 
 namespace des

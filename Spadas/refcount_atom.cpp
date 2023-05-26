@@ -1,6 +1,10 @@
 ﻿
 #include "spadas.h"
 
+#if !defined(SPADAS_ENV_NILRT)
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 using namespace spadas;
 
 Atom::Atom() : val(0)
@@ -11,11 +15,11 @@ Atom::Atom(Int val0) : val(val0)
 {
 }
 
-Int Atom::get()
+Int Atom::get() const
 {
 	return val;
 }
-void Atom::set(Int val0)
+void Atom::set(Int val0) const
 {
 	*(volatile Int*)&val = val0;
 }
@@ -24,46 +28,46 @@ void Atom::set(Int val0)
 
 #include <windows.h>
 
-Int Atom::increase()
+Int Atom::increase() const
 {
 	return (Int)InterlockedIncrement((volatile long*)&val);
 }
 
-Int Atom::decrease()
+Int Atom::decrease() const
 {
 	return (Int)InterlockedDecrement((volatile long*)&val);
 }
 
-Int Atom::add(Int number)
+Int Atom::add(Int number) const
 {
 	return (Int)InterlockedAdd((volatile long*)&val, (long)number);
 }
 
-Bool Atom::cas(Int oldVal, Int newVal)
+Bool Atom::cas(Int oldVal, Int newVal) const
 {
 	return (Int)InterlockedCompareExchange((volatile long*)&val, (long)newVal, (long)oldVal) == oldVal;
 }
 
 #endif
 
-#if defined(SPADAS_ENV_LINUX)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
 
-Int Atom::increase()
+Int Atom::increase() const
 {
 	return __atomic_add_fetch((volatile int *)&val, 1, __ATOMIC_ACQ_REL);
 }
 
-Int Atom::decrease()
+Int Atom::decrease() const
 {
 	return __atomic_sub_fetch((volatile int *)&val, 1, __ATOMIC_ACQ_REL);
 }
 
-Int Atom::add(Int number)
+Int Atom::add(Int number) const
 {
 	return __atomic_add_fetch((volatile int *)&val, number, __ATOMIC_ACQ_REL);
 }
 
-Bool Atom::cas(Int oldVal, Int newVal)
+Bool Atom::cas(Int oldVal, Int newVal) const
 {
 	return __atomic_compare_exchange((volatile int *)&val, &oldVal, &newVal, false, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED);
 }
@@ -74,22 +78,22 @@ Bool Atom::cas(Int oldVal, Int newVal)
 
 #include <libkern/OSAtomic.h>
 
-Int Atom::increase()
+Int Atom::increase() const
 {
 	return (Int)OSAtomicIncrement32Barrier((volatile int32_t *)&val);
 }
 
-Int Atom::decrease()
+Int Atom::decrease() const
 {
 	return (Int)OSAtomicDecrement32Barrier((volatile int32_t *)&val);
 }
 
-Int Atom::add(Int number)
+Int Atom::add(Int number) const
 {
 	return (Int)OSAtomicAdd32Barrier((int32_t)number, (volatile int32_t *)&val);
 }
 
-Bool Atom::cas(Int oldVal, Int newVal)
+Bool Atom::cas(Int oldVal, Int newVal) const
 {
 	return OSAtomicCompareAndSwap32Barrier((int32_t)oldVal, (int32_t)newVal, (volatile int32_t *)&val);
 }

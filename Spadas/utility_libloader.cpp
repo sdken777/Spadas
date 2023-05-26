@@ -8,6 +8,8 @@
 #else
 #include <dlfcn.h>
 #include <unistd.h>
+#undef NULL
+#define NULL 0
 #endif
 
 namespace spadas
@@ -53,7 +55,7 @@ Bool LibraryLoader::openWithName(Path libDir, String libName, String libVersion,
 #if defined(SPADAS_ENV_WINDOWS)
 	Path libPath = libDir.childFile(libName + ".dll");
 #endif
-#if defined(SPADAS_ENV_LINUX)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
 	Path libPath = libDir.childFile(SS"lib" + libName + ".so" + versionPostfix);
 #endif
 #if defined(SPADAS_ENV_MACOS)
@@ -103,9 +105,9 @@ Bool LibraryLoader::openWithPath(Path libPath, String& errorMessage)
 
 	Path rootDir = libPath.parentFolder();
 	system::addEnvironmentPath(rootDir);
-	chdir((Char*)rootDir.fullPath().bytes());
+	chdir(rootDir.fullPath().chars().data());
 
-	vars->handle = (Pointer)dlopen((Char*)libPath.fullPath().bytes(), RTLD_NOW);
+	vars->handle = (Pointer)dlopen(libPath.fullPath().chars().data(), RTLD_NOW);
 	if (vars->handle == NULL)
 	{
 		errorMessage = dlerror();
@@ -140,6 +142,6 @@ Pointer LibraryLoader::getSymbol(String symbol)
 	return (Pointer)GetProcAddress(vars->module, symbol.chars().data());
 #else
 	SPADAS_ERROR_RETURNVAL(vars->handle == NULL, NULL);
-	return (Pointer)dlsym(vars->handle, (Char*)symbol.bytes());
+	return (Pointer)dlsym(vars->handle, symbol.chars().data());
 #endif
 }

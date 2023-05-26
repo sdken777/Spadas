@@ -1,21 +1,21 @@
 ﻿
-#include "spadas.h"
-
-#include "file.h"
-
 #if defined(SPADAS_ENV_WINDOWS)
 
+#include "file.h"
+#include "string_spadas.h"
+#include <stdio.h>
+#include <wchar.h>
 #include <windows.h>
+
 #undef TRUE
 #undef FALSE
 #undef min
 #undef max
 
-#include "spadas_support.h"
-
 namespace file_internal
 {
 	using namespace spadas;
+	using namespace string_internal;
 
 	// paths
 	String getExecutableFolderPathString()
@@ -27,7 +27,7 @@ namespace file_internal
 		Array<UInt> slashLocations = bufferString.search('\\');
 		
 		if (slashLocations.isEmpty()) return String();
-		else return String(bufferString, Region(0, slashLocations.last() + 1));
+		else return bufferString.subString(0, slashLocations.last() + 1);
 	}
 	String getWorkPathString()
 	{
@@ -60,103 +60,88 @@ namespace file_internal
 	// file I/O operations
 	Pointer fileOpen(String fileName, Bool outputMode)
 	{
-		return msvc_fopen(fileName.wchars().data(), outputMode ? L"wb+" : L"rb");
+		FILE *file;
+		_wfopen_s(&file, fileName.wchars().data(), outputMode ? L"wb+" : L"rb");
+		return (Pointer)file;
 	}
 
 	void fileClose(Pointer file)
 	{
-		msvc_fclose(file);
+		if (file) fclose((FILE*)file);
 	}
 
 	void filePrint(Pointer file, String text)
 	{
-		fileOutput(file, text.toBinary());
+		fwrite(text.bytes(), sizeof(Byte), text.length(), (FILE*)file);
 
-		const unsigned char enter = '\n';
-		msvc_fwrite(file, &enter, 1);
+		const Byte enter = '\n';
+		fwrite(&enter, sizeof(Byte), 1, (FILE*)file);
 	}
 
-	String fileScan(Pointer file, Char buf[SCAN_SIZE], Bool isUtf8)
+	String fileScan(Pointer file, Char buffer[SCAN_SIZE], Bool isUtf8)
 	{
-		Bool ok = msvc_fgets(file, buf, SCAN_SIZE);
+		Char *buf = fgets(buffer, SCAN_SIZE, (FILE*)file);
+		if (!buf) return String();
 
-		String out;
-		if (ok)
+		buf[SCAN_SIZE - 1] = 0;
+		UInt len = (UInt)strlen(buf);
+		if (len == 0) return String();
+
+		// remove LF, CR or CRLF
+		if (buf[len - 1] == 10)
 		{
-			buf[SCAN_SIZE - 1] = 0;
-			UInt len = (UInt)strlen(buf);
-			UInt lenDec = 0;
-
-            // remove LF, CR or CRLF
-			if (len >= 1)
-			{
-				if (buf[len - 1] == 10)
-				{
-					if (len >= 2 && buf[len - 2] == 13)
-					{
-						buf[len - 2] = 0;
-						lenDec = 2;
-					}
-					else
-					{
-						buf[len - 1] = 0;
-						lenDec = 1;
-					}
-
-				}
-				else if (buf[len - 1] == 13)
-				{
-					buf[len - 1] = 0;
-					lenDec = 1;
-				}
-			}
-
-			if (isUtf8)
-			{
-				out = Binary((Byte*)buf, len - lenDec);
-			}
-			else
-			{
-				out = buf;
-			}
+			if (len >= 2 && buf[len - 2] == 13) len -= 2;
+			else len -= 1;
 		}
+		else if (buf[len - 1] == 13) len -= 1;
+		buf[len] = 0;
 
-		return out;
+		if (isUtf8)
+		{
+			return buf;
+		}
+		else
+		{
+			Array<WChar> wchars(len + 1);
+			UInt wcharsLength = ansiToWChar((Byte*)buf, len, wchars.data(), wchars.size());
+			wchars[wcharsLength] = 0;
+			return wchars;
+		}
 	}
 
 	Binary fileInput(Pointer file, UInt size, ULong fileSize, ULong filePos)
 	{
 		if (filePos >= fileSize) return Binary();
 		Binary out((UInt)math::min((ULong)size, fileSize - filePos));
-		msvc_fread(file, out.data(), out.size());
+		fread(out.data(), sizeof(Byte), out.size(), (FILE*)file);
 		return out;
 	}
 
 	void fileOutput(Pointer file, Binary data)
 	{
-		msvc_fwrite(file, data.data(), data.size());
+		fwrite(data.data(), sizeof(Byte), data.size(), (FILE*)file);
 	}
 
 	void fileFlush(Pointer file)
 	{
-		msvc_fflush(file);
+		fflush((FILE*)file);
 	}
 	
 	ULong fileGetSize(Pointer file)
 	{
-		msvc_fseek(file, 0, 2);
-		return msvc_ftell(file);
+		_fseeki64((FILE*)file, 0, SEEK_END);
+		return (ULong)_ftelli64((FILE*)file);
 	}
 
 	ULong filePos(Pointer file)
 	{
-		return msvc_ftell(file);
+		return (ULong)_ftelli64((FILE*)file);
 	}
 	
 	ULong fileSeek(Pointer file, ULong pos)
 	{
-		msvc_fseek(file, pos, 0);
-		return msvc_ftell(file);
+		_fseeki64((FILE*)file, pos, SEEK_SET);
+		return (ULong)_ftelli64((FILE*)file);
 	}
 
 	// file operations

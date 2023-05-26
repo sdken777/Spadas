@@ -1,14 +1,7 @@
 ﻿
-#if defined(SPADAS_DEBUG)
-#undef SPADAS_DEBUG
-#endif
-
-#include "spadas.h"
-
-#include "string_bz.h"
-
 #if defined(SPADAS_ENV_WINDOWS)
 
+#include "string_spadas.h"
 #include <string.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -18,64 +11,63 @@
 
 using namespace spadas;
 
-UInt spadas_internal::lengthChar(const Char str[])
+UInt string_internal::utf8ToWChar(const Char src[], UInt srcLength, WChar dst[], UInt dstSize)
 {
-	return (UInt)strlen(str);
+	int res = MultiByteToWideChar(CP_UTF8, 0, src, srcLength, dst, dstSize);
+	if (res == 0)
+	{
+		dst[dstSize - 1] = 0;
+		return dstSize - 1;
+	}
+	else
+	{
+		UInt length = math::min((UInt)res, dstSize - 1);
+		dst[length] = 0;
+		return length;
+	}
 }
 
-UInt spadas_internal::lengthWChar(const WChar str[])
+UInt string_internal::wCharToUTF8(const WChar src[], UInt srcLength, Char dst[], UInt dstSize)
 {
-	return (UInt)wcslen(str);
+	int res = WideCharToMultiByte(CP_UTF8, 0, src, srcLength, dst, dstSize, 0, 0);
+	if (res == 0)
+	{
+		dst[dstSize - 1] = 0;
+		return dstSize - 1;
+	}
+	else
+	{
+		UInt length = math::min((UInt)res, dstSize - 1);
+		dst[length] = 0;
+		return length;
+	}
 }
 
-Int spadas_internal::compareString(const Char str1[], const Char str2[])
+UInt string_internal::printToString(Char dst[], UInt dstSize, const Char format[], ...)
 {
-	return strcmp(str1, str2);
-}
-
-UInt spadas_internal::utf8ToChar(const Char src[], UInt srcLength, Char dst[], UInt dstSize)
-{
-	Array<WChar> buffer(srcLength + 1);
-	UInt wcharLength = math::min(srcLength, (UInt)MultiByteToWideChar(CP_UTF8, 0, src, srcLength, buffer.data(), buffer.size()));
-	buffer[wcharLength] = 0;
-	return WideCharToMultiByte(CP_ACP, 0, buffer.data(), wcharLength, dst, dstSize, "?", 0);
-}
-
-UInt spadas_internal::charToUTF8(const Char src[], UInt srcLength, Char dst[], UInt dstSize)
-{
-	Array<WChar> buffer(srcLength + 1);
-	UInt wcharLength = math::min(srcLength, (UInt)MultiByteToWideChar(CP_ACP, 0, src, srcLength, buffer.data(), buffer.size()));
-	buffer[wcharLength] = 0;
-	return WideCharToMultiByte(CP_UTF8, 0, buffer.data(), wcharLength, dst, dstSize, 0, 0);
-}
-
-UInt spadas_internal::utf8ToWChar(const Char src[], UInt srcLength, WChar dst[], UInt dstSize)
-{
-	return MultiByteToWideChar(CP_UTF8, 0, src, srcLength, dst, dstSize);
-}
-
-UInt spadas_internal::wCharToUTF8(const WChar src[], UInt srcLength, Char dst[], UInt dstSize)
-{
-	return WideCharToMultiByte(CP_UTF8, 0, src, srcLength, dst, dstSize, 0, 0);
-}
-
-UInt spadas_internal::printToString(Char dst[], UInt dstSize, const Char format[], ...)
-{
-	UInt length = 0;
+	int result = 0;
 	va_list list;
 	va_start(list, format);
 	{
-		
-		length = _vsnprintf_s(dst, dstSize, dstSize - 1, format, list);
+		result = _vsnprintf_s(dst, dstSize, dstSize - 1, format, list);
 	}
 	va_end(list);
-	dst[dstSize - 1] = 0;
-	return length;
+	if (result <= 0)
+	{
+		dst[dstSize - 1] = 0;
+		return dstSize - 1;
+	}
+	else return result;
 }
 
-Bool spadas_internal::scanFromString(const Char src[], UInt srcSize, const Char format[], Pointer val)
+UInt string_internal::ansiToWChar(const Byte src[], UInt srcLength, WChar dst[], UInt dstSize)
 {
-	return _snscanf_s(src, srcSize, format, val) == 1;
+	return MultiByteToWideChar(CP_ACP, 0, (const Char*)src, srcLength, dst, dstSize);
+}
+
+UInt string_internal::wCharToAnsi(const WChar src[], UInt srcLength, Byte dst[], UInt dstSize)
+{
+	return WideCharToMultiByte(CP_ACP, 0, src, srcLength, (Char*)dst, dstSize, 0, 0);
 }
 
 #endif

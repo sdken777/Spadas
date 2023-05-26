@@ -37,21 +37,19 @@ private:
 	{
 		if (threadIndex == 0)
 		{
-			vars->lock.enter();
+            LockProxy lock(vars->lock);
 			system::wait(3);
 			vars->startCPUTick = Timer::cpuTick();
-			vars->lock.leave();
 		}
 		else
 		{
-			vars->lock.enter();
+            LockProxy lock(vars->lock);
             if (vars->startCPUTick != 0)
             {
                 vars->intervalSum += Timer::cpuTick() - vars->startCPUTick;
                 vars->intervalCount++;
                 vars->startCPUTick = 0;
             }
-			vars->lock.leave();
 		}
 	}
 };

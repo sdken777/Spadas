@@ -1,4 +1,6 @@
 ﻿
+#include "spadas.h"
+
 namespace file_internal
 {
 	using namespace spadas;

@@ -1,7 +1,5 @@
 ﻿
-#include "spadas.h"
-
-#include "image_bz.h"
+#include "image.h"
 
 namespace image_internal
 {
@@ -30,7 +28,7 @@ Image::Image()
 {
 }
 
-Image::Image(Size2D size, Enum<PixelFormat> format, Bool clearPixels)
+Image::Image(Size2D size, Enum<PixelFormat> format, Bool setPixels)
 {
 	setVars(new ImageVars(calcImageDataSize(size, format)), TRUE);
     size.width = math::clamp(size.width, 1u, MAX_WIDTH);
@@ -41,15 +39,15 @@ Image::Image(Size2D size, Enum<PixelFormat> format, Bool clearPixels)
     vars->rowBytes = ((size.width * PixelFormat::bytesPerPixel(format) - 1) & 0xfffffff8) + 8;
     vars->bytesPerPixel = PixelFormat::bytesPerPixel(vars->format);
     vars->data = vars->data0.data();
-    if (clearPixels)
+    if (setPixels)
     {
         utility::memorySet(0, vars->data, vars->rowBytes * vars->height);
     }
 }
 
-Image::Image(Enum<ImageResolution> resolution, Enum<PixelFormat> format, Bool clearPixels)
+Image::Image(Enum<ImageResolution> resolution, Enum<PixelFormat> format, Bool setPixels)
 {
-    operator =(Image(ImageResolution::size(resolution), format, clearPixels));
+    operator =(Image(ImageResolution::size(resolution), format, setPixels));
 }
 
 Image::Image(Size2D size, Enum<PixelFormat> format, Pointer raw, UInt rawRowBytes)
@@ -79,123 +77,14 @@ Image::Image(Enum<ImageResolution> resolution, Enum<PixelFormat> format, Pointer
     operator =(Image(ImageResolution::size(resolution), format, raw, rawRowBytes));
 }
 
-Image::Image(Image src, Region2D srcRegion)
+Image::Image(ImagePointer pointer) : Object<class ImageVars>(new ImageVars(pointer.getData()), TRUE)
 {
-    srcRegion.width = math::clamp(srcRegion.width, 1u, MAX_WIDTH);
-    srcRegion.height = math::clamp(srcRegion.height, 1u, MAX_HEIGHT);
-	SPADAS_ERROR_RETURN(srcRegion.offsetU < 0 || srcRegion.offsetV < 0 || srcRegion.offsetU + srcRegion.width > src.width() || srcRegion.offsetV + srcRegion.height > src.height());
-
-	setVars(new ImageVars(calcImageDataSize(srcRegion.size(), src.format())), TRUE);
-	vars->width = srcRegion.width;
-	vars->height = srcRegion.height;
-	vars->format = src.format();
-	vars->rowBytes = ((vars->width * PixelFormat::bytesPerPixel(vars->format) - 1) & 0xfffffff8) + 8;
+	vars->width = pointer.getWidth();
+	vars->height = pointer.getHeight();
+	vars->format = pointer.isColor() ? PixelFormat::Value::ByteBGR : PixelFormat::Value::ByteGray;
+	vars->rowBytes = pointer.getRowBytes();
 	vars->bytesPerPixel = PixelFormat::bytesPerPixel(vars->format);
 	vars->data = vars->data0.data();
-
-	Byte *srcData = src.data().b;
-	UInt srcRowBytes = src.rowBytes();
-	Byte *dstData = (Byte*)vars->data;
-	UInt bytesPerPixel = PixelFormat::bytesPerPixel(vars->format);
-	UInt rowBytesValid = vars->width * bytesPerPixel;
-	for (UInt v = 0; v < vars->height; v++)
-	{
-		Byte *srcRow = &srcData[(srcRegion.offsetV + v) * srcRowBytes + srcRegion.offsetU * bytesPerPixel];
-		Byte *dstRow = &dstData[v * vars->rowBytes];
-		utility::memoryCopy(srcRow, dstRow, rowBytesValid);
-	}
-}
-
-Image::Image(ImagePointer pointer) : Object<class ImageVars>(new ImageVars(pointer.data), TRUE)
-{
-	vars->width = pointer.width;
-	vars->height = pointer.height;
-	vars->format = pointer.isColor ? PixelFormat::ByteBGR : PixelFormat::ByteGray;
-	vars->rowBytes = pointer.rowBytes;
-	vars->bytesPerPixel = PixelFormat::bytesPerPixel(vars->format);
-	vars->data = vars->data0.data();
-}
-
-Image::Image(IplImage *iplimage)
-{
-	SPADAS_ERROR_RETURN(!iplimage);
-	
-	Bool isSupported;
-	Enum<PixelFormat> format;
-	switch (iplimage->depth)
-	{
-        case 8:
-            switch (iplimage->nChannels)
-		{
-            case 1:
-                format = PixelFormat::ByteGray;
-                isSupported = TRUE;
-                break;
-            case 3:
-                format = PixelFormat::ByteBGR;
-                isSupported = TRUE;
-                break;
-            case 4:
-                format = PixelFormat::ByteBGRA;
-                isSupported = TRUE;
-                break;
-            default:
-                isSupported = FALSE;
-                break;
-		}
-            break;
-            
-        case 16:
-            switch (iplimage->nChannels)
-		{
-            case 1:
-                format = PixelFormat::WordGray;
-                isSupported = TRUE;
-                break;
-            case 3:
-                format = PixelFormat::WordBGR;
-                isSupported = TRUE;
-                break;
-            default:
-                isSupported = FALSE;
-                break;
-		}
-            break;
-            
-        case 32:
-            switch (iplimage->nChannels)
-		{
-            case 1:
-                format = PixelFormat::FloatGray;
-                isSupported = TRUE;
-                break;
-            case 3:
-                format = PixelFormat::FloatBGR;
-                isSupported = TRUE;
-                break;
-            default:
-                isSupported = FALSE;
-                break;
-		}
-            break;
-            
-        default:
-            isSupported = FALSE;
-            break;
-	}
-    
-	SPADAS_ERROR_RETURN(!isSupported);
-    
-    Size2D size = Size2D::wh(iplimage->width, iplimage->height);
-	Image out(size, format, FALSE);
-    
-    UInt srcRowBytes = iplimage->widthStep;
-    UInt rowBytesValid = out.rowBytesValid();
-	for (UInt v = 0; v < size.height; v++)
-	{
-        utility::memoryCopy(&iplimage->imageData[v * srcRowBytes], out[v].b, rowBytesValid);
-	}
-	operator =(out);
 }
 
 Image Image::clone()
@@ -240,11 +129,11 @@ void Image::drawLayer(Image layer, CoordInt2D offset)
     Enum<PixelFormat> srcFormat;
     switch (layer.format().value())
     {
-        case PixelFormat::ByteBGRA:
-            srcFormat = PixelFormat::ByteBGR;
+        case PixelFormat::Value::ByteBGRA:
+            srcFormat = PixelFormat::Value::ByteBGR;
             break;
-        case PixelFormat::ByteRGBA:
-            srcFormat = PixelFormat::ByteRGB;
+        case PixelFormat::Value::ByteRGBA:
+            srcFormat = PixelFormat::Value::ByteRGB;
             break;
         default:
 			SPADAS_ERROR_MSG("Invalid layer.format()");
@@ -283,7 +172,7 @@ Image Image::subImage(Region2D region)
 {
 	SPADAS_ERROR_RETURNVAL(!vars, Image());
 
-	SPADAS_ERROR_RETURNVAL(vars->format == PixelFormat::ByteUYVY && (region.offsetU % 2 == 1 || region.width % 2 == 1), Image());
+	SPADAS_ERROR_RETURNVAL(vars->format == PixelFormat::Value::ByteUYVY && (region.offsetU % 2 == 1 || region.width % 2 == 1), Image());
     
     region.width = math::clamp(region.width, 1u, MAX_WIDTH);
     region.height = math::clamp(region.height, 1u, MAX_HEIGHT);
@@ -308,100 +197,15 @@ Optional<ImagePointer> Image::imagePointer()
 
 	if ((PointerInt)vars->data != (PointerInt)vars->data0.data()) return Optional<ImagePointer>();
 
-	if (vars->format == PixelFormat::ByteBGR)
+	if (vars->format == PixelFormat::Value::ByteBGR)
 	{
-		ImagePointer ip;
-		ip.width = vars->width;
-		ip.height = vars->height;
-		ip.isColor = TRUE;
-		ip.rowBytes = vars->rowBytes;
-		ip.data = vars->data0;
-		return ip;
+		return ImagePointer(Size2D::wh(vars->width, vars->height), TRUE, vars->rowBytes, vars->data0);
 	}
-	else if (vars->format == PixelFormat::ByteGray)
+	else if (vars->format == PixelFormat::Value::ByteGray)
 	{
-		ImagePointer ip;
-		ip.width = vars->width;
-		ip.height = vars->height;
-		ip.isColor = FALSE;
-		ip.rowBytes = vars->rowBytes;
-		ip.data = vars->data0;
-		return ip;
+		return ImagePointer(Size2D::wh(vars->width, vars->height), FALSE, vars->rowBytes, vars->data0);
 	}
 	else return Optional<ImagePointer>();
-}
-
-IplImage *Image::iplImage()
-{
-	SPADAS_ERROR_RETURNVAL(!vars, NULL);
-
-	if (!vars->iplImage) vars->iplImage = new IplImage();
-    
-    if (vars->format != PixelFormat::ByteBGR &&
-        vars->format != PixelFormat::ByteGray &&
-        vars->format != PixelFormat::WordBGR &&
-        vars->format != PixelFormat::WordGray &&
-        vars->format != PixelFormat::FloatBGR &&
-        vars->format != PixelFormat::FloatGray &&
-        vars->format != PixelFormat::ByteBGRA)
-    {
-		SPADAS_ERROR_MSG("Invalid vars->format");
-        return NULL;
-    }
-	
-	Bool isColor = PixelFormat::isColor(vars->format);
-    Bool hasAlpha = PixelFormat::hasAlpha(vars->format);
-    vars->iplImage->nChannels = PixelFormat::nChannels(vars->format);
-    vars->iplImage->depth = PixelFormat::bytesPerPixel(vars->format) * 8 / vars->iplImage->nChannels;
-    
-	if (isColor)
-	{
-        vars->iplImage->colorModel[0] = 'R';
-		vars->iplImage->colorModel[1] = 'G';
-		vars->iplImage->colorModel[2] = 'B';
-        vars->iplImage->colorModel[3] = '\0';
-        vars->iplImage->channelSeq[0] = 'B';
-		vars->iplImage->channelSeq[1] = 'G';
-		vars->iplImage->channelSeq[2] = 'R';
-        if (hasAlpha) vars->iplImage->channelSeq[3] = 'A';
-        else vars->iplImage->channelSeq[3] = '\0';
-	}
-	else
-	{
-		vars->iplImage->colorModel[0] = 'G';
-		vars->iplImage->colorModel[1] = 'R'; 
-		vars->iplImage->colorModel[2] = 'A';
-		vars->iplImage->colorModel[3] = 'Y';
-		vars->iplImage->channelSeq[0] = 'G';
-		vars->iplImage->channelSeq[1] = 'R';
-		vars->iplImage->channelSeq[2] = 'A';
-		vars->iplImage->channelSeq[3] = 'Y';
-	}
-    
-	vars->iplImage->nSize = sizeof(IplImage);
-	vars->iplImage->ID = 0;
-	vars->iplImage->alphaChannel = 0;
-	vars->iplImage->dataOrder = 0;
-	vars->iplImage->origin = 0;
-	vars->iplImage->align = 8;
-	vars->iplImage->width = (int)vars->width;
-	vars->iplImage->height = (int)vars->height;
-	vars->iplImage->roi = 0;
-	vars->iplImage->maskROI = 0;
-	vars->iplImage->imageId = 0;
-	vars->iplImage->tileInfo = 0;
-	vars->iplImage->imageSize = (int)(vars->rowBytes * vars->height);
-	vars->iplImage->imageData = (char*)vars->data;
-	vars->iplImage->widthStep = (int)vars->rowBytes;
-	vars->iplImage->imageDataOrigin = (char*)vars->data0.data();
-    
-	for (int i = 0; i < 4; i++)
-	{
-		vars->iplImage->BorderMode[i] = 0;
-		vars->iplImage->BorderConst[i] = 0;
-	}
-    
-	return vars->iplImage;
 }
 
 Size2D Image::size()
@@ -424,7 +228,7 @@ UInt Image::height()
 
 Enum<PixelFormat> Image::format()
 {
-    SPADAS_ERROR_RETURNVAL(!vars, PixelFormat::defaultValue());
+    SPADAS_ERROR_RETURNVAL(!vars, Enum<PixelFormat>());
 	return vars->format;
 }
 
@@ -457,14 +261,14 @@ Image Image::resize(Enum<ResizeScale> resizeScale)
 {
     SPADAS_ERROR_RETURNVAL(!vars, Image());
 
-	if (vars->format != PixelFormat::ByteBGR &&
-        vars->format != PixelFormat::ByteGray &&
-        vars->format != PixelFormat::WordBGR &&
-        vars->format != PixelFormat::WordGray &&
-        vars->format != PixelFormat::ByteRGB &&
-        vars->format != PixelFormat::ByteYUV &&
-        vars->format != PixelFormat::ByteBGRA &&
-        vars->format != PixelFormat::ByteRGBA)
+	if (vars->format != PixelFormat::Value::ByteBGR &&
+        vars->format != PixelFormat::Value::ByteGray &&
+        vars->format != PixelFormat::Value::WordBGR &&
+        vars->format != PixelFormat::Value::WordGray &&
+        vars->format != PixelFormat::Value::ByteRGB &&
+        vars->format != PixelFormat::Value::ByteYUV &&
+        vars->format != PixelFormat::Value::ByteBGRA &&
+        vars->format != PixelFormat::Value::ByteRGBA)
 	{
 		SPADAS_ERROR_MSG("Invalid vars->format");
 		return Image();
@@ -474,41 +278,44 @@ Image Image::resize(Enum<ResizeScale> resizeScale)
 	Float scaleF = 1.0f;
 	switch (resizeScale.value())
 	{
-		case ResizeScale::Quarter:
+		case ResizeScale::Value::Quarter:
 			scale = 4;
 			scaleF = 4.0f;
 			break;
-		case ResizeScale::Half:
+		case ResizeScale::Value::Half:
 			scale = 2;
 			scaleF = 2.0f;
 			break;
-		case ResizeScale::Double:
+		case ResizeScale::Value::Double:
 			scale = 1;
 			scaleF = 0.5f;
 			break;
+        default:
+            SPADAS_ERROR_MSG("Invalid resizeScale");
+            return Image();
 	}
 	
     SPADAS_ERROR_RETURNVAL(vars->width % scale != 0 || vars->height % scale != 0, Image());
 	
-	Size2D targetSize = Size2D::wh(round((Float)vars->width / scaleF), round((Float)vars->height / scaleF));
+	Size2D targetSize = Size2D::wh(math::round((Float)vars->width / scaleF), math::round((Float)vars->height / scaleF));
 	
     Image image(targetSize, vars->format, FALSE);
 	switch (vars->format.value())
 	{
-		case PixelFormat::ByteBGR:
-		case PixelFormat::ByteRGB:
-		case PixelFormat::ByteYUV:
-        case PixelFormat::ByteBGRA:
-        case PixelFormat::ByteRGBA:
+		case PixelFormat::Value::ByteBGR:
+		case PixelFormat::Value::ByteRGB:
+		case PixelFormat::Value::ByteYUV:
+        case PixelFormat::Value::ByteBGRA:
+        case PixelFormat::Value::ByteRGBA:
             resizeColorByteWithScale(*this, image, resizeScale, PixelFormat::nChannels(vars->format));
 			break;
-        case PixelFormat::ByteGray:
+        case PixelFormat::Value::ByteGray:
 			resizeGrayByteWithScale(*this, image, resizeScale);
 			break;
-		case PixelFormat::WordBGR:
+		case PixelFormat::Value::WordBGR:
 			resizeColorWordWithScale(*this, image, resizeScale);
 			break;
-		case PixelFormat::WordGray:
+		case PixelFormat::Value::WordGray:
 			resizeGrayWordWithScale(*this, image, resizeScale);
 			break;
 
@@ -540,11 +347,11 @@ void resizeNearestOrBilinear(Image src, Image& dst, Enum<ResizeMode> mode)
 	}
 	
 	Int rowToRead = 0;
-	if (mode == ResizeMode::Nearest)
+	if (mode == ResizeMode::Value::Nearest)
 	{
 		rowToRead = 1;
 	}
-	if (mode == ResizeMode::Bilinear)
+	if (mode == ResizeMode::Value::Bilinear)
 	{
 		rowToRead = 2;
 	}
@@ -556,13 +363,13 @@ void resizeNearestOrBilinear(Image src, Image& dst, Enum<ResizeMode> mode)
 	}
 	Pointer dataOut = createRowData(iotype, dst.width());
 	
-	if (mode == ResizeMode::Nearest)
+	if (mode == ResizeMode::Value::Nearest)
 	{
 		UInt prev = 99999;
 		for (UInt y = 0; y < dst.height(); y++)
 		{
 			v = y * scaleHeight;
-			v = (Float)round(v);
+			v = (Float)math::round(v);
 			if (v >= (Float)src.height() - 1)
 			{
 				v = (Float)src.height() - 1;
@@ -571,18 +378,18 @@ void resizeNearestOrBilinear(Image src, Image& dst, Enum<ResizeMode> mode)
 			{
 				rowLoader->io(src[(Int)v].ptr, dataIn[0], src.width());
 			}
-			prev = (UInt)round(v);
+			prev = (UInt)math::round(v);
 			rowRsz->rsz(dataIn, dataOut, src.width(), dst.width(), src.height(), dst.height(), mode, v);
 			rowWriter->io(dst[y].ptr, dataOut, dst.width());
 		}
 	}
-	if(mode == ResizeMode::Bilinear)
+	if(mode == ResizeMode::Value::Bilinear)
 	{
 		UInt prefloorv = 99999;
 		for (UInt y = 0; y < dst.height(); y ++)
 		{
 			v = y * scaleHeight;
-			UInt floorv = floor(v);
+			UInt floorv = math::floor(v);
 			UInt ceilv = floorv + 1;
 			if(ceilv > src.height() - 1)
 			{
@@ -623,7 +430,7 @@ Image Image::resize(Size2D outputSize, Bool undistort, Enum<ResizeMode> mode)
 
 	if (size() == outputSize) return clone();
 
-	if (mode == ResizeMode::Nearest || mode == ResizeMode::Bilinear)
+	if (mode == ResizeMode::Value::Nearest || mode == ResizeMode::Value::Bilinear)
 	{
         table.init();
 		
@@ -655,16 +462,16 @@ Image Image::resize(Size2D outputSize, Bool undistort, Enum<ResizeMode> mode)
 	
 	else // RM_Area
 	{
-        if (vars->format != PixelFormat::ByteBGR &&
-            vars->format != PixelFormat::ByteGray &&
-            vars->format != PixelFormat::WordBGR &&
-            vars->format != PixelFormat::WordGray &&
-            vars->format != PixelFormat::FloatBGR &&
-            vars->format != PixelFormat::FloatGray &&
-            vars->format != PixelFormat::ByteRGB &&
-            vars->format != PixelFormat::ByteYUV &&
-            vars->format != PixelFormat::ByteBGRA &&
-            vars->format != PixelFormat::ByteRGBA)
+        if (vars->format != PixelFormat::Value::ByteBGR &&
+            vars->format != PixelFormat::Value::ByteGray &&
+            vars->format != PixelFormat::Value::WordBGR &&
+            vars->format != PixelFormat::Value::WordGray &&
+            vars->format != PixelFormat::Value::FloatBGR &&
+            vars->format != PixelFormat::Value::FloatGray &&
+            vars->format != PixelFormat::Value::ByteRGB &&
+            vars->format != PixelFormat::Value::ByteYUV &&
+            vars->format != PixelFormat::Value::ByteBGRA &&
+            vars->format != PixelFormat::Value::ByteRGBA)
         {
 			SPADAS_ERROR_MSG("Invalid vars->format");
             return Image();
@@ -682,26 +489,26 @@ Image Image::resize(Size2D outputSize, Bool undistort, Enum<ResizeMode> mode)
         Image image(outputSize, vars->format, FALSE);
 		switch (vars->format.value())
 		{
-			case PixelFormat::ByteBGR:
-            case PixelFormat::ByteRGB:
-			case PixelFormat::ByteYUV:
-            case PixelFormat::ByteBGRA:
-            case PixelFormat::ByteRGBA:
+			case PixelFormat::Value::ByteBGR:
+            case PixelFormat::Value::ByteRGB:
+			case PixelFormat::Value::ByteYUV:
+            case PixelFormat::Value::ByteBGRA:
+            case PixelFormat::Value::ByteRGBA:
                 areaResizeColorByte(*this, image, widthRatio, heightRatio, PixelFormat::nChannels(vars->format));
 				break;
-			case PixelFormat::ByteGray:
+			case PixelFormat::Value::ByteGray:
 				areaResizeGrayByte(*this, image, widthRatio, heightRatio);
 				break;
-			case PixelFormat::WordBGR:
+			case PixelFormat::Value::WordBGR:
 				areaResizeColorWord(*this, image, widthRatio, heightRatio);
 				break;
-			case PixelFormat::WordGray:
+			case PixelFormat::Value::WordGray:
 				areaResizeGrayWord(*this, image, widthRatio, heightRatio);
 				break;
-			case PixelFormat::FloatBGR:
+			case PixelFormat::Value::FloatBGR:
 				areaResizeColorFloat(*this, image, widthRatio, heightRatio);
 				break;
-			case PixelFormat::FloatGray:
+			case PixelFormat::Value::FloatGray:
 				areaResizeGrayFloat(*this, image, widthRatio, heightRatio);
 				break;
 			default:
@@ -724,37 +531,37 @@ Image Image::convert(Enum<PixelFormat> outputFormat)
     Bool fastConverted = TRUE;
     switch (vars->format.value())
     {
-        case PixelFormat::ByteBGR:
+        case PixelFormat::Value::ByteBGR:
             switch (outputFormat.value())
         {
-            case PixelFormat::ByteGray:
+            case PixelFormat::Value::ByteGray:
                 fastCvtByteBGR2ByteGray(*this, image);
                 break;
-            case PixelFormat::FloatBGR:
+            case PixelFormat::Value::FloatBGR:
                 fastCvtByteBGR2FloatBGR(*this, image);
                 break;
-            case PixelFormat::FloatGray:
+            case PixelFormat::Value::FloatGray:
                 fastCvtByteBGR2FloatGray(*this, image);
                 break;
-            case PixelFormat::WordBGR:
+            case PixelFormat::Value::WordBGR:
                 fastCvtByteBGR2WordBGR(*this, image);
                 break;
-            case PixelFormat::WordGray:
+            case PixelFormat::Value::WordGray:
                 fastCvtByteBGR2WordGray(*this, image);
                 break;
-            case PixelFormat::ByteRGB:
+            case PixelFormat::Value::ByteRGB:
                 fastCvtByteBGR2ByteRGB(*this, image);
                 break;
-            case PixelFormat::ByteUYVY:
+            case PixelFormat::Value::ByteUYVY:
                 fastCvtByteBGR2ByteUYVY(*this, image);
                 break;
-            case PixelFormat::ByteYUV:
+            case PixelFormat::Value::ByteYUV:
                 fastCvtByteBGR2ByteYUV(*this, image);
                 break;
-            case PixelFormat::ByteBGRA:
+            case PixelFormat::Value::ByteBGRA:
                 fastCvtByteBGR2ByteBGRA(*this, image);
                 break;
-            case PixelFormat::ByteRGBA:
+            case PixelFormat::Value::ByteRGBA:
                 fastCvtByteBGR2ByteRGBA(*this, image);
                 break;
             default:
@@ -762,22 +569,22 @@ Image Image::convert(Enum<PixelFormat> outputFormat)
                 break;
         }
             break;
-        case PixelFormat::ByteGray:
+        case PixelFormat::Value::ByteGray:
             switch (outputFormat.value())
         {
-            case PixelFormat::ByteBGR:
+            case PixelFormat::Value::ByteBGR:
                 fastCvtByteGray2ByteBGR(*this, image);
                 break;
-            case PixelFormat::FloatGray:
+            case PixelFormat::Value::FloatGray:
                 fastCvtByteGray2FloatGray(*this, image);
                 break;
-            case PixelFormat::WordGray:
+            case PixelFormat::Value::WordGray:
                 fastCvtByteGray2WordGray(*this, image);
                 break;
-            case PixelFormat::ByteUYVY:
+            case PixelFormat::Value::ByteUYVY:
                 fastCvtByteGray2ByteUYVY(*this, image);
                 break;
-            case PixelFormat::ByteYUV:
+            case PixelFormat::Value::ByteYUV:
                 fastCvtByteGray2ByteYUV(*this, image);
                 break;
             default:
@@ -785,10 +592,10 @@ Image Image::convert(Enum<PixelFormat> outputFormat)
                 break;
         }
             break;
-        case PixelFormat::FloatBGR:
+        case PixelFormat::Value::FloatBGR:
             switch (outputFormat.value())
         {
-            case PixelFormat::ByteBGR:
+            case PixelFormat::Value::ByteBGR:
                 fastCvtFloatBGR2ByteBGR(*this, image);
                 break;
             default:
@@ -796,16 +603,16 @@ Image Image::convert(Enum<PixelFormat> outputFormat)
                 break;
         }
             break;
-        case PixelFormat::FloatGray:
+        case PixelFormat::Value::FloatGray:
             switch (outputFormat.value())
         {
-            case PixelFormat::ByteBGR:
+            case PixelFormat::Value::ByteBGR:
                 fastCvtFloatGray2ByteBGR(*this, image);
                 break;
-            case PixelFormat::ByteGray:
+            case PixelFormat::Value::ByteGray:
                 fastCvtFloatGray2ByteGray(*this, image);
                 break;
-            case PixelFormat::WordGray:
+            case PixelFormat::Value::WordGray:
                 fastCvtFloatGray2WordGray(*this, image);
                 break;
             default:
@@ -813,13 +620,13 @@ Image Image::convert(Enum<PixelFormat> outputFormat)
                 break;
         }
             break;
-        case PixelFormat::WordBGR:
+        case PixelFormat::Value::WordBGR:
             switch (outputFormat.value())
         {
-            case PixelFormat::ByteBGR:
+            case PixelFormat::Value::ByteBGR:
                 fastCvtWordBGR2ByteBGR(*this, image);
                 break;
-            case PixelFormat::WordGray:
+            case PixelFormat::Value::WordGray:
                 fastCvtWordBGR2WordGray(*this, image);
                 break;
             default:
@@ -827,13 +634,13 @@ Image Image::convert(Enum<PixelFormat> outputFormat)
                 break;
         }
             break;
-        case PixelFormat::WordGray:
+        case PixelFormat::Value::WordGray:
             switch (outputFormat.value())
         {
-            case PixelFormat::ByteBGR:
+            case PixelFormat::Value::ByteBGR:
                 fastCvtWordGray2ByteBGR(*this, image);
                 break;
-            case PixelFormat::ByteGray:
+            case PixelFormat::Value::ByteGray:
                 fastCvtWordGray2ByteGray(*this, image);
                 break;
             default:
@@ -841,13 +648,13 @@ Image Image::convert(Enum<PixelFormat> outputFormat)
                 break;
         }
             break;
-        case PixelFormat::ByteRGB:
+        case PixelFormat::Value::ByteRGB:
             switch (outputFormat.value())
         {
-            case PixelFormat::ByteBGR:
+            case PixelFormat::Value::ByteBGR:
                 fastCvtByteRGB2ByteBGR(*this, image);
                 break;
-            case PixelFormat::ByteRGBA:
+            case PixelFormat::Value::ByteRGBA:
                 fastCvtByteRGB2ByteRGBA(*this, image);
                 break;
             default:
@@ -855,13 +662,13 @@ Image Image::convert(Enum<PixelFormat> outputFormat)
                 break;
         }
             break;
-        case PixelFormat::ByteUYVY:
+        case PixelFormat::Value::ByteUYVY:
             switch (outputFormat.value())
         {
-            case PixelFormat::ByteBGR:
+            case PixelFormat::Value::ByteBGR:
                 fastCvtByteUYVY2ByteBGR(*this, image);
                 break;
-            case PixelFormat::ByteGray:
+            case PixelFormat::Value::ByteGray:
                 fastCvtByteUYVY2ByteGray(*this, image);
                 break;
             default:
@@ -869,13 +676,13 @@ Image Image::convert(Enum<PixelFormat> outputFormat)
                 break;
         }
             break;
-        case PixelFormat::ByteYUV:
+        case PixelFormat::Value::ByteYUV:
             switch (outputFormat.value())
         {
-            case PixelFormat::ByteBGR:
+            case PixelFormat::Value::ByteBGR:
                 fastCvtByteYUV2ByteBGR(*this, image);
                 break;
-            case PixelFormat::ByteGray:
+            case PixelFormat::Value::ByteGray:
                 fastCvtByteYUV2ByteGray(*this, image);
                 break;
             default:
@@ -883,13 +690,13 @@ Image Image::convert(Enum<PixelFormat> outputFormat)
                 break;
         }
             break;
-        case PixelFormat::ByteBGRA:
+        case PixelFormat::Value::ByteBGRA:
             switch (outputFormat.value())
         {
-            case PixelFormat::ByteBGR:
+            case PixelFormat::Value::ByteBGR:
                 fastCvtByteBGRA2ByteBGR(*this, image);
                 break;
-            case PixelFormat::ByteRGBA:
+            case PixelFormat::Value::ByteRGBA:
                 fastCvtByteBGRA2ByteRGBA(*this, image);
                 break;
             default:
@@ -897,16 +704,16 @@ Image Image::convert(Enum<PixelFormat> outputFormat)
                 break;
         }
             break;
-        case PixelFormat::ByteRGBA:
+        case PixelFormat::Value::ByteRGBA:
             switch (outputFormat.value())
         {
-            case PixelFormat::ByteBGR:
+            case PixelFormat::Value::ByteBGR:
                 fastCvtByteRGBA2ByteBGR(*this, image);
                 break;
-            case PixelFormat::ByteRGB:
+            case PixelFormat::Value::ByteRGB:
                 fastCvtByteRGBA2ByteRGB(*this, image);
                 break;
-            case PixelFormat::ByteBGRA:
+            case PixelFormat::Value::ByteBGRA:
                 fastCvtByteRGBA2ByteBGRA(*this, image);
                 break;
             default:
@@ -953,7 +760,7 @@ Image Image::flip(Bool upDownFlip, Bool leftRightFlip)
 {
     SPADAS_ERROR_RETURNVAL(!vars, Image());
 
-    if (leftRightFlip && upDownFlip && vars->format != PixelFormat::ByteUYVY) return rotate(ImageRotation::CW180);
+    if (leftRightFlip && upDownFlip && vars->format != PixelFormat::Value::ByteUYVY) return rotate(ImageRotation::Value::CW180);
 	
 	table.init();
 	
@@ -1021,32 +828,33 @@ Image Image::flip(Bool upDownFlip, Bool leftRightFlip)
 Image Image::rotate(Enum<ImageRotation> rotation)
 {
     SPADAS_ERROR_RETURNVAL(!vars, Image());
-    SPADAS_ERROR_RETURNVAL(vars->format == PixelFormat::ByteUYVY, Image());
+    SPADAS_ERROR_RETURNVAL(vars->format == PixelFormat::Value::ByteUYVY, Image());
+    SPADAS_ERROR_RETURNVAL(rotation == ImageRotation::Value::None, Image());
 
 	Size2D targetSize;
-	if (rotation == ImageRotation::CW180) targetSize = this->size();
+	if (rotation == ImageRotation::Value::CW180) targetSize = this->size();
 	else targetSize = Size2D::wh(vars->height, vars->width);
     
     Image image(targetSize, vars->format, FALSE);
 	
 	switch (vars->format.value())
 	{
-		case PixelFormat::ByteBGR:
-		case PixelFormat::ByteGray:
-        case PixelFormat::ByteRGB:
-		case PixelFormat::ByteYUV:
-        case PixelFormat::ByteBool:
-        case PixelFormat::ByteBGRA:
-        case PixelFormat::ByteRGBA:
+		case PixelFormat::Value::ByteBGR:
+		case PixelFormat::Value::ByteGray:
+        case PixelFormat::Value::ByteRGB:
+		case PixelFormat::Value::ByteYUV:
+        case PixelFormat::Value::ByteBool:
+        case PixelFormat::Value::ByteBGRA:
+        case PixelFormat::Value::ByteRGBA:
 			rotateByte(*this, image, PixelFormat::nChannels(vars->format), rotation);
 			break;
-		case PixelFormat::WordBGR:
-		case PixelFormat::WordGray:
+		case PixelFormat::Value::WordBGR:
+		case PixelFormat::Value::WordGray:
 			rotateWord(*this, image, PixelFormat::isColor(vars->format), rotation);
 			break;
-		case PixelFormat::FloatBGR:
-		case PixelFormat::FloatGray:
-		case PixelFormat::FloatHSV:
+		case PixelFormat::Value::FloatBGR:
+		case PixelFormat::Value::FloatGray:
+		case PixelFormat::Value::FloatHSV:
 			rotateInt(*this, image, PixelFormat::isColor(vars->format), rotation);
 			break;
 		default:
@@ -1062,31 +870,31 @@ ImagePair Image::splitFields()
 	Image dst[2];
 	switch(vars->format.value())
 	{
-	case PixelFormat::ByteGray:
+	case PixelFormat::Value::ByteGray:
 		splitFieldByte(*this, dst, 1);
 		break;
-	case PixelFormat::ByteUYVY:
+	case PixelFormat::Value::ByteUYVY:
 		splitFieldByte(*this, dst, 2);
 		break;
-	case PixelFormat::ByteBGR:
-	case PixelFormat::ByteRGB:
-	case PixelFormat::ByteYUV:
+	case PixelFormat::Value::ByteBGR:
+	case PixelFormat::Value::ByteRGB:
+	case PixelFormat::Value::ByteYUV:
 		splitFieldByte(*this, dst, 3);
 		break;
-	case PixelFormat::ByteBGRA:
-	case PixelFormat::ByteRGBA:
+	case PixelFormat::Value::ByteBGRA:
+	case PixelFormat::Value::ByteRGBA:
 		splitFieldByte(*this, dst, 4);
 		break;
-	case PixelFormat::WordGray:
+	case PixelFormat::Value::WordGray:
 		splitFieldWord(*this, dst, 1);
 		break;
-	case PixelFormat::WordBGR:
+	case PixelFormat::Value::WordBGR:
 		splitFieldWord(*this, dst, 3);
 		break;
-	case PixelFormat::FloatGray:
+	case PixelFormat::Value::FloatGray:
 		splitFieldFloat(*this, dst, 1);
 		break;
-	case PixelFormat::FloatBGR:
+	case PixelFormat::Value::FloatBGR:
 		splitFieldFloat(*this, dst, 3);
 		break;
 	default:
@@ -1113,22 +921,22 @@ ImagePair Image::splitStereo(Enum<MergeMode> srcMergeMode)
 {
     SPADAS_ERROR_RETURNVAL(!vars, ImagePair());
     SPADAS_ERROR_RETURNVAL(!MergeMode::is3DMerged(srcMergeMode), ImagePair());
-    SPADAS_ERROR_RETURNVAL(height() % 2 != 0 && (srcMergeMode == MergeMode::LineByLineLR || srcMergeMode == MergeMode::LineByLineRL), ImagePair());
-    SPADAS_ERROR_RETURNVAL(width() % 2 != 0 && (srcMergeMode == MergeMode::FullSideBySide || srcMergeMode == MergeMode::HalfSideBySide), ImagePair());
+    SPADAS_ERROR_RETURNVAL(height() % 2 != 0 && (srcMergeMode == MergeMode::Value::LineByLineLR || srcMergeMode == MergeMode::Value::LineByLineRL), ImagePair());
+    SPADAS_ERROR_RETURNVAL(width() % 2 != 0 && (srcMergeMode == MergeMode::Value::FullSideBySide || srcMergeMode == MergeMode::Value::HalfSideBySide), ImagePair());
 
 	Image dst[2];
 	switch (vars->format.value())
 	{
-        case PixelFormat::ByteBGR:
-        case PixelFormat::ByteGray:
-        case PixelFormat::ByteRGB:
-        case PixelFormat::ByteYUV:
-        case PixelFormat::ByteBGRA:
-        case PixelFormat::ByteRGBA:
+        case PixelFormat::Value::ByteBGR:
+        case PixelFormat::Value::ByteGray:
+        case PixelFormat::Value::ByteRGB:
+        case PixelFormat::Value::ByteYUV:
+        case PixelFormat::Value::ByteBGRA:
+        case PixelFormat::Value::ByteRGBA:
             splitStereoByte(*this, dst, srcMergeMode, PixelFormat::nChannels(vars->format));
             break;
-        case PixelFormat::WordBGR:
-        case PixelFormat::WordGray:
+        case PixelFormat::Value::WordBGR:
+        case PixelFormat::Value::WordGray:
             splitStereoWord(*this, dst, srcMergeMode, PixelFormat::nChannels(vars->format));
             break;
         default:
@@ -1151,23 +959,23 @@ Image Image::mergeStereo(ImagePair src, Enum<MergeMode> dstMergeMode)
     Size2D srcSize = src.image1.size();
     Enum<PixelFormat> srcFormat = src.image1.format();
     
-    SPADAS_ERROR_RETURNVAL(dstMergeMode == MergeMode::HalfSideBySide && srcSize.width % 2 != 0, Image());
-    SPADAS_ERROR_RETURNVAL((dstMergeMode == MergeMode::LineByLineLR || dstMergeMode == MergeMode::LineByLineRL) && srcSize.height % 2 != 0, Image());
+    SPADAS_ERROR_RETURNVAL(dstMergeMode == MergeMode::Value::HalfSideBySide && srcSize.width % 2 != 0, Image());
+    SPADAS_ERROR_RETURNVAL((dstMergeMode == MergeMode::Value::LineByLineLR || dstMergeMode == MergeMode::Value::LineByLineRL) && srcSize.height % 2 != 0, Image());
 
     Image srcArr[2] = {src.image1, src.image2};
 	Image dst;
 	switch (srcFormat.value())
 	{
-	case PixelFormat::ByteBGR:
-	case PixelFormat::ByteGray:
-    case PixelFormat::ByteRGB:
-    case PixelFormat::ByteYUV:
-    case PixelFormat::ByteBGRA:
-    case PixelFormat::ByteRGBA:
+	case PixelFormat::Value::ByteBGR:
+	case PixelFormat::Value::ByteGray:
+    case PixelFormat::Value::ByteRGB:
+    case PixelFormat::Value::ByteYUV:
+    case PixelFormat::Value::ByteBGRA:
+    case PixelFormat::Value::ByteRGBA:
         mergeStereoByte(srcArr, dst, dstMergeMode, PixelFormat::nChannels(srcFormat));
         break;
-	case PixelFormat::WordBGR:
-	case PixelFormat::WordGray:
+	case PixelFormat::Value::WordBGR:
+	case PixelFormat::Value::WordGray:
 		mergeStereoWord(srcArr, dst, dstMergeMode, PixelFormat::nChannels(srcFormat));
 		break;
 	default:
@@ -1185,19 +993,19 @@ Array<Image> Image::splitChannels()
 	Enum<PixelFormat> dstFormat;
 	switch (vars->format.value())
 	{
-	case PixelFormat::ByteBGR:
-	case PixelFormat::ByteRGB:
-    case PixelFormat::ByteYUV:
-    case PixelFormat::ByteBGRA:
-    case PixelFormat::ByteRGBA:
-		dstFormat = PixelFormat::ByteGray;
+	case PixelFormat::Value::ByteBGR:
+	case PixelFormat::Value::ByteRGB:
+    case PixelFormat::Value::ByteYUV:
+    case PixelFormat::Value::ByteBGRA:
+    case PixelFormat::Value::ByteRGBA:
+		dstFormat = PixelFormat::Value::ByteGray;
 		break;
-	case PixelFormat::WordBGR:
-		dstFormat = PixelFormat::WordGray;
+	case PixelFormat::Value::WordBGR:
+		dstFormat = PixelFormat::Value::WordGray;
 		break;
-	case PixelFormat::FloatBGR:
-	case PixelFormat::FloatHSV:
-		dstFormat = PixelFormat::FloatGray;
+	case PixelFormat::Value::FloatBGR:
+	case PixelFormat::Value::FloatHSV:
+		dstFormat = PixelFormat::Value::FloatGray;
 		break;
 	default:
 		SPADAS_ERROR_MSG("Invalid vars->format");
@@ -1220,9 +1028,9 @@ Array<Image> Image::splitChannels()
         UInt i = 0;
         switch (vars->format.value())
         {
-        case PixelFormat::ByteBGR:
-        case PixelFormat::ByteRGB:
-        case PixelFormat::ByteYUV:
+        case PixelFormat::Value::ByteBGR:
+        case PixelFormat::Value::ByteRGB:
+        case PixelFormat::Value::ByteYUV:
             for (UInt u = 0; u < vars->width; u++)
             {
                 c0Row.b[u] = srcRow.b[i++];
@@ -1230,8 +1038,8 @@ Array<Image> Image::splitChannels()
                 c2Row.b[u] = srcRow.b[i++];
             }
             break;
-        case PixelFormat::ByteBGRA:
-        case PixelFormat::ByteRGBA:
+        case PixelFormat::Value::ByteBGRA:
+        case PixelFormat::Value::ByteRGBA:
 			for (UInt u = 0; u < vars->width; u++)
 			{
 				c0Row.b[u] = srcRow.b[i++];
@@ -1240,7 +1048,7 @@ Array<Image> Image::splitChannels()
 				c3Row.b[u] = srcRow.b[i++];
 			}
 			break;
-        case PixelFormat::WordBGR:
+        case PixelFormat::Value::WordBGR:
             for (UInt u = 0; u < vars->width; u++)
             {
                 c0Row.w[u] = srcRow.w[i++];
@@ -1248,7 +1056,7 @@ Array<Image> Image::splitChannels()
                 c2Row.w[u] = srcRow.w[i++];
             }
             break;
-        case PixelFormat::FloatBGR:
+        case PixelFormat::Value::FloatBGR:
             for (UInt u = 0; u < vars->width; u++)
             {
                 c0Row.f[u] = srcRow.f[i++];
@@ -1256,7 +1064,7 @@ Array<Image> Image::splitChannels()
                 c2Row.f[u] = srcRow.f[i++];
             }
             break;
-        case PixelFormat::FloatHSV:
+        case PixelFormat::Value::FloatHSV:
             for (UInt u = 0; u < vars->width; u++)
             {
                 c0Row.f[u] = clamp(srcRow.f[i++] / 360, 0.0f, 1.0f);
@@ -1282,19 +1090,19 @@ Image Image::mergeChannels(Array<Image> channels, Enum<PixelFormat> multiChannel
 	Enum<PixelFormat> srcFormat;
 	switch (multiChannelFormat.value())
 	{
-        case PixelFormat::ByteBGR:
-        case PixelFormat::ByteRGB:
-        case PixelFormat::ByteYUV:
-        case PixelFormat::ByteBGRA:
-        case PixelFormat::ByteRGBA:
-            srcFormat = PixelFormat::ByteGray;
+        case PixelFormat::Value::ByteBGR:
+        case PixelFormat::Value::ByteRGB:
+        case PixelFormat::Value::ByteYUV:
+        case PixelFormat::Value::ByteBGRA:
+        case PixelFormat::Value::ByteRGBA:
+            srcFormat = PixelFormat::Value::ByteGray;
             break;
-        case PixelFormat::WordBGR:
-            srcFormat = PixelFormat::WordGray;
+        case PixelFormat::Value::WordBGR:
+            srcFormat = PixelFormat::Value::WordGray;
             break;
-        case PixelFormat::FloatBGR:
-        case PixelFormat::FloatHSV:
-            srcFormat = PixelFormat::FloatGray;
+        case PixelFormat::Value::FloatBGR:
+        case PixelFormat::Value::FloatHSV:
+            srcFormat = PixelFormat::Value::FloatGray;
             break;
         default:
 			SPADAS_ERROR_MSG("Invalid multiChannelFormat");
@@ -1325,9 +1133,9 @@ Image Image::mergeChannels(Array<Image> channels, Enum<PixelFormat> multiChannel
         UInt i = 0;
         switch (multiChannelFormat.value())
         {
-        case PixelFormat::ByteBGR:
-        case PixelFormat::ByteRGB:
-        case PixelFormat::ByteYUV:
+        case PixelFormat::Value::ByteBGR:
+        case PixelFormat::Value::ByteRGB:
+        case PixelFormat::Value::ByteYUV:
             for (UInt u = 0; u < srcSize.width; u++)
             {
                 dstRow.b[i++] = c0Row.b[u];
@@ -1335,8 +1143,8 @@ Image Image::mergeChannels(Array<Image> channels, Enum<PixelFormat> multiChannel
                 dstRow.b[i++] = c2Row.b[u];
             }
             break;
-        case PixelFormat::ByteBGRA:
-        case PixelFormat::ByteRGBA:
+        case PixelFormat::Value::ByteBGRA:
+        case PixelFormat::Value::ByteRGBA:
             for (UInt u = 0; u < srcSize.width; u++)
             {
                 dstRow.b[i++] = c0Row.b[u];
@@ -1345,7 +1153,7 @@ Image Image::mergeChannels(Array<Image> channels, Enum<PixelFormat> multiChannel
                 dstRow.b[i++] = c3Row.b[u];
             }
             break;
-        case PixelFormat::WordBGR:
+        case PixelFormat::Value::WordBGR:
             for (UInt u = 0; u < srcSize.width; u++)
             {
                 dstRow.w[i++] = c0Row.w[u];
@@ -1353,7 +1161,7 @@ Image Image::mergeChannels(Array<Image> channels, Enum<PixelFormat> multiChannel
                 dstRow.w[i++] = c2Row.w[u];
             }
             break;
-        case PixelFormat::FloatBGR:
+        case PixelFormat::Value::FloatBGR:
             for (UInt u = 0; u < srcSize.width; u++)
             {
                 dstRow.f[i++] = c0Row.f[u];
@@ -1361,7 +1169,7 @@ Image Image::mergeChannels(Array<Image> channels, Enum<PixelFormat> multiChannel
                 dstRow.f[i++] = c2Row.f[u];
             }
             break;
-        case PixelFormat::FloatHSV:
+        case PixelFormat::Value::FloatHSV:
             for (UInt u = 0; u < srcSize.width; u++)
             {
                 dstRow.f[i++] = clamp(c0Row.f[u] * 360.0f, 0.0f, 360.0f);
@@ -1385,14 +1193,14 @@ Array<Image> Image::genMipmap(UInt nLevels)
 	Int width = (Int)vars->width;
 	Int height = (Int)vars->height;
 	
-	Int maxMultiplier = math::round(math::power(2.0f, (Float)nLevels-1));
+	Int maxMultiplier = (Int)math::round(math::power(2.0f, (Float)nLevels - 1));
     SPADAS_ERROR_RETURNVAL(width % maxMultiplier != 0 || height % maxMultiplier != 0, Array<Image>());
 	
     Array<Image> mipmap(nLevels);
 	mipmap[0] = clone();
 	for (UInt i = 1; i < nLevels; i++)
 	{
-        mipmap[i] = mipmap[i-1].resize(ResizeScale::Half);
+        mipmap[i] = mipmap[i-1].resize(ResizeScale::Value::Half);
 	}
     return mipmap;
 }

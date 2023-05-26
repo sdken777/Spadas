@@ -12,12 +12,13 @@ void exampleConsole()
 	String text = console::scan();
 	if (!text.isEmpty()) console::popup(text);
 
-	// 按键检测，输入Q推出
-	console::print("Press keys, Q to break.");
-	while (TRUE)
+	// 按键检测，输入Q退出
+	console::print("Press keys, Q to break (5 seconds timeout).");
+	Timer timer;
+	while (timer.check() < 5000)
 	{
 		Enum<Key> key = console::checkKey();
-		if (key == Key::Q) break;
-		else if (key != Key::None) console::print(key);
+		if (key == Key::Value::Q) break;
+		else if (key != Key::Value::None) console::print(key);
 	}
 }

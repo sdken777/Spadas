@@ -17,92 +17,28 @@ namespace spadas
 using namespace spadas;
 using namespace spadas::math;
 
-// AspectRatio
-Bool AspectRatio::isValid(Int val)
-{
-    return val >= AspectRatio::_1_1 && val <= AspectRatio::_40_33;
-}
-String AspectRatio::toString(Int val)
-{
-    switch (val)
-	{
-		case AspectRatio::_1_1:
-			return "1:1";
-		case AspectRatio::_4_3:
-			return "4:3";
-		case AspectRatio::_10_11:
-			return "10:11";
-		case AspectRatio::_12_11:
-			return "12:11";
-		case AspectRatio::_16_11:
-			return "16:11";
-		case AspectRatio::_40_33:
-			return "40:33";
-        default:
-            return String();
-	}
-}
-Int AspectRatio::defaultValue()
-{
-	return AspectRatio::_1_1;
-}
-
 // FrameRate
-Bool FrameRate::isValid(Int val)
-{
-    return val >= FrameRate::Unknown && val <= FrameRate::_60;
-}
-String FrameRate::toString(Int val)
-{
-    switch (val)
-	{
-		case FrameRate::Unknown:
-			return "Unknown frame rate";
-		case FrameRate::_23_98:
-			return "23.98[fps]";
-		case FrameRate::_24:
-			return "24[fps]";
-		case FrameRate::_25:
-			return "25[fps]";
-		case FrameRate::_29_97:
-			return "29.97[fps]";
-		case FrameRate::_30:
-			return "30[fps]";
-		case FrameRate::_50:
-			return "50[fps]";
-		case FrameRate::_59_94:
-			return "59.94[fps]";
-		case FrameRate::_60:
-			return "60[fps]";
-        default:
-            return String();
-	}
-}
-Int FrameRate::defaultValue()
-{
-	return FrameRate::Unknown;
-}
 Float FrameRate::rate(Enum<FrameRate> frameRate)
 {
     switch (frameRate.value())
 	{
-		case FrameRate::Unknown:
+		case FrameRate::Value::Unknown:
 			return FINF;
-		case FrameRate::_23_98:
+		case FrameRate::Value::_23_98:
 			return 24.0f / 1001;
-		case FrameRate::_24:
+		case FrameRate::Value::_24:
 			return 24.0f;
-		case FrameRate::_25:
+		case FrameRate::Value::_25:
 			return 25.0f;
-		case FrameRate::_29_97:
+		case FrameRate::Value::_29_97:
 			return 30.0f / 1001;
-		case FrameRate::_30:
+		case FrameRate::Value::_30:
 			return 30.0f;
-		case FrameRate::_50:
+		case FrameRate::Value::_50:
 			return 50.0f;
-		case FrameRate::_59_94:
+		case FrameRate::Value::_59_94:
 			return 60.0f / 1001;
-		case FrameRate::_60:
+		case FrameRate::Value::_60:
 			return 60.0f;
         default:
             return FINF;
@@ -116,37 +52,15 @@ Float FrameRate::period(Enum<FrameRate> frameRate)
 }
 
 // InterlaceMode
-Bool InterlaceMode::isValid(Int val)
-{
-    return val >= InterlaceMode::Progressive && val <= InterlaceMode::LowerFirst;
-}
-String InterlaceMode::toString(Int val)
-{
-    switch (val)
-	{
-		case InterlaceMode::Progressive:
-			return "Progressive";
-		case InterlaceMode::UpperFirst:
-			return "Interlaced (Upper field first)";
-		case InterlaceMode::LowerFirst:
-			return "Interlaced (Lower field first)";
-        default:
-            return String();
-	}
-}
-Int InterlaceMode::defaultValue()
-{
-	return InterlaceMode::Progressive;
-}
 Bool InterlaceMode::isInterlaced(Enum<InterlaceMode> mode)
 {
     switch (mode.value())
 	{
-		case InterlaceMode::Progressive:
+		case InterlaceMode::Value::Progressive:
 			return FALSE;
-		case InterlaceMode::UpperFirst:
+		case InterlaceMode::Value::UpperFirst:
 			return TRUE;
-		case InterlaceMode::LowerFirst:
+		case InterlaceMode::Value::LowerFirst:
 			return TRUE;
         default:
             return FALSE;
@@ -154,53 +68,23 @@ Bool InterlaceMode::isInterlaced(Enum<InterlaceMode> mode)
 }
 
 // MergeMode
-Bool MergeMode::isValid(Int val)
-{
-    return val >= MergeMode::Normal && val <= MergeMode::LineByLineRL;
-}
-String MergeMode::toString(Int val)
-{
-    switch (val)
-	{
-		case MergeMode::Normal:
-			return "Normal";
-		case MergeMode::LeftEye:
-			return "Left image";
-		case MergeMode::RightEye:
-			return "Right image";
-		case MergeMode::HalfSideBySide:
-			return "Side by side (Half)";
-		case MergeMode::FullSideBySide:
-			return "Side by side (Full)";
-		case MergeMode::LineByLineLR:
-			return (String)"Line by line (Upper field is left image)";
-		case MergeMode::LineByLineRL:
-			return (String)"Line by line (Upper field is right image)";
-        default:
-            return String();
-	}
-}
-Int MergeMode::defaultValue()
-{
-	return MergeMode::Normal;
-}
 Bool MergeMode::is3DMerged(Enum<MergeMode> mode)
 {
     switch (mode.value())
 	{
-		case MergeMode::Normal:
+		case MergeMode::Value::Normal:
 			return FALSE;
-		case MergeMode::LeftEye:
+		case MergeMode::Value::LeftEye:
 			return FALSE;
-		case MergeMode::RightEye:
+		case MergeMode::Value::RightEye:
 			return FALSE;
-		case MergeMode::HalfSideBySide:
+		case MergeMode::Value::HalfSideBySide:
 			return TRUE;
-		case MergeMode::FullSideBySide:
+		case MergeMode::Value::FullSideBySide:
 			return TRUE;
-		case MergeMode::LineByLineLR:
+		case MergeMode::Value::LineByLineLR:
 			return TRUE;
-		case MergeMode::LineByLineRL:
+		case MergeMode::Value::LineByLineRL:
 			return TRUE;
         default:
             return FALSE;
@@ -256,78 +140,35 @@ String ColorRGB::toString()
 }
 
 // ImageResolution
-Bool ImageResolution::isValid(Int val)
-{
-    return val >= ImageResolution::QVGA && val <= ImageResolution::HD1080;
-}
-
-String ImageResolution::toString(Int val)
-{
-    switch (val)
-    {
-        case ImageResolution::QVGA:
-            return "QVGA (320x240)";
-        case ImageResolution::VGA:
-            return "VGA (640x480)";
-        case ImageResolution::PAL720:
-            return "PAL (720x576)";
-        case ImageResolution::PAL768:
-            return "PAL (768x576)";
-        case ImageResolution::SVGA:
-            return "SVGA (800x600)";
-        case ImageResolution::XGA:
-            return "XGA (1024x768)";
-        case ImageResolution::WXGA:
-            return "WXGA (1280x800)";
-        case ImageResolution::SXGA:
-            return "SXGA (1280x1024)";
-        case ImageResolution::SXGAPlus:
-            return "SXGA+ (1400x1050)";
-        case ImageResolution::UXGA:
-            return "UXGA (1600x1200)";
-        case ImageResolution::WSXGAPlus:
-            return "WSXGA+ (1680x1050)";
-        case ImageResolution::HD720:
-            return "HD720 (1280x720)";
-        case ImageResolution::HD1080:
-            return "HD1080 (1920x1080)";
-        default:
-            return String();
-    }
-}
-Int ImageResolution::defaultValue()
-{
-	return ImageResolution::VGA;
-}
 Size2D ImageResolution::size(Enum<spadas::ImageResolution> resolution)
 {
     switch (resolution.value())
     {
-        case ImageResolution::QVGA:
+        case ImageResolution::Value::QVGA:
             return Size2D::wh(320, 240);
-        case ImageResolution::VGA:
+        case ImageResolution::Value::VGA:
             return Size2D::wh(640, 480);
-        case ImageResolution::PAL720:
+        case ImageResolution::Value::PAL720:
             return Size2D::wh(720, 576);
-        case ImageResolution::PAL768:
+        case ImageResolution::Value::PAL768:
             return Size2D::wh(768, 576);
-        case ImageResolution::SVGA:
+        case ImageResolution::Value::SVGA:
             return Size2D::wh(800, 600);
-        case ImageResolution::XGA:
+        case ImageResolution::Value::XGA:
             return Size2D::wh(1024, 768);
-        case ImageResolution::WXGA:
+        case ImageResolution::Value::WXGA:
             return Size2D::wh(1280, 800);
-        case ImageResolution::SXGA:
+        case ImageResolution::Value::SXGA:
             return Size2D::wh(1280, 1024);
-        case ImageResolution::SXGAPlus:
+        case ImageResolution::Value::SXGAPlus:
             return Size2D::wh(1400, 1050);
-        case ImageResolution::UXGA:
+        case ImageResolution::Value::UXGA:
             return Size2D::wh(1600, 1200);
-        case ImageResolution::WSXGAPlus:
+        case ImageResolution::Value::WSXGAPlus:
             return Size2D::wh(1680, 1050);
-        case ImageResolution::HD720:
+        case ImageResolution::Value::HD720:
             return Size2D::wh(1280, 720);
-        case ImageResolution::HD1080:
+        case ImageResolution::Value::HD1080:
             return Size2D::wh(1920, 1080);
         default:
             return Size2D();
@@ -335,79 +176,35 @@ Size2D ImageResolution::size(Enum<spadas::ImageResolution> resolution)
 }
 
 // PixelFormat
-Bool PixelFormat::isValid(Int val)
-{
-    return (val >= PixelFormat::ByteBGR && val <= PixelFormat::ByteRGBA) ||
-    (val >= PixelFormat::WordBGR && val <= PixelFormat::WordGray) ||
-    (val >= PixelFormat::FloatBGR && val <= PixelFormat::FloatHSV);
-}
-String PixelFormat::toString(Int val)
-{
-    switch (val)
-	{
-		case PixelFormat::ByteBGR:
-			return "ByteBGR";
-        case PixelFormat::ByteRGB:
-			return "ByteRGB";
-		case PixelFormat::ByteUYVY:
-			return "ByteUYVY";
-		case PixelFormat::ByteYUV:
-			return "ByteYUV";
-		case PixelFormat::ByteGray:
-			return "ByteGray";
-        case PixelFormat::ByteBool:
-			return "ByteBool";
-        case PixelFormat::ByteBGRA:
-            return "ByteBGRA";
-        case PixelFormat::ByteRGBA:
-            return "ByteRGBA";
-		case PixelFormat::WordBGR:
-			return "WordBGR";
-		case PixelFormat::WordGray:
-			return "WordGray";
-		case PixelFormat::FloatBGR:
-			return "FloatBGR";
-		case PixelFormat::FloatGray:
-			return "FloatGray";
-		case PixelFormat::FloatHSV:
-			return "FloatHSV";
-        default:
-            return String();
-	}
-}
-Int PixelFormat::defaultValue()
-{
-	return PixelFormat::ByteBGR;
-}
 Bool PixelFormat::isColor(Enum<spadas::PixelFormat> format)
 {
     switch (format.value())
 	{
-		case PixelFormat::ByteBGR:
+		case PixelFormat::Value::ByteBGR:
 			return TRUE;
-        case PixelFormat::ByteRGB:
+        case PixelFormat::Value::ByteRGB:
 			return TRUE;
-		case PixelFormat::ByteUYVY:
+		case PixelFormat::Value::ByteUYVY:
 			return TRUE;
-		case PixelFormat::ByteYUV:
+		case PixelFormat::Value::ByteYUV:
 			return TRUE;
-		case PixelFormat::ByteGray:
+		case PixelFormat::Value::ByteGray:
 			return FALSE;
-        case PixelFormat::ByteBool:
+        case PixelFormat::Value::ByteBool:
 			return FALSE;
-        case PixelFormat::ByteBGRA:
+        case PixelFormat::Value::ByteBGRA:
             return TRUE;
-        case PixelFormat::ByteRGBA:
+        case PixelFormat::Value::ByteRGBA:
             return TRUE;
-		case PixelFormat::WordBGR:
+		case PixelFormat::Value::WordBGR:
 			return TRUE;
-		case PixelFormat::WordGray:
+		case PixelFormat::Value::WordGray:
 			return FALSE;
-		case PixelFormat::FloatBGR:
+		case PixelFormat::Value::FloatBGR:
 			return TRUE;
-		case PixelFormat::FloatGray:
+		case PixelFormat::Value::FloatGray:
 			return FALSE;
-		case PixelFormat::FloatHSV:
+		case PixelFormat::Value::FloatHSV:
 			return TRUE;
         default:
             return FALSE;
@@ -417,31 +214,31 @@ Bool PixelFormat::hasAlpha(Enum<spadas::PixelFormat> format)
 {
     switch (format.value())
 	{
-		case PixelFormat::ByteBGR:
+		case PixelFormat::Value::ByteBGR:
 			return FALSE;
-        case PixelFormat::ByteRGB:
+        case PixelFormat::Value::ByteRGB:
 			return FALSE;
-		case PixelFormat::ByteUYVY:
+		case PixelFormat::Value::ByteUYVY:
 			return FALSE;
-		case PixelFormat::ByteYUV:
+		case PixelFormat::Value::ByteYUV:
 			return FALSE;
-		case PixelFormat::ByteGray:
+		case PixelFormat::Value::ByteGray:
 			return FALSE;
-        case PixelFormat::ByteBool:
+        case PixelFormat::Value::ByteBool:
 			return FALSE;
-        case PixelFormat::ByteBGRA:
+        case PixelFormat::Value::ByteBGRA:
             return TRUE;
-        case PixelFormat::ByteRGBA:
+        case PixelFormat::Value::ByteRGBA:
             return TRUE;
-		case PixelFormat::WordBGR:
+		case PixelFormat::Value::WordBGR:
 			return FALSE;
-		case PixelFormat::WordGray:
+		case PixelFormat::Value::WordGray:
 			return FALSE;
-		case PixelFormat::FloatBGR:
+		case PixelFormat::Value::FloatBGR:
 			return FALSE;
-		case PixelFormat::FloatGray:
+		case PixelFormat::Value::FloatGray:
 			return FALSE;
-		case PixelFormat::FloatHSV:
+		case PixelFormat::Value::FloatHSV:
 			return FALSE;
         default:
             return FALSE;
@@ -451,31 +248,31 @@ UInt PixelFormat::nChannels(Enum<PixelFormat> format)
 {
     switch (format.value())
 	{
-		case PixelFormat::ByteBGR:
+		case PixelFormat::Value::ByteBGR:
 			return 3;
-        case PixelFormat::ByteRGB:
+        case PixelFormat::Value::ByteRGB:
 			return 3;
-		case PixelFormat::ByteUYVY:
+		case PixelFormat::Value::ByteUYVY:
 			return 2;
-		case PixelFormat::ByteYUV:
+		case PixelFormat::Value::ByteYUV:
 			return 3;
-		case PixelFormat::ByteGray:
+		case PixelFormat::Value::ByteGray:
 			return 1;
-        case PixelFormat::ByteBool:
+        case PixelFormat::Value::ByteBool:
 			return 1;
-        case PixelFormat::ByteBGRA:
+        case PixelFormat::Value::ByteBGRA:
             return 4;
-        case PixelFormat::ByteRGBA:
+        case PixelFormat::Value::ByteRGBA:
             return 4;
-		case PixelFormat::WordBGR:
+		case PixelFormat::Value::WordBGR:
 			return 3;
-		case PixelFormat::WordGray:
+		case PixelFormat::Value::WordGray:
 			return 1;
-		case PixelFormat::FloatBGR:
+		case PixelFormat::Value::FloatBGR:
 			return 3;
-		case PixelFormat::FloatGray:
+		case PixelFormat::Value::FloatGray:
 			return 1;
-		case PixelFormat::FloatHSV:
+		case PixelFormat::Value::FloatHSV:
 			return 3;
         default:
             return 0;
@@ -485,107 +282,35 @@ UInt PixelFormat::bytesPerPixel(Enum<PixelFormat> format)
 {
     switch (format.value())
 	{
-		case PixelFormat::ByteBGR:
+		case PixelFormat::Value::ByteBGR:
 			return 3;
-        case PixelFormat::ByteRGB:
+        case PixelFormat::Value::ByteRGB:
 			return 3;
-		case PixelFormat::ByteUYVY:
+		case PixelFormat::Value::ByteUYVY:
 			return 2;
-		case PixelFormat::ByteYUV:
+		case PixelFormat::Value::ByteYUV:
 			return 3;
-		case PixelFormat::ByteGray:
+		case PixelFormat::Value::ByteGray:
 			return 1;
-        case PixelFormat::ByteBool:
+        case PixelFormat::Value::ByteBool:
 			return 1;
-        case PixelFormat::ByteBGRA:
+        case PixelFormat::Value::ByteBGRA:
             return 4;
-        case PixelFormat::ByteRGBA:
+        case PixelFormat::Value::ByteRGBA:
             return 4;
-		case PixelFormat::WordBGR:
+		case PixelFormat::Value::WordBGR:
 			return 6;
-		case PixelFormat::WordGray:
+		case PixelFormat::Value::WordGray:
 			return 2;
-		case PixelFormat::FloatBGR:
+		case PixelFormat::Value::FloatBGR:
 			return 12;
-		case PixelFormat::FloatGray:
+		case PixelFormat::Value::FloatGray:
 			return 4;
-		case PixelFormat::FloatHSV:
+		case PixelFormat::Value::FloatHSV:
 			return 12;
         default:
             return 0;
 	}
-}
-
-// ResizeMode
-Bool ResizeMode::isValid(Int val)
-{
-	return val >= ResizeMode::Nearest && val <= ResizeMode::Area;
-}
-String ResizeMode::toString(Int val)
-{
-	switch (val)
-	{
-		case ResizeMode::Nearest:
-			return "Nearest";
-		case ResizeMode::Bilinear:
-			return "Bilinear";
-		case ResizeMode::Area:
-			return "Area";
-		default:
-			return String();
-	}
-}
-Int ResizeMode::defaultValue()
-{
-	return ResizeMode::Bilinear;
-}
-
-// ResizeScale
-Bool ResizeScale::isValid(Int val)
-{
-	return val >= ResizeScale::Quarter && val <= ResizeScale::Double;
-}
-String ResizeScale::toString(Int val)
-{
-	switch (val)
-	{
-		case ResizeScale::Quarter:
-			return "Quarter";
-		case ResizeScale::Half:
-			return "Half";
-		case ResizeScale::Double:
-			return "Double";
-		default:
-			return String();
-	}
-}
-Int ResizeScale::defaultValue()
-{
-	return ResizeScale::Half;
-}
-
-/* ImageRotation */
-Bool ImageRotation::isValid(Int val)
-{
-	return val >= ImageRotation::CW90 && val <= ImageRotation::CCW90;
-}
-String ImageRotation::toString(Int val)
-{
-	switch (val)
-	{
-		case ImageRotation::CW90:
-			return "Clockwise 90 degree";
-		case ImageRotation::CW180:
-			return "Clockwise 180 degree";
-		case ImageRotation::CCW90:
-			return "Counter-clockwise 90 degree";
-		default:
-			return String();
-	}
-}
-Int ImageRotation::defaultValue()
-{
-	return ImageRotation::CW90;
 }
 
 /* PixelData */

@@ -1,13 +1,10 @@
 ﻿
-#if defined(SPADAS_DEBUG)
-#undef SPADAS_DEBUG
-#endif
-
-#include "spadas.h"
 #include "binary.h"
 #include <memory.h>
+#undef NULL
+#define NULL 0
 
-#if defined(SPADAS_ENV_MACOS)
+# if !defined(SPADAS_ENV_NILRT)
 #pragma clang diagnostic ignored "-Wunused-private-field"
 #endif
 

@@ -46,16 +46,16 @@ void FileConsole::print(String text, Enum<MessageLevel> level)
 
 	switch (level.value())
 	{
-	case MessageLevel::Error:
+	case MessageLevel::Value::Error:
 		vars->file.print(vars->errorPrefix + text);
 		break;
-	case MessageLevel::Warning:
+	case MessageLevel::Value::Warning:
 		vars->file.print(vars->warningPrefix + text);
 		break;
-	case MessageLevel::Info:
+	case MessageLevel::Value::Info:
 		vars->file.print(vars->infoPrefix + text);
 		break;
-	case MessageLevel::Debug:
+	case MessageLevel::Value::Debug:
 		vars->file.print(vars->debugPrefix + text);
 		break;
 	default:

@@ -24,7 +24,7 @@ namespace utility_internal
 	{
 		UInt width = matDimAt1;
 		UInt height = matDimAt0;
-		Image out(Size2D::wh(width, height), PixelFormat::FloatGray);
+		Image out(Size2D::wh(width, height), PixelFormat::Value::FloatGray);
 
 		Float k = 1.0f / (Float)(upper - lower);
 
@@ -53,52 +53,52 @@ IntMat spadas::utility::imageToMatrixInt(Image image)
 	UInt rowElements;
 	switch (image.format().value())
 	{
-		case PixelFormat::ByteBGR:
+		case PixelFormat::Value::ByteBGR:
 			dims = Array<UInt>(3);
 			dims[0] = image.height(); dims[1] = image.width(); dims[2] = 3;
 			rowElements = image.rowBytes();
 			break;
-		case PixelFormat::ByteRGB:
+		case PixelFormat::Value::ByteRGB:
 			dims = Array<UInt>(3);
 			dims[0] = image.height(); dims[1] = image.width(); dims[2] = 3;
 			rowElements = image.rowBytes();
 			break;
-		case PixelFormat::ByteGray:
+		case PixelFormat::Value::ByteGray:
 			dims = Array<UInt>(2);
 			dims[0] = image.height(); dims[1] = image.width();
 			rowElements = image.rowBytes();
 			break;
-		case PixelFormat::ByteUYVY:
+		case PixelFormat::Value::ByteUYVY:
 			dims = Array<UInt>(3);
 			dims[0] = image.height(); dims[1] = image.width(); dims[2] = 2;
 			rowElements = image.rowBytes();
 			break;
-		case PixelFormat::ByteYUV:
+		case PixelFormat::Value::ByteYUV:
 			dims = Array<UInt>(3);
 			dims[0] = image.height(); dims[1] = image.width(); dims[2] = 3;
 			rowElements = image.rowBytes();
 			break;
-		case PixelFormat::ByteBool:
+		case PixelFormat::Value::ByteBool:
 			dims = Array<UInt>(2);
 			dims[0] = image.height(); dims[1] = image.width();
 			rowElements = image.rowBytes();
 			break;
-		case PixelFormat::ByteBGRA:
+		case PixelFormat::Value::ByteBGRA:
 			dims = Array<UInt>(3);
 			dims[0] = image.height(); dims[1] = image.width(); dims[2] = 4;
 			rowElements = image.rowBytes();
 			break;
-		case PixelFormat::ByteRGBA:
+		case PixelFormat::Value::ByteRGBA:
 			dims = Array<UInt>(3);
 			dims[0] = image.height(); dims[1] = image.width(); dims[2] = 4;
 			rowElements = image.rowBytes();
 			break;
-		case PixelFormat::WordBGR:
+		case PixelFormat::Value::WordBGR:
 			dims = Array<UInt>(3);
 			dims[0] = image.height(); dims[1] = image.width(); dims[2] = 3;
 			rowElements = image.rowBytes() / 2;
 			break;
-		case PixelFormat::WordGray:
+		case PixelFormat::Value::WordGray:
 			dims = Array<UInt>(2);
 			dims[0] = image.height(); dims[1] = image.width();
 			rowElements = image.rowBytes() / 2;
@@ -114,22 +114,22 @@ IntMat spadas::utility::imageToMatrixInt(Image image)
 	
 	switch (image.format().value())
 	{
-		case PixelFormat::ByteBGR:
-		case PixelFormat::ByteRGB:
-		case PixelFormat::ByteGray:
-		case PixelFormat::ByteUYVY:
-		case PixelFormat::ByteYUV:
-		case PixelFormat::ByteBGRA:
-		case PixelFormat::ByteRGBA:
+		case PixelFormat::Value::ByteBGR:
+		case PixelFormat::Value::ByteRGB:
+		case PixelFormat::Value::ByteGray:
+		case PixelFormat::Value::ByteUYVY:
+		case PixelFormat::Value::ByteYUV:
+		case PixelFormat::Value::ByteBGRA:
+		case PixelFormat::Value::ByteRGBA:
 			srcToDst(image.data().b, out.data(), imageHeight, rowElements, copyElements, copyElements);
 			break;
 
-		case PixelFormat::WordBGR:
-		case PixelFormat::WordGray:
+		case PixelFormat::Value::WordBGR:
+		case PixelFormat::Value::WordGray:
 			srcToDst(image.data().w, out.data(), imageHeight, rowElements, copyElements, copyElements);
 			break;
 			
-		case PixelFormat::ByteBool:
+		case PixelFormat::Value::ByteBool:
 			for (UInt v = 0; v < imageHeight; v++)
 			{
 				Byte *srcRow = image[v].b;
@@ -155,25 +155,25 @@ Image spadas::utility::matrixIntToImage(IntMat matrix, Enum<PixelFormat> format)
 	UInt nDims = 0, nChannels = 1;
 	switch (format.value())
 	{
-	case PixelFormat::ByteBGRA:
-	case PixelFormat::ByteRGBA:
+	case PixelFormat::Value::ByteBGRA:
+	case PixelFormat::Value::ByteRGBA:
 		nDims = 3;
 		nChannels = 4;
 		break;
-	case PixelFormat::ByteBGR:
-	case PixelFormat::ByteRGB:
-	case PixelFormat::ByteYUV:
-	case PixelFormat::WordBGR:
+	case PixelFormat::Value::ByteBGR:
+	case PixelFormat::Value::ByteRGB:
+	case PixelFormat::Value::ByteYUV:
+	case PixelFormat::Value::WordBGR:
 		nDims = 3;
 		nChannels = 3;
 		break;
-	case PixelFormat::ByteUYVY:
+	case PixelFormat::Value::ByteUYVY:
 		nDims = 3;
 		nChannels = 2;
 		break;
-	case PixelFormat::ByteGray:
-	case PixelFormat::ByteBool:
-	case PixelFormat::WordGray:
+	case PixelFormat::Value::ByteGray:
+	case PixelFormat::Value::ByteBool:
+	case PixelFormat::Value::WordGray:
 		nDims = 2;
 		break;
 	default:
@@ -189,22 +189,22 @@ Image spadas::utility::matrixIntToImage(IntMat matrix, Enum<PixelFormat> format)
 
 	switch (format.value())
 	{
-	case PixelFormat::ByteBGR:
-	case PixelFormat::ByteRGB:
-	case PixelFormat::ByteGray:
-	case PixelFormat::ByteUYVY:
-	case PixelFormat::ByteYUV:
-	case PixelFormat::ByteBGRA:
-	case PixelFormat::ByteRGBA:
+	case PixelFormat::Value::ByteBGR:
+	case PixelFormat::Value::ByteRGB:
+	case PixelFormat::Value::ByteGray:
+	case PixelFormat::Value::ByteUYVY:
+	case PixelFormat::Value::ByteYUV:
+	case PixelFormat::Value::ByteBGRA:
+	case PixelFormat::Value::ByteRGBA:
 		srcToDst(matrix.data(), out.data().b, imageHeight, copyElements, out.rowBytes(), copyElements);
 		break;
 
-	case PixelFormat::WordBGR:
-	case PixelFormat::WordGray:
+	case PixelFormat::Value::WordBGR:
+	case PixelFormat::Value::WordGray:
 		srcToDst(matrix.data(), out.data().w, imageHeight, copyElements, out.rowBytes() / 2, copyElements);
 		break;
 
-	case PixelFormat::ByteBool:
+	case PixelFormat::Value::ByteBool:
 		for (UInt v = 0; v < imageHeight; v++)
 		{
 			Int *srcRow = matrix[v].data();
@@ -231,17 +231,17 @@ FloatMat spadas::utility::imageToMatrixFloat(Image image)
 	UInt rowElements;
 	switch (image.format().value())
 	{
-		case PixelFormat::FloatBGR:
+		case PixelFormat::Value::FloatBGR:
 			dims = Array<UInt>(3);
 			dims[0] = image.height(); dims[1] = image.width(); dims[2] = 3;
 			rowElements = image.rowBytes() / 4;
 			break;
-		case PixelFormat::FloatGray:
+		case PixelFormat::Value::FloatGray:
 			dims = Array<UInt>(2);
 			dims[0] = image.height(); dims[1] = image.width();
 			rowElements = image.rowBytes() / 4;
 			break;
-		case PixelFormat::FloatHSV:
+		case PixelFormat::Value::FloatHSV:
 			dims = Array<UInt>(3);
 			dims[0] = image.height(); dims[1] = image.width(); dims[2] = 3;
 			rowElements = image.rowBytes() / 4;
@@ -267,12 +267,12 @@ Image spadas::utility::matrixFloatToImage(FloatMat matrix, Enum<PixelFormat> for
 	UInt nDims = 0, nChannels = 1;
 	switch (format.value())
 	{
-	case PixelFormat::FloatBGR:
-	case PixelFormat::FloatHSV:
+	case PixelFormat::Value::FloatBGR:
+	case PixelFormat::Value::FloatHSV:
 		nChannels = 3;
 		nDims = 3;
 		break;
-	case PixelFormat::FloatGray:
+	case PixelFormat::Value::FloatGray:
 		nDims = 2;
 		break;
 	default:

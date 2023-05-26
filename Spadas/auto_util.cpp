@@ -3,20 +3,6 @@
 
 namespace spadas
 {
-	class TriggerFilterVars : public Vars
-	{
-	public:
-		SPADAS_VARS_DEF(TriggerFilter, Vars)
-
-		Double interval;
-		OptionalBool lastState;
-		GlobalTimestamp lastStateTS;
-		GlobalTimestamp filterTS;
-
-		TriggerFilterVars() : interval(1)
-		{}
-	};
-
 	class GeneralIOObjectVars : public Vars
 	{
 	public:
@@ -28,49 +14,6 @@ namespace spadas
 }
 
 using namespace spadas;
-
-const String spadas::TriggerFilter::TypeName = "spadas.TriggerFilter";
-
-TriggerFilter::TriggerFilter() : Object<TriggerFilterVars>(new TriggerFilterVars, TRUE)
-{
-}
-
-void TriggerFilter::setMinInterval(Double sec)
-{
-	vars->interval = math::max(0.0, sec);
-}
-
-Bool TriggerFilter::update(Bool state, GlobalTimestamp ts)
-{
-	// 时间轴顺序检验
-	if (vars->lastState.valid)
-	{
-		if (ts.base == vars->lastStateTS.base && ts.offset <= vars->lastStateTS.offset)
-		{
-			return FALSE;
-		}
-	}
-
-	// holder
-	Bool filterState;
-	if (state == TRUE)
-	{
-		filterState = TRUE;
-		vars->filterTS = ts;
-	}
-	else
-	{
-		if (ts.base == vars->filterTS.base && ts.offset - vars->filterTS.offset < vars->interval) filterState = TRUE;
-		else filterState = FALSE;
-	}
-	
-	// 检测holder后的信号上升沿
-	Bool trigger = vars->lastState.valid && vars->lastState.value == FALSE && filterState == TRUE;
-	vars->lastState = filterState;
-	vars->lastStateTS = ts;
-
-	return trigger;
-}
 
 Bool ITimestampSearch::readNextTimestamp(File file, Double& time, ULong& pos)
 {
@@ -94,8 +37,8 @@ File TimestampSearch::search(Path path, Double time, Interface<ITimestampSearch>
 
 	// 确定尾部搜索范围
 	Range tailRange = searcher->getTailSearchRange();
-	Int tailSmallRange = math::round(tailRange.lower);
-	Int tailLargeRange = math::round(tailRange.upper);
+	Int tailSmallRange = (Int)math::round(tailRange.lower);
+	Int tailLargeRange = (Int)math::round(tailRange.upper);
 	if (tailSmallRange <= 0 || tailLargeRange <= 0)
 	{
 		tailSmallRange = 100;
@@ -235,8 +178,8 @@ Optional<Range> TimestampSearch::getTimeRange(Path path, Interface<ITimestampSea
 
 	// 确定尾部搜索范围
 	Range tailRange = searcher->getTailSearchRange();
-	Int tailSmallRange = math::round(tailRange.lower);
-	Int tailLargeRange = math::round(tailRange.upper);
+	Int tailSmallRange = (Int)math::round(tailRange.lower);
+	Int tailLargeRange = (Int)math::round(tailRange.upper);
 	if (tailSmallRange <= 0 || tailLargeRange <= 0)
 	{
 		tailSmallRange = 100;

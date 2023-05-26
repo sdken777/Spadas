@@ -1,7 +1,5 @@
 ﻿
-#include "spadas.h"
-
-#include "image_bz.h"
+#include "image.h"
 
 namespace image_internal
 {
@@ -12,49 +10,52 @@ namespace image_internal
 		UInt rowUnits = dst.rowBytes() / sizeof(Type);
 		switch (rotation.value())
 		{
-			case ImageRotation::CW90:
-			{
-				Type *dstData = (Type*)dst.data().ptr;
-				for (UInt v = 0; v < height; v++)
+			case ImageRotation::Value::CW90:
 				{
-					Type *srcRow = (Type*)src[v].ptr;
-					Type *dstCol = &dstData[height-1-v];
-					for (UInt uSrc = 0, uDst = 0; uSrc < width; uSrc++, uDst += rowUnits)
+					Type *dstData = (Type*)dst.data().ptr;
+					for (UInt v = 0; v < height; v++)
 					{
-						dstCol[uDst] = srcRow[uSrc];
+						Type *srcRow = (Type*)src[v].ptr;
+						Type *dstCol = &dstData[height-1-v];
+						for (UInt uSrc = 0, uDst = 0; uSrc < width; uSrc++, uDst += rowUnits)
+						{
+							dstCol[uDst] = srcRow[uSrc];
+						}
 					}
 				}
-			}
 				break;
 				
-			case ImageRotation::CCW90:
-			{
-				Type *dstData = (Type*)dst.data().ptr;
-				UInt rowUnits = dst.rowBytes() / sizeof(Type);
-				for (UInt v = 0; v < height; v++)
+			case ImageRotation::Value::CCW90:
 				{
-					Type *srcRow = (Type*)src[v].ptr;
-					Type *dstCol = &dstData[v];
-					for (Int uSrc = (Int)width-1, uDst = 0; uSrc >= 0; uSrc--, uDst += rowUnits)
+					Type *dstData = (Type*)dst.data().ptr;
+					UInt rowUnits = dst.rowBytes() / sizeof(Type);
+					for (UInt v = 0; v < height; v++)
 					{
-						dstCol[uDst] = srcRow[uSrc];
+						Type *srcRow = (Type*)src[v].ptr;
+						Type *dstCol = &dstData[v];
+						for (Int uSrc = (Int)width-1, uDst = 0; uSrc >= 0; uSrc--, uDst += rowUnits)
+						{
+							dstCol[uDst] = srcRow[uSrc];
+						}
 					}
 				}
-			}
 				break;
 				
-			case ImageRotation::CW180:
-			{
-				for (UInt v = 0; v < height; v++)
+			case ImageRotation::Value::CW180:
 				{
-					Type *srcRow = (Type*)src[v].ptr;
-					Type *dstRow = (Type*)dst[height-1-v].ptr;
-					for (UInt uDst = 0, uSrc = width-1; uDst < width; uDst++, uSrc--)
+					for (UInt v = 0; v < height; v++)
 					{
-						dstRow[uDst] = srcRow[uSrc];
+						Type *srcRow = (Type*)src[v].ptr;
+						Type *dstRow = (Type*)dst[height-1-v].ptr;
+						for (UInt uDst = 0, uSrc = width-1; uDst < width; uDst++, uSrc--)
+						{
+							dstRow[uDst] = srcRow[uSrc];
+						}
 					}
 				}
-			}
+				break;
+
+			default:
 				break;
 		}
 	}
@@ -66,52 +67,55 @@ namespace image_internal
 		UInt rowUnits = dst.rowBytes() / sizeof(Type);
 		switch (rotation.value())
 		{
-			case ImageRotation::CW90:
-			{
-				Type *dstData = (Type*)dst.data().ptr;
-				for (UInt v = 0; v < height; v++)
+			case ImageRotation::Value::CW90:
 				{
-					Type *srcRow = (Type*)src[v].ptr;
-					Type *dstCell = &dstData[(height-1-v)*nChannels];
-					for (UInt u = 0, un = 0; u < width; u++)
+					Type *dstData = (Type*)dst.data().ptr;
+					for (UInt v = 0; v < height; v++)
 					{
-                        for (UInt n = 0; n < nChannels; n++) dstCell[n] = srcRow[un++];
-						dstCell = &dstCell[rowUnits];
+						Type *srcRow = (Type*)src[v].ptr;
+						Type *dstCell = &dstData[(height-1-v)*nChannels];
+						for (UInt u = 0, un = 0; u < width; u++)
+						{
+							for (UInt n = 0; n < nChannels; n++) dstCell[n] = srcRow[un++];
+							dstCell = &dstCell[rowUnits];
+						}
 					}
 				}
-			}
 				break;
 				
-			case ImageRotation::CCW90:
-			{
-				Type *dstData = (Type*)dst.data().ptr;
-				UInt rowUnits = dst.rowBytes() / sizeof(Type);
-				for (UInt v = 0; v < height; v++)
+			case ImageRotation::Value::CCW90:
 				{
-					Type *srcRow = (Type*)src[v].ptr;
-					Type *dstCell = &dstData[v*nChannels];
-					for (Int u = 0, un = nChannels*width-1; u < (Int)width; u++)
+					Type *dstData = (Type*)dst.data().ptr;
+					UInt rowUnits = dst.rowBytes() / sizeof(Type);
+					for (UInt v = 0; v < height; v++)
 					{
-                        for (Int n = (Int)nChannels-1; n >= 0; n--) dstCell[n] = srcRow[un--];
-						dstCell = &dstCell[rowUnits];
+						Type *srcRow = (Type*)src[v].ptr;
+						Type *dstCell = &dstData[v*nChannels];
+						for (Int u = 0, un = nChannels*width-1; u < (Int)width; u++)
+						{
+							for (Int n = (Int)nChannels-1; n >= 0; n--) dstCell[n] = srcRow[un--];
+							dstCell = &dstCell[rowUnits];
+						}
 					}
 				}
-			}
 				break;
 				
-			case ImageRotation::CW180:
-			{
-                UInt uncStep = 2 * nChannels;
-				for (UInt v = 0; v < height; v++)
+			case ImageRotation::Value::CW180:
 				{
-					Type *srcRow = (Type*)src[v].ptr;
-					Type *dstRow = (Type*)dst[height-1-v].ptr;
-					for (Int u = 0, un = 0, unc = nChannels*(width-1); u < (Int)width; u++, unc -= uncStep)
+					UInt uncStep = 2 * nChannels;
+					for (UInt v = 0; v < height; v++)
 					{
-                        for (UInt n = 0; n < nChannels; n++) dstRow[unc++] = srcRow[un++];
+						Type *srcRow = (Type*)src[v].ptr;
+						Type *dstRow = (Type*)dst[height-1-v].ptr;
+						for (Int u = 0, un = 0, unc = nChannels*(width-1); u < (Int)width; u++, unc -= uncStep)
+						{
+							for (UInt n = 0; n < nChannels; n++) dstRow[unc++] = srcRow[un++];
+						}
 					}
 				}
-			}
+				break;
+
+			default:
 				break;
 		}
 	}

@@ -1,233 +1,195 @@
 {
     "configurations": [
         {
-            "name": "Windows主机/X86-Windows目标",
-            "compilerPath": "C:\\x-tools\\x86-windows\\bin\\x86_64-w64-mingw32-g++.exe",
+            "name": "Windows主机/X86-Windows10目标",
+            "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
+            "compilerArgs": [
+                "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-windows10",
+                "--target=x86_64-w64-mingw32"
+            ],
             "includePath": [
-                ".\\",
-                "..\\include",
-                // "..\\include64",
-                "C:\\x-tools-headers\\x86-windows\\lib\\gcc\\x86_64-w64-mingw32\\8.3.0\\include",
-                "C:\\x-tools-headers\\x86-windows\\x86_64-w64-mingw32\\include\\c++\\8.3.0",
-                "C:\\x-tools-headers\\x86-windows\\x86_64-w64-mingw32\\include\\c++\\8.3.0\\x86_64-w64-mingw32",
-                "C:\\x-tools-headers\\x86-windows\\x86_64-w64-mingw32\\sysroot\\mingw\\include"
+                "${workspaceFolder}",
+                "${workspaceFolder}\\..\\include",
+                // "${workspaceFolder}\\..\\include64",
             ],
             "defines": [
                 "SPADAS_ENV_WINDOWS",
                 "SPADAS_ARCH_X86"
             ],
-            "intelliSenseMode": "gcc-x64",
-            "cppStandard": "c++11"
+            "intelliSenseMode": "clang-x64",
+            "cppStandard": "c++17"
         },
         {
-            "name": "Windows主机/X86-Ubuntu1804目标",
-            "compilerPath": "C:\\x-tools\\x86-ubuntu1804\\bin\\x86_64-ubuntu18.04-linux-gnu-g++.exe",
+            "name": "Windows主机/X86-Ubuntu2204目标",
+            "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
+            "compilerArgs": [
+                "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-ubuntu2204",
+                "--target=x86_64-ubuntu22.04-linux-gnu"
+            ],
             "includePath": [
-                ".\\",
-                "..\\include",
-                // "..\\includex",
-                "C:\\x-tools-headers\\x86-ubuntu1804\\lib\\gcc\\x86_64-ubuntu18.04-linux-gnu\\8.3.0\\include",
-                "C:\\x-tools-headers\\x86-ubuntu1804\\x86_64-ubuntu18.04-linux-gnu\\include\\c++\\8.3.0",
-                "C:\\x-tools-headers\\x86-ubuntu1804\\x86_64-ubuntu18.04-linux-gnu\\include\\c++\\8.3.0\\x86_64-ubuntu18.04-linux-gnu",
-                "C:\\x-tools-headers\\x86-ubuntu1804\\x86_64-ubuntu18.04-linux-gnu\\sysroot\\usr\\include"
+                "${workspaceFolder}",
+                "${workspaceFolder}\\..\\include",
+                // "${workspaceFolder}\\..\\includex",
             ],
             "defines": [
                 "SPADAS_ENV_LINUX",
                 "SPADAS_ARCH_X86"
             ],
-            "intelliSenseMode": "gcc-x64",
-            "cppStandard": "c++11"
+            "intelliSenseMode": "clang-x64",
+            "cppStandard": "c++17"
         },
         {
-            "name": "Windows主机/Arm-Ubuntu1604目标",
-            "compilerPath": "C:\\x-tools\\arm-ubuntu1604\\bin\\aarch64-ubuntu16.04-linux-gnu-g++.exe",
+            "name": "Windows主机/Arm-Ubuntu2204目标",
+            "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
+            "compilerArgs": [
+                "--sysroot=C:\\msys64\\opt\\xtools-uni\\arm-ubuntu2204",
+                "--target=aarch64-ubuntu22.04-linux-gnu"
+            ],
             "includePath": [
-                ".\\",
-                "..\\include",
-                // "..\\includexa",
-                "C:\\x-tools-headers\\arm-ubuntu1604\\lib\\gcc\\aarch64-ubuntu16.04-linux-gnu\\8.3.0\\include",
-                "C:\\x-tools-headers\\arm-ubuntu1604\\aarch64-ubuntu16.04-linux-gnu\\include\\c++\\8.3.0",
-                "C:\\x-tools-headers\\arm-ubuntu1604\\aarch64-ubuntu16.04-linux-gnu\\include\\c++\\8.3.0\\aarch64-ubuntu16.04-linux-gnu",
-                "C:\\x-tools-headers\\arm-ubuntu1604\\aarch64-ubuntu16.04-linux-gnu\\sysroot\\usr\\include"
+                "${workspaceFolder}",
+                "${workspaceFolder}\\..\\include",
+                // "${workspaceFolder}\\..\\includexa",
             ],
             "defines": [
                 "SPADAS_ENV_LINUX",
                 "SPADAS_ARCH_ARM"
             ],
-            "intelliSenseMode": "gcc-arm64",
-            "cppStandard": "c++11"
+            "intelliSenseMode": "clang-arm64",
+            "cppStandard": "c++17"
         },
         {
-            "name": "Windows主机/X86-MacOS1010目标",
-            "compilerPath": "C:\\x-tools\\x86-macos1010\\target\\bin2\\x86_64-apple-darwin14-clang++.exe",
-            "compilerArgs": [ "-foc-compiler-path=C:\\x-tools\\x86-macos1010\\llvm-8\\bin" ],
+            "name": "Windows主机/Arm-MacOS1203目标",
+            "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
+            "compilerArgs": [
+                "--sysroot=C:\\msys64\\opt\\xtools-uni\\arm-macos1203",
+                "--target=arm64-apple-darwin21.4.0"
+            ],
             "includePath": [
-                ".\\",
-                "..\\include",
-                // "..\\includem",
-                "C:\\x-tools-headers\\x86-macos1010\\llvm-8\\lib\\clang\\8.0.0\\include",
-                "C:\\x-tools-headers\\x86-macos1010\\target\\SDK\\MacOSX10.10.sdk\\usr\\include\\c++\\v1",
-                "C:\\x-tools-headers\\x86-macos1010\\target\\SDK\\MacOSX10.10.sdk\\usr\\include"
+                "${workspaceFolder}",
+                "${workspaceFolder}\\..\\include",
+                // "${workspaceFolder}\\..\\includema",
             ],
             "defines": [
                 "SPADAS_ENV_MACOS",
+                "SPADAS_ARCH_ARM"
+            ],
+            "intelliSenseMode": "clang-arm64",
+            "cppStandard": "c++17"
+        },
+        {
+            "name": "Windows主机/X86-NILRT17目标",
+            "compilerPath": "C:\\msys64\\opt\\xtools-uni\\x86-nilrt17\\sysroots\\i686-nilrtsdk-mingw32\\usr\\bin\\x86_64-nilrt-linux\\x86_64-nilrt-linux-g++.exe",
+            "compilerArgs": [
+                "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-nilrt17\\sysroots\\core2-64-nilrt-linux",
+                "-m64 -march=core2 -mtune=core2 -msse3 -mfpmath=sse"
+            ],
+            "includePath": [
+                "${workspaceFolder}",
+                "${workspaceFolder}\\..\\include",
+                // "${workspaceFolder}\\..\\includeni",
+            ],
+            "defines": [
+                "SPADAS_ENV_NILRT",
                 "SPADAS_ARCH_X86"
             ],
-            "intelliSenseMode": "clang-x64",
+            "intelliSenseMode": "gcc-x64",
             "cppStandard": "c++11"
         },
         {
-            "name": "Linux主机/X86-Windows目标",
-            "compilerPath": "/opt/x-tools/x86-windows/bin/x86_64-w64-mingw32-g++",
+            "name": "非Windows主机/X86-Windows10目标",
+            "compilerPath": "/opt/clang-15/bin/clang++",
+            "compilerArgs": [
+                "--sysroot=/opt/xtools-uni/x86-windows10",
+                "--target=x86_64-w64-mingw32"
+            ],
             "includePath": [
-                "./",
-                "../include",
-                // "../include64",
-                "/opt/x-tools/x86-windows/lib/gcc/x86_64-w64-mingw32/8.3.0/include",
-                "/opt/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0",
-                "/opt/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0/x86_64-w64-mingw32",
-                "/opt/x-tools/x86-windows/x86_64-w64-mingw32/sysroot/mingw/include"
+                "${workspaceFolder}",
+                "${workspaceFolder}/../include",
+                // "${workspaceFolder}/../include64",
             ],
             "defines": [
                 "SPADAS_ENV_WINDOWS",
                 "SPADAS_ARCH_X86"
             ],
-            "intelliSenseMode": "gcc-x64",
-            "cppStandard": "c++11"
+            "intelliSenseMode": "clang-x64",
+            "cppStandard": "c++17"
         },
         {
-            "name": "Linux主机/X86-Ubuntu1804目标",
-            "compilerPath": "/opt/x-tools/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-g++",
+            "name": "非Windows主机/X86-Ubuntu2204目标",
+            "compilerPath": "/opt/clang-15/bin/clang++",
+            "compilerArgs": [
+                "--sysroot=/opt/xtools-uni/x86-ubuntu2204",
+                "--target=x86_64-ubuntu22.04-linux-gnu"
+            ],
             "includePath": [
-                "./",
-                "../include",
-                // "../includex",
-                "/opt/x-tools/x86-ubuntu1804/lib/gcc/x86_64-ubuntu18.04-linux-gnu/8.3.0/include",
-                "/opt/x-tools/x86-ubuntu1804/x86_64-ubuntu18.04-linux-gnu/include/c++/8.3.0",
-                "/opt/x-tools/x86-ubuntu1804/x86_64-ubuntu18.04-linux-gnu/include/c++/8.3.0/x86_64-ubuntu18.04-linux-gnu",
-                "/opt/x-tools/x86-ubuntu1804/x86_64-ubuntu18.04-linux-gnu/sysroot/usr/include"
+                "${workspaceFolder}",
+                "${workspaceFolder}/../include",
+                // "${workspaceFolder}/../includex",
             ],
             "defines": [
                 "SPADAS_ENV_LINUX",
                 "SPADAS_ARCH_X86"
             ],
-            "intelliSenseMode": "gcc-x64",
-            "cppStandard": "c++11"
+            "intelliSenseMode": "clang-x64",
+            "cppStandard": "c++17"
         },
         {
-            "name": "Linux主机/Arm-Ubuntu1604目标",
-            "compilerPath": "/opt/x-tools/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-g++",
+            "name": "非Windows主机/Arm-Ubuntu2204目标",
+            "compilerPath": "/opt/clang-15/bin/clang++",
+            "compilerArgs": [
+                "--sysroot=/opt/xtools-uni/arm-ubuntu2204",
+                "--target=aarch64-ubuntu22.04-linux-gnu"
+            ],
             "includePath": [
-                "./",
-                "../include",
-                // "../includexa",
-                "/opt/x-tools/arm-ubuntu1604/lib/gcc/aarch64-ubuntu16.04-linux-gnu/8.3.0/include",
-                "/opt/x-tools/arm-ubuntu1604/aarch64-ubuntu16.04-linux-gnu/include/c++/8.3.0",
-                "/opt/x-tools/arm-ubuntu1604/aarch64-ubuntu16.04-linux-gnu/include/c++/8.3.0/aarch64-ubuntu16.04-linux-gnu",
-                "/opt/x-tools/arm-ubuntu1604/aarch64-ubuntu16.04-linux-gnu/sysroot/usr/include"
+                "${workspaceFolder}",
+                "${workspaceFolder}/../include",
+                // "${workspaceFolder}/../includexa",
             ],
             "defines": [
                 "SPADAS_ENV_LINUX",
                 "SPADAS_ARCH_ARM"
             ],
-            "intelliSenseMode": "gcc-arm64",
-            "cppStandard": "c++11"
+            "intelliSenseMode": "clang-arm64",
+            "cppStandard": "c++17"
         },
         {
-            "name": "Linux主机/X86-MacOS1010目标",
-            "compilerPath": "/opt/x-tools/x86-macos1010/target/bin/x86_64-apple-darwin14-clang++",
-            "compilerArgs": [ "-foc-compiler-path=/opt/x-tools/x86-macos1010/llvm-8/bin" ],
+            "name": "非Windows主机/Arm-MacOS1203目标",
+            "compilerPath": "/opt/clang-15/bin/clang++",
+            "compilerArgs": [
+                "--sysroot=/opt/xtools-uni/arm-macos1203",
+                "--target=arm64-apple-darwin21.4.0"
+            ],
             "includePath": [
-                "./",
-                "../include",
-                // "../includem",
-                "/opt/x-tools/x86-macos1010/llvm-8/lib/clang/8.0.0/include",
-                "/opt/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/v1",
-                "/opt/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include"
+                "${workspaceFolder}",
+                "${workspaceFolder}/../include",
+                // "${workspaceFolder}/../includema",
             ],
             "defines": [
                 "SPADAS_ENV_MACOS",
-                "SPADAS_ARCH_X86"
-            ],
-            "intelliSenseMode": "clang-x64",
-            "cppStandard": "c++11"
-        },
-        {
-            "name": "MacOS主机/X86-Windows目标",
-            "compilerPath": "/Volumes/x-tools/x86-windows/bin/x86_64-w64-mingw32-g++",
-            "includePath": [
-                "./",
-                "../include",
-                // "../include64",
-                "/Volumes/x-tools/x86-windows/lib/gcc/x86_64-w64-mingw32/8.3.0/include",
-                "/Volumes/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0",
-                "/Volumes/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0/x86_64-w64-mingw32",
-                "/Volumes/x-tools/x86-windows/x86_64-w64-mingw32/sysroot/mingw/include"
-            ],
-            "defines": [
-                "SPADAS_ENV_WINDOWS",
-                "SPADAS_ARCH_X86"
-            ],
-            "intelliSenseMode": "gcc-x64",
-            "cppStandard": "c++11"
-        },
-        {
-            "name": "MacOS主机/X86-Ubuntu1804目标",
-            "compilerPath": "/Volumes/x-tools/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-g++",
-            "includePath": [
-                "./",
-                "../include",
-                // "../includex",
-                "/Volumes/x-tools/x86-ubuntu1804/lib/gcc/x86_64-ubuntu18.04-linux-gnu/8.3.0/include",
-                "/Volumes/x-tools/x86-ubuntu1804/x86_64-ubuntu18.04-linux-gnu/include/c++/8.3.0",
-                "/Volumes/x-tools/x86-ubuntu1804/x86_64-ubuntu18.04-linux-gnu/include/c++/8.3.0/x86_64-ubuntu18.04-linux-gnu",
-                "/Volumes/x-tools/x86-ubuntu1804/x86_64-ubuntu18.04-linux-gnu/sysroot/usr/include"
-            ],
-            "defines": [
-                "SPADAS_ENV_LINUX",
-                "SPADAS_ARCH_X86"
-            ],
-            "intelliSenseMode": "gcc-x64",
-            "cppStandard": "c++11"
-        },
-        {
-            "name": "MacOS主机/Arm-Ubuntu1604目标",
-            "compilerPath": "/Volumes/x-tools/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-g++",
-            "includePath": [
-                "./",
-                "../include",
-                // "../includexa",
-                "/Volumes/x-tools/arm-ubuntu1604/lib/gcc/aarch64-ubuntu16.04-linux-gnu/8.3.0/include",
-                "/Volumes/x-tools/arm-ubuntu1604/aarch64-ubuntu16.04-linux-gnu/include/c++/8.3.0",
-                "/Volumes/x-tools/arm-ubuntu1604/aarch64-ubuntu16.04-linux-gnu/include/c++/8.3.0/aarch64-ubuntu16.04-linux-gnu",
-                "/Volumes/x-tools/arm-ubuntu1604/aarch64-ubuntu16.04-linux-gnu/sysroot/usr/include"
-            ],
-            "defines": [
-                "SPADAS_ENV_LINUX",
                 "SPADAS_ARCH_ARM"
             ],
-            "intelliSenseMode": "gcc-arm64",
-            "cppStandard": "c++11"
+            "intelliSenseMode": "clang-arm64",
+            "cppStandard": "c++17"
         },
         {
-            "name": "MacOS主机/X86-MacOS1010目标",
-            "compilerPath": "/Volumes/x-tools/x86-macos1010/target/bin/x86_64-apple-darwin14-clang++",
-            "compilerArgs": [ "-foc-compiler-path=/Volumes/x-tools/x86-macos1010/llvm-8/bin" ],
+            "name": "非Windows主机/X86-NILRT17目标",
+            "compilerPath": "/opt/xtools-uni/x86-nilrt17/sysroots/x86_64-nilrtsdk-linux/usr/bin/x86_64-nilrt-linux/x86_64-nilrt-linux-g++",
+            "compilerArgs": [
+                "--sysroot=/opt/xtools-uni/x86-nilrt17/sysroots/core2-64-nilrt-linux",
+                "-m64 -march=core2 -mtune=core2 -msse3 -mfpmath=sse"
+            ],
             "includePath": [
-                "./",
-                "../include",
-                // "../includem",
-                "/Volumes/x-tools/x86-macos1010/llvm-8/lib/clang/8.0.0/include",
-                "/Volumes/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/v1",
-                "/Volumes/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include"
+                "${workspaceFolder}",
+                "${workspaceFolder}/../include",
+                // "${workspaceFolder}/../includeni",
             ],
             "defines": [
-                "SPADAS_ENV_MACOS",
+                "SPADAS_ENV_NILRT",
                 "SPADAS_ARCH_X86"
             ],
-            "intelliSenseMode": "clang-x64",
+            "intelliSenseMode": "gcc-x64",
             "cppStandard": "c++11"
-        }
+        },
     ],
     "version": 4
 }

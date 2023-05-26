@@ -147,21 +147,6 @@ OptionalDouble OptionalSignedDouble::toOptionalDouble(Bool signOptional)
 	}
 }
 
-Bool GlobalTimestamp::operator ==(GlobalTimestamp time)
-{
-	return base == time.base && offset == time.offset;
-}
-
-Bool GlobalTimestamp::operator !=(GlobalTimestamp time)
-{
-	return base != time.base || offset != time.offset;
-}
-
-String GlobalTimestamp::toString()
-{
-	return base.dateString(String()) + "-" + base.timeString("-") + "-" + String(offset, 6);
-}
-
 Bool ShortTimestamp::operator ==(ShortTimestamp timestamp)
 {
 	return session == timestamp.session && offset == timestamp.offset;
@@ -232,23 +217,11 @@ String GeneralElement::toString()
 	return valid ? (isText ? text : String(value)) : "(invalid)";
 }
 
-void IBusRawDataTransmitter::transmitMessage(BusRawData msg, UInt interval)
-{
-}
-
-void IStandaloneTaskCallback::setTaskProgress(StandaloneTaskState state, String description, Double progress)
+void IStandaloneTaskCallback::setTaskProgress(Enum<StandaloneTaskState> state, String description, Double progress)
 {
 }
 
 void IStandaloneTaskCallback::setTaskReturnValue(String value)
-{
-}
-
-void IGeneralRawDataOutput::outputGeneralRawData(String protocol, GeneralRawData data)
-{
-}
-
-void IVideoPreviewExpress::outputPreview(Double ts, UInt ch, ImagePointer preview)
 {
 }
 
@@ -292,15 +265,16 @@ SessionIdentifier::SessionIdentifier(Time time) : value(0)
 
 SessionIdentifier::SessionIdentifier(String idString) : value(0)
 {
-	Array<String> comps = idString.split("-");
+	Array<StringSpan> comps = idString.split("-");
 	if (comps.size() != 6) return;
 
-	auto year0 = comps[0].toInt().value(-1);
-	auto month0 = comps[1].toInt().value(-1);
-	auto day0 = comps[2].toInt().value(-1);
-	auto hour0 = comps[3].toInt().value(-1);
-	auto minute0 = comps[4].toInt().value(-1);
-	auto second0 = comps[5].toInt().value(-1);
+	Int year0 = -1, month0 = -1, day0 = -1, hour0 = -1, minute0 = -1, second0 = -1;
+	comps[0].toNumber(year0);
+	comps[1].toNumber(month0);
+	comps[2].toNumber(day0);
+	comps[3].toNumber(hour0);
+	comps[4].toNumber(minute0);
+	comps[5].toNumber(second0);
 	if (year0 >= 1900 && year0 < 10000 && month0 >= 1 && month0 <= 12 && day0 >= 1 && day0 <= 31 &&
 		hour0 >= 0 && hour0 < 24 && minute0 >= 0 && minute0 < 60 && second0 >= 0 && second0 < 60)
 	{
@@ -343,8 +317,10 @@ String SessionIdentifier::toString()
 	if (value == 0) return "1900-01-01-00-00-00";
 
 	Time time = toTime();
-	String output = "0000-00-00-00-00-00";
-	Byte *data = output.bytes();
+
+	Binary buffer(19, (Byte)'0');
+	buffer[4] = buffer[7] = buffer[10] = buffer[13] = buffer[16] = (Byte)'-';
+	Byte *data = buffer.data();
 	data[0] = (Byte)'0' + (Byte)(time.year / 1000);
 	data[1] = (Byte)'0' + (Byte)((time.year / 100) % 10);
 	data[2] = (Byte)'0' + (Byte)((time.year / 10) % 10);
@@ -359,7 +335,7 @@ String SessionIdentifier::toString()
 	data[15] = (Byte)'0' + (Byte)(time.minute % 10);
 	data[17] = (Byte)'0' + (Byte)(time.second / 10);
 	data[18] = (Byte)'0' + (Byte)(time.second % 10);
-	return output;
+	return buffer;
 }
 
 Time SessionIdentifier::toTime()
@@ -410,21 +386,21 @@ OptionalBool IBusMessageTransmitter::transmitAtServerPosix(UInt channel, UInt id
 	return OptionalBool();
 }
 
-void IVideoPreviewExpressX::outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix, NanoPosix gnssPosix)
+void IVideoPreviewExpress::outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix, NanoPosix gnssPosix)
 {
 }
 
-OptionalBool IVideoFrameTransmitter::transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data)
-{
-	return OptionalBool();
-}
-
-OptionalBool IVideoFrameTransmitter::transmitAtTimeOffset(UInt channel, VideoDataCodec codec, Size2D size, Binary data, Double offset, UInt tolerance)
+OptionalBool IVideoFrameTransmitter::transmitNow(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data)
 {
 	return OptionalBool();
 }
 
-OptionalBool IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance)
+OptionalBool IVideoFrameTransmitter::transmitAtTimeOffset(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, Double offset, UInt tolerance)
+{
+	return OptionalBool();
+}
+
+OptionalBool IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance)
 {
 	return OptionalBool();
 }

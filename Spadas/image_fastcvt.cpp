@@ -1,7 +1,5 @@
 ﻿
-#include "spadas.h"
-
-#include "image_bz.h"
+#include "image.h"
 
 using namespace image_internal;
 using namespace spadas::math;

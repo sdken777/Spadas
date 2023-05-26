@@ -460,7 +460,7 @@ FloatMat spadas::math::inverse(FloatMat src)
 	
 	UInt dim = s.dimAt(0);
 	FloatMat s1(dim, dim);
-	s1.clear(0);
+	s1.set(0);
 	for (UInt i = 0; i < dim; i++)
 	{
 		s1(i, i) = s(i, i) <= thresh ? 0 : (Float)1 / s(i, i);
@@ -480,7 +480,7 @@ DoubleMat spadas::math::inverse(DoubleMat src)
 	
 	UInt dim = s.dimAt(0);
 	DoubleMat s1(dim, dim);
-	s1.clear(0);
+	s1.set(0);
 	for (UInt i = 0; i < dim; i++)
 	{
 		s1(i, i) = s(i, i) <= thresh ? 0 : (Double)1 / s(i, i);

@@ -2,87 +2,14 @@
 #ifndef SPADAS_TEMPLATE_H
 #define SPADAS_TEMPLATE_H
 
-///内部模块 (NOT FOR USER) ///////////////////////////////////////////////////////
-namespace spadas_internal
-{
-	using namespace spadas;
-
-	template<typename NType, typename LType> struct GraphLink
-	{
-		GraphNodeVars<NType, LType> *target;
-		LType link;
-		GraphLink<NType, LType> *next;
-		GraphLink(GraphNodeVars<NType, LType> *target0, LType link0) : target(target0), link(link0), next(0)
-		{ }
-		void release()
-		{
-			if (next)
-			{
-				next->release();
-				delete next;
-			}
-		}
-	};
-
-	template<typename Type> struct MapKey
-	{
-		Type key;
-		UInt index;
-		Bool operator >(const MapKey<Type>& target)
-		{
-			return key > target.key;
-		}
-		Bool operator <(const MapKey<Type>& target)
-		{
-			return key < target.key;
-		}
-	};
-
-	template<typename Type> struct ArrayXNode
-	{
-		Type* buffer;
-		UInt initialized;
-		ArrayXNode<Type>* children[2];
-		ArrayXNode(Type* bufferUninitialized, UInt bufferSize) : buffer(bufferUninitialized), initialized(bufferSize * (UInt)(Bool)__is_trivial(Type))
-		{
-			children[0] = 0;
-			children[1] = 0;
-		}
-		ArrayXNode(Type* bufferUninitialized, UInt bufferSize, Type& defaultValue) : buffer(bufferUninitialized), initialized(bufferSize)
-		{
-			children[0] = 0;
-			children[1] = 0;
-			for (UInt i = 0; i < bufferSize; i++) new (&buffer[i])Type(defaultValue);
-		}
-		void release()
-		{
-			if (!__is_trivial(Type))
-			{
-				for (UInt i = 0; i < initialized; i++) (&buffer[i])->~Type();
-			}
-		}
-	};
-
-    template <typename Type> class FlexHandler : public EmptyObject, public IFlexHandler
-    {
-    public:
-        void createData(Pointer data)
-        {
-            new ((Type*)data)Type();
-        }
-        void destroyData(Pointer data)
-        {
-            ((Type*)data)->~Type();
-        }
-    };
-}
-
 namespace spadas
 {
+	// 相关常数 ///////////////////////////////////////////////////////////
 	const UInt ARRAY_SIZE_LIMIT = 1000000000;		// 十亿
 	const UInt ARRAYX_SIZE_LIMIT = 134217728;		// 一亿多(2^27)
 	const UInt ARRAYX_SEGMENT_LIMIT = 65536;
 	const UInt MAP_INDEX_LIMIT = 65536;
+	const ULong MATRIX_MAX_NELEMS = 100000000;		// 一亿
 
 	// 引用计数实现 ///////////////////////////////////////////////////////////
 	template <typename VarsType>
@@ -108,27 +35,11 @@ namespace spadas
 	}
 
 	template <typename VarsType>
-	Object<VarsType>& Object<VarsType>::operator=(const Object<VarsType>& obj)
+	Object<VarsType>& Object<VarsType>::operator =(const Object<VarsType>& obj)
 	{
-		if (!vars)
-		{
-			if (obj.vars)
-			{
-				vars = obj.vars;
-				((Vars*)vars)->retain();
-			}
-		}
-		else if (!obj.vars)
-		{
-			((Vars*)vars)->release();
-			vars = 0;
-		}
-		else if (obj.vars != vars)
-		{
-			((Vars*)vars)->release();
-			vars = obj.vars;
-			((Vars*)vars)->retain();
-		}
+		if (obj.vars) ((Vars*)obj.vars)->retain();
+		if (vars) ((Vars*)vars)->release();
+		vars = obj.vars;
 		return *this;
 	}
 
@@ -163,6 +74,12 @@ namespace spadas
 	}
 
 	template <typename VarsType>
+	ULong Object<VarsType>::getID() const
+	{
+		return (ULong)vars;
+	}
+
+	template <typename VarsType>
 	UInt Object<VarsType>::getRefCount()
 	{
 		return vars ? ((Vars*)vars)->getRefCount() : 0;
@@ -178,76 +95,37 @@ namespace spadas
 	template<typename TargetType>
 	Bool Object<VarsType>::is()
 	{
-		if (!vars) return TRUE;
-		if (((Vars*)vars)->getTypeName() == TargetType::TypeName) return TRUE;
-		ListNode<String> typeNode = ((Vars*)vars)->getBaseChain();
-		Bool isTargetType = FALSE;
-		while (TRUE)
-		{
-			if (typeNode->isEmpty()) break;
-			if (typeNode.value() == TargetType::TypeName)
-			{
-				isTargetType = TRUE;
-				break;
-			}
-			if (typeNode.hasNext()) typeNode.goNext();
-			else break;
-		}
-		typeNode.collapse();
-		return isTargetType;
+		return !vars || ((Vars*)vars)->isType(TargetType::TypeName.getID()) || ((Vars*)vars)->isType(TargetType::TypeName);
 	}
 
 	template<typename VarsType>
 	template<typename TargetType>
 	TargetType Object<VarsType>::as()
 	{
-		if (!vars) return TargetType();
-		if (((Vars*)vars)->getTypeName() == TargetType::TypeName)
-		{
-			auto objBase = TargetType::castCreate((Vars*)vars);
-			return *(TargetType*)(&objBase);
-		}
-		ListNode<String> typeNode = ((Vars*)vars)->getBaseChain();
-		while (TRUE)
-		{
-			if (typeNode->isEmpty()) break;
-			if (typeNode.value() == TargetType::TypeName)
-			{
-				auto objBase = TargetType::castCreate((Vars*)vars);
-				return *(TargetType*)(&objBase);
-			}
-			if (typeNode.hasNext()) typeNode.goNext();
-			else break;
-		}
-		typeNode.collapse();
-		SPADAS_WARNING_MSG("Wrong type");
-		return TargetType();
+		Bool dummy;
+		return as<TargetType>(dummy);
 	}
 
 	template<typename VarsType>
 	template<typename TargetType>
-	Optional<TargetType> Object<VarsType>::cast()
+	TargetType Object<VarsType>::as(Bool& ok)
 	{
-		if (!vars) return TargetType();
-		if (((Vars*)vars)->getTypeName() == TargetType::TypeName)
+		if (!vars)
+		{
+			ok = TRUE;
+			return TargetType();
+		}
+		else if (((Vars*)vars)->isType(TargetType::TypeName.getID()) || ((Vars*)vars)->isType(TargetType::TypeName))
 		{
 			auto objBase = TargetType::castCreate((Vars*)vars);
+			ok = TRUE;
 			return *(TargetType*)(&objBase);
 		}
-		ListNode<String> typeNode = ((Vars*)vars)->getBaseChain();
-		while (TRUE)
+		else
 		{
-			if (typeNode->isEmpty()) break;
-			if (typeNode.value() == TargetType::TypeName)
-			{
-				auto objBase = TargetType::castCreate((Vars*)vars);
-				return *(TargetType*)(&objBase);
-			}
-			if (typeNode.hasNext()) typeNode.goNext();
-			else break;
+			ok = FALSE;
+			return TargetType();
 		}
-		typeNode.collapse();
-		return Optional<TargetType>();
 	}
 
 	template <typename VarsType>
@@ -259,23 +137,10 @@ namespace spadas
 	template <typename VarsType>
 	void Object<VarsType>::setVars(VarsType *newVars, Bool isNew)
 	{
-		if (vars != newVars)
-		{
-			if (vars) ((Vars*)vars)->release();
-			vars = newVars;
-			if (!isNew && vars) ((Vars*)vars)->retain();
-		}
-	}
-
-	template <typename VarsType>
-	void Object<VarsType>::castVars(Vars *varsToCast)
-	{
-		if ((Vars*)vars != varsToCast)
-		{
-			if (vars) ((Vars*)vars)->release();
-			vars = (VarsType*)varsToCast;
-			if (vars) ((Vars*)vars)->retain();
-		}
+		SPADAS_ERROR_RETURN(!newVars);
+		if (!isNew) ((Vars*)newVars)->retain();
+		if (vars) ((Vars*)vars)->release();
+		vars = newVars;
 	}
 
 	template <typename VarsType>
@@ -290,8 +155,57 @@ namespace spadas
 	template <typename VarsType>
 	String Object<VarsType>::toString()
 	{
-		if (vars) return ((Vars*)vars)->toString();
-		else return String();
+		return vars ? ((Vars*)vars)->toString() : String();
+	}
+
+	template <typename Type>
+	Safe<Type>::Safe()
+	{}
+
+	template <typename Type>
+	void Safe<Type>::operator =(Type target)
+	{
+		while (!this->objSpinLock.cas(0, 1)) {}
+		this->obj = target;
+		this->objSpinLock.decrease();
+	}
+
+	template <typename Type>
+	template <typename VarsType>
+	void Safe<Type>::setVars(VarsType* newVars, Bool isNew)
+	{
+		while (!this->objSpinLock.cas(0, 1)) {}
+		this->obj.setVars(newVars, isNew);
+		this->objSpinLock.decrease();
+	}
+
+	template <typename Type>
+	Type Safe<Type>::get()
+	{
+		while (!this->objSpinLock.cas(0, 1)) {}
+		Type output = this->obj;
+		this->objSpinLock.decrease();
+		return output;
+	}
+
+	template <typename Type>
+	SpinLocked<Type>::SpinLocked(Safe<Type>& safeObj) : obj(safeObj.get())
+	{
+		Vars *vars = (Vars*)this->obj.getVars();
+		if (vars && !vars->isSpinLockManaged()) vars->spinEnter();
+	}
+
+	template <typename Type>
+	SpinLocked<Type>::~SpinLocked()
+	{
+		Vars *vars = (Vars*)this->obj.getVars();
+		if (vars && !vars->isSpinLockManaged()) vars->spinLeave();
+	}
+
+	template <typename Type>
+	Type *SpinLocked<Type>::operator ->()
+	{
+		return &this->obj;
 	}
 
 	template <typename Type> class InterfaceVars : public Vars
@@ -408,18 +322,13 @@ namespace spadas
 	{
 	public:
 		UInt size;
+		UInt reserveSize;
 		Type *data;
-		ArrayVars<Type>* binded;
-		ArrayVars(UInt size0, Type* data0) : size(size0), data(data0), binded(0)
+		ArrayVars(UInt size0, Type* data0) : size(size0), reserveSize(0), data(data0)
 		{ }
-		ArrayVars(UInt size0, Type* data0, ArrayVars<Type>* binded0) : size(size0), data(data0), binded(binded0)
-		{
-			binded->retain();
-		}
 		~ArrayVars()
 		{
-			if (binded) binded->release();
-			else if (!__is_trivial(Type))
+			if (!__is_trivial(Type))
 			{
 				for (UInt i = 0; i < size; i++)
 				{
@@ -479,28 +388,6 @@ namespace spadas
 	}
 
 	template<typename Type>
-	Array<Type>::Array(Array<Type> input, Region region)
-	{
-		if (!input.vars) return;
-		UInt inputSize = input.vars->size;
-		Int startIndex = region.offset, endIndex = (region.size == UINF ? INF : (region.offset + (Int)region.size - 1));
-		if (region.size == 0 || startIndex >= (Int)inputSize || endIndex < 0) return;
-		startIndex = math::max(0, startIndex);
-		endIndex = math::min((Int)inputSize - 1, endIndex);
-		Int size = endIndex + 1 - startIndex;
-		if (size <= 0) return;
-		size = math::min((UInt)size, ARRAY_SIZE_LIMIT);
-		Byte* newVarsRaw = new Byte[sizeof(ArrayVars<Type>) + sizeof(Type) * size];
-		ArrayVars<Type>* newVars = new (newVarsRaw)ArrayVars<Type>(size, (Type*)&newVarsRaw[sizeof(ArrayVars<Type>)]);
-		Type* srcData = input.vars->data;
-		for (Int i = 0; i < size; i++)
-		{
-			new (&newVars->data[i])Type(srcData[i + startIndex]);
-		}
-		this->setVars(newVars, TRUE);
-	}
-
-	template<typename Type>
 	UInt Array<Type>::size()
 	{
 		return this->vars ? this->vars->size : 0;
@@ -536,12 +423,14 @@ namespace spadas
 	template<typename Type>
 	ArrayElem<Type> Array<Type>::firstElem()
 	{
+		this->vars->reserveSize = this->vars->size;
 		return ArrayElem<Type>(*this, 0);
 	}
 
 	template<typename Type>
 	ArrayElem<Type> Array<Type>::lastElem()
 	{
+		this->vars->reserveSize = this->vars->size;
 		return ArrayElem<Type>(*this, this->vars ? (this->vars->size - 1) : UINF);
 	}
 
@@ -551,9 +440,8 @@ namespace spadas
 		SPADAS_ERROR_RETURNVAL(!this->vars || index >= this->vars->size, Array<Type>());
 		size = math::min(size, this->vars->size - index);
 		if (size == 0) return Array<Type>();
-		Array<Type> subarr;
-		subarr.setVars(new ArrayVars<Type>(size, &this->vars->data[index], this->vars), TRUE);
-		return subarr;
+		this->vars->reserveSize = index + size;
+		return Array<Type>(&this->vars->data[index], size);
 	}
 
 	template<typename Type>
@@ -565,20 +453,17 @@ namespace spadas
 	template<typename Type>
 	void Array<Type>::trim(UInt size)
 	{
+		SPADAS_ERROR_RETURN(size == 0);
 		if (this->vars && size < this->vars->size)
 		{
-			if (size == 0) this->setVars(0, FALSE);
-			else
+			if (!__is_trivial(Type))
 			{
-				if (!__is_trivial(Type))
+				for (UInt i = math::max(size, this->vars->reserveSize); i < this->vars->size; i++)
 				{
-					for (UInt i = size; i < this->vars->size; i++)
-					{
-						(&this->vars->data[i])->~Type();
-					}
+					(&this->vars->data[i])->~Type();
 				}
-				this->vars->size = size;
 			}
+			this->vars->size = size;
 		}
 	}
 
@@ -590,7 +475,7 @@ namespace spadas
 	}
 
 	template<typename Type>
-	void Array<Type>::clear(Type value)
+	void Array<Type>::set(Type value)
 	{
 		if (!this->vars) return;
 		for (UInt i = 0; i < this->vars->size; i++)
@@ -628,7 +513,7 @@ namespace spadas
 	}
 
 	template<typename Type>
-	Bool Array<Type>::containAs(typename InOut<Type, Bool>::Function func)
+	Bool Array<Type>::containAs(Func<Bool(Type&)> func)
 	{
 		if (!this->vars) return FALSE;
 		UInt size = this->vars->size;
@@ -646,35 +531,61 @@ namespace spadas
 		if (!this->vars) return Array<UInt>();
 		UInt size = this->vars->size;
 		Type *data = this->vars->data;
-		Array<UInt> bufIndices(size);
-		UInt nBufIndices = 0;
-		for (UInt i = 0; i < size; i++)
+		if (size >= 64)
 		{
-			if (data[i] == val) bufIndices[nBufIndices++] = i;
+			ArrayX<UInt> bufIndices(size >= 8192 ? (size >= 1048576 ? 256 : 64) : 16);
+			for (UInt i = 0; i < size; i++)
+			{
+				if (data[i] == val) bufIndices.append(i);
+			}
+			return bufIndices.toArray();
 		}
-		bufIndices.trim(nBufIndices);
-		return bufIndices;
+		else
+		{
+			Array<UInt> bufIndices(size);
+			UInt nBufIndices = 0;
+			for (UInt i = 0; i < size; i++)
+			{
+				if (data[i] == val) bufIndices[nBufIndices++] = i;
+			}
+			if (nBufIndices == 0) return Array<UInt>();
+			bufIndices.trim(nBufIndices);
+			return bufIndices;
+		}
 	}
 
 	template<typename Type>
-	Array<UInt> Array<Type>::searchAs(typename InOut<Type, Bool>::Function func)
+	Array<UInt> Array<Type>::searchAs(Func<Bool(Type&)> func)
 	{
 		if (!this->vars) return Array<UInt>();
 		UInt size = this->vars->size;
 		Type *data = this->vars->data;
-		Array<UInt> bufIndices(size);
-		UInt nBufIndices = 0;
-		for (UInt i = 0; i < size; i++)
+		if (size >= 64)
 		{
-			if (func(data[i])) bufIndices[nBufIndices++] = i;
+			ArrayX<UInt> bufIndices(size >= 8192 ? (size >= 1048576 ? 256 : 64) : 16);
+			for (UInt i = 0; i < size; i++)
+			{
+				if (func(data[i])) bufIndices.append(i);
+			}
+			return bufIndices.toArray();
 		}
-		bufIndices.trim(nBufIndices);
-		return bufIndices;
+		else
+		{
+			Array<UInt> bufIndices(size);
+			UInt nBufIndices = 0;
+			for (UInt i = 0; i < size; i++)
+			{
+				if (func(data[i])) bufIndices[nBufIndices++] = i;
+			}
+			if (nBufIndices == 0) return Array<UInt>();
+			bufIndices.trim(nBufIndices);
+			return bufIndices;
+		}
 	}
 
 	template<typename Type>
 	template <typename TargetType>
-	Array<TargetType> Array<Type>::convert(typename InOut<Type, TargetType>::Function func)
+	Array<TargetType> Array<Type>::convert(Func<TargetType(Type&)> func)
 	{
 		if (!this->vars) return Array<TargetType>();
 		Array<TargetType> output = Array<TargetType>::createUninitialized(this->vars->size);
@@ -804,11 +715,16 @@ namespace spadas
 
 	template<typename Type>
 	template<typename TargetType>
-	Array<Optional<TargetType> > Array<Type>::castArray()
+	Array<TargetType> Array<Type>::asArray(Array<Bool>& ok)
 	{
-		if (!this->vars) return Array<Optional<TargetType> >();
-		Array<Optional<TargetType> > output = Array<Optional<TargetType> >::createUninitialized(this->vars->size);
-		for (UInt i = 0; i < this->vars->size; i++) output.initialize(i, this->vars->data[i].template cast<TargetType>());
+		if (!this->vars)
+		{
+			ok = Array<Bool>();
+			return Array<TargetType>();
+		}
+		Array<TargetType> output = Array<TargetType>::createUninitialized(this->vars->size);
+		ok = Array<Bool>(this->vars->size);
+		for (UInt i = 0; i < this->vars->size; i++) output.initialize(i, this->vars->data[i].template as<TargetType>(ok[i]));
 		return output;
 	}
 
@@ -832,7 +748,7 @@ namespace spadas
 	}
 
 	template<typename Type>
-	void Array<Type>::sortAs(typename In2Out<Type&, Type&, Bool>::Function func)
+	void Array<Type>::sortAs(Func<Bool(Type&, Type&)> func)
 	{
 		if (!this->vars) return;
 		const Int n = this->vars->size;
@@ -857,43 +773,43 @@ namespace spadas
 	template<typename Type>
 	Bool ArrayElem<Type>::valid()
 	{
-		return idx < size;
+		return this->idx < this->size;
 	}
 
 	template<typename Type>
 	UInt ArrayElem<Type>::index()
 	{
-		return idx;
+		return this->idx;
 	}
 
 	template<typename Type>
 	Type& ArrayElem<Type>::value()
 	{
-		return data[idx];
+		return this->data[this->idx];
 	}
 
 	template<typename Type>
 	Type* ArrayElem<Type>::operator ->()
 	{
-		return &data[idx];
+		return &this->data[this->idx];
 	}
 
 	template<typename Type>
 	void ArrayElem<Type>::operator =(const Type& val)
 	{
-		data[idx] = val;
+		this->data[this->idx] = val;
 	}
 
 	template<typename Type>
 	void ArrayElem<Type>::operator --()
 	{
-		idx--;
+		this->idx--;
 	}
 
 	template<typename Type>
 	void ArrayElem<Type>::operator ++()
 	{
-		idx++;
+		this->idx++;
 	}
 
 	// 链表节点实现 ///////////////////////////////////////////////////////
@@ -962,13 +878,13 @@ namespace spadas
 	template <typename Type>
 	void ListNode<Type>::goNext()
 	{
-		if (this->vars->nextVars != 0) this->operator =(ListNode<Type>(this->vars->nextVars));
+		if (this->vars->nextVars != 0) this->setVars(this->vars->nextVars, FALSE);
 	}
 
 	template <typename Type>
 	void ListNode<Type>::goPrevious()
 	{
-		if (this->vars->previousVars != 0) this->operator =(ListNode<Type>(this->vars->previousVars));
+		if (this->vars->previousVars != 0) this->setVars(this->vars->previousVars, FALSE);
 	}
 
 	template <typename Type>
@@ -1543,12 +1459,32 @@ namespace spadas
 	}
 	
 	// 图节点实现 ///////////////////////////////////////////////////////
+	namespace internal
+	{
+		template<typename NType, typename LType> struct GraphLink
+		{
+			GraphNodeVars<NType, LType> *target;
+			LType link;
+			GraphLink<NType, LType> *next;
+			GraphLink(GraphNodeVars<NType, LType> *target0, LType link0) : target(target0), link(link0), next(0)
+			{ }
+			void release()
+			{
+				if (next)
+				{
+					next->release();
+					delete next;
+				}
+			}
+		};
+	}
+
 	template<typename NType, typename LType> class GraphNodeVars : public Vars
 	{
 	public:
 		NType val;
 		UInt nLinks;
-		spadas_internal::GraphLink<NType, LType> *links;
+		internal::GraphLink<NType, LType> *links;
 		GraphNodeVars() : nLinks(0), links(0)
 		{ }
 		GraphNodeVars(NType& origin) : val(origin), nLinks(0), links(0)
@@ -1597,7 +1533,7 @@ namespace spadas
 	LType& GraphNode<NType, LType>::linkAt(UInt index)
 	{
 		SPADAS_ERROR_RETURNVAL(index >= this->vars->nLinks, *(new LType));
-		spadas_internal::GraphLink<NType, LType> *linkInfo = this->vars->links;
+		internal::GraphLink<NType, LType> *linkInfo = this->vars->links;
 		for (UInt i = 0; i < index; i++) linkInfo = linkInfo->next;
 		return linkInfo->link;
 	}
@@ -1605,7 +1541,7 @@ namespace spadas
 	template<typename NType, typename LType>
 	LType& GraphNode<NType, LType>::linkWith(GraphNode<NType, LType> node)
 	{
-		spadas_internal::GraphLink<NType, LType> *linkInfo = this->vars->links;
+		internal::GraphLink<NType, LType> *linkInfo = this->vars->links;
 		if (linkInfo != 0)
 		{
 			for (UInt i = 0; i < this->vars->nLinks; i++)
@@ -1633,7 +1569,7 @@ namespace spadas
 			SPADAS_ERROR_MSG("index >= this->vars->nLinks");
 			return GraphNode<NType, LType>();
 		}
-		spadas_internal::GraphLink<NType, LType> *linkInfo = this->vars->links;
+		internal::GraphLink<NType, LType> *linkInfo = this->vars->links;
 		for (UInt i = 0; i < index; i++) linkInfo = linkInfo->next;
 		link = linkInfo->link;
 		return GraphNode<NType, LType>(linkInfo->target);
@@ -1642,7 +1578,7 @@ namespace spadas
 	template<typename NType, typename LType>
 	UInt GraphNode<NType, LType>::indexOf(GraphNode<NType, LType> node)
 	{
-		spadas_internal::GraphLink<NType, LType> *linkInfo = this->vars->links;
+		internal::GraphLink<NType, LType> *linkInfo = this->vars->links;
 		if (linkInfo == 0) return UINF;
 		for (UInt i = 0; i < this->vars->nLinks; i++)
 		{
@@ -1655,7 +1591,7 @@ namespace spadas
 	template<typename NType, typename LType>
 	void GraphNode<NType, LType>::addLinkWith(GraphNode<NType, LType> dst, LType linkToDst, LType linkFromDst)
 	{
-		spadas_internal::GraphLink<NType, LType> *linkInfo = this->vars->links, *previousLinkInfo = 0;
+		internal::GraphLink<NType, LType> *linkInfo = this->vars->links, *previousLinkInfo = 0;
 		while (linkInfo)
 		{
 			if (linkInfo->target == dst.vars)
@@ -1676,7 +1612,7 @@ namespace spadas
 			previousLinkInfo = linkInfo;
 			linkInfo = linkInfo->next;
 		}
-		spadas_internal::GraphLink<NType, LType> *newLink = new spadas_internal::GraphLink<NType, LType>(dst.vars, linkToDst);
+		internal::GraphLink<NType, LType> *newLink = new internal::GraphLink<NType, LType>(dst.vars, linkToDst);
 		dst.vars->retain();
 		if (!previousLinkInfo) this->vars->links = newLink;
 		else previousLinkInfo->next = newLink;
@@ -1688,7 +1624,7 @@ namespace spadas
 			previousLinkInfo = linkInfo;
 			linkInfo = linkInfo->next;
 		}
-		newLink = new spadas_internal::GraphLink<NType, LType>(this->vars, linkFromDst);
+		newLink = new internal::GraphLink<NType, LType>(this->vars, linkFromDst);
 		this->vars->retain();
 		if (!previousLinkInfo) dst.vars->links = newLink;
 		else previousLinkInfo->next = newLink;
@@ -1698,7 +1634,7 @@ namespace spadas
 	template<typename NType, typename LType>
 	void GraphNode<NType, LType>::cutLinkWith(GraphNode<NType, LType> node)
 	{
-		spadas_internal::GraphLink<NType, LType> *linkInfo = this->vars->links, *previousLinkInfo = 0;
+		internal::GraphLink<NType, LType> *linkInfo = this->vars->links, *previousLinkInfo = 0;
 		if (linkInfo == 0) return;
 		for (UInt i = 0; i < this->vars->nLinks; i++)
 		{
@@ -1752,6 +1688,34 @@ namespace spadas
 	}
 
 	// 自动变长数组实现 ///////////////////////////////////////////////////////
+	namespace internal
+	{
+		template<typename Type> struct ArrayXNode
+		{
+			Type* buffer;
+			UInt initialized;
+			ArrayXNode<Type>* children[2];
+			ArrayXNode(Type* bufferUninitialized, UInt bufferSize) : buffer(bufferUninitialized), initialized(bufferSize * (UInt)(Bool)__is_trivial(Type))
+			{
+				children[0] = 0;
+				children[1] = 0;
+			}
+			ArrayXNode(Type* bufferUninitialized, UInt bufferSize, Type& defaultValue) : buffer(bufferUninitialized), initialized(bufferSize)
+			{
+				children[0] = 0;
+				children[1] = 0;
+				for (UInt i = 0; i < bufferSize; i++) new (&buffer[i])Type(defaultValue);
+			}
+			void release()
+			{
+				if (!__is_trivial(Type))
+				{
+					for (UInt i = 0; i < initialized; i++) (&buffer[i])->~Type();
+				}
+			}
+		};
+	}
+
 	template<typename Type> class ArrayXVars : public Vars
 	{
 	public:
@@ -1761,12 +1725,12 @@ namespace spadas
 		Byte segmentSizePower;
 		Word segmentSizeMask;
 		UInt accessingSegment;
-		spadas_internal::ArrayXNode<Type>* accessingNode;
+		internal::ArrayXNode<Type>* accessingNode;
 		UInt lastSegment;
 		UInt lastNextIndex;
-		spadas_internal::ArrayXNode<Type>* lastNode;
+		internal::ArrayXNode<Type>* lastNode;
 		Type* defaultValue;
-		spadas_internal::ArrayXNode<Type> root;
+		internal::ArrayXNode<Type> root;
 		ArrayXVars(UInt segSize, UInt power, Type* rootBufferUninitialized) : size(0), segmentSize(segSize), withDefault(FALSE), segmentSizePower((Byte)power), segmentSizeMask((Word)(segSize - 1)), accessingSegment(1), lastSegment(1), lastNextIndex(0), defaultValue(0), root(rootBufferUninitialized, segSize)
 		{
 			accessingNode = lastNode = &root;
@@ -1782,7 +1746,7 @@ namespace spadas
 			if (root.children[1]) releaseNode(root.children[1]);
 			root.release();
 		}
-		void releaseNode(spadas_internal::ArrayXNode<Type>* node)
+		void releaseNode(internal::ArrayXNode<Type>* node)
 		{
 			if (node->children[0]) releaseNode(node->children[0]);
 			if (node->children[1]) releaseNode(node->children[1]);
@@ -1798,12 +1762,16 @@ namespace spadas
 	template<typename Type>
 	ArrayX<Type>::ArrayX(UInt segmentSize)
 	{
-		segmentSize = math::clamp(segmentSize, 1u, ARRAYX_SEGMENT_LIMIT);
-		UInt size = 1, power = 0;
-		while (size < segmentSize)
+		UInt size, power;
+		if (segmentSize <= 1)
 		{
-			size *= 2;
-			power++;
+			power = 0;
+			size = 1;
+		}
+		else
+		{
+			power = math::depth(math::min(segmentSize, ARRAYX_SEGMENT_LIMIT) - 1) + 1;
+			size = 1 << power;
 		}
 		Byte* newVarsRaw = new Byte[sizeof(ArrayXVars<Type>) + sizeof(Type) * size];
 		ArrayXVars<Type>* newVars = new (newVarsRaw)ArrayXVars<Type>(size, power, (Type*)&newVarsRaw[sizeof(ArrayXVars<Type>)]);
@@ -1813,12 +1781,16 @@ namespace spadas
 	template<typename Type>
 	ArrayX<Type>::ArrayX(UInt segmentSize, Type defaultValue)
 	{
-		segmentSize = math::clamp(segmentSize, 1u, ARRAYX_SEGMENT_LIMIT);
-		UInt size = 1, power = 0;
-		while (size < segmentSize)
+		UInt size, power;
+		if (segmentSize <= 1)
 		{
-			size *= 2;
-			power++;
+			power = 0;
+			size = 1;
+		}
+		else
+		{
+			power = math::depth(math::min(segmentSize, ARRAYX_SEGMENT_LIMIT) - 1) + 1;
+			size = 1 << power;
 		}
 		Byte* newVarsRaw = new Byte[sizeof(ArrayXVars<Type>) + sizeof(Type) * (1 + size)];
 		Type* defaultVal = new (&newVarsRaw[sizeof(ArrayXVars<Type>)])Type(defaultValue);
@@ -1830,24 +1802,24 @@ namespace spadas
 	Pointer ArrayX<Type>::getSegmentNode(UInt segment)
 	{
 		Int depth = (Int)math::depth(segment);
-		spadas_internal::ArrayXNode<Type>* currentNode = &this->vars->root;
+		internal::ArrayXNode<Type>* currentNode = &this->vars->root;
 		for (Int i = depth - 1; i >= 0; i--)
 		{
 			if (!currentNode->children[0])
 			{
-				Byte* leaf0Data = new Byte[sizeof(spadas_internal::ArrayXNode<Type>) + sizeof(Type) * this->vars->segmentSize];
-				Byte* leaf1Data = new Byte[sizeof(spadas_internal::ArrayXNode<Type>) + sizeof(Type) * this->vars->segmentSize];
-				spadas_internal::ArrayXNode<Type>* leaf0Node = NULL;
-				spadas_internal::ArrayXNode<Type>* leaf1Node = NULL;
+				Byte* leaf0Data = new Byte[sizeof(internal::ArrayXNode<Type>) + sizeof(Type) * this->vars->segmentSize];
+				Byte* leaf1Data = new Byte[sizeof(internal::ArrayXNode<Type>) + sizeof(Type) * this->vars->segmentSize];
+				internal::ArrayXNode<Type>* leaf0Node = NULL;
+				internal::ArrayXNode<Type>* leaf1Node = NULL;
 				if (this->vars->withDefault)
 				{
-					leaf0Node = new (leaf0Data)spadas_internal::ArrayXNode<Type>((Type*)&leaf0Data[sizeof(spadas_internal::ArrayXNode<Type>)], this->vars->segmentSize, *this->vars->defaultValue);
-					leaf1Node = new (leaf1Data)spadas_internal::ArrayXNode<Type>((Type*)&leaf1Data[sizeof(spadas_internal::ArrayXNode<Type>)], this->vars->segmentSize, *this->vars->defaultValue);
+					leaf0Node = new (leaf0Data)internal::ArrayXNode<Type>((Type*)&leaf0Data[sizeof(internal::ArrayXNode<Type>)], this->vars->segmentSize, *this->vars->defaultValue);
+					leaf1Node = new (leaf1Data)internal::ArrayXNode<Type>((Type*)&leaf1Data[sizeof(internal::ArrayXNode<Type>)], this->vars->segmentSize, *this->vars->defaultValue);
 				}
 				else
 				{
-					leaf0Node = new (leaf0Data)spadas_internal::ArrayXNode<Type>((Type*)&leaf0Data[sizeof(spadas_internal::ArrayXNode<Type>)], this->vars->segmentSize);
-					leaf1Node = new (leaf1Data)spadas_internal::ArrayXNode<Type>((Type*)&leaf1Data[sizeof(spadas_internal::ArrayXNode<Type>)], this->vars->segmentSize);
+					leaf0Node = new (leaf0Data)internal::ArrayXNode<Type>((Type*)&leaf0Data[sizeof(internal::ArrayXNode<Type>)], this->vars->segmentSize);
+					leaf1Node = new (leaf1Data)internal::ArrayXNode<Type>((Type*)&leaf1Data[sizeof(internal::ArrayXNode<Type>)], this->vars->segmentSize);
 				}
 				currentNode->children[0] = leaf0Node;
 				currentNode->children[1] = leaf1Node;
@@ -1872,7 +1844,7 @@ namespace spadas
 		{
 			SPADAS_ERROR_RETURNVAL(index >= ARRAYX_SIZE_LIMIT, *(new Type));
 			this->vars->accessingSegment = segment;
-			this->vars->accessingNode = (spadas_internal::ArrayXNode<Type>*)getSegmentNode(segment);
+			this->vars->accessingNode = (internal::ArrayXNode<Type>*)getSegmentNode(segment);
 		}
 		if (index >= this->vars->size)
 		{
@@ -1881,7 +1853,7 @@ namespace spadas
 			this->vars->lastNextIndex = localIndex + 1;
 			this->vars->lastNode = this->vars->accessingNode;
 		}
-		spadas_internal::ArrayXNode<Type>& targetNode = *this->vars->accessingNode;
+		internal::ArrayXNode<Type>& targetNode = *this->vars->accessingNode;
 		if (!__is_trivial(Type) && localIndex >= targetNode.initialized)
 		{
 			for (UInt i = targetNode.initialized; i < this->vars->segmentSize; i++)
@@ -1920,7 +1892,7 @@ namespace spadas
 		UInt segment = (index >> this->vars->segmentSizePower) + 1;
 		UInt localIndex = index & this->vars->segmentSizeMask;
 		this->vars->lastSegment = this->vars->accessingSegment = segment;
-		this->vars->lastNode = this->vars->accessingNode = (spadas_internal::ArrayXNode<Type>*)getSegmentNode(segment);
+		this->vars->lastNode = this->vars->accessingNode = (internal::ArrayXNode<Type>*)getSegmentNode(segment);
 		this->vars->lastNextIndex = localIndex + 1;
 		this->vars->size = size;
 	}
@@ -1939,10 +1911,10 @@ namespace spadas
 			SPADAS_ERROR_RETURN(this->vars->size >= ARRAYX_SIZE_LIMIT);
 			UInt segment = (this->vars->size >> this->vars->segmentSizePower) + 1;
 			this->vars->lastSegment = this->vars->accessingSegment = segment;
-			this->vars->lastNode = this->vars->accessingNode = (spadas_internal::ArrayXNode<Type>*)getSegmentNode(segment);
+			this->vars->lastNode = this->vars->accessingNode = (internal::ArrayXNode<Type>*)getSegmentNode(segment);
 			this->vars->lastNextIndex = 0;
 		}
-		spadas_internal::ArrayXNode<Type>& targetNode = *this->vars->lastNode;
+		internal::ArrayXNode<Type>& targetNode = *this->vars->lastNode;
 		if (__is_trivial(Type) || this->vars->withDefault)
 		{
 			this->vars->size++;
@@ -1993,7 +1965,7 @@ namespace spadas
 	template<typename Type>
 	void ArrayX<Type>::copyRegion(Pointer nodePtr, UInt segment, Array<Type>& dst, UInt firstIndex, UInt lastIndex, UInt firstSegment, UInt lastSegment)
 	{
-		spadas_internal::ArrayXNode<Type>* node = (spadas_internal::ArrayXNode<Type>*)nodePtr;
+		internal::ArrayXNode<Type>* node = (internal::ArrayXNode<Type>*)nodePtr;
 		if (segment >= firstSegment && segment <= lastSegment)
 		{
 			UInt startIndex = 0, endIndex = this->vars->segmentSize - 1;
@@ -2055,27 +2027,6 @@ namespace spadas
 		~ListVars()
 		{
 			origin.collapse();
-		}
-	};
-
-	template <typename Type> class ListElemVars : public Vars
-	{
-	public:
-		ListNode<Type> node;
-		Bool valid;
-		UInt index;
-		ListNode<Type> prevNode;
-		Bool prevValid;
-		UInt prevIndex;
-		ListNode<Type> nextNode;
-		Bool nextValid;
-		UInt nextIndex;
-		List<Type> list;
-		ListElemVars(ListNode<Type> node, Bool valid, UInt index, ListNode<Type> prevNode, Bool prevValid, ListNode<Type> nextNode, Bool nextValid, List<Type> list)
-			: node(node), valid(valid), index(index), prevNode(prevNode), prevValid(prevValid), nextNode(nextNode), nextValid(nextValid), list(list)
-		{
-			prevIndex = prevValid ? (index - 1) : UINF;
-			nextIndex = nextValid ? (index + 1) : UINF;
 		}
 	};
 
@@ -2201,92 +2152,95 @@ namespace spadas
 
 	template<typename Type>
 	ListElem<Type>::ListElem(ListNode<Type> node, Bool valid, UInt index, ListNode<Type> prevNode, Bool prevValid, ListNode<Type> nextNode, Bool nextValid, List<Type> list)
-		: Object<ListElemVars<Type> >(new ListElemVars<Type>(node, valid, index, prevNode, prevValid, nextNode, nextValid, list), TRUE)
-	{}
+		: node(node), vld(valid), idx(index), prevNode(prevNode), prevValid(prevValid), nextNode(nextNode), nextValid(nextValid), list(list)
+	{
+		prevIndex = prevValid ? (index - 1) : UINF;
+		nextIndex = nextValid ? (index + 1) : UINF;
+	}
 
 	template<typename Type>
 	Bool ListElem<Type>::valid()
 	{
-		return this->vars->valid;
+		return this->vld;
 	}
 
 	template <typename Type>
 	Bool ListElem<Type>::hasPrevious()
 	{
-		return this->vars->prevValid;
+		return this->prevValid;
 	}
 
 	template <typename Type>
 	Bool ListElem<Type>::hasNext()
 	{
-		return this->vars->nextValid;
+		return this->nextValid;
 	}
 
 	template<typename Type>
 	UInt ListElem<Type>::index()
 	{
-		return this->vars->index;
+		return this->idx;
 	}
 
 	template<typename Type>
 	Type& ListElem<Type>::value()
 	{
-		SPADAS_ERROR_PASS(!this->vars->valid);
-		return this->vars->node.value();
+		SPADAS_ERROR_PASS(!this->vld);
+		return this->node.value();
 	}
 
 	template<typename Type>
 	Type* ListElem<Type>::operator ->()
 	{
-		SPADAS_ERROR_PASS(!this->vars->valid);
-		return this->vars->node.operator ->();
+		SPADAS_ERROR_PASS(!this->vld);
+		return this->node.operator ->();
 	}
 
 	template <typename Type>
 	Type& ListElem<Type>::previous()
 	{
-		SPADAS_ERROR_PASS(!this->vars->prevValid);
-		return this->vars->prevNode.value();
+		SPADAS_ERROR_PASS(!this->prevValid);
+		return this->prevNode.value();
 	}
 
 	template <typename Type>
 	Type& ListElem<Type>::next()
 	{
-		SPADAS_ERROR_PASS(!this->vars->nextValid);
-		return this->vars->nextNode.value();
+		SPADAS_ERROR_PASS(!this->nextValid);
+		return this->nextNode.value();
 	}
 
 	template <typename Type>
 	void ListElem<Type>::operator =(const Type& val)
 	{
-		SPADAS_ERROR_RETURN(!this->vars->valid);
-		this->vars->node.value() = val;
+		SPADAS_ERROR_RETURN(!this->vld);
+		this->node.value() = val;
 	}
 
 	template<typename Type>
 	void ListElem<Type>::operator --()
 	{
-		if (this->vars->valid)
+		if (this->vld)
 		{
-			this->vars->nextValid = TRUE;
-			this->vars->nextNode = this->vars->node;
-			this->vars->nextIndex = this->vars->index;
+			this->nextValid = TRUE;
+			this->nextNode = this->node;
+			this->nextIndex = this->idx;
 		}
-		this->vars->valid = this->vars->prevValid;
-		this->vars->node = this->vars->prevNode;
-		this->vars->index = this->vars->prevIndex;
-		if (this->vars->valid)
+		this->vld = this->prevValid;
+		this->node = this->prevNode;
+		this->idx = this->prevIndex;
+		if (this->vld)
 		{
-			this->vars->prevNode = this->vars->node.previous();
-			if (this->vars->prevNode == this->vars->list.getVars()->origin)
+			this->prevNode = this->node.previous();
+			if (this->prevNode == this->list.getVars()->origin)
 			{
-				this->vars->prevValid = FALSE;
-				this->vars->prevIndex = UINF;
+				this->prevValid = FALSE;
+				this->prevIndex = UINF;
 			}
 			else
 			{
-				this->vars->prevValid = TRUE;
-				this->vars->prevIndex = this->vars->index - 1;
+				this->prevValid = TRUE;
+				this->prevIndex = this->idx - 1;
 			}
 		}
 	}
@@ -2294,27 +2248,27 @@ namespace spadas
 	template<typename Type>
 	void ListElem<Type>::operator ++()
 	{
-		if (this->vars->valid)
+		if (this->vld)
 		{
-			this->vars->prevValid = TRUE;
-			this->vars->prevNode = this->vars->node;
-			this->vars->prevIndex = this->vars->index;
+			this->prevValid = TRUE;
+			this->prevNode = this->node;
+			this->prevIndex = this->idx;
 		}
-		this->vars->valid = this->vars->nextValid;
-		this->vars->node = this->vars->nextNode;
-		this->vars->index = this->vars->nextIndex;
-		if (this->vars->valid)
+		this->vld = this->nextValid;
+		this->node = this->nextNode;
+		this->idx = this->nextIndex;
+		if (this->vld)
 		{
-			this->vars->nextNode = this->vars->node.next();
-			if (this->vars->nextNode == this->vars->list.getVars()->origin)
+			this->nextNode = this->node.next();
+			if (this->nextNode == this->list.getVars()->origin)
 			{
-				this->vars->nextValid = FALSE;
-				this->vars->nextIndex = UINF;
+				this->nextValid = FALSE;
+				this->nextIndex = UINF;
 			}
 			else
 			{
-				this->vars->nextValid = TRUE;
-				this->vars->nextIndex = this->vars->index + 1;
+				this->nextValid = TRUE;
+				this->nextIndex = this->idx + 1;
 			}
 		}
 	}
@@ -2322,34 +2276,34 @@ namespace spadas
 	template<typename Type>
 	void ListElem<Type>::insertPrevious(Type val)
 	{
-		if (!this->vars->valid) return;
-		this->vars->prevNode = this->vars->node.insertPrevious(val);
-		this->vars->prevValid = TRUE;
-		this->vars->prevIndex = this->vars->index;
-		this->vars->index++;
-		if (this->vars->nextValid) this->vars->nextIndex++;
-		this->vars->list.getVars()->size++;
+		if (!this->vld) return;
+		this->prevNode = this->node.insertPrevious(val);
+		this->prevValid = TRUE;
+		this->prevIndex = this->idx;
+		this->idx++;
+		if (this->nextValid) this->nextIndex++;
+		this->list.getVars()->size++;
 	}
 
 	template<typename Type>
 	void ListElem<Type>::insertNext(Type val)
 	{
-		if (!this->vars->valid) return;
-		this->vars->nextNode = this->vars->node.insertNext(val);
-		this->vars->nextValid = TRUE;
-		this->vars->nextIndex = this->vars->index + 1;
-		this->vars->list.getVars()->size++;
+		if (!this->vld) return;
+		this->nextNode = this->node.insertNext(val);
+		this->nextValid = TRUE;
+		this->nextIndex = this->idx + 1;
+		this->list.getVars()->size++;
 	}
 
 	template<typename Type>
 	void ListElem<Type>::remove()
 	{
-		if (!this->vars->valid) return;
-		this->vars->node.removeSelf();
-		this->vars->valid = FALSE;
-		this->vars->index = UINF;
-		if (this->vars->nextValid) this->vars->nextIndex--;
-		this->vars->list.getVars()->size--;
+		if (!this->vld) return;
+		this->node.removeSelf();
+		this->vld = FALSE;
+		this->idx = UINF;
+		if (this->nextValid) this->nextIndex--;
+		this->list.getVars()->size--;
 	}
 
 	// 数据流实现 ///////////////////////////////////////////////////////
@@ -2364,8 +2318,7 @@ namespace spadas
 		Bool discardable;
 		volatile Bool terminated;
 		ListNode<Type> origin;
-		Lock lock;
-		StreamVars(Bool spin) : nEnqueued(0), nDequeued(0), nDiscarded(0), nElements(0), capacity(0), discardable(FALSE), terminated(FALSE), lock(spin)
+		StreamVars() : nEnqueued(0), nDequeued(0), nDiscarded(0), nElements(0), capacity(0), discardable(FALSE), terminated(FALSE)
 		{
 			origin.joinNext(origin);
 		}
@@ -2373,24 +2326,21 @@ namespace spadas
 		{
 			origin.collapse();
 		}
+		Bool isSpinLockManaged() override
+		{
+			return TRUE;
+		}
 	};
 
 	template<typename Type>
-	Stream<Type>::Stream() : Object<StreamVars<Type> >(new StreamVars<Type>(FALSE), TRUE)
+	Stream<Type>::Stream() : Object<StreamVars<Type> >(new StreamVars<Type>(), TRUE)
 	{
 		this->vars->capacity = 1;
 		this->vars->discardable = TRUE;
 	}
 
 	template<typename Type>
-	Stream<Type>::Stream(UInt capacity, Bool discardable) : Object<StreamVars<Type> >(new StreamVars<Type>(FALSE), TRUE)
-	{
-		this->vars->capacity = math::max(1u, capacity);
-		this->vars->discardable = discardable;
-	}
-
-	template<typename Type>
-	Stream<Type>::Stream(UInt capacity, Bool discardable, Bool spin) : Object<StreamVars<Type> >(new StreamVars<Type>(spin), TRUE)
+	Stream<Type>::Stream(UInt capacity, Bool discardable) : Object<StreamVars<Type> >(new StreamVars<Type>(), TRUE)
 	{
 		this->vars->capacity = math::max(1u, capacity);
 		this->vars->discardable = discardable;
@@ -2407,7 +2357,7 @@ namespace spadas
 	{
 		capacity = math::max(1u, capacity);
 		if (this->vars->capacity == capacity) return;
-		this->vars->lock.enter();
+		this->vars->spinEnter();
 		this->vars->capacity = capacity;
 		if (this->vars->capacity < this->vars->nElements)
 		{
@@ -2416,7 +2366,7 @@ namespace spadas
 			this->vars->nDiscarded += nRemove;
 			this->vars->nElements -= nRemove;
 		}
-		this->vars->lock.leave();
+		this->vars->spinLeave();
 	}
 
 	template<typename Type>
@@ -2452,16 +2402,16 @@ namespace spadas
 	template<typename Type>
 	Type Stream<Type>::first()
 	{
-		this->vars->lock.enter();
+		this->vars->spinEnter();
 		if (this->vars->nElements == 0)
 		{
-			this->vars->lock.leave();
+			this->vars->spinLeave();
 			return Type();
 		}
 		else
 		{
 			Type output = this->vars->origin.next().value();
-			this->vars->lock.leave();
+			this->vars->spinLeave();
 			return output;
 		}
 	}
@@ -2469,16 +2419,16 @@ namespace spadas
 	template<typename Type>
 	Type Stream<Type>::last()
 	{
-		this->vars->lock.enter();
+		this->vars->spinEnter();
 		if (this->vars->nElements == 0)
 		{
-			this->vars->lock.leave();
+			this->vars->spinLeave();
 			return Type();
 		}
 		else
 		{
 			Type output = this->vars->origin.previous().value();
-			this->vars->lock.leave();
+			this->vars->spinLeave();
 			return output;
 		}
 	}
@@ -2486,31 +2436,23 @@ namespace spadas
 	template<typename Type>
 	void Stream<Type>::enqueue(Type newElement)
 	{
-		this->vars->lock.enter();
+		this->vars->spinEnter();
 		if (!this->vars->discardable)
 		{
 			while (this->vars->nElements == this->vars->capacity)
 			{
-				this->vars->lock.leave();
-				if (this->vars->lock.isSpin())
-				{
-					while (this->vars->nElements == this->vars->capacity)
-					{
-						SPADAS_WARNING_RETURN(this->vars->terminated);
-					}
-				}
-				else
+				this->vars->spinLeave();
+				while (this->vars->nElements == this->vars->capacity)
 				{
 					SPADAS_WARNING_RETURN(this->vars->terminated);
-					system::wait(1);
 				}
-				this->vars->lock.enter();
+				this->vars->spinEnter();
 			}
 		}
 		if (this->vars->terminated)
 		{
 			SPADAS_WARNING_MSG("this->vars->terminated");
-			this->vars->lock.leave();
+			this->vars->spinLeave();
 			return;
 		}
 		this->vars->origin.insertPrevious(newElement);
@@ -2521,36 +2463,28 @@ namespace spadas
 			this->vars->nDiscarded++;
 		}
 		else this->vars->nElements++;
-		this->vars->lock.leave();
+		this->vars->spinLeave();
 	}
 
 	template<typename Type>
 	Bool Stream<Type>::enqueue(Type newElement, Flag interrupt)
 	{
-		this->vars->lock.enter();
+		this->vars->spinEnter();
 		if (!this->vars->discardable)
 		{
 			while (this->vars->nElements == this->vars->capacity)
 			{
-				this->vars->lock.leave();
-				if (this->vars->lock.isSpin())
-				{
-					while (this->vars->nElements == this->vars->capacity)
-					{
-						if (this->vars->terminated || interrupt.check()) return FALSE;
-					}
-				}
-				else
+				this->vars->spinLeave();
+				while (this->vars->nElements == this->vars->capacity)
 				{
 					if (this->vars->terminated || interrupt.check()) return FALSE;
-					system::wait(1);
 				}
-				this->vars->lock.enter();
+				this->vars->spinEnter();
 			}
 		}
 		if (this->vars->terminated)
 		{
-			this->vars->lock.leave();
+			this->vars->spinLeave();
 			return FALSE;
 		}
 		this->vars->origin.insertPrevious(newElement);
@@ -2561,7 +2495,7 @@ namespace spadas
 			this->vars->nDiscarded++;
 		}
 		else this->vars->nElements++;
-		this->vars->lock.leave();
+		this->vars->spinLeave();
 		return TRUE;
 	}
 
@@ -2580,11 +2514,11 @@ namespace spadas
 		}
 		else
 		{
-			this->vars->lock.enter();
+			this->vars->spinEnter();
 			if (this->vars->terminated)
 			{
 				SPADAS_WARNING_MSG("this->vars->terminated");
-				this->vars->lock.leave();
+				this->vars->spinLeave();
 				return;
 			}
 			for (UInt i = 0; i < elemSize; i++)
@@ -2598,7 +2532,7 @@ namespace spadas
 				}
 				else this->vars->nElements++;
 			}
-			this->vars->lock.leave();
+			this->vars->spinLeave();
 		}
 	}
 
@@ -2617,10 +2551,10 @@ namespace spadas
 		}
 		else
 		{
-			this->vars->lock.enter();
+			this->vars->spinEnter();
 			if (this->vars->terminated)
 			{
-				this->vars->lock.leave();
+				this->vars->spinLeave();
 				return FALSE;
 			}
 			for (UInt i = 0; i < elemSize; i++)
@@ -2634,7 +2568,7 @@ namespace spadas
 				}
 				else this->vars->nElements++;
 			}
-			this->vars->lock.leave();
+			this->vars->spinLeave();
 			return TRUE;
 		}
 	}
@@ -2642,7 +2576,7 @@ namespace spadas
 	template<typename Type>
 	Array<Type> Stream<Type>::dequeue(UInt num)
 	{
-		this->vars->lock.enter();
+		this->vars->spinEnter();
 		UInt nOuts = math::min(this->vars->nElements, num);
 		Array<Type> out = Array<Type>::createUninitialized(nOuts);
 		for (UInt i = 0; i < nOuts; i++)
@@ -2652,7 +2586,7 @@ namespace spadas
 		}
 		this->vars->nDequeued += nOuts;
 		this->vars->nElements -= nOuts;
-		this->vars->lock.leave();
+		this->vars->spinLeave();
 		return out;
 	}
 
@@ -2660,7 +2594,7 @@ namespace spadas
 	template<typename TargetType>
 	Array<Type> Stream<Type>::dequeueLessThan(TargetType target)
 	{
-		this->vars->lock.enter();
+		this->vars->spinEnter();
 		List<Type> out;
 		for (UInt i = 0; i < this->vars->nElements; i++)
 		{
@@ -2674,17 +2608,17 @@ namespace spadas
 		}
 		this->vars->nDequeued += out.size();
 		this->vars->nElements -= out.size();
-		this->vars->lock.leave();
+		this->vars->spinLeave();
 		return out.toArray();
 	}
 
 	template<typename Type>
-	Bool Stream<Type>::waitAllDequeued(Flag interrupt)
+	Bool Stream<Type>::waitAllDequeued(Flag interrupt, Bool spin)
 	{
 		while (this->vars->nElements != 0)
 		{
 			if (interrupt.check()) return FALSE;
-			if (!this->vars->lock.isSpin()) system::wait(1);
+			if (!spin) system::wait(1);
 		}
 		return TRUE;
 	}
@@ -2692,9 +2626,9 @@ namespace spadas
 	template<typename Type>
 	void Stream<Type>::terminate()
 	{
-		this->vars->lock.enter();
+		this->vars->spinEnter();
 		this->vars->terminated = TRUE;
-		this->vars->lock.leave();
+		this->vars->spinLeave();
 	}
 
 	template<typename Type>
@@ -2706,7 +2640,7 @@ namespace spadas
 	template<typename Type>
 	void Stream<Type>::reset()
 	{
-		this->vars->lock.enter();
+		this->vars->spinEnter();
 		this->vars->origin.collapse();
 		this->vars->origin.joinNext(this->vars->origin);
 		this->vars->nEnqueued = 0;
@@ -2714,10 +2648,27 @@ namespace spadas
 		this->vars->nDiscarded = 0;
 		this->vars->nElements = 0;
 		this->vars->terminated = FALSE;
-		this->vars->lock.leave();
+		this->vars->spinLeave();
 	}
 
 	// 映射与字典实现 ///////////////////////////////////////////////////////
+	namespace internal
+	{
+		template<typename Type> struct MapKey
+		{
+			Type key;
+			UInt index;
+			Bool operator >(const MapKey<Type>& target)
+			{
+				return key > target.key;
+			}
+			Bool operator <(const MapKey<Type>& target)
+			{
+				return key < target.key;
+			}
+		};
+	}
+
 	template<typename Type>
 	NumericKey<Type>::NumericKey()
 	{}
@@ -2806,15 +2757,13 @@ namespace spadas
 	};
 
 	template <typename KeyType, typename ValueType>
-	Map<KeyType, ValueType>::Map() : Object<MapVars<KeyType, ValueType> >(new MapVars<KeyType, ValueType>(256), TRUE)
+	Map<KeyType, ValueType>::Map()
 	{ }
 
 	template <typename KeyType, typename ValueType>
 	Map<KeyType, ValueType>::Map(UInt bucketCount)
 	{
-		bucketCount = math::clamp(bucketCount, 16u, MAP_INDEX_LIMIT);
-		UInt size = 16;
-		while (size < bucketCount) size *= 2;
+		UInt size = bucketCount <= 16 ? 16 : (1 << (math::depth(math::min(bucketCount, MAP_INDEX_LIMIT) - 1) + 1));
 		this->setVars(new MapVars<KeyType, ValueType>(size), TRUE);
 	}
 
@@ -2840,6 +2789,7 @@ namespace spadas
 	template <typename KeyType, typename ValueType>
 	void Map<KeyType, ValueType>::clear()
 	{
+		if (!this->vars) return;
 		UInt tableSize = this->vars->table.size();
 		ListNode<KeyValue<KeyType, ValueType> >** tableData = this->vars->table.data();
 		for (UInt i = 0; i < tableSize; i++)
@@ -2857,19 +2807,19 @@ namespace spadas
 	template <typename KeyType, typename ValueType>
 	Bool Map<KeyType, ValueType>::isEmpty()
 	{
-		return this->vars->size == 0;
+		return !this->vars || this->vars->size == 0;
 	}
 
 	template <typename KeyType, typename ValueType>
 	UInt Map<KeyType, ValueType>::size()
 	{
-		return this->vars->size;
+		return this->vars ? this->vars->size : 0;
 	}
 
 	template <typename KeyType, typename ValueType>
 	Array<KeyType> Map<KeyType, ValueType>::keys()
 	{
-		if (this->vars->size == 0) return Array<KeyType>();
+		if (!this->vars || this->vars->size == 0) return Array<KeyType>();
 		Array<KeyType> out = Array<KeyType>::createUninitialized(this->vars->size);
 		UInt count = 0;
 		UInt tableSize = this->vars->table.size();
@@ -2899,7 +2849,7 @@ namespace spadas
 	template <typename KeyType, typename ValueType>
 	Array<ValueType> Map<KeyType, ValueType>::values()
 	{
-		if (this->vars->size == 0) return Array<ValueType>();
+		if (!this->vars || this->vars->size == 0) return Array<ValueType>();
 		Array<ValueType> out = Array<ValueType>::createUninitialized(this->vars->size);
 		UInt count = 0;
 		UInt tableSize = this->vars->table.size();
@@ -2921,7 +2871,7 @@ namespace spadas
 	template <typename KeyType, typename ValueType>
 	Array<KeyValue<KeyType, ValueType> > Map<KeyType, ValueType>::keyValues()
 	{
-		if (this->vars->size == 0) return Array<KeyValue<KeyType, ValueType> >();
+		if (!this->vars || this->vars->size == 0) return Array<KeyValue<KeyType, ValueType> >();
 		Array<KeyValue<KeyType, ValueType> > out = Array<KeyValue<KeyType, ValueType> >::createUninitialized(this->vars->size);
 		UInt count = 0;
 		UInt tableSize = this->vars->table.size();
@@ -2951,7 +2901,7 @@ namespace spadas
 	template <typename KeyType, typename ValueType>
 	void Map<KeyType, ValueType>::pairs(Array<KeyType>& keys, Array<ValueType>& values)
 	{
-		if (this->vars->size == 0)
+		if (!this->vars || this->vars->size == 0)
 		{
 			keys = Array<KeyType>();
 			values = Array<ValueType>();
@@ -2988,7 +2938,7 @@ namespace spadas
 			values = valuesRaw;
 			return;
 		}
-		Array<spadas_internal::MapKey<KeyType> > mapKeys(keysRaw.size());
+		Array<internal::MapKey<KeyType> > mapKeys(keysRaw.size());
 		for (UInt i = 0; i < keysRaw.size(); i++)
 		{
 			mapKeys[i].key = keysRaw[i];
@@ -3007,6 +2957,7 @@ namespace spadas
 	template <typename KeyType, typename ValueType>
 	Bool Map<KeyType, ValueType>::contain(KeyType key)
 	{
+		if (!this->vars) return FALSE;
 		Word index = key.getHash() & this->vars->mask;
 		ListNode<KeyValue<KeyType, ValueType> >* target = this->vars->table[index];
 		if (!target) return FALSE;
@@ -3022,6 +2973,7 @@ namespace spadas
 	template <typename KeyType, typename ValueType>
 	void Map<KeyType, ValueType>::remove(KeyType key)
 	{
+		if (!this->vars) return;
 		Word index = key.getHash() & this->vars->mask;
 		ListNode<KeyValue<KeyType, ValueType> >** tableData = this->vars->table.data();
 		if (!tableData[index]) return;
@@ -3059,6 +3011,7 @@ namespace spadas
 	template <typename KeyType, typename ValueType>
 	ValueType Map<KeyType, ValueType>::get(KeyType key, ValueType defaultValue)
 	{
+		if (!this->vars) return defaultValue;
 		Word index = key.getHash() & this->vars->mask;
 		ListNode<KeyValue<KeyType, ValueType> >* target = this->vars->table[index];
 		if (!target) return defaultValue;
@@ -3075,6 +3028,7 @@ namespace spadas
 	template <typename KeyType, typename ValueType>
 	Bool Map<KeyType, ValueType>::tryGet(KeyType key, ValueType& value)
 	{
+		if (!this->vars) return FALSE;
 		Word index = key.getHash() & this->vars->mask;
 		ListNode<KeyValue<KeyType, ValueType> >* target = this->vars->table[index];
 		if (!target) return FALSE;
@@ -3095,6 +3049,10 @@ namespace spadas
 	template <typename KeyType, typename ValueType>
 	void Map<KeyType, ValueType>::set(KeyType key, ValueType value)
 	{
+		if (!this->vars)
+		{
+			this->setVars(new MapVars<KeyType, ValueType>(256), TRUE);
+		}
 		Word index = key.getHash() & this->vars->mask;
 		ListNode<KeyValue<KeyType, ValueType> >** tableData = this->vars->table.data();
 		if (!tableData[index])
@@ -3129,6 +3087,10 @@ namespace spadas
 	template <typename KeyType, typename ValueType>
 	ValueType& Map<KeyType, ValueType>::operator [](KeyType key)
 	{
+		if (!this->vars)
+		{
+			this->setVars(new MapVars<KeyType, ValueType>(256), TRUE);
+		}
 		Word index = key.getHash() & this->vars->mask;
 		ListNode<KeyValue<KeyType, ValueType> >** tableData = this->vars->table.data();
 		if (!tableData[index])
@@ -3202,51 +3164,557 @@ namespace spadas
 		return mergeStrings(strs, separator);
 	}
 
+	template <typename Type>
+	StringAppender StringAppender::operator +(Type target)
+	{
+		this->str += target;
+		return *this;
+	}
+
 	// 枚举类实现 ///////////////////////////////////////////////////////
 	template <typename Type>
-	Enum<Type>::Enum() : val(Type::defaultValue())
-	{ }
+	Enum<Type>::Enum()
+	{
+		this->val = Type::Value::Default;
+		this->str = Type::toString(this->val);
+	}
 
 	template <typename Type>
-	Enum<Type>::Enum(const Int val0)
+	Enum<Type>::Enum(typename Type::Value val)
 	{
-		if (!Type::isValid(val0))
+		this->str = Type::toString(val);
+		if (this->str) this->val = val;
+		else
 		{
-			SPADAS_ERROR_MSG("!Type::isValid(val0)");
-			val = Type::defaultValue();
+			this->val = Type::Value::Default;
+			this->str = Type::toString(this->val);
 		}
-		else val = val0;
+	}
+
+	template <typename Type>
+	Bool Enum<Type>::operator ==(typename Type::Value val)
+	{
+		return this->val == val;
 	}
 
 	template <typename Type>
 	Bool Enum<Type>::operator ==(Enum<Type> enumeration)
 	{
-		return val == enumeration.val;
+		return this->val == enumeration.val;
+	}
+
+	template <typename Type>
+	Bool Enum<Type>::operator !=(typename Type::Value val)
+	{
+		return this->val != val;
 	}
 
 	template <typename Type>
 	Bool Enum<Type>::operator !=(Enum<Type> enumeration)
 	{
-		return val != enumeration.val;
+		return this->val != enumeration.val;
 	}
 
 	template <typename Type>
 	Word Enum<Type>::getHash()
 	{
-		return (Word)(UInt)val;
+		return (Word)(UInt)this->val;
 	}
 
 	template <typename Type>
-	Int Enum<Type>::value()
+	typename Type::Value Enum<Type>::value()
 	{
-		return val;
+		return this->val;
 	}
 
 	template <typename Type>
 	String Enum<Type>::toString()
 	{
-		String out = Type::toString(val);
-		return out.isEmpty() ? "Unknown" : out;
+		return this->str;
+	}
+
+	// 矩阵类实现 ///////////////////////////////////////////////////////
+	template<typename Type> class MatrixVars : public Vars
+	{
+	public:
+		Array<UInt> dims;
+		UInt nElems;
+		Array<Type> data0;
+		Type *data;
+		MatrixVars(Array<UInt> dims0/* 不能为空 */) : dims(dims0.clone())
+        {
+            UInt *dimsData = dims.data();
+            UInt nDims = dims.size();
+            for (UInt i = 0; i < nDims; i++)
+            {
+                dimsData[i] += (dimsData[i] == 0);
+            }
+            ULong nElems0 = 1;
+            for (UInt i = 0; i < nDims; i++)
+            {
+                nElems0 *= (ULong)dimsData[i];
+                if (nElems0 > MATRIX_MAX_NELEMS)
+                {
+					SPADAS_ERROR_MSG("nElems0 > MATRIX_MAX_NELEMS");
+                    nElems0 /= (ULong)dimsData[i];
+                    for (UInt n = i; n < nDims; n++) dimsData[n] = 1;
+					break;
+                }
+            }
+            nElems = (UInt)nElems0;
+            data0 = Array<Type>(nElems, 0);
+            data = data0.data();
+        }
+		MatrixVars(Array<Type> data00, UInt nDims) : dims(Array<UInt>(nDims)), data0(data00)
+		{ }
+	};
+
+	template<typename Type>
+	Matrix<Type>::Matrix()
+	{ }
+
+	template<typename Type>
+	Matrix<Type>::Matrix(UInt nRows, UInt nCols)
+	{
+		nRows += (nRows == 0);
+		nCols += (nCols == 0);
+		Array<UInt> dims(2);
+		dims[0] = nRows; dims[1] = nCols;
+		this->setVars(new MatrixVars<Type>(dims), TRUE);
+	}
+
+	template<typename Type>
+	Matrix<Type>::Matrix(UInt nRows, UInt nCols, UInt nDepths)
+	{
+		nRows += (nRows == 0);
+		nCols += (nCols == 0);
+		nDepths += (nDepths == 0);
+		Array<UInt> dims(3);
+		dims[0] = nRows; dims[1] = nCols; dims[2] = nDepths;
+		this->setVars(new MatrixVars<Type>(dims), TRUE);
+	}
+
+	template<typename Type>
+	Matrix<Type>::Matrix(Array<UInt> dims)
+	{
+		if (dims.isEmpty()) dims = Array<UInt>::scalar(1);
+		this->setVars(new MatrixVars<Type>(dims), TRUE);
+	}
+
+	template<typename Type>
+	Matrix<Type>::Matrix(Array<UInt> dims, Pointer raw)
+	{
+		SPADAS_ERROR_RETURN(dims.isEmpty() || !raw);
+		for (UInt i = 0; i < dims.size(); i++)
+		{
+			SPADAS_ERROR_RETURN (dims[i] == 0);
+		}
+		this->setVars(new MatrixVars<Type>(dims), TRUE);
+		utility::memoryCopy(raw, this->vars->data, this->vars->nElems * sizeof(Type));
+	}
+
+	template<typename Type>
+	Matrix<Type>::Matrix(Array<Type> arr, UInt nDims)
+	{
+		SPADAS_ERROR_RETURN(nDims == 0 || arr.size() == 0);
+		Array<UInt> dims(nDims, 1);
+		dims[0] = arr.size();
+		this->setVars(new MatrixVars<Type>(dims), TRUE);
+		utility::memoryCopy(arr.data(), this->vars->data, this->vars->nElems * sizeof(Type));
+	}
+
+	template<typename Type>
+	Matrix<Type>::Matrix(Path filePath)
+	{
+		SPADAS_ERROR_RETURN(filePath.isNull() || !filePath.exist())
+		File file = File::openText(filePath);
+		if (file.isNull()) return;
+		ArrayX<String> rowStringsBuf(256, String());
+		while (TRUE)
+		{
+			String newString = file.scan();
+			if (newString.isEmpty()) break;
+			else rowStringsBuf.append(newString);
+		}
+		Array<String> rowStrings = rowStringsBuf.toArray();
+		UInt nRows = rowStrings.size();
+		SPADAS_ERROR_RETURN(nRows == 0);
+		UInt nCols = 0;
+		Array<StringSpan> firstRowElements = rowStrings[0].split('\t');
+		for (UInt i = 0; i < firstRowElements.size(); i++)
+		{
+			if (!firstRowElements[i].isEmpty()) nCols++;
+		}
+		SPADAS_ERROR_RETURN(nCols == 0);
+		Matrix<Type> out(nRows, nCols);
+		Type *outData = out.vars->data;
+		for (UInt i = 0; i < nRows; i++)
+		{
+			Array<StringSpan> elems = rowStrings[i].split('\t');
+			Type *matRow = &outData[i * nCols];
+			UInt curCols = math::min(nCols, elems.size());
+			for (UInt n = 0; n < curCols; n++)
+			{
+				elems[n].toNumber(matRow[n]);
+			}
+		}
+		this->setVars(out.vars, FALSE);
+	}
+
+	template<typename Type>
+	Matrix<Type> Matrix<Type>::clone()
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, Matrix<Type>());
+		Matrix<Type> out(this->vars->dims);
+		utility::memoryCopy(this->vars->data, out.vars->data, this->vars->nElems * sizeof(Type));
+		return out;
+	}
+
+	template<typename Type>
+	template<typename TargetType>
+	void Matrix<Type>::convertTo(Matrix<TargetType>& target)
+	{
+		SPADAS_ERROR_RETURN(!this->vars);
+		target = Matrix<TargetType>(this->vars->dims);
+		UInt nElements = nElems();
+		Type *srcData = this->vars->data;
+		TargetType *dstData = target.data();
+		for (UInt i = 0; i < nElements; i++)
+		{
+			dstData[i] = (TargetType)srcData[i];
+		}
+	}
+
+	template<typename Type>
+	void Matrix<Type>::copy(Matrix<Type> src, Region2D srcRegion, CoordInt2D thisOffset)
+	{
+		SPADAS_ERROR_RETURN(!this->vars);
+		SPADAS_ERROR_RETURN(!src.vars || this->vars == src.vars);
+		srcRegion.dim0 = math::max(srcRegion.dim0, 1u);
+		srcRegion.dim1 = math::max(srcRegion.dim1, 1u);
+		SPADAS_ERROR_RETURN(srcRegion.offsetI < 0 || srcRegion.offsetJ < 0 || srcRegion.offsetI + srcRegion.dim0 > src.dimAt(0) || srcRegion.offsetJ + srcRegion.dim1 > src.dimAt(1));
+		SPADAS_ERROR_RETURN(thisOffset.i < 0 || thisOffset.j < 0 || thisOffset.i + srcRegion.dim0 > this->vars->dims[0] || thisOffset.j + srcRegion.dim1 > this->vars->dims[1]);
+		UInt srcDim1 = src.dimAt(1);
+		UInt dstDim1 = this->vars->dims[1];
+		Type *srcData = &src(srcRegion.offsetI, srcRegion.offsetJ);
+		Type *dstData = &operator()(thisOffset.i, thisOffset.j);
+		for (UInt i = 0; i < srcRegion.dim0; i++)
+		{
+			Type *srcRow = &srcData[i * srcDim1];
+			Type *dstRow = &dstData[i * dstDim1];
+			for (UInt j = 0; j < srcRegion.dim1; j++)
+			{
+				dstRow[j] = srcRow[j];
+			}
+		}
+	}
+
+	template<typename Type>
+	void Matrix<Type>::copy(Matrix<Type> src, Region3D srcRegion, CoordInt3D thisOffset)
+	{
+		SPADAS_ERROR_RETURN(!this->vars);
+		SPADAS_ERROR_RETURN(!src.vars || this->vars == src.vars);
+		srcRegion.dim0 = math::max(srcRegion.dim0, 1u);
+		srcRegion.dim1 = math::max(srcRegion.dim1, 1u);
+		srcRegion.dim2 = math::max(srcRegion.dim2, 1u);
+		SPADAS_ERROR_RETURN(srcRegion.offsetI < 0 || srcRegion.offsetJ < 0 || srcRegion.offsetK < 0 || srcRegion.offsetI + srcRegion.dim0 > src.dimAt(0) || srcRegion.offsetJ + srcRegion.dim1 > src.dimAt(1) || srcRegion.offsetK + srcRegion.dim2 > src.dimAt(2));
+		SPADAS_ERROR_RETURN(thisOffset.i < 0 || thisOffset.j < 0 || thisOffset.k < 0 || thisOffset.i + srcRegion.dim0 > this->vars->dims[0] || thisOffset.j + srcRegion.dim1 > this->vars->dims[1] || thisOffset.k + srcRegion.dim2 > this->vars->dims[2]);
+		UInt srcDim1 = src.dimAt(1);
+		UInt srcDim2 = src.dimAt(2);
+		UInt dstDim1 = this->vars->dims[1];
+		UInt dstDim2 = this->vars->dims[2];
+		Type *srcData = &src(srcRegion.offsetI, srcRegion.offsetJ, srcRegion.offsetK);
+		Type *dstData = &operator()(thisOffset.i, thisOffset.j, thisOffset.k);
+		for (UInt i = 0; i < srcRegion.dim0; i++)
+		{
+			Type *srcSlice = &srcData[i * srcDim1 * srcDim2];
+			Type *dstSlice = &dstData[i * dstDim1 * dstDim2];
+			for (UInt j = 0; j < srcRegion.dim1; j++)
+			{
+				Type *srcRow = &srcSlice[j * srcDim2];
+				Type *dstRow = &dstSlice[j * dstDim2];
+				for (UInt k = 0; k < srcRegion.dim2; k++)
+				{
+					dstRow[k] = srcRow[k];
+				}
+			}
+		}
+	}
+
+	template<typename Type>
+	void Matrix<Type>::set(Type value)
+	{
+		SPADAS_ERROR_RETURN(!this->vars);
+		Type *data0 = this->vars->data;
+		for (UInt i = 0; i < this->vars->nElems; i++)
+		{
+			data0[i] = value;
+		}
+	}
+
+	template<typename Type>
+	Array<UInt> Matrix<Type>::size()
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, Array<UInt>());
+		return this->vars->dims.clone();
+	}
+
+	template<typename Type>
+	UInt Matrix<Type>::dimAt(UInt index)
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, 0);
+		UInt nDims = this->vars->dims.size();
+		SPADAS_ERROR_RETURNVAL(index >= nDims, 0);
+		return this->vars->dims[index];
+	}
+
+	template<typename Type>
+	UInt Matrix<Type>::nDims()
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, 0);
+		return this->vars->dims.size();
+	}
+
+	template<typename Type>
+	UInt Matrix<Type>::nElems()
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, 0);
+		return this->vars->nElems;
+	}
+
+	template<typename Type>
+	Bool Matrix<Type>::isSize(Size2D size2D)
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, FALSE);
+		if (this->vars->dims.size() != 2) return FALSE;
+		return this->vars->dims[0] == size2D.height && this->vars->dims[1] == size2D.width;
+	}
+
+	template<typename Type>
+	Bool Matrix<Type>::isSize(Size3D size3D)
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, FALSE);
+		if (this->vars->dims.size() != 3) return FALSE;
+		return this->vars->dims[0] == size3D.height && this->vars->dims[1] == size3D.width && this->vars->dims[2] == size3D.depth;
+	}
+
+	template<typename Type>
+	Bool Matrix<Type>::isSize(Array<UInt> dims)
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, FALSE);
+		if (this->vars->dims.size() != dims.size()) return FALSE;
+		UInt nDims = this->vars->dims.size();
+		for (UInt i = 0; i < nDims; i++)
+		{
+			if (this->vars->dims[i] != dims[i]) return FALSE;
+		}
+		return TRUE;
+	}
+
+	template<typename Type>
+	Type *Matrix<Type>::data()
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, 0);
+		return this->vars->data;
+	}
+
+	template<typename Type>
+	Matrix<Type> Matrix<Type>::operator [](UInt i)
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, Matrix<Type>());
+		UInt nDims = this->vars->dims.size();
+		SPADAS_ERROR_RETURNVAL(nDims == 0, *this);
+		if (i >= this->vars->dims[0])
+		{
+			SPADAS_ERROR_MSG("i >= this->vars->dims[0]");
+			i = 0;
+		}
+		MatrixVars<Type> *newVars = new MatrixVars<Type>(this->vars->data0, nDims - 1);
+		UInt newVarsNDims = newVars->dims.size();
+		for (UInt j = 0; j < newVarsNDims; j++)
+		{
+			newVars->dims[j] = this->vars->dims[j + 1];
+		}
+		newVars->nElems = this->vars->nElems / this->vars->dims[0];
+		newVars->data = &this->vars->data[i * newVars->nElems];
+		Matrix<Type> out;
+		out.setVars(newVars, TRUE);
+		return out;
+	}
+
+	template<typename Type>
+	Type& Matrix<Type>::operator ()(UInt i)
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, *(new Type));
+		SPADAS_ERROR_RETURNVAL(this->vars->dims.size() != 1, *(new Type));
+		SPADAS_ERROR_RETURNVAL (i >= this->vars->dims[0], *(new Type));
+		return this->vars->data[i];
+	}
+
+	template<typename Type>
+	Type& Matrix<Type>::operator ()(UInt i, UInt j)
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, *(new Type));
+		SPADAS_ERROR_RETURNVAL(this->vars->dims.size() != 2, *(new Type));
+		UInt *dimsData = this->vars->dims.data();
+		SPADAS_ERROR_RETURNVAL(i >= dimsData[0] || j >= dimsData[1], *(new Type));
+		return this->vars->data[i * dimsData[1] + j];
+	}
+
+	template<typename Type>
+	Type& Matrix<Type>::operator ()(UInt i, UInt j, UInt k)
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, *(new Type));
+		SPADAS_ERROR_RETURNVAL(this->vars->dims.size() != 3, *(new Type));
+		UInt *dimsData = this->vars->dims.data();
+		SPADAS_ERROR_RETURNVAL(i >= dimsData[0] || j >= dimsData[1] || k >= dimsData[2], *(new Type));
+		return this->vars->data[(i * dimsData[1] + j) * dimsData[2] + k];
+	}
+
+	template<typename Type>
+	Matrix<Type> Matrix<Type>::operator +(Matrix<Type> matrix)
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars || !matrix.vars, Matrix<Type>());
+		SPADAS_ERROR_RETURNVAL(!isSize(matrix.size()), *this);
+		Matrix<Type> out(this->vars->dims);
+		Type *src1 = this->vars->data;
+		Type *src2 = matrix.vars->data;
+		Type *dst = out.vars->data;
+		for (UInt i = 0; i < this->vars->nElems; i++)
+		{
+			dst[i] = src1[i] + src2[i];
+		}
+		return out;
+	}
+
+	template<typename Type>
+	Matrix<Type> Matrix<Type>::operator -(Matrix<Type> matrix)
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars || !matrix.vars, Matrix<Type>());
+		SPADAS_ERROR_RETURNVAL(!isSize(matrix.size()), *this);
+		Matrix<Type> out(this->vars->dims);
+		Type *src1 = this->vars->data;
+		Type *src2 = matrix.vars->data;
+		Type *dst = out.vars->data;
+		for (UInt i = 0; i < this->vars->nElems; i++)
+		{
+			dst[i] = src1[i] - src2[i];
+		}
+		return out;
+	}
+
+	template<typename Type>
+	Matrix<Type> Matrix<Type>::operator *(Type scale)
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, Matrix<Type>());
+		Matrix<Type> out(this->vars->dims);
+		Type *src = this->vars->data;
+		Type *dst = out.vars->data;
+		for (UInt i = 0; i < this->vars->nElems; i++)
+		{
+			dst[i] = src[i] * scale;
+		}
+		return out;
+	}
+
+	template<typename Type>
+	Matrix<Type> Matrix<Type>::operator *(Matrix<Type> matrix)
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars || !matrix.vars, Matrix<Type>());
+		SPADAS_ERROR_RETURNVAL(this->vars->dims.size() != 2 || matrix.vars->dims.size() != 2, *this);
+		SPADAS_ERROR_RETURNVAL(this->vars->dims[1] != matrix.vars->dims[0], *this);
+		UInt outRows = this->vars->dims[0], outCols = matrix.vars->dims[1];
+		Matrix<Type> out(outRows, outCols);
+		Type *selfRow = this->vars->data;
+		Type *inData = matrix.vars->data;
+		Type *outRow = out.vars->data;
+		UInt selfStep = this->vars->dims[1];
+		UInt inStep = matrix.vars->dims[1];
+		UInt outStep = out.vars->dims[1];
+		UInt inColIndex;
+		Type sum;
+		for (UInt i = 0; i < outRows; i++)
+		{
+			for (UInt j = 0; j < outCols; j++)
+			{
+				inColIndex = j;
+				sum = 0;
+				for (UInt k = 0; k < selfStep; k++, inColIndex += inStep)
+				{
+					sum += selfRow[k] * inData[inColIndex];
+				}
+				outRow[j] = sum;
+			}
+			selfRow = &selfRow[selfStep];
+			outRow = &outRow[outStep];
+		}
+		return out;
+	}
+
+	template<typename Type>
+	Matrix<Type> Matrix<Type>::transpose()
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, Matrix<Type>());
+		SPADAS_ERROR_RETURNVAL(this->vars->dims.size() != 2, *this);
+		UInt nRows = this->vars->dims[0];
+		UInt nCols = this->vars->dims[1];
+		Matrix<Type> out(nCols, nRows);
+		for (UInt i = 0; i < nCols; i++)
+		{
+			Type *outRow = &out.vars->data[i * nRows];
+			UInt srcIndex0 = i;
+			for (UInt j = 0; j < nRows; j++)
+			{
+				outRow[j] = this->vars->data[srcIndex0 + j*nCols];
+			}
+		}
+		return out;
+	}
+
+	template<typename Type>
+	String Matrix<Type>::toString()
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, String());
+		SPADAS_ERROR_RETURNVAL(this->vars->dims.size() != 2, String());
+		UInt nRows = this->vars->dims[0];
+		UInt nCols = this->vars->dims[1];
+		String outString = String::createWithSize(nRows * (nCols + 1) * 32);
+		for (UInt i = 0; i < nRows; i++)
+		{
+			String rowString = String::createWithSize(nCols * 32);
+			Type *rowData = &this->vars->data[i * nCols];
+			for (UInt j = 0; j < nCols; j++)
+			{
+				rowString += rowData[j];
+				rowString += '\t';
+			}
+			outString += rowString;
+			outString += '\n';
+		}
+		return outString;
+	}
+
+	template<typename Type>
+	void Matrix<Type>::save(Path filePath)
+	{
+		SPADAS_ERROR_RETURN(!this->vars);
+		SPADAS_ERROR_RETURN(filePath.isNull());
+		SPADAS_ERROR_RETURN(this->vars->dims.size() != 2);
+		File file = File::createText(filePath);
+		if (file.isNull()) return;
+		UInt nRows = this->vars->dims[0];
+		UInt nCols = this->vars->dims[1];
+		for (UInt i = 0; i < nRows; i++)
+		{
+			String rowString = String::createWithSize(nCols * 32);
+			Type *rowData = &this->vars->data[i * nCols];
+			for (UInt j = 0; j < nCols; j++)
+			{
+				rowString += rowData[j];
+				rowString += '\t';
+			}
+			file.print(rowString);
+		}
 	}
 
 	// 数学相关函数的实现 ///////////////////////////////////////////////////////
@@ -3334,6 +3802,22 @@ namespace spadas
 	}
 
 	// FlexVars函数的实现 ///////////////////////////////////////////////////////
+	namespace internal
+	{
+		template <typename Type> class FlexHandler : public EmptyObject, public IFlexHandler
+		{
+		public:
+			void createData(Pointer data) override
+			{
+				new ((Type*)data)Type();
+			}
+			void destroyData(Pointer data) override
+			{
+				((Type*)data)->~Type();
+			}
+		};
+	}
+
 	template <typename Type>
 	FlexVars<Type>::FlexVars(Array<Int> validFlagIndices)
 	{
@@ -3351,7 +3835,7 @@ namespace spadas
 			UInt flagIndex = (UInt)validFlagIndices[i];
 			flags[flagIndex >> 6] |= 1 << (flagIndex & 0x3f);
 		}
-		handler = spadas_internal::FlexHandler<Type>();
+		handler = internal::FlexHandler<Type>();
 		handler->createData(data.data());
 	}
 	
@@ -3385,12 +3869,12 @@ namespace spadas
 
 	// SampleBuffer函数的实现 /////////////////////////////////////////////////////////
 	template<typename Type>
-	SampleInterpolationResult SessionSampleBuffer::interpolate(Double offset, Type& interpolatedSample, UInt earlyThresh)
+	Enum<SampleInterpolationResult> SessionSampleBuffer::interpolate(Double offset, Type& interpolatedSample, UInt earlyThresh)
 	{
-		if (this->isEmpty()) return SampleInterpolationResult::OutOfRange;
+		if (this->isEmpty()) return SampleInterpolationResult::Value::OutOfRange;
 
 		String protocol = getProtocol(FALSE);
-		if (protocol.isEmpty()) return SampleInterpolationResult::NoProtocol;
+		if (protocol.isEmpty()) return SampleInterpolationResult::Value::NoProtocol;
 
 		SessionGeneralSample sFirst, sLast;
 		this->getEarliest(sFirst);
@@ -3399,7 +3883,7 @@ namespace spadas
 		if (offset > sFirst.timestamp.offset && offset <= sLast.timestamp.offset)
 		{
 			SessionGeneralSample sgs1, sgs2;
-			if (!this->search(offset, sgs1, sgs2)) return SampleInterpolationResult::OutOfRange;
+			if (!this->search(offset, sgs1, sgs2)) return SampleInterpolationResult::Value::OutOfRange;
 
 			Double delta = sgs2.timestamp.offset - sgs1.timestamp.offset;
 			Double w1 = (sgs2.timestamp.offset - offset) / delta;
@@ -3408,18 +3892,18 @@ namespace spadas
 			if (!Type::supportInterpolation())
 			{
 				Bool parseResult = interpolatedSample.fromGeneralSample(protocol, w1 > w2 ? sgs1 : sgs2);
-				return parseResult ? SampleInterpolationResult::NearestInstead : SampleInterpolationResult::ParseError;
+				return parseResult ? SampleInterpolationResult::Value::NearestInstead : SampleInterpolationResult::Value::ParseError;
 			}
 
 			Type s1, s2;
 			Bool parseResultS1 = s1.fromGeneralSample(protocol, sgs1);
 			Bool parseResultS2 = s2.fromGeneralSample(protocol, sgs2);
-			if (!parseResultS1 || !parseResultS2) return SampleInterpolationResult::ParseError;
+			if (!parseResultS1 || !parseResultS2) return SampleInterpolationResult::Value::ParseError;
 
 			FullTimestamp timestamp;
 			timestamp.session = this->getCurrentSession();
 			timestamp.offset = offset;
-			timestamp.offsetSync = sgs1.timestamp.offsetSync == sgs2.timestamp.offsetSync ? sgs1.timestamp.offsetSync : TimeOffsetSync::None;
+			timestamp.offsetSync = sgs1.timestamp.offsetSync == sgs2.timestamp.offsetSync ? sgs1.timestamp.offsetSync : TimeOffsetSync::Value::None;
 
 			ULong *sgs1Times = (ULong*)&sgs1.timestamp.cpuTick;
 			ULong *sgs2Times = (ULong*)&sgs2.timestamp.cpuTick;
@@ -3432,15 +3916,15 @@ namespace spadas
 			}
 
 			interpolatedSample = Type::interpolate(s1, w1, s2, w2, timestamp);
-			return SampleInterpolationResult::OK;
+			return SampleInterpolationResult::Value::OK;
 		}
 		else if (offset > sLast.timestamp.offset && offset < sLast.timestamp.offset + 0.001 * earlyThresh)
 		{
-			return SampleInterpolationResult::TooEarly;
+			return SampleInterpolationResult::Value::TooEarly;
 		}
 		else
 		{
-			return SampleInterpolationResult::OutOfRange;
+			return SampleInterpolationResult::Value::OutOfRange;
 		}
 	}
 }

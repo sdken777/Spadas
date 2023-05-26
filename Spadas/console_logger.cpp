@@ -2,7 +2,7 @@
 #include "spadas.h"
 #include "console.h"
 
-using namespace spadas_internal;
+using namespace console_internal;
 
 LoggerManager::LoggerManager()
 {

@@ -10,6 +10,7 @@
         "*.vcxproj.filters": true
     },
     "files.associations": {
+        "atomic": "cpp"
         "bitset": "cpp",
         "iomanip": "cpp",
         "istream": "cpp",

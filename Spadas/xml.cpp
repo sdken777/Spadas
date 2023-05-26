@@ -5,7 +5,6 @@ namespace xml_internal
 {
 	using namespace spadas;
 	using namespace spadas::console;
-    using namespace spadas_internal;
 
 	enum class BracketType
 	{
@@ -34,7 +33,7 @@ namespace xml_internal
 	Bool okForTagOrAttributeName(String text)
 	{
 		UInt textLength = text.length();
-		Byte *textData = text.bytes();
+		const Byte *textData = text.bytes();
 		for (UInt i = 0; i < textLength; i++)
 		{
 			if ((textData[i] >= '0' && textData[i] <= '9') ||
@@ -53,7 +52,7 @@ namespace xml_internal
 	String encodeES(String text, Bool includeQuotation)
 	{
 		UInt textLength = text.length();
-		Byte *textData = text.bytes();
+		const Byte *textData = text.bytes();
 		UInt countAmp = 0, countLt = 0, countGt = 0, countQuot = 0;
 		for (UInt i = 0; i < textLength; i++)
 		{
@@ -63,8 +62,10 @@ namespace xml_internal
 			else if (includeQuotation && textData[i] == '\"') countQuot++;
 		}
 		
-		String out = String::createWithSize(textLength + 1 + countAmp * 4 + countQuot * 5 + countLt * 3 + countGt * 3);
-		Byte* outData = out.bytes();
+		Binary buffer(textLength + countAmp * 4 + countQuot * 5 + countLt * 3 + countGt * 3);
+		if (buffer.isEmpty()) return String();
+
+		Byte* outData = buffer.data();
 		
 		UInt k = 0;
 		for (UInt i = 0; i < textLength; i++)
@@ -103,15 +104,16 @@ namespace xml_internal
 			}
 			else outData[k++] = character;
 		}
-		outData[k] = 0;
-		out.updateLength();
-		return out;
+		if (k == 0) return String();
+
+		buffer.trim(k);
+		return buffer;
 	}
 	
 	String decodeES(String text)
 	{
 		UInt textLength = text.length();
-		Byte *textData = text.bytes();
+		const Byte *textData = text.bytes();
 		UInt countAmp = 0, countLt = 0, countGt = 0, countQuot = 0;
 		for (UInt i = 0; i < textLength; i++)
 		{
@@ -124,8 +126,10 @@ namespace xml_internal
 			}
 		}
 		
-		String out = String::createWithSize(textLength + 1 - countAmp * 4 - countQuot * 5 - countLt * 3 - countGt * 3);
-		Byte* outData = out.bytes();
+		Binary buffer(textLength - countAmp * 4 - countQuot * 5 - countLt * 3 - countGt * 3);
+		if (buffer.isEmpty()) return String();
+
+		Byte* outData = buffer.data();
 		
 		UInt k = 0;
 		for (UInt i = 0; i < textLength; i++)
@@ -140,10 +144,10 @@ namespace xml_internal
 			}
 			else outData[k++] = textData[i];
 		}
-		
-		outData[k] = 0;
-		out.updateLength();
-		return out;
+		if (k == 0) return String();
+
+		buffer.trim(k);
+		return buffer;
 	}
 	
 	Bool extractTag(String bracketContent, String& tag, String& attributesString)
@@ -152,8 +156,8 @@ namespace xml_internal
 		if (spaceLocations.size() == 0) tag = bracketContent.clone();
 		else
 		{
-			tag = String(bracketContent, Region(0, spaceLocations[0]));
-			attributesString = String(bracketContent, Region(spaceLocations[0]+1, UINF));
+			tag = bracketContent.subString(0, spaceLocations[0]);
+			attributesString = bracketContent.subString(spaceLocations[0]+1);
 		}
 		
 		if (tag.isEmpty()) return FALSE;
@@ -162,19 +166,22 @@ namespace xml_internal
 
 	Array<XMLAttribute> unpackAttributes(String attributesString)
 	{
-		Array<String> subStrings = attributesString.split("\"");
+		Array<StringSpan> subStrings = attributesString.split("\"");
 
 		Array<XMLAttribute> out(subStrings.size() / 2);
 		for (UInt i = 0; i < out.size(); i++)
 		{
 			XMLAttribute& attribute = out[i];
-			String nameString = subStrings[2*i];
-			String valueString = subStrings[2*i+1];
-			
-			attribute.name = String::createWithSize(nameString.length() + 1);
-			Byte *attributeNameData = attribute.name.bytes();
+			String nameString = subStrings[2 * i];
+			String valueString = subStrings[2 * i + 1];
+
+			if (!nameString.isEmpty()) continue;
+
+			Binary buffer(nameString.length());
+			Byte *attributeNameData = buffer.data();
+
 			UInt k = 0;
-			Byte *nameStringData = nameString.bytes();
+			const Byte *nameStringData = nameString.bytes();
 			UInt nameStringLength = nameString.length();
 			for (UInt n = 0; n < nameStringLength; n++)
 			{
@@ -188,8 +195,9 @@ namespace xml_internal
 					attributeNameData[k++] = nameStringData[n];
 				}
 			}
-			attributeNameData[k] = 0;
-			attribute.name.updateLength();
+			if (k == 0) continue;
+
+			attribute.name = buffer;
 			attribute.value = decodeES(valueString);
 		}
 		return out;
@@ -223,7 +231,7 @@ namespace xml_internal
 		UInt *leftRawData = leftRaw.data(), *rightRawData = rightRaw.data();
 		UInt *leftFineData = leftAngleLocations.data(), *rightFineData = rightAngleLocations.data();
 		UInt leftRawSize = leftRaw.size(), rightRawSize = rightRaw.size();
-		UInt pairCount = 0, leftIndex = 0, rightIndex = 0;
+		UInt nBrackets = 0, leftIndex = 0, rightIndex = 0;
 		while (leftIndex < leftRawSize && rightIndex < rightRawSize)
 		{
 			while (leftIndex + 1 < leftRawSize && leftRawData[leftIndex + 1] < rightRawData[rightIndex]) leftIndex++;
@@ -232,13 +240,10 @@ namespace xml_internal
 				if (rightIndex + 1 >= rightRawSize) break;
 				rightIndex++;
 			}
-			leftFineData[pairCount] = leftRawData[leftIndex++];
-			rightFineData[pairCount++] = rightRawData[rightIndex++];
+			leftFineData[nBrackets] = leftRawData[leftIndex++];
+			rightFineData[nBrackets++] = rightRawData[rightIndex++];
 		}
-		leftAngleLocations.trim(pairCount);
-		rightAngleLocations.trim(pairCount);
 
-		UInt nBrackets = leftAngleLocations.size();
 		Array<BracketType> bracketTypes(nBrackets);
 		Array<String> bracketContents(nBrackets);
 		Array<String> externalContents(nBrackets);
@@ -246,7 +251,7 @@ namespace xml_internal
 		UInt startBracketNum = 0;
 		UInt endBracketNum = 0;
 		
-		Byte* rawStringData = rawString.bytes();
+		const Byte* rawStringData = rawString.bytes();
 		for (UInt i = 0; i < nBrackets; i++)
 		{
 			SPADAS_ERROR_RETURNVAL((i != 0 && leftAngleLocations[i] < rightAngleLocations[i - 1]) || leftAngleLocations[i] > rightAngleLocations[i], FALSE);
@@ -280,15 +285,15 @@ namespace xml_internal
 			switch (bracketTypes[i])
 			{
 				case BracketType::Start:
-					bracketContents[i] = String(rawString, Region(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-1));
+					bracketContents[i] = rawString.subString(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-1);
 					break;
 					
 				case BracketType::End:
-					bracketContents[i] = String(rawString, Region(leftAngleLocations[i]+2, rightAngleLocations[i]-leftAngleLocations[i]-2));
+					bracketContents[i] = rawString.subString(leftAngleLocations[i]+2, rightAngleLocations[i]-leftAngleLocations[i]-2);
 					break;
 					
 				case BracketType::Atom:
-					bracketContents[i] = String(rawString, Region(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-2));
+					bracketContents[i] = rawString.subString(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-2);
 					break;
 					
 				default:
@@ -298,7 +303,7 @@ namespace xml_internal
 			/* get external content */
 			if (i != nBrackets - 1)
 			{
-				externalContents[i] = decodeES(String(rawString, Region(rightAngleLocations[i]+1, leftAngleLocations[i+1]-rightAngleLocations[i]-1)));
+				externalContents[i] = decodeES(rawString.subString(rightAngleLocations[i]+1, leftAngleLocations[i+1]-rightAngleLocations[i]-1));
 			}
 		}
 		

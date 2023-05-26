@@ -1,7 +1,5 @@
 ﻿
-#include "spadas.h"
-
-#include "image_bz.h"
+#include "image.h"
 
 namespace image_internal
 {
@@ -381,7 +379,7 @@ void LoadFloatHSV::io(Pointer row, Pointer data, UInt width)
 		v = clamp(ptr[i++], 0.0f, 1.0f);
 		
 		h60 = h * k;
-		hi = (UInt)floor(h60);
+		hi = (UInt)math::floor(h60);
 		f = h60 - hi;
 		p = v * (1.0f - s);
 		q = v * (1.0f - f * s);
@@ -652,9 +650,9 @@ void CvtFloatColorToWordColorAlpha::cvt(Pointer src, Pointer dst, UInt width)
 	
 	for (UInt i = 0; i < width; i++)
 	{
-		r2[i] = (Word)round(65535.0f * r1[i]);
-		g2[i] = (Word)round(65535.0f * g1[i]);
-		b2[i] = (Word)round(65535.0f * b1[i]);
+		r2[i] = (Word)math::round(65535.0f * r1[i]);
+		g2[i] = (Word)math::round(65535.0f * g1[i]);
+		b2[i] = (Word)math::round(65535.0f * b1[i]);
         a2[i] = 255;
 	}
 }
@@ -688,7 +686,7 @@ void CvtFloatMonoToWordColorAlpha::cvt(Pointer src, Pointer dst, UInt width)
 	
 	for (UInt i = 0; i < width; i++)
 	{
-		Word theVal = (Word)round(65535.0f * val[i]);
+		Word theVal = (Word)math::round(65535.0f * val[i]);
 		r[i] = theVal;
 		g[i] = theVal;
 		b[i] = theVal;
@@ -727,7 +725,7 @@ void CvtFloatColorToWordMono::cvt(Pointer src, Pointer dst, UInt width)
 	
 	for (UInt i = 0; i < width; i++)
 	{
-		val[i] = (Word)round(19589.0f * r[i] + 38443.0f * g[i] + 7502.0f * b[i]);
+		val[i] = (Word)math::round(19589.0f * r[i] + 38443.0f * g[i] + 7502.0f * b[i]);
 	}
 }
 
@@ -755,7 +753,7 @@ void CvtFloatMonoToWordMono::cvt(Pointer src, Pointer dst, UInt width)
 	
 	for (UInt i = 0; i < width; i++)
 	{
-		val2[i] = (Word)round(65535.0f * val1[i]);
+		val2[i] = (Word)math::round(65535.0f * val1[i]);
 	}
 }
 
@@ -866,7 +864,7 @@ void FlipFloatMono::cvt(Pointer src, Pointer dst, UInt width)
 
 void ResizeWordColorAlpha::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWidth, UInt srcHeight, UInt dstHeight, Enum<ResizeMode> mode, Float v)
 {
-	if (mode == ResizeMode::Nearest)
+	if (mode == ResizeMode::Value::Nearest)
 	{
 		Word** src0 = (Word**)src[0];
 		Word *r1 = src0[0];
@@ -899,7 +897,7 @@ void ResizeWordColorAlpha::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt ds
             a2[x] = a1[(Int)u];
 		}
 	}
-	else if(mode == ResizeMode::Bilinear)
+	else if(mode == ResizeMode::Value::Bilinear)
 	{
 		Word*** src0 = (Word***)src;
 		
@@ -919,7 +917,7 @@ void ResizeWordColorAlpha::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt ds
 		{
 			scaleWidth = (Float)(srcWidth - 1) / (dstWidth - 1);
 		}
-		Int floorv = floor(v);
+		Int floorv = math::floor(v);
 		Int ceilv = floorv + 1;
 		
 		Word *row0R = src0[0][0];
@@ -938,7 +936,7 @@ void ResizeWordColorAlpha::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt ds
             Float dsta = 0;
 			
 			u = x * scaleWidth;
-			Int flooru = floor(u);
+			Int flooru = math::floor(u);
 			Int ceilu = flooru + 1;
 			
 			Float aa = (ceilu - u) * (ceilv - v);
@@ -966,17 +964,17 @@ void ResizeWordColorAlpha::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt ds
 			dstb += row1B[ceilu] * dd;
             dsta += row1A[ceilu] * dd;
 			
-			r2[x] = (Word)round(dstr);
-			g2[x] = (Word)round(dstg);
-			b2[x] = (Word)round(dstb);
-            a2[x] = (Word)round(dsta);
+			r2[x] = (Word)math::round(dstr);
+			g2[x] = (Word)math::round(dstg);
+			b2[x] = (Word)math::round(dstb);
+            a2[x] = (Word)math::round(dsta);
 		}
 	}
 }
 
 void ResizeWordMono::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWidth, UInt srcHeight, UInt dstHeight, Enum<ResizeMode> mode, Float v)
 {
-	if (mode == ResizeMode::Nearest)
+	if (mode == ResizeMode::Value::Nearest)
 	{
 		Word** src0 = (Word**)src[0];
 		Word *v1 = src0[0];
@@ -1000,7 +998,7 @@ void ResizeWordMono::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWidth
 			v2[x] = v1[(Int)u];
 		}
 	}
-	else if(mode == ResizeMode::Bilinear)
+	else if(mode == ResizeMode::Value::Bilinear)
 	{
 		Word*** src0 = (Word***)src;
 		
@@ -1017,14 +1015,14 @@ void ResizeWordMono::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWidth
 		{
 			scaleWidth = (Float)(srcWidth - 1) / (dstWidth - 1);
 		}
-		Int floorv = floor(v);
+		Int floorv = math::floor(v);
 		Int ceilv = floorv + 1;
 		for (UInt x = 0; x < dstWidth; x++)
 		{
 			Float dst = 0;
 			
 			u = x * scaleWidth;
-			Int flooru = floor(u);
+			Int flooru = math::floor(u);
 			Int ceilu = flooru + 1;
 			Word *row0 = src0[0][0];
 			Word *row1 = src0[1][0];
@@ -1038,14 +1036,14 @@ void ResizeWordMono::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWidth
 			dst += row1[flooru] * cc;
 			dst += row1[ceilu] * dd;
 			
-			val2[x] = (Word)round(dst);
+			val2[x] = (Word)math::round(dst);
 		}
 	}
 }
 
 void ResizeFloatColor::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWidth, UInt srcHeight, UInt dstHeight, Enum<ResizeMode> mode, Float v)
 {
-	if (mode == ResizeMode::Nearest)
+	if (mode == ResizeMode::Value::Nearest)
 	{
 		Float** src0 = (Float**)src[0];
 		Float *r1 = src0[0];
@@ -1075,7 +1073,7 @@ void ResizeFloatColor::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWid
 			b2[x] = b1[(Int)u];
 		}
 	}
-	else if(mode == ResizeMode::Bilinear)
+	else if(mode == ResizeMode::Value::Bilinear)
 	{
 		Float*** src0 = (Float***)src;
 		
@@ -1094,7 +1092,7 @@ void ResizeFloatColor::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWid
 		{
 			scaleWidth = (Float)(srcWidth - 1) / (dstWidth - 1);
 		}
-		Int floorv = floor(v);
+		Int floorv = math::floor(v);
 		Int ceilv = floorv + 1;
 		for (UInt x = 0; x < dstWidth; x++)
 		{
@@ -1103,7 +1101,7 @@ void ResizeFloatColor::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWid
 			Float dstb = 0;
 			
 			u = x * scaleWidth;
-			Int flooru = floor(u);
+			Int flooru = math::floor(u);
 			Int ceilu = flooru + 1;
 			Float *row0R = src0[0][0];
 			Float *row0G = src0[0][1];
@@ -1141,7 +1139,7 @@ void ResizeFloatColor::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWid
 
 void ResizeFloatMono::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWidth, UInt srcHeight, UInt dstHeight, Enum<ResizeMode> mode, Float v)
 {
-	if (mode == ResizeMode::Nearest)
+	if (mode == ResizeMode::Value::Nearest)
 	{
 		Float** src0 = (Float**)src[0];
 		Float *v1 = src0[0];
@@ -1165,7 +1163,7 @@ void ResizeFloatMono::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWidt
 			v2[x] = v1[(Int)u];
 		}
 	}
-	else if(mode == ResizeMode::Bilinear)
+	else if(mode == ResizeMode::Value::Bilinear)
 	{
 		Float*** src0 = (Float***)src;
 		
@@ -1182,14 +1180,14 @@ void ResizeFloatMono::rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWidt
 		{
 			scaleWidth = (Float)(srcWidth - 1) / (dstWidth - 1);
 		}
-		Int floorv = floor(v);
+		Int floorv = math::floor(v);
 		Int ceilv = floorv + 1;
 		for (UInt x = 0; x < dstWidth; x++)
 		{
 			Float dst = 0;
 			
 			u = x * scaleWidth;
-			Int flooru = floor(u);
+			Int flooru = math::floor(u);
 			Int ceilu = flooru + 1;
 			Float *row0 = src0[0][0];
 			Float *row1 = src0[1][0];
@@ -1212,25 +1210,25 @@ RowIOType image_internal::getRowIOType(Enum<PixelFormat> format)
 {
 	switch (format.value())
 	{
-		case PixelFormat::ByteBGR:
-        case PixelFormat::WordBGR:
-        case PixelFormat::ByteRGB:
-        case PixelFormat::ByteUYVY:
-        case PixelFormat::ByteYUV:
-        case PixelFormat::ByteBGRA:
-        case PixelFormat::ByteRGBA:
+		case PixelFormat::Value::ByteBGR:
+        case PixelFormat::Value::WordBGR:
+        case PixelFormat::Value::ByteRGB:
+        case PixelFormat::Value::ByteUYVY:
+        case PixelFormat::Value::ByteYUV:
+        case PixelFormat::Value::ByteBGRA:
+        case PixelFormat::Value::ByteRGBA:
 			return RowIOType::WordColorAlpha;
 			
-		case PixelFormat::ByteGray:
-        case PixelFormat::ByteBool:
-		case PixelFormat::WordGray:
+		case PixelFormat::Value::ByteGray:
+        case PixelFormat::Value::ByteBool:
+		case PixelFormat::Value::WordGray:
 			return RowIOType::WordMono;
 			
-		case PixelFormat::FloatBGR:
-        case PixelFormat::FloatHSV:
+		case PixelFormat::Value::FloatBGR:
+        case PixelFormat::Value::FloatHSV:
 			return RowIOType::FloatColor;
 			
-		case PixelFormat::FloatGray:
+		case PixelFormat::Value::FloatGray:
 			return RowIOType::FloatMono;
 			
 		default:
@@ -1310,43 +1308,43 @@ IRowIO *image_internal::createRowLoader(Enum<PixelFormat> format)
 {
 	switch (format.value())
 	{
-		case PixelFormat::ByteBGR:
+		case PixelFormat::Value::ByteBGR:
 			return new LoadByteBGR();
 			
-		case PixelFormat::ByteGray:
+		case PixelFormat::Value::ByteGray:
 			return new LoadByteGray();
 			
-		case PixelFormat::WordBGR:
+		case PixelFormat::Value::WordBGR:
 			return new LoadWordBGR();
 			
-		case PixelFormat::WordGray:
+		case PixelFormat::Value::WordGray:
 			return new LoadWordGray();
 			
-		case PixelFormat::FloatBGR:
+		case PixelFormat::Value::FloatBGR:
 			return new LoadFloatBGR();
 			
-		case PixelFormat::FloatGray:
+		case PixelFormat::Value::FloatGray:
 			return new LoadFloatGray();
 			
-		case PixelFormat::ByteRGB:
+		case PixelFormat::Value::ByteRGB:
 			return new LoadByteRGB();
 
-		case PixelFormat::ByteUYVY:
+		case PixelFormat::Value::ByteUYVY:
 			return new LoadByteUYVY();
 			
-		case PixelFormat::ByteYUV:
+		case PixelFormat::Value::ByteYUV:
 			return new LoadByteYUV();
 
-		case PixelFormat::FloatHSV:
+		case PixelFormat::Value::FloatHSV:
 			return new LoadFloatHSV();
 			
-		case PixelFormat::ByteBool:
+		case PixelFormat::Value::ByteBool:
 			return new LoadByteBool();
             
-        case PixelFormat::ByteBGRA:
+        case PixelFormat::Value::ByteBGRA:
             return new LoadByteBGRA();
             
-        case PixelFormat::ByteRGBA:
+        case PixelFormat::Value::ByteRGBA:
             return new LoadByteRGBA();
 			
 		default:
@@ -1358,43 +1356,43 @@ IRowIO *image_internal::createRowWriter(Enum<PixelFormat> format)
 {
 	switch (format.value())
 	{
-		case PixelFormat::ByteBGR:
+		case PixelFormat::Value::ByteBGR:
 			return new WriteByteBGR();
 			
-		case PixelFormat::ByteGray:
+		case PixelFormat::Value::ByteGray:
 			return new WriteByteGray();
 			
-		case PixelFormat::WordBGR:
+		case PixelFormat::Value::WordBGR:
 			return new WriteWordBGR();
 			
-		case PixelFormat::WordGray:
+		case PixelFormat::Value::WordGray:
 			return new WriteWordGray();
 			
-		case PixelFormat::FloatBGR:
+		case PixelFormat::Value::FloatBGR:
 			return new WriteFloatBGR();
 			
-		case PixelFormat::FloatGray:
+		case PixelFormat::Value::FloatGray:
 			return new WriteFloatGray();
 			
-		case PixelFormat::ByteRGB:
+		case PixelFormat::Value::ByteRGB:
 			return new WriteByteRGB();
 
-		case PixelFormat::ByteUYVY:
+		case PixelFormat::Value::ByteUYVY:
 			return new WriteByteUYVY();
 			
-		case PixelFormat::ByteYUV:
+		case PixelFormat::Value::ByteYUV:
 			return new WriteByteYUV();
 
-		case PixelFormat::FloatHSV:
+		case PixelFormat::Value::FloatHSV:
 			return new WriteFloatHSV();
 			
-		case PixelFormat::ByteBool:
+		case PixelFormat::Value::ByteBool:
 			return new WriteByteBool();
             
-        case PixelFormat::ByteBGRA:
+        case PixelFormat::Value::ByteBGRA:
             return new WriteByteBGRA();
             
-        case PixelFormat::ByteRGBA:
+        case PixelFormat::Value::ByteRGBA:
             return new WriteByteRGBA();
 			
 		default:

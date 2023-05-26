@@ -1,9 +1,4 @@
 ﻿
-#if defined(SPADAS_DEBUG)
-#undef SPADAS_DEBUG
-#endif
-
-#include "spadas.h"
 #include "binary.h"
 
 #if defined(SPADAS_ENV_MACOS)
@@ -38,7 +33,7 @@ Binary::Binary(UInt size, Byte origin)
 	utility::memorySet(origin, vars->data, size);
 }
 
-Binary::Binary(Byte *arr, UInt size)
+Binary::Binary(const Byte *arr, UInt size)
 {
 	if (arr == NULL || size == 0) return;
 
@@ -50,28 +45,7 @@ Binary::Binary(Byte *arr, UInt size)
 	utility::memoryCopy(arr, vars->data, size);
 }
 
-Binary::Binary(Binary input, Region region)
-{
-	if (input.isEmpty()) return;
-
-	UInt inputSize = input.size();
-	Int startIndex = region.offset, endIndex = (region.size == UINF ? INF : (region.offset + (Int)region.size - 1));
-	if (region.size == 0 || startIndex >= (Int)inputSize || endIndex < 0) return;
-
-	startIndex = math::max(0, startIndex);
-	endIndex = math::min((Int)inputSize - 1, endIndex);
-	Int size = endIndex + 1 - startIndex;
-	if (size <= 0) return;
-
-	size = math::min((UInt)size, ARRAY_SIZE_LIMIT);
-	Byte* newVarsRaw = new Byte[sizeof(BinaryVars) + size];
-	BinaryVars* newVars = new (newVarsRaw)BinaryVars(size, &newVarsRaw[sizeof(BinaryVars)]);
-	setVars(newVars, TRUE);
-
-	utility::memoryCopy(&input.vars->data[startIndex], vars->data, size);
-}
-
-Binary Binary::create(UInt size, Byte firstByte, ...)
+Binary Binary::create(UInt size, UInt firstByte, ...)
 {
 	if (size == 0) return Binary();
 	Binary out(size);
@@ -109,9 +83,7 @@ Binary Binary::subBinary(UInt index, UInt size)
 	SPADAS_ERROR_RETURNVAL(!vars || index >= vars->size, Binary());
 	size = math::min(size, vars->size - index);
 	if (size == 0) return Binary();
-	Binary subbin;
-	subbin.setVars(new BinaryVars(size, &this->vars->data[index], this->vars), TRUE);
-	return subbin;
+	return Binary(&vars->data[index], size);
 }
 
 Bool Binary::isEmpty()
@@ -121,10 +93,10 @@ Bool Binary::isEmpty()
 
 void Binary::trim(UInt size)
 {
+	SPADAS_ERROR_RETURN(size == 0);
 	if (vars && size < vars->size)
 	{
-		if (size == 0) setVars(0, FALSE);
-		else vars->size = size;
+		vars->size = size;
 	}
 }
 
@@ -136,7 +108,7 @@ Binary Binary::clone()
     return out;
 }
 
-void Binary::clear(Byte val)
+void Binary::set(Byte val)
 {
 	if (!vars) return;
 	utility::memorySet(val, vars->data, vars->size);

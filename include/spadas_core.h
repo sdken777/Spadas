@@ -31,10 +31,10 @@ namespace spadas
 	/// 64位带符号整数
 	typedef long long Long;
 	
-	/// Windows: ANSI字符集; Linux: UTF-8字符集
+	/// UTF-8字符
 	typedef char Char;
 	
-	/// Windows: UTF-16字符集, Linux: UTF-32字符集
+	/// Windows: UTF-16字符, Linux: UTF-32字符
 	typedef wchar_t WChar;
 	
 	/// 32位浮点数，单精度
@@ -43,8 +43,11 @@ namespace spadas
 	/// 64位浮点数，双精度
 	typedef double Double;
 
-	/// 指针
+	/// 读写数据指针
 	typedef void *Pointer;
+
+	/// 只读数据指针
+	typedef const void *ConstPointer;
 	
 	/// 兼容指针的整数类型
 	typedef ULong PointerInt;
@@ -78,7 +81,13 @@ namespace spadas
 	// 前置声明 //////////////////////////////////////////////////////////////
 
 	// 字符串
-	class SPADAS_API String;
+	class String;
+
+	// 字符串片段
+	class StringSpan;
+
+	/// 字符串拼接器
+	class StringAppender;
 
 	// 可空对象
 	template <typename Type> class Optional;
@@ -89,67 +98,11 @@ namespace spadas
 	// 链表节点
 	template <typename Type> class ListNode;
 
-	// Int矩阵
-	class SPADAS_API IntMat;
-
-	// Float矩阵
-	class SPADAS_API FloatMat;
-
-	// Double矩阵
-	class SPADAS_API DoubleMat;
+	// 图像对
+	struct ImagePair;
 
 	// 标志位
-	class SPADAS_API Flag;
-
-	// 函数模板 //////////////////////////////////////////////////////////////
-
-	/// 无参数无返回值函数模板
-	class Void
-	{
-	public:
-		/// 无参数无返回值函数
-		typedef void (*Function)();
-	};
-
-	/// 无参数带返回值函数模板
-	template <typename RetType> class Out
-	{
-	public:
-		/// 无参数带返回值函数
-		typedef RetType (*Function)();
-	};
-
-	/// 单参数无返回值函数模板
-	template <typename ArgType> class In
-	{
-	public:
-		/// 单参数无返回值函数
-		typedef void (*Function)(ArgType arg);
-	};
-
-	/// 单参数带返回值函数模板
-	template <typename ArgType, typename RetType> class InOut
-	{
-	public:
-		/// 单参数带返回值函数
-		typedef RetType (*Function)(ArgType arg);
-	};
-
-	/// 双参数无返回值函数模板
-	template <typename ArgType1, typename ArgType2> class In2
-	{
-	public:
-		/// 双参数无返回值函数
-		typedef void (*Function)(ArgType1 arg1, ArgType2 arg2);
-	};
-
-	/// 双参数带返回值函数模板
-	template <typename ArgType1, typename ArgType2, typename RetType> class In2Out
-	{
-	public:
-		/// 双参数带返回值函数
-		typedef RetType (*Function)(ArgType1 arg1, ArgType2 arg2);
-	};
+	class Flag;
 
 	// 空间与索引 //////////////////////////////////////////////////////////////
 
@@ -438,7 +391,7 @@ namespace spadas
 
 	// 引用计数 //////////////////////////////////////////////////////////////
 
-	/// [多线程安全] 用于保证计数多线程安全的原子操作类
+	/// 原子操作类
 	class SPADAS_API Atom
 	{
 	public:
@@ -449,22 +402,22 @@ namespace spadas
 		Atom(Int val);
 		
 		/// 加1并返回新值
-		Int increase();
+		Int increase() const;
 		
 		/// 减1并返回新值
-		Int decrease();
+		Int decrease() const;
 		
 		/// 获取当前值
-		Int get();
+		Int get() const;
 
 		/// 设定当前值
-		void set(Int val);
+		void set(Int val) const;
 
 		/// 加/减数并返回新值
-		Int add(Int number);
+		Int add(Int number) const;
 
 		/// 若为旧值则设定为新值并返回TRUE，否则返回FALSE
-		Bool cas(Int oldVal, Int newVal);
+		Bool cas(Int oldVal, Int newVal) const;
 		
 	private:
 		Int val;
@@ -472,7 +425,7 @@ namespace spadas
 		Atom& operator =(const Atom& obj) { return *this; }
 	};
 	
-	/// [多线程安全] 变量数据的基类，使其具有引用计数属性
+	/// 变量数据的基类，使其具有引用计数属性
 	class SPADAS_API Vars
 	{
 	public:
@@ -487,103 +440,114 @@ namespace spadas
 		
 		/// 引用计数减1
 		void release();
-		
+
 		/// 取得当前引用计数
 		UInt getRefCount();
 
-		/// 获取类名称（用于实现类型转换）
+		/// 加自旋锁
+		void spinEnter();
+
+		/// 解自旋锁
+		void spinLeave();
+
+		/// 获取类名称
 		virtual String getTypeName();
 
-		/// 获取基类类型链（用于实现类型转换）
-		virtual ListNode<String> getBaseChain();
+		/// 按类ID判断是否为该类型
+		virtual Bool isType(ULong typeID);
+
+		/// 按类名称判断是否为该类型
+		virtual Bool isType(String typeName);
 
 		/// 获取字符串描述
 		virtual String toString();
 
+		/// 自旋锁是否已被管理，若是则 spadas::SpinLocked 将不加锁
+		virtual Bool isSpinLockManaged();
+
 		/// 取得存活对象数目
 		static UInt getObjectCount();
 
-	protected:
-		/// 方便在getBaseChain方法中生成类型链
-		ListNode<String> genBaseChain(String baseType, ListNode<String> baseBaseChain);
-
 	private:
 		Atom nRefs;
+		Atom varSpinLock;
+		Vars(const Vars& obj);
+		Vars& operator =(const Vars& obj) { return *this; }
 	};
 	
 	/// 所有引用计数类的基类，其中VarsType为Vars的子类
 	template <typename VarsType> class Object
 	{
 	public:
-		/// [多线程安全] 默认构造函数，变量数据指针为空
+		/// 默认构造函数，变量数据指针为空
 		Object();
 
-		/// @brief [多线程安全] 以指定变量数据指针初始化
+		/// @brief 以指定变量数据指针初始化
 		/// @param newVars 变量数据的指针
 		/// @param isNew 对于new出来的指针isNew应为TRUE，否则为FALSE（由 Object::getVars 等获得的情况）
 		Object(VarsType *newVars, Bool isNew);
 		
-		/// [多线程安全] 析构函数，变量数据的引用减1
+		/// 析构函数，变量数据的引用减1
 		virtual ~Object();
 		
-		/// [多线程安全] 创建引用对象，直接指向另一个对象的变量数据（作为基类被隐式调用）
+		/// 创建引用对象，直接指向另一个对象的变量数据（作为基类被隐式调用）
 		Object(const Object<VarsType>& obj);
 		
-		/// 重定向，原变量数据引用减1并指向另一个对象的变量数据（作为基类被隐式调用）。非多线程安全：多线程共享对象有调用此方法的(等号左手边)，必须对该对象的所有操作加 spadas::Lock
+		/// 重定向，原变量数据引用减1并指向另一个对象的变量数据（作为基类被隐式调用）
 		Object& operator =(const Object<VarsType>& obj);
 		
-		/// [多线程安全] 是否相等
+		/// 是否相等
 		Bool operator ==(const Object<VarsType>& obj);
 
-		/// [多线程安全] 是否不相等
+		/// 是否不相等
 		Bool operator !=(const Object<VarsType>& obj);
 
-		/// [多线程安全] 变量数据指针是否为空
+		/// 变量数据指针是否为空
 		Bool isNull();
 
-		/// [多线程安全] 变量数据指针是否有效（非空）
+		/// 变量数据指针是否有效（非空）
 		Bool isValid();
 		
-		/// [多线程安全] 获取哈希值
+		/// 获取哈希值
 		Word getHash();
 
-		/// [多线程安全] 获得变量数据的引用计数
+		/// 作为非空静态对象时可获取程序运行周期间的唯一ID
+		ULong getID() const;
+
+		/// 获得变量数据的引用计数
 		UInt getRefCount();
 
-		/// [多线程安全] 获得变量数据对应的类名称
+		/// 获得变量数据对应的类名称
 		String getTypeName();
 
-		/// [多线程安全] 是否为该类的变量数据，若变量数据指针为空也返回TRUE
+		/// 是否为该类的变量数据，若变量数据指针为空也返回TRUE
 		template <typename TargetType>
 		Bool is();
 
-		/// [多线程安全] 转换为基类对象，若变量数据指针为空或类型不符合则返回默认构造对象
+		/// 转换为基类或派生类对象，若变量数据指针为空或类型不符合则返回默认构造对象
 		template <typename TargetType>
 		TargetType as();
 
-		/// [多线程安全] 转换为派生类对象，若类型不符合则返回无效对象
+		/// 转换为基类或派生类对象，若变量数据指针为空或类型不符合则返回默认构造对象，并仅当类型不符合时输出FALSE
 		template <typename TargetType>
-		Optional<TargetType> cast();
+		TargetType as(Bool& ok);
 
-		/// [非安全指针] 获得变量数据的指针
+		/// [非安全] 获得变量数据的指针
 		VarsType *getVars();
 
-		/// @brief [非安全操作] 设置变量数据指针。非多线程安全：在非构造时调用此方法的类都为非多线程安全类
+		/// @brief [非安全] 重定向，设置变量数据指针
 		/// @param newVars 变量数据的指针
 		/// @param isNew 对于new出来的指针isNew应为TRUE，否则为FALSE（由 Object::getVars 等获得的情况）
 		void setVars(VarsType* newVars, Bool isNew);
-
-		/// [非安全操作] 转换输入并设置变量数据指针（建议使用castCreate）
-		void castVars(Vars* varsToCast);
 		
-		/// [非安全操作] 以输入的变量数据指针转换为当前类型创建对象
+		/// [非安全] 以输入的变量数据指针转换为当前类型创建对象
 		static Object<VarsType> castCreate(Vars* varsToCast);
 
 		/// 获取字符串描述
 		String toString();
 
 	protected:
-		/// [非安全指针] 变量数据指针
+		/// [非安全] 变量数据指针
 		VarsType *vars;
 	};
 
@@ -608,6 +572,51 @@ namespace spadas
 
 		/// 无效对象
 		BaseObject();
+	};
+
+	/// 实现Type类重定向操作的多线程安全
+	template <typename Type> class Safe
+	{
+	public:
+		/// 创建Type对象
+		Safe();
+		
+		/// 等于号重定向
+		void operator =(Type target);
+
+		/// @brief [非安全] 重定向，设置变量数据指针
+		/// @param newVars 变量数据的指针
+		/// @param isNew 对于new出来的指针isNew应为TRUE，否则为FALSE（由 Object::getVars 等获得的情况）
+		template <typename VarsType>
+		void setVars(VarsType* newVars, Bool isNew);
+
+		/// 获取对象
+		Type get();
+
+	private:
+		Type obj;
+		Atom objSpinLock;
+		Safe(const Safe<Type>& obj);
+		Safe<Type>& operator =(const Safe<Type>& obj) { return *this; }
+	};
+
+	/// 对Type对象进行多线程安全操作的容器
+	template <typename Type> class SpinLocked
+	{
+	public:
+		/// 构造函数，输入需要进行多线程安全操作的对象，自动加锁
+		SpinLocked(Safe<Type>& safeObj);
+
+		// 析构，自动解锁
+		~SpinLocked();
+
+		/// 使用容器中的对象
+		Type *operator ->();
+
+	private:
+		Type obj;
+		SpinLocked(const SpinLocked& obj);
+		SpinLocked& operator =(const SpinLocked& obj) { return *this; }
 	};
 
 	/// spadas::Interface 模板类的变量数据
@@ -659,23 +668,19 @@ namespace spadas
 		/// 取值，当无效时返回输入的默认值
 		Type value(Type defaultValue);
 
-		/// [可修改] 取值
+		/// 取得值的引用
 		Type& refValue();
 
-		/// [可修改] 使用字段或方法
+		/// 使用字段或方法
 		Type* operator ->();
 	};
 
 	// 数据结构模板 //////////////////////////////////////////////////////////////
 
 	/// 定长数组元素遍历器
-	template <typename Type> struct ArrayElem
+	template <typename Type> class ArrayElem
 	{
-		Array<Type> arr;
-		Type *data;
-		UInt size;
-		UInt idx;
-
+	public:
 		/// 初始化函数
 		ArrayElem(Array<Type> arr, UInt index);
 
@@ -685,13 +690,13 @@ namespace spadas
 		/// 获取当前元素的序号
 		UInt index();
 
-		/// [非安全操作] [可修改] 取得值的引用（需要先确保在数组范围内）
+		/// [非安全] 取得值的引用（需要先确保在数组范围内）
 		Type& value();
 
-		/// [非安全操作] [可修改] 使用值的字段或方法（需要先确保在数组范围内）
+		/// [非安全] 使用值的字段或方法（需要先确保在数组范围内）
 		Type* operator ->();
 
-		/// [非安全操作] 赋值给当前元素（需要先确保在数组范围内）
+		/// [非安全] 赋值给当前元素（需要先确保在数组范围内）
 		void operator =(const Type& val);
 
 		/// 移动至上个元素
@@ -699,6 +704,12 @@ namespace spadas
 
 		/// 移动至下个元素
 		void operator ++();
+
+	private:
+		Array<Type> arr;
+		Type *data;
+		UInt size;
+		UInt idx;
 	};
 
 	/// spadas::Array 模板类的变量数据
@@ -724,47 +735,42 @@ namespace spadas
 		/// @param arr 源数据数组指针
 		/// @param size 源数据数组大小
 		Array(const Type arr[], UInt size);
-		
-		/// @brief 从另一个数组的子区域拷贝并创建对象
-		/// @param input 源数据数组
-		/// @param region 拷贝区域（为 spadas::UINF 时将拷贝至末尾）
-		Array(Array<Type> input, Region region);
 
 		/// 取得数组大小
 		UInt size();
 
-		/// [非安全指针][可修改] 取得数组的头指针
+		/// [非安全] 取得数组的头指针
 		Type *data();
 
-		/// [可修改] 取得数组中某个元素的引用
+		/// 取得数组中某个元素的引用
 		Type& operator [](UInt index);
 
-		/// [可修改] 取得数组中第一个元素的引用
+		/// 取得数组中第一个元素的引用
 		Type& first();
 
-		/// [可修改] 取得数组中最后一个元素的引用
+		/// 取得数组中最后一个元素的引用
 		Type& last();
 
-		/// [可修改] 取得从第一个元素的遍历器
+		/// 取得从第一个元素的遍历器，可修改元素
 		ArrayElem<Type> firstElem();
 
-		/// [可修改] 取得从最后一个元素开始的遍历器
+		/// 取得从最后一个元素开始的遍历器，可修改元素
 		ArrayElem<Type> lastElem();
 
-		/// [可修改] 取得子数组，其将绑定至本数组的数据
+		/// 取得子数组，其数据绑定至本数组的数据
 		Array<Type> subArray(UInt index, UInt size = UINF);
 
 		/// 是否为空数组
 		Bool isEmpty();
 
-		/// 缩减数组大小（缩减前获取的ArrayElem和子数组将不可用）
+		/// 缩减数组大小
 		void trim(UInt size);
 		
 		/// 克隆出一个新对象 (所有元素调用=号拷贝)
 		Array<Type> clone();
 
-		/// 赋值擦除数据
-		void clear(Type value);
+		/// 对所有元素赋同一个值
+		void set(Type value);
 		
 		/// @brief 从另一个数组的某个子区域拷贝数据到本数组的某个位置
 		/// @param src 源数据数组
@@ -776,17 +782,17 @@ namespace spadas
 		Bool contain(Type val);
 
 		/// 数组中是否包含指定函数返回TRUE的某个值
-		Bool containAs(typename InOut<Type, Bool>::Function func);
+		Bool containAs(Func<Bool(Type&)> func);
 
 		/// 返回数组中所有等于某个值的元素序号
 		Array<UInt> search(Type val);
 
 		/// 返回数组中所有指定函数返回TRUE的元素序号
-		Array<UInt> searchAs(typename InOut<Type, Bool>::Function func);
+		Array<UInt> searchAs(Func<Bool(Type&)> func);
 
 		/// 按指定函数转换为其他类型数组
 		template <typename TargetType>
-		Array<TargetType> convert(typename InOut<Type, TargetType>::Function func);
+		Array<TargetType> convert(Func<TargetType(Type&)> func);
 		
 		/// @brief 根据指定的大小分割为多个数组
 		/// @param sizes 将分割成的每个数组的大小
@@ -801,19 +807,19 @@ namespace spadas
 		/// 创建一个标量数组（只含有一个元素）
 		static Array<Type> scalar(Type element);
 
-		/// @brief [非安全操作] 基于可变参数列表创建数组并赋值，ArgType应为Int，UInt，Double，Char*或结构体和类名等
+		/// @brief [非安全] 基于可变参数列表创建数组并赋值，ArgType应为Int，UInt，Double，Char*或结构体和类名等
 		/// @param size 数组大小
 		/// @param firstValue 数组首个元素值，后面参数都为ArgType类型的元素值，总元素个数应与数组大小一致
 		/// @returns 创建的数组
 		template <typename ArgType>
 		static Array<Type> create(UInt size, ArgType firstValue, ...);
 
-		/// @brief [非安全操作] 创建一个具有指定大小但未初始化的数组，需要随后调用init方法确保对每个元素都初始化了仅一次
+		/// @brief [非安全] 创建一个具有指定大小但未初始化的数组，需要随后调用init方法确保对每个元素都初始化了仅一次
 		/// @param size 创建数组的大小
 		/// @returns 新创建的数组
 		static Array<Type> createUninitialized(UInt size);
 
-		/// [非安全操作] 初始化元素，需要确保序号在范围内
+		/// [非安全] 初始化元素，需要确保序号在范围内
 		void initialize(UInt index, const Type& val);
 		
 		/// @brief 合并多个数组
@@ -821,19 +827,19 @@ namespace spadas
 		/// @returns 合并后的数组
 		static Array<Type> merge(Array<Array<Type> > arrs);
 
-		/// 转换为基类对象的数组
+		/// 转换为基类或派生类对象的数组（具体行为参考 spadas::Object::as ）
 		template <typename TargetType>
 		Array<TargetType> asArray();
 
-		/// 转换为派生类对象的数组
+		/// 转换为基类或派生类对象的数组，并输出每个元素是否转换成功的数组（具体行为参考 spadas::Object::as ）
 		template <typename TargetType>
-		Array<Optional<TargetType> > castArray();
+		Array<TargetType> asArray(Array<Bool>& ok);
 
 		/// 按从小到大排序，需要Type支持>重载符
 		void sort();
 
 		/// 根据指定函数(判断是否大于)，按从小到大排序
-		void sortAs(typename In2Out<Type&, Type&, Bool>::Function func);
+		void sortAs(Func<Bool(Type&, Type&)> func);
 
 	private:
 		Bool isNull() { return FALSE; }
@@ -853,10 +859,10 @@ namespace spadas
 		/// 创建一个节点，并给其数据赋指定值
 		ListNode(Type val);
 
-		/// [可修改] 取得数据的引用
+		/// 取得数据的引用
 		Type& value();
 
-		/// [可修改] 使用数据的字段或方法
+		/// 使用数据的字段或方法
 		Type* operator ->();
 		
 		/// 是否存在下一个节点
@@ -941,10 +947,10 @@ namespace spadas
 		/// 创建一个节点，并给其数据赋指定值
 		TreeNode(Type val);
 
-		/// [可修改] 取得数据的引用
+		/// 取得数据的引用
 		Type& value();
 
-		/// [可修改] 使用数据的字段或方法
+		/// 使用数据的字段或方法
 		Type* operator ->();
 
 		/// 取得根方向节点 (若不存在返回本节点)
@@ -1012,19 +1018,19 @@ namespace spadas
 		/// 创建一个节点，并给其数据赋指定值
 		GraphNode(NType val);
 		
-		/// [可修改] 取得数据的引用
+		/// 取得数据的引用
 		NType& value();
 
-		/// [可修改] 使用数据的字段或方法
+		/// 使用数据的字段或方法
 		NType* operator ->();
 
 		/// 取得本节点上链接的数目
 		UInt nLinks();
 		
-		/// [可修改] 由序号取得某个链接上的数据 (序号从0开始)
+		/// 由序号取得某个链接上的数据引用 (序号从0开始)
 		LType& linkAt(UInt index);
 		
-		/// [可修改] 取得与指定节点间的链接上的数据，若无此链接则报错
+		/// 取得与指定节点间的链接上的数据引用，若无此链接则报错
 		LType& linkWith(GraphNode<NType, LType> node);
 		
 		/// 由序号取得某个链接着的节点 (序号从0开始)
@@ -1067,7 +1073,7 @@ namespace spadas
 		/// 以指定段大小（应为2的幂数，范围在1~65536内）和默认值创建可扩展数组
 		ArrayX(UInt segmentSize, Type defaultValue);
 		
-		/// [可修改] 取得数组中某个元素的引用 (若越过数组边界，将先扩展大小至序号+1再访问)
+		/// 取得数组中某个元素的引用 (若越过数组边界，将先扩展大小至序号+1再访问)
 		Type& operator [](UInt index);
 		
 		/// 是否为空数组
@@ -1104,12 +1110,9 @@ namespace spadas
 	/// spadas::List 模板类的变量数据
 	template <typename Type> class ListVars;
 
-	/// spadas::ListElem 模板类的变量数据
-	template <typename Type> class ListElemVars;
-
 	/// 链表元素遍历器
 	template <typename Type> class List;
-	template <typename Type> class ListElem : public Object<ListElemVars<Type> >
+	template <typename Type> class ListElem
 	{
 	public:
 		/// 构造函数，由 List::head 和 List::tail 调用生成
@@ -1127,16 +1130,16 @@ namespace spadas
 		/// 获取当前元素在链表中的序号（不在链表中则返回UINF）
 		UInt index();
 
-		/// [可修改] 取得值的引用
+		/// 取得值的引用
 		Type& value();
 
-		/// [可修改] 使用值的字段或方法
+		/// 使用值的字段或方法
 		Type* operator ->();
 
-		/// [可修改] 取得上一个元素值的引用
+		/// 取得上一个元素值的引用
 		Type& previous();
 
-		/// [可修改] 取得下一个元素值的引用
+		/// 取得下一个元素值的引用
 		Type& next();
 
 		/// 赋值给当前元素
@@ -1158,8 +1161,16 @@ namespace spadas
 		void remove();
 	
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		ListNode<Type> node;
+		Bool vld;
+		UInt idx;
+		ListNode<Type> prevNode;
+		Bool prevValid;
+		UInt prevIndex;
+		ListNode<Type> nextNode;
+		Bool nextValid;
+		UInt nextIndex;
+		List<Type> list;
 	};
 
 	/// 链表
@@ -1220,14 +1231,11 @@ namespace spadas
 	template <typename Type> class Stream : public Object<StreamVars<Type> >
 	{
 	public:
-		/// 创建容量为1的数据流，且其元素可丢弃，其多线程安全由非自旋锁保障
+		/// 创建容量为1的数据流，且其元素可丢弃
 		Stream();
 		
-		/// 创建指定容量的数据流，并指定其元素是否可丢弃，其多线程安全由非自旋锁保障
+		/// 创建指定容量的数据流，并指定其元素是否可丢弃
 		Stream(UInt capacity, Bool discardable = TRUE);
-
-		/// 创建指定容量的数据流，并指定其元素是否可丢弃，以及其多线程安全是否由自旋锁保障
-		Stream(UInt capacity, Bool discardable, Bool spin);
 
 		/// 更新数据流的容量，并舍弃多余的元素
 		void setCapacity(UInt capacity);
@@ -1276,7 +1284,7 @@ namespace spadas
 		Array<Type> dequeueLessThan(TargetType target);
 
 		/// 等待所有元素取出 (若检测到interrupt则返回FALSE)
-		Bool waitAllDequeued(Flag interrupt);
+		Bool waitAllDequeued(Flag interrupt, Bool spin);
 
 		/// 终止数据流，使其变为“已终止状态”。终止后将无法推入任何元素，但可取出
 		void terminate();
@@ -1357,13 +1365,13 @@ namespace spadas
 	template <typename KeyType, typename ValueType> class Map : public Object<MapVars<KeyType, ValueType> >
 	{
 	public:
-		/// 创建映射表，默认bucket个数为256
+		/// 创建空的映射表，默认bucket个数为256
 		Map();
 
 		/// 创建指定bucket个数的映射表（应为2的幂数，范围在16~65536内）
 		Map(UInt bucketCount);
 
-		/// @brief [非安全操作] 基于可变参数列表创建映射表并赋值，KeyArgType和ValueArgType应为Int，UInt，Double，Char*或结构体和类名等
+		/// @brief [非安全] 基于可变参数列表创建映射表并赋值，KeyArgType和ValueArgType应为Int，UInt，Double，Char*或结构体和类名等
 		/// @param size 待赋值的键值个数
 		/// @param firstKey 首个键
 		/// @param firstValue 首个值，后面参数交替为KeyArgType和ValueArgType类型，总个数应为待赋值的键值个数x2
@@ -1374,7 +1382,7 @@ namespace spadas
 		/// 清空数据
 		void clear();
 
-		/// 是否无数据
+		/// 是否为空的映射表
 		Bool isEmpty();
 
 		/// 取得映射数目
@@ -1416,7 +1424,7 @@ namespace spadas
 		/// 设置指定键对应的值，若不存在则新建映射
 		void set(KeyType key, ValueType value);
 
-		/// [可修改] 获得指定键对应的值引用，若不存在则新建映射
+		/// 获得指定键对应的值引用，若不存在则新建映射
 		ValueType& operator [](KeyType key);
 
 	private:
@@ -1434,7 +1442,7 @@ namespace spadas
 		/// 创建指定bucket个数的字典（应为2的幂数，范围在16~65536内）
 		Dictionary(UInt bucketCount);
 
-		/// @brief [非安全操作] 基于可变参数列表创建字典并赋值，ArgType应为Int，UInt，Double，Char*或结构体和类名等
+		/// @brief [非安全] 基于可变参数列表创建字典并赋值，ArgType应为Int，UInt，Double，Char*或结构体和类名等
 		/// @param size 待赋值的键值个数
 		/// @param firstKey 首个键
 		/// @param firstValue 首个值，后面参数交替为Char*和ArgType类型，总个数应为待赋值的键值个数x2
@@ -1506,17 +1514,12 @@ namespace spadas
 		/// @brief 从一个 spadas::Byte 数组指针创建对象，需指定数据块大小（创建时将拷贝源数据）
 		/// @param arr 源数据数组指针
 		/// @param size 源数据数组大小（字节单位）
-		Binary(Byte *arr, UInt size);
-		
-		/// @brief 从另一个数据块的子区域拷贝并创建对象
-		/// @param input 源数据数组
-		/// @param region 拷贝区域（为 spadas::UINF 时将拷贝至末尾）
-		Binary(Binary input, Region region);
+		Binary(const Byte *arr, UInt size);
 
-		/// @brief [非安全操作] 基于可变参数列表创建二进制数据块并赋值
+		/// @brief [非安全] 基于可变参数列表创建二进制数据块并赋值
 		/// @param size 数据块大小（字节单位）
-		/// @param firstByte 首个字节值，后面参数都为Byte类型的值，总字节个数应与数据块大小一致
-		static Binary create(UInt size, Byte firstByte, ...);
+		/// @param firstByte 首个字节值，后面参数都为范围在0～255的值，总字节个数应与数据块大小一致
+		static Binary create(UInt size, UInt firstByte, ...);
 
 		/// @brief 由Base64字符串创建二进制数据
 		/// @param base64 输入的base64字符串
@@ -1532,13 +1535,13 @@ namespace spadas
 		/// 取得数据块大小
 		UInt size();
 
-		/// [非安全指针][可修改] 取得数据块的头指针
+		/// [非安全] 取得数据块的头指针
 		Byte *data();
 
-		/// [可修改] 取得某个字节的引用
+		/// 取得某个字节的引用
 		Byte& operator [](UInt index);
 
-		/// [可修改] 取得子数据块，其将绑定至本数据块的数据
+		/// 取得子数据块，其数据绑定至本数据块的数据
 		Binary subBinary(UInt index, UInt size = UINF);
 
 		/// 本对象是否无效（大小为0）
@@ -1550,8 +1553,8 @@ namespace spadas
 		/// 克隆出一个新对象
 		Binary clone();
 		
-		/// 赋值擦除数据
-		void clear(Byte val);
+		/// 对所有字节赋同一个值
+		void set(Byte val);
 
 		/// @brief 从另一个数据块的某个子区域拷贝数据到本数据块的某个位置
 		/// @param src 源数据数组
@@ -1593,20 +1596,99 @@ namespace spadas
 		Bool isValid() { return FALSE; }
 	};
 
-#if defined(SPADAS_DEBUG)
-	class BinaryVars
-	{
-	public:
-		Byte dummy[SPADAS_BINARY_DUMMY_BYTES];
-		UInt size;
-		Byte* data;
-	};
-#endif
-
 	// 字符串 //////////////////////////////////////////////////////////////
 
+	/// 字符串通用处理
+	class SPADAS_API StringCommon
+	{
+	public:
+		/// [非安全] 取得字符串UTF-8数据的头指针 (只读且不以0结尾)
+		virtual const Byte *bytes() = 0;
+
+		/// 取得字符串长度 (UTF-8字节数)
+		virtual UInt length() = 0;
+
+		/// 克隆出一个新对象
+		String clone();
+
+		/// 转换为Char数组，以0结尾（因此有效长度为数组长度-1）
+		Array<Char> chars();
+
+		/// 转换为WChar数组，以0结尾（因此有效长度为数组长度-1）
+		Array<WChar> wchars();
+
+		/// 是否为空字符串
+		Bool isEmpty();
+
+		/// @brief 在本字符串后拼接另一个字符串（不会更改本对象数据，且可多个字符串连加）
+		/// @param string 将拼接的另一个字符串
+		/// @returns 字符串拼接器
+		StringAppender operator +(String string);
+
+		/// 转换并返回 spadas::Int 数字
+		Optional<Int> toInt();
+
+		/// 转换并返回 spadas::Long 数字
+		Optional<Long> toLong();
+
+		/// 转换并返回 spadas::Float 数值
+		Optional<Float> toFloat();
+
+		/// 转换并返回 spadas::Double 数值
+		Optional<Double> toDouble();
+
+		/// 转换并输出 spadas::Int 数字，返回是否转换成功
+		Bool toNumber(Int& number);
+
+		/// 转换并输出 spadas::Long 数字，返回是否转换成功
+		Bool toNumber(Long& number);
+
+		/// 转换并输出 spadas::Float 数字，返回是否转换成功
+		Bool toNumber(Float& number);
+
+		/// 转换并输出 spadas::Double 数字，返回是否转换成功
+		Bool toNumber(Double& number);
+		
+		/// 转换为UTF-8二进制数据块（不以0结尾）
+		Binary toBinary();
+
+		/// 转换为全大写字符串
+		String toUpper();
+
+		/// 转换为全小写字符串
+		String toLower();
+
+		/// 是否以指定字符串开头
+		Bool startsWith(String target);
+
+		/// 是否以指定字符串结尾
+		Bool endsWith(String target);
+
+		/// 搜索目标字符串，返回所有发现目标的首字符位置。如"bananana"搜"nana"，返回{2, 4}
+		Array<UInt> search(String target);
+		
+		/// 用指定字符串对本字符串进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串不含target时，若本字符串为空则返回空数组，非空则返回标量数组
+		Array<StringSpan> split(String target);
+
+		/// 将本字符串中oldString部分替换为newString，并返回替换后的字符串
+		String replace(String oldString, String newString);
+
+		/// @brief 取得子字符串，其数据绑定至本字符串的数据，或片段的原字符串数据
+		/// @param index 子字符串在本字符串或字符串片段的起始位置
+		/// @param length 字符串长度
+		/// @param trimStart 是否裁剪掉开始处的空格
+		/// @param trimEnd 是否裁剪掉结尾处的空格
+		/// @return 子字符串
+		StringSpan subString(UInt index, UInt length = UINF, Bool trimStart = FALSE, Bool trimEnd = FALSE);
+
+	protected:
+		Word getHashCode();
+		virtual ~StringCommon();
+		virtual StringSpan genStringSpan(UInt index, UInt length) = 0;
+	};
+
 	/// 字符串
-	class SPADAS_API String : public Object<class StringVars>
+	class SPADAS_API String : public Object<class StringVars>, public StringCommon
 	{
 	public:
 		/// 类名称
@@ -1665,7 +1747,7 @@ namespace spadas
 
 		/// @brief 由 spadas::UInt 初始化，可指定位数（不足的用0补齐）
 		/// @param val 输入32位无符号整数
-		/// @param nDigits 指定位数
+		/// @param nDigits 指定位数，范围为0~10
 		String(UInt val, UInt nDigits);
 
 		/// @brief 由 spadas::ULong 初始化
@@ -1674,7 +1756,7 @@ namespace spadas
 
 		/// @brief 由 spadas::ULong 初始化，可指定位数（不足的用0补齐）
 		/// @param val 输入64位无符号整数
-		/// @param nDigits 指定位数
+		/// @param nDigits 指定位数，范围为0~20
 		String(ULong val, UInt nDigits);
 
 		/// @brief 由 spadas::Short 初始化
@@ -1689,32 +1771,27 @@ namespace spadas
 		/// @param val 输入64位带符号整数
 		String(Long val);
 
-		/// @brief 由 spadas::Float 初始化，默认小数位数为3
+		/// @brief 由 spadas::Float 初始化
 		/// @param val 输入32位浮点数
 		String(Float val);
 
-		/// @brief 由 spadas::Double 初始化，默认小数位数为3
+		/// @brief 由 spadas::Double 初始化
 		/// @param val 输入64位浮点数
 		String(Double val);
 
 		/// @brief 由 spadas::Float 初始化，并指定保留小数位数
 		/// @param val 输入32位浮点数
-		/// @param nDigits 保留小数位数，范围为0~10以及UINF(自适应)
+		/// @param nDigits 保留小数位数，范围为0~9
 		String(Float val, UInt nDigits);
 
 		/// @brief 由 spadas::Double 初始化，并指定保留小数位数
 		/// @param val 输入64位浮点数
-		/// @param nDigits 保留小数位数，范围为0~20以及UINF(自适应)
+		/// @param nDigits 保留小数位数，范围为0~18
 		String(Double val, UInt nDigits);
 
 		/// @brief 从UTF-8二进制数据创建字符串对象
 		/// @param binary UTF-8二进制数据（不要求以0结尾）
 		String(Binary binary);
-
-		/// @brief 从另一个字符串中的一段文本拷贝并创建字符串对象
-		/// @param src 源字符串
-		/// @param region 拷贝区域（为 spadas::UINF 时将拷贝至末尾）
-		String(String src, Region region);
 
 		/// @brief 由任意具有toString方法的结构体或对象创建字符串对象
 		template <typename Type>
@@ -1735,74 +1812,95 @@ namespace spadas
 		/// 获取哈希值
 		Word getHash();
 
-		/// 克隆出一个新对象
-		String clone();
-		
-		/// 计算并更新字符串长度（在调用bytes方法对字符串数据进行更改后必须调用本方法）
-		void updateLength();
-
-		/// [可修改] 取得字符串UTF-8数据的头指针，其中至少应有一个字节为0，若修改了数据则必须调用updateLength方法
-		Byte *bytes();
-
-		/// 取得字符串UTF-8数据的字节数
-		UInt byteSize();
-
-		/// 转换为Char数组，以0结尾（因此有效长度为数组长度-1）
-		Array<Char> chars();
-
-		/// 转换为WChar数组，以0结尾（因此有效长度为数组长度-1）
-		Array<WChar> wchars();
+		/// [非安全] 取得字符串UTF-8数据的头指针 (只读且不以0结尾)
+		const Byte *bytes() override;
 
 		/// 取得字符串长度 (UTF-8字节数)
-		UInt length();
+		UInt length() override;
 
-		/// 是否为空字符串
-		Bool isEmpty();
-
-		/// @brief 在本字符串后拼接另一个字符串（可不创建新对象，速度更快，但会更改本对象数据，一般对基于createWithSize创建的字符串使用）
-		/// @param string 将拼接的另一个字符串
+		/// @brief 在本字符串后拼接另一个字符串(将更改本对象数据)
+		/// @param string 拼接的另一个字符串
 		void operator +=(String string);
 
-		/// @brief 在本字符串后拼接另一个字符串（需要创建新对象，速度较慢，但不会更改本对象数据，且可多个字符串连加）
-		/// @param string 将拼接的另一个字符串
-		/// @returns 拼接后的字符串
-		String operator +(String string);
+		/// @brief 在本字符串后拼接另一个字符串片段(将更改本对象数据)
+		/// @param string 拼接的另一个字符串片段
+		void operator +=(StringSpan span);
 
-		/// 转换为 spadas::Int 数字
-		Optional<Int> toInt();
+		/// @brief 在本字符串后拼接 spadas::Char 单字符 (将更改本对象数据)
+		/// @param character 拼接的字符
+		void operator +=(Char character);
 
-		/// 转换为 spadas::Long 数字
-		Optional<Long> toLong();
+		/// @brief 在本字符串后拼接 spadas::WChar 单字符 (将更改本对象数据)
+		/// @param character 拼接的字符
+		void operator +=(WChar character);
 
-		/// 转换为 spadas::Float 数值
-		Optional<Float> toFloat();
+		/// @brief 在本字符串后拼接 spadas::Char 字符数组指针 (将更改本对象数据)
+		/// @param text 拼接的字符数组指针（以0结尾）
+		void operator +=(Char text[]);
 
-		/// 转换为 spadas::Double 数值
-		Optional<Double> toDouble();
-		
-		/// 转换为UTF-8二进制数据（不以0结尾）
-		Binary toBinary();
+		/// @brief 在本字符串后拼接 spadas::Char 字符数组指针 (将更改本对象数据)
+		/// @param text 拼接的字符数组指针（以0结尾）
+		void operator +=(const Char text[]);
 
-		/// 转换为全大写字符串
-		String toUpper();
+		/// @brief 在本字符串后拼接 spadas::WChar 字符数组指针 (将更改本对象数据)
+		/// @param text 拼接的字符数组指针（以0结尾）
+		void operator +=(WChar text[]);
 
-		/// 转换为全小写字符串
-		String toLower();
+		/// @brief 在本字符串后拼接 spadas::WChar 字符数组指针 (将更改本对象数据)
+		/// @param text 拼接的字符数组指针（以0结尾）
+		void operator +=(const WChar text[]);
 
-		/// 是否以指定字符串开头
-		Bool startsWith(String target);
+		/// @brief 在本字符串后拼接 spadas::Char 字符数组 (将更改本对象数据)
+		/// @param text 拼接的字符数组（不要求以0结尾）
+		void operator +=(Array<Char> text);
 
-		/// 是否以指定字符串结尾
-		Bool endsWith(String target);
+		/// @brief 在本字符串后拼接 spadas::WChar 字符数组 (将更改本对象数据)
+		/// @param text 拼接的字符数组（不要求以0结尾）
+		void operator +=(Array<WChar> text);
 
-		/// 搜索目标字符串，返回所有发现目标的首字符位置。如"bananana"搜"nana"，返回{2, 4}
-		Array<UInt> search(String target);
-		
-		/// 用指定字符串对本字符串进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串不含target时，若本字符串为空则返回空数组，非空则返回标量数组
-		Array<String> split(String target);
+		/// @brief 在本字符串后拼接 spadas::Bool (将更改本对象数据)
+		/// @param val 拼接的布尔值
+		void operator +=(Bool val);
 
-		/// 将本字符串中oldString部分替换为newString，并返回替换后的字符串
-		String replace(String oldString, String newString);
+		/// @brief 在本字符串后拼接 spadas::Byte (将更改本对象数据)
+		/// @param val 拼接的8位无符号整数
+		void operator +=(Byte val);
+
+		/// @brief 在本字符串后拼接 spadas::Word (将更改本对象数据)
+		/// @param val 拼接的16位无符号整数
+		void operator +=(Word val);
+
+		/// @brief 在本字符串后拼接 spadas::UInt (将更改本对象数据)
+		/// @param val 拼接的32位无符号整数
+		void operator +=(UInt val);
+
+		/// @brief 在本字符串后拼接 spadas::ULong (将更改本对象数据)
+		/// @param val 拼接的64位无符号整数
+		void operator +=(ULong val);
+
+		/// @brief 在本字符串后拼接 spadas::Short (将更改本对象数据)
+		/// @param val 拼接的16位带符号整数
+		void operator +=(Short val);
+
+		/// @brief 在本字符串后拼接 spadas::Int (将更改本对象数据)
+		/// @param val 拼接的32位带符号整数
+		void operator +=(Int val);
+
+		/// @brief 在本字符串后拼接 spadas::Long (将更改本对象数据)
+		/// @param val 拼接的64位带符号整数
+		void operator +=(Long val);
+
+		/// @brief 在本字符串后拼接 spadas::Float (将更改本对象数据)
+		/// @param val 拼接的32位浮点数
+		void operator +=(Float val);
+
+		/// @brief 在本字符串后拼接 spadas::Double (将更改本对象数据)
+		/// @param val 拼接的64位浮点数
+		void operator +=(Double val);
+
+		/// @brief 在本字符串后拼接UTF-8二进制数据 (将更改本对象数据)
+		/// @param binary 拼接的UTF-8二进制数据（不要求以0结尾）
+		void operator +=(Binary binary);
 
 		/// 创建数据块大小（字节单位）为指定值的空字符串
 		static String createWithSize(UInt size);
@@ -1843,6 +1941,12 @@ namespace spadas
 		/// @returns 按指定分隔符拼接的字符串
 		static String mergeStrings(Array<String> strs, String separator = "\n");
 
+		/// @brief 拼接多个字符串片段，片段间以指定分割符分割
+		/// @param strs 输入的多个字符串片段
+		/// @param separator 分隔符
+		/// @returns 按指定分隔符拼接的字符串
+		static String mergeStrings(Array<StringSpan> spans, String separator = "\n");
+
 		/// @brief 以String构造函数拼接数组，字符串间以指定分割符分割
 		/// @param strs 输入数组
 		/// @param separator 分隔符
@@ -1853,25 +1957,83 @@ namespace spadas
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
+		StringSpan genStringSpan(UInt index, UInt length) override;
+		void initBuffer(UInt dataSize);
+		void ensureBuffer(UInt appendSize);
 	};
 
-#if defined(SPADAS_DEBUG)
-	class StringVars
+	/// 字符串片段，数据绑定至原字符串的数据
+	class SPADAS_API StringSpan : public StringCommon
 	{
 	public:
-		Byte dummy[SPADAS_STRING_DUMMY_BYTES];
-		Char* data;
-		UInt length;
+		/// 创建空片段
+		StringSpan();
+
+		/// 绑定至原字符串
+		StringSpan(String& sourceString, UInt index, UInt length = UINF);
+
+		/// 是否等于
+		Bool operator ==(StringSpan span);
+
+		/// 是否不等于
+		Bool operator !=(StringSpan span);
+
+		/// 是否等于
+		Bool operator ==(String string);
+
+		/// 是否不等于
+		Bool operator !=(String string);
+
+		/// 是否大于，按照系统默认字符串排序顺序
+		Bool operator >(StringSpan span);
+
+		/// 是否小于，按照系统默认字符串排序顺序
+		Bool operator <(StringSpan span);
+
+		/// 获取哈希值
+		Word getHash();
+
+		/// [非安全] 取得字符串UTF-8数据的头指针 (只读且不以0结尾)
+		const Byte *bytes() override;
+
+		/// 取得字符串片段长度 (UTF-8字节数)
+		UInt length() override;
+
+		/// 转字符串
+		String toString();
+
+	private:
+		String source;
+		UInt idx;
+		UInt len;
+		UInt toStringCount;
+		StringSpan genStringSpan(UInt index, UInt length) override;
 	};
-#endif
+
+	/// 字符串拼接器，用于加速+运算符
+	class SPADAS_API StringAppender
+	{
+	public:
+		/// 默认构造函数
+		StringAppender(String origin);
+
+		/// 拼接字符串
+		template <typename Type>
+		StringAppender operator +(Type target);
+
+		/// 转字符串
+		String toString();
+
+	private:
+		String str;
+	};
 
 	// 枚举对象 //////////////////////////////////////////////////////////////
 
-	/// @brief [多线程安全] 枚举类型容器。若无转字符串及作为键的需求，可直接使用enum class
-	/// @details 其中Type为枚举定义类，该类中需要实现以下三个静态方法：\n
-	/// -static Bool isValid(Int val);			// 告知指定值是否有效 \n
-	/// -static String toString(Int val);		// 用文本表述指定值得含义 \n
-	/// -static Int defaultValue();				// 给出默认值
+	/// @brief [多线程安全] 枚举类型容器。若有高性能要求，应直接使用Type::Value
+	/// @details 其中Type为枚举类，该类需要定义如下：\n
+	/// 具有定义enum class Value，其中包含Default枚举值 \n
+	/// 具有函数static const Char* toString(Value)，返回各枚举值的字符串，默认返回空指针0 \n
 	template <typename Type> class Enum
 	{
 	public:
@@ -1879,10 +2041,16 @@ namespace spadas
 		Enum();
 
 		/// 创建一个对象，使用指定值（若该值无效则使用默认值）
-		Enum(const Int val);
+		Enum(typename Type::Value val);
+
+		/// 是否等于
+		Bool operator ==(typename Type::Value val);
 
 		/// 是否等于
 		Bool operator ==(Enum<Type> enumeration);
+
+		/// 是否不等于
+		Bool operator !=(typename Type::Value val);
 
 		/// 是否不等于
 		Bool operator !=(Enum<Type> enumeration);
@@ -1891,13 +2059,14 @@ namespace spadas
 		Word getHash();
 
 		/// 取得枚举对象的值
-		Int value();
+		typename Type::Value value();
 
 		/// 取得枚举对象的文本表述
 		String toString();
 
 	private:
-		Int val;
+		typename Type::Value val;
+		const Char* str;
 	};
 
 	// 控制台 //////////////////////////////////////////////////////////////
@@ -1906,89 +2075,172 @@ namespace spadas
 	class SPADAS_API Key
 	{
 	public:
-		static const Int None = 0;
-		static const Int Enter = 1;
-		static const Int Space = 2;
-		static const Int Back = 3;
-		static const Int Esc = 4;
-		static const Int Tab = 5;
-		static const Int Shift = 6;
-		static const Int Ctrl = 7;
-		static const Int Insert = 8;
-		static const Int Delete = 9;
-		static const Int Home = 10;
-		static const Int End = 11;
-		static const Int PageUp = 12;
-		static const Int PageDown = 13;
-		static const Int Up = 14;
-		static const Int Down = 15;
-		static const Int Left = 16;
-		static const Int Right = 17;
-		static const Int Comma = 18;
-		static const Int Period = 19;
-		static const Int Key0 = 20;
-		static const Int Key1 = 21;
-		static const Int Key2 = 22;
-		static const Int Key3 = 23;
-		static const Int Key4 = 24;
-		static const Int Key5 = 25;
-		static const Int Key6 = 26;
-		static const Int Key7 = 27;
-		static const Int Key8 = 28;
-		static const Int Key9 = 29;
-		static const Int A = 30;
-		static const Int B = 31;
-		static const Int C = 32;
-		static const Int D = 33;
-		static const Int E = 34;
-		static const Int F = 35;
-		static const Int G = 36;
-		static const Int H = 37;
-		static const Int I = 38;
-		static const Int J = 39;
-		static const Int K = 40;
-		static const Int L = 41;
-		static const Int M = 42;
-		static const Int N = 43;
-		static const Int O = 44;
-		static const Int P = 45;
-		static const Int Q = 46;
-		static const Int R = 47;
-		static const Int S = 48;
-		static const Int T = 49;
-		static const Int U = 50;
-		static const Int V = 51;
-		static const Int W = 52;
-		static const Int X = 53;
-		static const Int Y = 54;
-		static const Int Z = 55;
-		static const Int F1 = 56;
-		static const Int F2 = 57;
-		static const Int F3 = 58;
-		static const Int F4 = 59;
-		static const Int F5 = 60;
-		static const Int F6 = 61;
-		static const Int F7 = 62;
-		static const Int F8 = 63;
-		static const Int Unknown = 100;
-		
-		static Bool isValid(Int val);
-		static String toString(Int val);
-		static Int defaultValue();
+		enum class Value
+		{
+			Default = 0,
+			None = 0,
+			Enter = 1,
+			Space = 2,
+			Back = 3,
+			Esc = 4,
+			Tab = 5,
+			Shift = 6,
+			Ctrl = 7,
+			Insert = 8,
+			Delete = 9,
+			Home = 10,
+			End = 11,
+			PageUp = 12,
+			PageDown = 13,
+			Up = 14,
+			Down = 15,
+			Left = 16,
+			Right = 17,
+			Comma = 18,
+			Period = 19,
+			Key0 = 20,
+			Key1 = 21,
+			Key2 = 22,
+			Key3 = 23,
+			Key4 = 24,
+			Key5 = 25,
+			Key6 = 26,
+			Key7 = 27,
+			Key8 = 28,
+			Key9 = 29,
+			A = 30,
+			B = 31,
+			C = 32,
+			D = 33,
+			E = 34,
+			F = 35,
+			G = 36,
+			H = 37,
+			I = 38,
+			J = 39,
+			K = 40,
+			L = 41,
+			M = 42,
+			N = 43,
+			O = 44,
+			P = 45,
+			Q = 46,
+			R = 47,
+			S = 48,
+			T = 49,
+			U = 50,
+			V = 51,
+			W = 52,
+			X = 53,
+			Y = 54,
+			Z = 55,
+			F1 = 56,
+			F2 = 57,
+			F3 = 58,
+			F4 = 59,
+			F5 = 60,
+			F6 = 61,
+			F7 = 62,
+			F8 = 63,
+			Unknown = 100,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(None);
+				ES(Enter);
+				ES(Space);
+				ES(Back);
+				ES(Esc);
+				ES(Tab);
+				ES(Shift);
+				ES(Ctrl);
+				ES(Insert);
+				ES(Delete);
+				ES(Home);
+				ES(End);
+				ES(PageUp);
+				ES(PageDown);
+				ES(Up);
+				ES(Down);
+				ES(Left);
+				ES(Right);
+				ES(Comma);
+				ES(Period);
+				ES(Key0);
+				ES(Key1);
+				ES(Key2);
+				ES(Key3);
+				ES(Key4);
+				ES(Key5);
+				ES(Key6);
+				ES(Key7);
+				ES(Key8);
+				ES(Key9);
+				ES(A);
+				ES(B);
+				ES(C);
+				ES(D);
+				ES(E);
+				ES(F);
+				ES(G);
+				ES(H);
+				ES(I);
+				ES(J);
+				ES(K);
+				ES(L);
+				ES(M);
+				ES(N);
+				ES(O);
+				ES(P);
+				ES(Q);
+				ES(R);
+				ES(S);
+				ES(T);
+				ES(U);
+				ES(V);
+				ES(W);
+				ES(X);
+				ES(Y);
+				ES(Z);
+				ES(F1);
+				ES(F2);
+				ES(F3);
+				ES(F4);
+				ES(F5);
+				ES(F6);
+				ES(F7);
+				ES(F8);
+				ES(Unknown);
+				default: return 0;
+			}
+		}
 	};
 
 	/// 消息级别
 	class SPADAS_API MessageLevel
 	{
 	public:
-		static const Int Debug = 1;
-		static const Int Info = 2;
-		static const Int Warning = 3;
-		static const Int Error = 4;
-
-		static Bool isValid(Int val);
-		static String toString(Int val);
-		static Int defaultValue();
+		enum class Value
+		{
+			Default = 1,
+			Debug = 1,
+			Info = 2,
+			Warning = 3,
+			Error = 4,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(Debug);
+				ES(Info);
+				ES(Warning);
+				ES(Error);
+				default: return 0;
+			}
+		}
 	};
 
 	/// 控制台接口
@@ -2042,7 +2294,7 @@ namespace spadas
 		/// 等待一个按键输入 (优先级高于 spadas::console::checkKey )
 		SPADAS_API Enum<Key> waitKey();
 
-		/// 是否有按键输入，若有则返回该按键，无则返回 Key::None
+		/// 是否有按键输入，若有则返回该按键，无则返回 Key::Value::None
 		SPADAS_API Enum<Key> checkKey();
 
 		/// 重定向控制台接口并返回旧接口，重定向后 spadas::console::print 、 spadas::console::scan 、 spadas::console::waitKey 、 spadas::console::checkKey 将使用该接口执行 (默认为无效接口，使用默认控制台)
@@ -2103,49 +2355,49 @@ namespace spadas
 		/// 若存在则移除文件或文件夹
 		void remove();
 
-		/// @brief [仅限文件] 移动文件至目标位置
+		/// @brief (仅限文件) 移动文件至目标位置
 		/// @param dstPath 目标文件路径
 		void moveTo(Path dstPath);
 
-		/// @brief [仅限文件夹] 移动文件夹至目标位置
+		/// @brief (仅限文件夹) 移动文件夹至目标位置
 		/// @param dstPath 目标文件夹路径
 		/// @param mergeDst 是否与目标文件夹合并
 		void moveTo(Path dstPath, Bool mergeDst);
 
-		/// @brief [仅限文件] 拷贝文件至目标位置
+		/// @brief (仅限文件) 拷贝文件至目标位置
 		/// @param dstPath 目标文件路径
 		void copyTo(Path dstPath);
 
-		/// @brief [仅限文件夹] 拷贝文件夹至目标位置
+		/// @brief (仅限文件夹) 拷贝文件夹至目标位置
 		/// @param dstPath 目标文件夹路径
 		/// @param mergeDst 是否与目标文件夹合并
 		void copyTo(Path dstPath, Bool mergeDst);
 
-		/// [仅限文件] 取得文件大小 (当文件不存在返回0)
+		/// (仅限文件) 取得文件大小 (当文件不存在返回0)
 		ULong fileSize();
 
-		/// [仅限文件] 创建或重新创建一个指定大小的空文件，数据都为0
+		/// (仅限文件) 创建或重新创建一个指定大小的空文件，数据都为0
 		void fileCreate(UInt size);
 
-		/// [仅限文件夹] 若不存在则创建文件夹
+		/// (仅限文件夹) 若不存在则创建文件夹
 		void folderMake();
 
-		/// [仅限文件夹] 取得文件夹内所有文件和文件夹路径（若includeAllLevels为TRUE，则返回文件夹内所有层级的子文件和子文件夹。若内容较多则速度可能很慢）
+		/// (仅限文件夹) 取得文件夹内所有文件和文件夹路径（若includeAllLevels为TRUE，则返回文件夹内所有层级的子文件和子文件夹。若内容较多则速度可能很慢）
 		Array<Path> folderContents(Bool includeAllLevels = FALSE);
 
-		/// [仅限文件夹] 生成子文件路径
+		/// (仅限文件夹) 生成子文件路径
 		Path childFile(String childFullName);
 
-		/// [仅限文件夹] 生成子文件夹路径（无需在末尾加路径分隔符）
+		/// (仅限文件夹) 生成子文件夹路径（无需在末尾加路径分隔符）
 		Path childFolder(String childFullName);
 
-		/// [仅限文件夹] 输入当前文件夹内的相对路径，生成文件或文件夹路径 (文件夹以路径分隔符/或\结尾)
+		/// (仅限文件夹) 输入当前文件夹内的相对路径，生成文件或文件夹路径 (文件夹以路径分隔符/或\结尾)
 		Path childPath(String pathString);
 
-		/// [仅限文件夹] 检查目标路径是否包含在当前文件夹内
+		/// (仅限文件夹) 检查目标路径是否包含在当前文件夹内
 		Bool contain(Path path);
 
-		/// [仅限文件夹] 检查目标路径是否包含在当前文件夹内。若包含，则输出基于当前文件夹的相对路径至pathString
+		/// (仅限文件夹) 检查目标路径是否包含在当前文件夹内。若包含，则输出基于当前文件夹的相对路径至pathString
 		Bool contain(Path path, String& pathString);
 
 		/// 获得文件或文件夹的上层文件夹 (如果本路径为磁盘根目录，如c:\等，则返回无效路径)
@@ -2210,25 +2462,25 @@ namespace spadas
 		/// 获得当前文件的路径
 		Path path();
 
-		/// [文本输出模式] 打印一行文本至缓冲区
+		/// (文本输出模式) 打印一行文本至缓冲区
 		void print(String text);
 
-		/// [输出模式] 输出一块二进制数据至缓冲区
+		/// (输出模式) 输出一块二进制数据至缓冲区
 		void output(Binary data);
 
-		/// [输出模式] 将缓冲区数据写入磁盘
+		/// (输出模式) 将缓冲区数据写入磁盘
 		void flush();
 
-		/// [文本输入模式] 从文件扫描一行文本
+		/// (文本输入模式) 从文件扫描一行文本
 		String scan();
 
-		/// [输入模式] 从文件输入指定大小的二进制数据，实际大小以输出为准
+		/// (输入模式) 从文件输入指定大小的二进制数据，实际大小以输出为准
 		Binary input(UInt size = UINF);
 
-		/// [输入模式] 移动至指定的I/O位置，字节单位，并返回实际移动到哪个位置
+		/// (输入模式) 移动至指定的I/O位置，字节单位，并返回实际移动到哪个位置
 		ULong seek(ULong pos);
 
-		/// [输入模式] 是否已到文件结尾
+		/// (输入模式) 是否已到文件结尾
 		Bool endOfFile();
 	};
 
@@ -2304,7 +2556,7 @@ namespace spadas
 		/// 复制对象
 		XML clone();
 
-		/// [可修改] 获得当前文档的根节点
+		/// 获得当前文档的根节点，从而可修改XML数据
 		XMLNode globalRoot();
 
 		/// 保存XML文档至.xml文件（UTF-8编码带BOM头）
@@ -2339,64 +2591,101 @@ namespace spadas
 	// 图像 //////////////////////////////////////////////////////////////
 
 	/// 图像数据指针
-	struct ImagePointer
+	class SPADAS_API ImagePointer
 	{
-		/// 图像宽度
-		UInt width;
-
-		/// 图像高度
-		UInt height;
-
-		/// 是否为彩色图像，彩色图像按BGR顺序存储数据
-		Bool isColor;
-
-		/// 每行图像的字节数，为8的倍数
-		UInt rowBytes;
-
-		/// 图像数据，数据字节数为8的倍数
-		Array<ULong> data;
-
-		/// 默认构造函数，数据为空
-		SPADAS_API ImagePointer();
+	public:
+		/// 默认构造函数，创建16x16灰度图像
+		ImagePointer();
 
 		/// 基于图像大小和是否为彩色图像进行初始化
-		SPADAS_API ImagePointer(Size2D size, Bool isColor);
+		ImagePointer(Size2D size, Bool isColor);
+
+		/// 基于已有数据初始化
+		ImagePointer(Size2D size, Bool isColor, UInt rowBytes, Array<ULong> data);
+
+		/// 图像宽度
+		UInt getWidth();
+
+		/// 图像高度
+		UInt getHeight();
+
+		/// 是否为彩色图像，彩色图像按BGR顺序存储数据
+		Bool isColor();
+
+		/// 每行图像的字节数，为8的倍数
+		UInt getRowBytes();
+
+		/// 图像数据，数据字节数为8的倍数
+		Array<ULong> getData();
+
+	private:
+		UInt width, height, rowBytes;
+		Bool color;
+		Array<ULong> data;
 	};
 
 	/// 像素aspect ratio
 	class SPADAS_API AspectRatio
 	{
 	public:
-		static const Int _1_1 = 1;
-		static const Int _4_3 = 2;
-		static const Int _10_11 = 3;
-		static const Int _12_11 = 4;
-		static const Int _16_11 = 5;
-		static const Int _40_33 = 6;
-
-		static Bool isValid(Int val);
-		static String toString(Int val);
-		static Int defaultValue();
+		enum class Value
+		{
+			Default = 1,
+			_1_1 = 1,
+			_4_3 = 2,
+			_10_11 = 3,
+			_12_11 = 4,
+			_16_11 = 5,
+			_40_33 = 6,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(_1_1);
+				ES(_4_3);
+				ES(_10_11);
+				ES(_12_11);
+				ES(_16_11);
+				ES(_40_33);
+				default: return 0;
+			}
+		}
 	};
 
 	/// 帧率 
 	class SPADAS_API FrameRate
 	{
 	public:
-		static const Int Unknown = 0;
-		static const Int _23_98 = 1; // 24/1001
-		static const Int _24 = 2;
-		static const Int _25 = 3;
-		static const Int _29_97 = 4; // 30/1001
-		static const Int _30 = 5;
-		static const Int _50 = 6;
-		static const Int _59_94 = 7; // 60/1001
-		static const Int _60 = 8;
-
-		static Bool isValid(Int val);
-		static String toString(Int val);
-		static Int defaultValue();
-
+		enum class Value
+		{
+			Default = 0,
+			Unknown = 0,
+			_23_98 = 1, // 24/1001
+			_24 = 2,
+			_25 = 3,
+			_29_97 = 4, // 30/1001
+			_30 = 5,
+			_50 = 6,
+			_59_94 = 7, // 60/1001
+			_60 = 8,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(Unknown);
+				ES(_23_98);
+				ES(_24);
+				ES(_25);
+				ES(_29_97);
+				ES(_30);
+				ES(_50);
+				ES(_59_94);
+				ES(_60);
+				default: return 0;
+			}
+		}
 		static Float rate(Enum<FrameRate> frameRate); // [fps]
 		static Float period(Enum<FrameRate> frameRate); // [毫秒]
 	};
@@ -2405,19 +2694,29 @@ namespace spadas
 	class SPADAS_API InterlaceMode
 	{
 	public:
-		/// 逐行扫描
-		static const Int Progressive = 1;
+		enum class Value
+		{
+			Default = 1,
 
-		/// 隔行扫描，偶数行024...为较早扫描的场
-		static const Int UpperFirst = 2;
+			/// 逐行扫描
+			Progressive = 1,
 
-		/// 隔行扫描，奇数行135...为较早扫描的场
-		static const Int LowerFirst = 3;
+			/// 隔行扫描，偶数行024...为较早扫描的场
+			UpperFirst = 2,
 
-		static Bool isValid(Int val);
-		static String toString(Int val);
-		static Int defaultValue();
-
+			/// 隔行扫描，奇数行135...为较早扫描的场
+			LowerFirst = 3,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(Progressive);
+				ES(UpperFirst);
+				ES(LowerFirst);
+				default: return 0;
+			}
+		}
 		static Bool isInterlaced(Enum<InterlaceMode> mode);
 	};
 
@@ -2425,18 +2724,31 @@ namespace spadas
 	class SPADAS_API MergeMode
 	{
 	public:
-		static const Int Normal = 1; // 非3D
-		static const Int LeftEye = 2;
-		static const Int RightEye = 3;
-		static const Int HalfSideBySide = 4;
-		static const Int FullSideBySide = 5;
-		static const Int LineByLineLR = 6; // 偶数行024...为左机图像, 奇数行135...为右机图像
-		static const Int LineByLineRL = 7; // 偶数行024...为右机图像, 奇数行135...为左机图像
-
-		static Bool isValid(Int val);
-		static String toString(Int val);
-		static Int defaultValue();
-
+		enum class Value
+		{
+			Default = 1,
+			Normal = 1, // 非3D
+			LeftEye = 2,
+			RightEye = 3,
+			HalfSideBySide = 4,
+			FullSideBySide = 5,
+			LineByLineLR = 6, // 偶数行024...为左机图像, 奇数行135...为右机图像
+			LineByLineRL = 7, // 偶数行024...为右机图像, 奇数行135...为左机图像
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(Normal);
+				ES(LeftEye);
+				ES(RightEye);
+				ES(HalfSideBySide);
+				ES(FullSideBySide);
+				ES(LineByLineLR);
+				ES(LineByLineRL);
+				default: return 0;
+			}
+		}
 		static Bool is3DMerged(Enum<MergeMode> mode);
 	};
 
@@ -2473,49 +2785,69 @@ namespace spadas
 	class SPADAS_API ImageResolution
 	{
 	public:
-		/// 320 x 240 (4:3)
-		static const Int QVGA = 1;
+		enum class Value
+		{
+			Default = 2,
 
-		/// 640 x 480 (4:3)
-		static const Int VGA = 2; 
+			/// 320 x 240 (4:3)
+			QVGA = 1,
 
-		/// 720 x 576 (5:4)
-		static const Int PAL720 = 3; 
+			/// 640 x 480 (4:3)
+			VGA = 2,
 
-		/// 768 x 576 (4:3)
-		static const Int PAL768 = 4; 
+			/// 720 x 576 (5:4)
+			PAL720 = 3,
 
-		/// 800 x 600 (4:3)
-		static const Int SVGA = 5; 
+			/// 768 x 576 (4:3)
+			PAL768 = 4,
 
-		/// 1024 x 768 (4:3)
-		static const Int XGA = 6; 
+			/// 800 x 600 (4:3)
+			SVGA = 5,
 
-		/// 1280 x 800 (8:5)
-		static const Int WXGA = 7; 
+			/// 1024 x 768 (4:3)
+			XGA = 6,
 
-		/// 1280 x 1024 (5:4)
-		static const Int SXGA = 8; 
+			/// 1280 x 800 (8:5)
+			WXGA = 7,
 
-		/// 1400 x 1050 (4:3)
-		static const Int SXGAPlus = 9; 
+			/// 1280 x 1024 (5:4)
+			SXGA = 8,
 
-		/// 1600 x 1200 (4:3)
-		static const Int UXGA = 10; 
+			/// 1400 x 1050 (4:3)
+			SXGAPlus = 9,
 
-		/// 1680 x 1050 (8:5)
-		static const Int WSXGAPlus = 11; 
+			/// 1600 x 1200 (4:3)
+			UXGA = 10,
 
-		/// 1280 x 720 (16:9)
-		static const Int HD720 = 12; 
+			/// 1680 x 1050 (8:5)
+			WSXGAPlus = 11,
 
-		/// 1920 x 1080 (16:9)
-		static const Int HD1080 = 13; 
+			/// 1280 x 720 (16:9)
+			HD720 = 12,
 
-		static Bool isValid(Int val);
-		static String toString(Int val);
-		static Int defaultValue();
-
+			/// 1920 x 1080 (16:9)
+			HD1080 = 13,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(QVGA);
+				ES(VGA);
+				ES(PAL720);
+				ES(PAL768);
+				ES(SVGA);
+				ES(XGA);
+				ES(WXGA);
+				ES(SXGA);
+				ES(SXGAPlus);
+				ES(UXGA);
+				ES(WSXGAPlus);
+				ES(HD720);
+				ES(HD1080);
+				default: return 0;
+			}
+		}
 		static Size2D size(Enum<ImageResolution> resolution);
 	};
 
@@ -2523,24 +2855,43 @@ namespace spadas
 	class SPADAS_API PixelFormat
 	{
 	public:
-		static const Int ByteBGR = 1; // OpenCV兼容
-		static const Int ByteRGB = 2; // OpenCV不兼容
-		static const Int ByteGray = 3; // OpenCV兼容
-		static const Int ByteUYVY = 4; // YUV(YCbCr)4:2:2, OpenCV不兼容
-		static const Int ByteYUV = 5; // YUV(YCbCr)4:4:4, OpenCV不兼容
-		static const Int ByteBool = 6; // OpenCV不兼容, 值: TRUE: 255, FALSE: 0
-		static const Int ByteBGRA = 7; // OpenCV兼容
-		static const Int ByteRGBA = 8; // OpenCV不兼容
-		static const Int WordBGR = 21; // OpenCV兼容, 数值范围: 0~65535
-		static const Int WordGray = 22; // OpenCV兼容, 数值范围: 0~65535
-		static const Int FloatBGR = 31; // OpenCV兼容, 数值范围: 0.0~1.0
-		static const Int FloatGray = 32; // OpenCV兼容, 数值范围: 0.0~1.0
-		static const Int FloatHSV = 33; // OpenCV不兼容, 数值范围: H(0.0~360.0) S(0.0~1.0) V(0.0~1.0)
-
-		static Bool isValid(Int val);
-		static String toString(Int val);
-		static Int defaultValue();
-
+		enum class Value
+		{
+			Default = 1,
+			ByteBGR = 1,
+			ByteRGB = 2,
+			ByteGray = 3,
+			ByteUYVY = 4, // YUV(YCbCr)4:2:2
+			ByteYUV = 5, // YUV(YCbCr)4:4:4
+			ByteBool = 6, // 值: TRUE: 255, FALSE: 0
+			ByteBGRA = 7,
+			ByteRGBA = 8,
+			WordBGR = 21, // 数值范围: 0~65535
+			WordGray = 22, // 数值范围: 0~65535
+			FloatBGR = 31, // 数值范围: 0.0~1.0
+			FloatGray = 32, // 数值范围: 0.0~1.0
+			FloatHSV = 33, // 数值范围: H(0.0~360.0) S(0.0~1.0) V(0.0~1.0)
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(ByteBGR);
+				ES(ByteRGB);
+				ES(ByteGray);
+				ES(ByteUYVY);
+				ES(ByteYUV);
+				ES(ByteBool);
+				ES(ByteBGRA);
+				ES(ByteRGBA);
+				ES(WordBGR);
+				ES(WordGray);
+				ES(FloatBGR);
+				ES(FloatGray);
+				ES(FloatHSV);
+				default: return 0;
+			}
+		}
 		static Bool isColor(Enum<PixelFormat> format);
 		static Bool hasAlpha(Enum<PixelFormat> format);
 		static UInt nChannels(Enum<PixelFormat> format);
@@ -2551,39 +2902,73 @@ namespace spadas
 	class SPADAS_API ResizeMode
 	{
 	public:
-		static const Int Nearest = 1;
-		static const Int Bilinear = 2;
-		static const Int Area = 3;
-
-		static Bool isValid(Int val);
-		static String toString(Int val);
-		static Int defaultValue();
+		enum class Value
+		{
+			Default = 1,
+			Nearest = 1,
+			Bilinear = 2,
+			Area = 3,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(Nearest);
+				ES(Bilinear);
+				ES(Area);
+				default: return 0;
+			}
+		}
 	};
 
 	/// 图像大小的调整倍数
 	class SPADAS_API ResizeScale
 	{
 	public:
-		static const Int Quarter = 1;
-		static const Int Half = 2;
-		static const Int Double = 3;
-
-		static Bool isValid(Int val);
-		static String toString(Int val);
-		static Int defaultValue();
+		enum class Value
+		{
+			Default = 0,
+			None = 0,
+			Quarter = 1,
+			Half = 2,
+			Double = 3,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(None);
+				ES(Quarter);
+				ES(Half);
+				ES(Double);
+				default: return 0;
+			}
+		}
 	};
 
 	/// 图像旋转的类型
 	class SPADAS_API ImageRotation
 	{
 	public:
-		static const Int CW90 = 1;
-		static const Int CW180 = 2;
-		static const Int CCW90 = 3;
-
-		static Bool isValid(Int val);
-		static String toString(Int val);
-		static Int defaultValue();
+		enum class Value
+		{
+			Default = 0,
+			None = 0,
+			CW90 = 1,
+			CW180 = 2,
+			CCW90 = 3,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(None);
+				ES(CW90);
+				ES(CW180);
+				ES(CCW90);
+				default: return 0;
+			}
+		}
 	};
 
 	/// 像素各通道值
@@ -2613,7 +2998,7 @@ namespace spadas
 	/// 像素数据，方便进行图像像素操作
 	struct PixelData
 	{
-		/// [非安全指针] 指针联合，可根据类型使用
+		/// [非安全] 指针联合，可根据类型使用
 		union { Pointer ptr; Byte *b; Word *w; Float *f; };
 
 		/// 每像素字节数
@@ -2650,9 +3035,6 @@ namespace spadas
 		SPADAS_API void set(FloatPixel floats);
 	};
 
-	// 图像对（前置声明）
-	struct ImagePair;
-
 	/// 图像类
 	class SPADAS_API Image : public Object<class ImageVars>
 	{
@@ -2663,11 +3045,11 @@ namespace spadas
 		/// 无效对象
 		Image();
 
-		/// 指定大小和格式创建图像，若clearPixels为TRUE则清空所有像素值为0
-		Image(Size2D size, Enum<PixelFormat> format, Bool clearPixels = TRUE);
+		/// 指定大小和格式创建图像，若setPixels为TRUE则所有像素赋值为0
+		Image(Size2D size, Enum<PixelFormat> format, Bool setPixels = TRUE);
 
-		/// 指定大小和格式创建图像，若clearPixels为TRUE则清空所有像素值为0
-		Image(Enum<ImageResolution> resolution, Enum<PixelFormat> format, Bool clearPixels = TRUE);
+		/// 指定大小和格式创建图像，若setPixels为TRUE则所有像素赋值为0
+		Image(Enum<ImageResolution> resolution, Enum<PixelFormat> format, Bool setPixels = TRUE);
 
 		/// 指定大小和格式创建图像，并从指针指向的数据块拷贝数据
 		Image(Size2D size, Enum<PixelFormat> format, Pointer raw, UInt rawRowBytes);
@@ -2675,17 +3057,11 @@ namespace spadas
 		/// 指定大小和格式创建图像，并从指针指向的数据块拷贝数据
 		Image(Enum<ImageResolution> resolution, Enum<PixelFormat> format, Pointer raw, UInt rawRowBytes);
 
-		/// 从另一幅图像的子区域拷贝并创建图像
-		Image(Image src, Region2D srcRegion);
-
 		/// 从图像指针创建图像（不拷贝数据）
 		Image(ImagePointer pointer);
 
 		/// 从.bmp文件读取图像，根据文件内容不同其格式可能为ByteBGR，ByteBGRA或ByteGray
 		Image(Path bmpFilePath);
-
-		/// 从IplImage创建图像
-		Image(IplImage *iplimage);
 
 		/// 克隆出一个新对象
 		Image clone();
@@ -2696,14 +3072,11 @@ namespace spadas
 		/// 绘制图层至本图像的某个位置 (layer图像必须具有Alpha通道)
 		void drawLayer(Image layer, CoordInt2D dstOffset);
 
-		/// [可修改] 取得子图像，其将绑定至本图像的数据
+		/// 取得子图像，其数据绑定至本图像的数据
 		Image subImage(Region2D region);
 
-		/// [可修改] 取得图像指针，仅ByteGray和ByteBGR支持
+		/// 取得图像指针，仅ByteGray和ByteBGR支持
 		Optional<ImagePointer> imagePointer();
-
-		/// [非安全指针][可修改] 以IplImage取得图像数据，其将绑定至本图像的数据
-		IplImage *iplImage();
 
 		/// 取得图像大小
 		Size2D size();
@@ -2723,22 +3096,22 @@ namespace spadas
 		/// 取得一行中有效的字节数（宽度x通道数）
 		UInt rowBytesValid();
 
-		/// [可修改] 取得图像第一个像素数据
+		/// 取得图像第一个像素数据
 		PixelData data();
 
-		/// [可修改] 取得某一行第一个像素数据，v=0为第一行
+		/// 取得某一行第一个像素数据，v=0为第一行
 		PixelData operator [](UInt v);
 
 		/// 按照指定倍数调整图像大小 (较快)
 		Image resize(Enum<ResizeScale> scale);
 
 		/// 调整图像大小至任意尺寸 (较慢)
-		Image resize(Size2D outputSize, Bool undistort, Enum<ResizeMode> mode = ResizeMode::Bilinear);
+		Image resize(Size2D outputSize, Bool undistort, Enum<ResizeMode> mode = ResizeMode::Value::Bilinear);
 
 		/// 调整图像大小至任意尺寸 (较慢)
-		Image resize(Enum<ImageResolution> outputResolution, Bool undistort, Enum<ResizeMode> mode = ResizeMode::Bilinear);
+		Image resize(Enum<ImageResolution> outputResolution, Bool undistort, Enum<ResizeMode> mode = ResizeMode::Value::Bilinear);
 
-		/// 转换像素格式 (转换为 PixelFormat::ByteBool 时, 128~255 -> 255, 0~127 -> 0
+		/// 转换像素格式 (转换为 PixelFormat::Value::ByteBool 时, 128~255 -> 255, 0~127 -> 0
 		Image convert(Enum<PixelFormat> outputFormat);
 
 		/// 反转图像
@@ -2823,9 +3196,6 @@ namespace spadas
 		/// 取得无符号二进制数据
 		Binary getData();
 
-		/// 转换为10进制数字字符串
-		String toString();
-
 		/// 获取哈希值
 		Word getHash();
 
@@ -2864,57 +3234,49 @@ namespace spadas
 		Bool isValid() { return FALSE; }
 	};
 
+	/// spadas::Matrix 模板类的变量数据
+	template <typename Type> class MatrixVars;
+
 	/// Int型矩阵
-	class SPADAS_API IntMat : public Object<class IntMatVars>
+	template <typename Type> class Matrix : public Object<class MatrixVars<Type> >
 	{
 	public:
 		/// 无效对象
-		IntMat();
+		Matrix();
 
 		/// 创建一个2维矩阵
-		IntMat(UInt dim0, UInt dim1);
+		Matrix(UInt dim0, UInt dim1);
 
 		/// 创建一个3维矩阵
-		IntMat(UInt dim0, UInt dim1, UInt dim2);
+		Matrix(UInt dim0, UInt dim1, UInt dim2);
 
 		/// 创建一个N维矩阵 (N至少为1)
-		IntMat(Array<UInt> dims);
+		Matrix(Array<UInt> dims);
 
 		/// 创建一个N维矩阵并从指定数据源拷贝
-		IntMat(Array<UInt> dims, Pointer raw);
+		Matrix(Array<UInt> dims, Pointer raw);
 
 		/// 由数组创建矩阵 (矩阵大小为N x 1 x 1...，维数由参数指定)
-		IntMat(Array<Int> arr, UInt nDims = 2);
-
-		/// 从另一个矩阵的子区域拷贝并创建矩阵，src应为2维矩阵
-		IntMat(IntMat src, Region2D srcRegion);
-
-		/// 从另一个矩阵的子区域拷贝并创建矩阵，src应为3维矩阵
-		IntMat(IntMat src, Region3D srcRegion);
+		Matrix(Array<Type> arr, UInt nDims = 2);
 
 		/// 从文件读取矩阵数据并创建（由Matrix::save方法创建的文件）
-		IntMat(Path filePath);
-
-		/// 由CvMat创建矩阵，并拷贝数据
-		IntMat(CvMat *cvmat);
+		Matrix(Path filePath);
 
 		/// 克隆出一个新对象
-		IntMat clone();
+		Matrix<Type> clone();
 
 		/// 矩阵数据类型转换
-		FloatMat convertToFloatMat();
-
-		/// 矩阵数据类型转换
-		DoubleMat convertToDoubleMat();
+		template <typename TargetType>
+		void convertTo(Matrix<TargetType>& target);
 
 		/// 从另一个矩阵的某个子区域拷贝数据到本矩阵的某个位置（通过thisOffset指定），源矩阵和本矩阵都应为2维矩阵
-		void copy(IntMat src, Region2D srcRegion, CoordInt2D thisOffset);
+		void copy(Matrix<Type> src, Region2D srcRegion, CoordInt2D thisOffset);
 
 		/// 从另一个矩阵的某个子区域拷贝数据到本矩阵的某个位置（通过thisOffset指定），源矩阵和本矩阵都应为3维矩阵
-		void copy(IntMat src, Region3D srcRegion, CoordInt3D thisOffset);
+		void copy(Matrix<Type> src, Region3D srcRegion, CoordInt3D thisOffset);
 
-		/// 重置所有元素的值
-		void clear(Int value);
+		/// 对所有元素赋同一个值
+		void set(Type value);
 
 		/// 获得矩阵的大小（各维的长度）
 		Array<UInt> size();
@@ -2937,271 +3299,51 @@ namespace spadas
 		/// 判断矩阵是否为指定大小
 		Bool isSize(Array<UInt> dims);
 
-		/// [非安全指针][可修改] 取得数据指针
-		Int *data();
+		/// [非安全] 取得数据指针
+		Type *data();
 
-		/// [非安全指针][可修改] 包装成CvMat的形式，数据将绑定至本矩阵
-		CvMat *cvMat();
+		/// 取得第i个子矩阵，该子矩阵维数减1，数据可绑定至本矩阵数据，序号从0开始
+		Matrix<Type> operator [](UInt i);
 
-		/// [可修改] 取得第i个子矩阵，该子矩阵维数减1，数据绑定至本矩阵，序号从0开始
-		IntMat operator [](UInt i);
+		/// 通过圆括号获得某个元素的引用，面向1维矩阵 (标量)
+		Type& operator ()(UInt i);
 
-		/// [可修改] 通过圆括号获得某个元素的引用，面向1维矩阵 (标量)
-		Int& operator ()(UInt i);
+		/// 通过圆括号获得某个元素的引用，面向2维矩阵 (标量)
+		Type& operator ()(UInt i, UInt j);
 
-		/// [可修改] 通过圆括号获得某个元素的引用，面向2维矩阵 (标量)
-		Int& operator ()(UInt i, UInt j);
-
-		/// [可修改] 通过圆括号获得某个元素的引用，面向3维矩阵 (标量)
-		Int& operator ()(UInt i, UInt j, UInt k);
+		/// 通过圆括号获得某个元素的引用，面向3维矩阵 (标量)
+		Type& operator ()(UInt i, UInt j, UInt k);
 
 		/// 矩阵加法: output = this + matrix
-		IntMat operator +(IntMat matrix);
+		Matrix<Type> operator +(Matrix<Type> matrix);
 
 		/// 矩阵减法: output = this - matrix
-		IntMat operator -(IntMat matrix);
+		Matrix<Type> operator -(Matrix<Type> matrix);
 
 		/// 矩阵乘以标量: output = this * scale
-		IntMat operator *(Int scale);
+		Matrix<Type> operator *(Type scale);
 
 		/// 矩阵相乘: output = this * matrix (仅支持2维矩阵)
-		IntMat operator *(IntMat matrix);
+		Matrix<Type> operator *(Matrix<Type> matrix);
 
 		/// 矩阵转置 (仅支持2维矩阵)
-		IntMat transpose();
+		Matrix<Type> transpose();
 
 		/// 用字符串表示矩阵数据 (仅支持2维矩阵)
-		String toString(UInt nDigits = 1);
+		String toString();
 
 		/// 保存矩阵数据至文本文件 (仅支持2维矩阵)
-		void save(Path filePath, UInt nDigits = 1);
+		void save(Path filePath);
 	};
 
-	/// Float型矩阵
-	class SPADAS_API FloatMat : public Object<class FloatMatVars>
-	{
-	public:
-		/// 无效对象
-		FloatMat();
+	/// 支持的矩阵类型: Int型矩阵
+	typedef Matrix<Int> IntMat;
 
-		/// 创建一个2维矩阵
-		FloatMat(UInt dim0, UInt dim1);
+	/// 支持的矩阵类型: Float型矩阵
+	typedef Matrix<Float> FloatMat;
 
-		/// 创建一个3维矩阵
-		FloatMat(UInt dim0, UInt dim1, UInt dim2);
-
-		/// 创建一个N维矩阵 (N至少为1)
-		FloatMat(Array<UInt> dims);
-
-		/// 创建一个N维矩阵并从指定数据源拷贝
-		FloatMat(Array<UInt> dims, Pointer raw);
-
-		/// 由数组创建矩阵 (矩阵大小为N x 1 x 1...，维数由参数指定)
-		FloatMat(Array<Float> arr, UInt nDims = 2);
-
-		/// 从另一个矩阵的子区域拷贝并创建矩阵，src应为2维矩阵
-		FloatMat(FloatMat src, Region2D srcRegion);
-
-		/// 从另一个矩阵的子区域拷贝并创建矩阵，src应为3维矩阵
-		FloatMat(FloatMat src, Region3D srcRegion);
-
-		/// 从文件读取矩阵数据并创建（由Matrix::save方法创建的文件）
-		FloatMat(Path filePath);
-
-		/// 由CvMat创建矩阵，并拷贝数据
-		FloatMat(CvMat *cvmat);
-
-		/// 克隆出一个新对象
-		FloatMat clone();
-
-		/// 矩阵数据类型转换
-		IntMat convertToIntMat();
-
-		/// 矩阵数据类型转换
-		DoubleMat convertToDoubleMat();
-
-		/// 从另一个矩阵的某个子区域拷贝数据到本矩阵的某个位置（通过thisOffset指定），源矩阵和本矩阵都应为2维矩阵
-		void copy(FloatMat src, Region2D srcRegion, CoordInt2D thisOffset);
-
-		/// 从另一个矩阵的某个子区域拷贝数据到本矩阵的某个位置（通过thisOffset指定），源矩阵和本矩阵都应为3维矩阵
-		void copy(FloatMat src, Region3D srcRegion, CoordInt3D thisOffset);
-
-		/// 重置所有元素的值
-		void clear(Float value);
-
-		/// 获得矩阵的大小（各维的长度）
-		Array<UInt> size();
-
-		/// 获得矩阵某个维度的长度 (维度无效时返回0)，序号从0开始
-		UInt dimAt(UInt index);
-
-		/// 获得矩阵维数
-		UInt nDims();
-
-		/// 获得矩阵的总元素个数
-		UInt nElems();
-
-		/// 判断矩阵是否为指定大小
-		Bool isSize(Size2D size);
-
-		/// 判断矩阵是否为指定大小
-		Bool isSize(Size3D size);
-
-		/// 判断矩阵是否为指定大小
-		Bool isSize(Array<UInt> dims);
-
-		/// [非安全指针][可修改] 取得数据指针
-		Float *data();
-
-		/// [非安全指针][可修改] 包装成CvMat的形式，数据将绑定至本矩阵
-		CvMat *cvMat();
-
-		/// [可修改] 取得第i个子矩阵，该子矩阵维数减1，数据绑定至本矩阵，序号从0开始
-		FloatMat operator [](UInt i);
-
-		/// [可修改] 通过圆括号获得某个元素的引用，面向1维矩阵 (标量)
-		Float& operator ()(UInt i);
-
-		/// [可修改] 通过圆括号获得某个元素的引用，面向2维矩阵 (标量)
-		Float& operator ()(UInt i, UInt j);
-
-		/// [可修改] 通过圆括号获得某个元素的引用，面向3维矩阵 (标量)
-		Float& operator ()(UInt i, UInt j, UInt k);
-
-		/// 矩阵加法: output = this + matrix
-		FloatMat operator +(FloatMat matrix);
-
-		/// 矩阵减法: output = this - matrix
-		FloatMat operator -(FloatMat matrix);
-
-		/// 矩阵乘以标量: output = this * scale
-		FloatMat operator *(Float scale);
-
-		/// 矩阵相乘: output = this * matrix (仅支持2维矩阵)
-		FloatMat operator *(FloatMat matrix);
-
-		/// 矩阵转置 (仅支持2维矩阵)
-		FloatMat transpose();
-
-		/// 用字符串表示矩阵数据 (仅支持2维矩阵)
-		String toString(UInt nDigits = 1);
-
-		/// 保存矩阵数据至文本文件 (仅支持2维矩阵)
-		void save(Path filePath, UInt nDigits = 1);
-	};
-
-	/// 支持的矩阵类型：Double型矩阵
-	class SPADAS_API DoubleMat : public Object<class DoubleMatVars>
-	{
-	public:
-		/// 无效对象
-		DoubleMat();
-
-		/// 创建一个2维矩阵
-		DoubleMat(UInt dim0, UInt dim1);
-
-		/// 创建一个3维矩阵
-		DoubleMat(UInt dim0, UInt dim1, UInt dim2);
-
-		/// 创建一个N维矩阵 (N至少为1)
-		DoubleMat(Array<UInt> dims);
-
-		/// 创建一个N维矩阵并从指定数据源拷贝
-		DoubleMat(Array<UInt> dims, Pointer raw);
-
-		/// 由数组创建矩阵 (矩阵大小为N x 1 x 1...，维数由参数指定)
-		DoubleMat(Array<Double> arr, UInt nDims = 2);
-
-		/// 从另一个矩阵的子区域拷贝并创建矩阵，src应为2维矩阵
-		DoubleMat(DoubleMat src, Region2D srcRegion);
-
-		/// 从另一个矩阵的子区域拷贝并创建矩阵，src应为3维矩阵
-		DoubleMat(DoubleMat src, Region3D srcRegion);
-
-		/// 从文件读取矩阵数据并创建（由Matrix::save方法创建的文件）
-		DoubleMat(Path filePath);
-
-		/// 由CvMat创建矩阵，并拷贝数据
-		DoubleMat(CvMat *cvmat);
-
-		/// 克隆出一个新对象
-		DoubleMat clone();
-
-		/// 矩阵数据类型转换
-		IntMat convertToIntMat();
-
-		/// 矩阵数据类型转换
-		FloatMat convertToFloatMat();
-
-		/// 从另一个矩阵的某个子区域拷贝数据到本矩阵的某个位置（通过thisOffset指定），源矩阵和本矩阵都应为2维矩阵
-		void copy(DoubleMat src, Region2D srcRegion, CoordInt2D thisOffset);
-
-		/// 从另一个矩阵的某个子区域拷贝数据到本矩阵的某个位置（通过thisOffset指定），源矩阵和本矩阵都应为3维矩阵
-		void copy(DoubleMat src, Region3D srcRegion, CoordInt3D thisOffset);
-
-		/// 重置所有元素的值
-		void clear(Double value);
-
-		/// 获得矩阵的大小（各维的长度）
-		Array<UInt> size();
-
-		/// 获得矩阵某个维度的长度 (维度无效时返回0)，序号从0开始
-		UInt dimAt(UInt index);
-
-		/// 获得矩阵维数
-		UInt nDims();
-
-		/// 获得矩阵的总元素个数
-		UInt nElems();
-
-		/// 判断矩阵是否为指定大小
-		Bool isSize(Size2D size);
-
-		/// 判断矩阵是否为指定大小
-		Bool isSize(Size3D size);
-
-		/// 判断矩阵是否为指定大小
-		Bool isSize(Array<UInt> dims);
-
-		/// [非安全指针][可修改] 取得数据指针
-		Double *data();
-
-		/// [非安全指针][可修改] 包装成CvMat的形式，数据将绑定至本矩阵
-		CvMat *cvMat();
-
-		/// [可修改] 取得第i个子矩阵，该子矩阵维数减1，数据绑定至本矩阵，序号从0开始
-		DoubleMat operator [](UInt i);
-
-		/// [可修改] 通过圆括号获得某个元素的引用，面向1维矩阵 (标量)
-		Double& operator ()(UInt i);
-
-		/// [可修改] 通过圆括号获得某个元素的引用，面向2维矩阵 (标量)
-		Double& operator ()(UInt i, UInt j);
-
-		/// [可修改] 通过圆括号获得某个元素的引用，面向3维矩阵 (标量)
-		Double& operator ()(UInt i, UInt j, UInt k);
-
-		/// 矩阵加法: output = this + matrix
-		DoubleMat operator +(DoubleMat matrix);
-
-		/// 矩阵减法: output = this - matrix
-		DoubleMat operator -(DoubleMat matrix);
-
-		/// 矩阵乘以标量: output = this * scale
-		DoubleMat operator *(Double scale);
-
-		/// 矩阵相乘: output = this * matrix (仅支持2维矩阵)
-		DoubleMat operator *(DoubleMat matrix);
-
-		/// 矩阵转置 (仅支持2维矩阵)
-		DoubleMat transpose();
-
-		/// 用字符串表示矩阵数据 (仅支持2维矩阵)
-		String toString(UInt nDigits = 1);
-
-		/// 保存矩阵数据至文本文件 (仅支持2维矩阵)
-		void save(Path filePath, UInt nDigits = 1);
-	};
+	/// 支持的矩阵类型: Double型矩阵
+	typedef Matrix<Double> DoubleMat;
 
 	/// 数学函数命名空间
 	namespace math
@@ -3257,22 +3399,22 @@ namespace spadas
 		inline Double abs(Double number) { return number > 0 ? number : -number; }
 
 		/// 四舍五入
-		inline Int round(Float number) { return (Int)(number + (number >= 0 ? 0.5f : -0.5f)); }
+		inline Long round(Float number) { return (Long)(number + (number >= 0 ? 0.5f : -0.5f)); }
 
 		/// 四舍五入
-		inline Int round(Double number) { return (Int)(number + (number >= 0 ? 0.5 : -0.5)); }
+		inline Long round(Double number) { return (Long)(number + (number >= 0 ? 0.5 : -0.5)); }
 
 		/// 取得不大于输入值的最大整数
-		inline Int floor(Float number) { Int i = (Int)number; return i - (i > number); }
+		inline Long floor(Float number) { Long i = (Long)number; return i - (i > number); }
 
 		/// 取得不大于输入值的最大整数
-		inline Int floor(Double number) { Int i = (Int)number; return i - (i > number); }
+		inline Long floor(Double number) { Long i = (Long)number; return i - (i > number); }
 
 		/// 取得不小于输入值的最小整数
-		inline Int ceil(Float number) { Int i = (Int)number; return i + (i < number); }
+		inline Long ceil(Float number) { Long i = (Long)number; return i + (i < number); }
 
 		/// 取得不小于输入值的最小整数
-		inline Int ceil(Double number) { Int i = (Int)number; return i + (i < number); }
+		inline Long ceil(Double number) { Long i = (Long)number; return i + (i < number); }
 
 		/// 计算a的x次幂 (返回无穷大若a < 0)
 		SPADAS_API Float power(Float a, Float x);
@@ -3352,7 +3494,7 @@ namespace spadas
 		/// 三角函数: arc-tangent(x/y) (输出FINF或DINF若输入参数无效)
 		SPADAS_API Double atan(Double x, Double y = 1.0);
 
-		/// 获取整型数的深度 (0~1的深度为0, 2~3的深度为1, 4~7的深度为2, 8~15的深度为3)
+		/// 获取整型数的深度 (0~1的深度为0, 2~3的深度为1, 4~7的深度为2, 8~15的深度为3, ...)
 		SPADAS_API UInt depth(UInt number);
 
 		/// 生成介于0.0至1.0的随机数，数量由参数指定
@@ -3414,7 +3556,7 @@ namespace spadas
 	{
 	public:
 		/// 绑定线程锁 (将自动调用lock.enter)
-		LockProxy(Lock lock);
+		LockProxy(Lock& lock);
 
 		/// 析构函数 (将自动调用lock.leave)
 		~LockProxy();
@@ -3508,7 +3650,7 @@ namespace spadas
 		/// 线程ID
 		Optional<UInt> threadID;
 
-		/// 用户设置的循环时间间隔[ms] (当使用用户自定义的循环间隔时才有效)
+		/// 用户设置的循环时间间隔 [ms] (当使用用户自定义的循环间隔时才有效)
 		Optional<UInt> userTimeInterval;
 
 		/// 线程循环平均处理时间 [ms]
@@ -3568,7 +3710,7 @@ namespace spadas
 		virtual void onThreadEnd(UInt threadIndex);
 	};
 
-	/// 多线程容器
+	/// [多线程安全] 多线程容器
 	class SPADAS_API Threads : public Object<class ThreadsVars>
 	{
 	public:
@@ -3631,7 +3773,7 @@ namespace spadas
 		virtual void onRunTask(Flag shouldEnd);
 	};
 
-	/// 任务管理器
+	/// [多线程安全] 任务管理器
 	class SPADAS_API TaskManager : public Object<class TaskManagerVars>
 	{
 	public:
@@ -3670,14 +3812,27 @@ namespace spadas
 	class SPADAS_API Environment
 	{
 	public:
-		static const Int Unknown = 0;
-		static const Int Linux = 3;
-		static const Int MacOS = 4;
-		static const Int Windows = 6;
-
-		static Bool isValid(Int val);
-		static String toString(Int val);
-		static Int defaultValue();
+		enum class Value
+		{
+			Default = 0,
+			Unknown = 0,
+			Linux = 3,
+			MacOS = 4,
+			Windows = 6,
+			NILRT = 7,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(Unknown);
+				ES(Linux);
+				ES(MacOS);
+				ES(Windows);
+				ES(NILRT);
+				default: return 0;
+			}
+		}
 	};
 
 	/// Posix时间，毫秒单位
@@ -3772,7 +3927,7 @@ namespace spadas
 		SPADAS_API Long operator -(TimeWithMS time);
 
 		/// 返回两个时间的时间差，以分量的形式
-		SPADAS_API void substract(TimeWithMS time, Int& week, Int& day, Int& hour, Int& minute, Int& second, Int& millisecond);
+		SPADAS_API void minus(TimeWithMS time, Int& week, Int& day, Int& hour, Int& minute, Int& second, Int& millisecond);
 
 		/// 分量时间（按本地时间）转Posix时间
 		SPADAS_API MilliPosix localTimeToPosix();
@@ -3877,30 +4032,48 @@ namespace spadas
 		/// 解除映射
 		void unmap();
 
-		/// [非安全指针] 取得映射起点的虚拟内存地址
+		/// [非安全] 取得映射起点的虚拟内存地址
 		Pointer getPointer();
 	};
 
 	/// 内存映射数据流的发送结果
-	enum class MemoryMapSendResult
+	class SPADAS_API MemoryMapSendResult
 	{
-		/// 发送成功
-		OK = 0,
+	public:
+		enum class Value
+		{
+			Default = 0,
 
-		/// 未开启
-		NotOpen = 1,
+			/// 发送成功
+			OK = 0,
 
-		/// 模式不正确
-		WrongMode = 2,
+			/// 未开启
+			NotOpen = 1,
 
-		/// 数据大小超过范围（slotSize x slotCount）
-		WrongSize = 3,
+			/// 模式不正确
+			WrongMode = 2,
 
-		/// 队列已满，或容量已不足以发送当前数据
-		QueueFull = 4,
+			/// 数据大小超过范围（slotSize x slotCount）
+			WrongSize = 3,
+
+			/// 队列已满，或容量已不足以发送当前数据
+			QueueFull = 4,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(OK);
+				ES(NotOpen);
+				ES(WrongMode);
+				ES(WrongSize);
+				ES(QueueFull);
+				default: return 0;
+			}
+		}
 	};
 
-	/// 基于内存映射的数据流
+	/// [多线程安全] 基于内存映射的数据流
 	class SPADAS_API MemoryMapStream : public Object<class MemoryMapStreamVars>
 	{
 	public:
@@ -3929,12 +4102,12 @@ namespace spadas
 		/// @param dataPtr 数据的起始指针
 		/// @param byteCount 数据的字节数
 		/// @returns 返回发送结果
-		MemoryMapSendResult send(Pointer dataPtr, UInt byteCount);
+		Enum<MemoryMapSendResult> send(Pointer dataPtr, UInt byteCount);
 
 		/// @brief 发送数据
 		/// @param data 二进制数据
 		/// @returns 返回发送结果
-		MemoryMapSendResult send(Binary data);
+		Enum<MemoryMapSendResult> send(Binary data);
 
 		/// 接收所有收到的数据
 		Array<Binary> receive();
@@ -3971,9 +4144,6 @@ namespace spadas
 
 		/// 获取哈希值
 		Word getHash();
-
-		/// 四字符转换为字符串
-		String toString();
 
 	private:
 		Bool isNull() { return FALSE; }
@@ -4034,7 +4204,7 @@ namespace spadas
 		/// 等待指定时间，单位毫秒（系统负载高时精度可能会降至5~10毫秒）
 		SPADAS_API void wait(UInt time);
 
-		/// 等待指定时间，单位微秒
+		/// 以自旋方式等待指定时间，单位微秒
 		SPADAS_API void waitSpin(UInt timeUS);
 
 		/// 执行一个控制台命令
@@ -4053,23 +4223,23 @@ namespace spadas
 	/// 实用功能函数命名空间
 	namespace utility
 	{
-		/// @brief [非安全操作] 以字节为单位设置一段内存的值
+		/// @brief [非安全] 以字节为单位设置一段内存的值
 		/// @param value 希望设置的字节数值
 		/// @param dst 内存起始地址
 		/// @param setSize 设置的字节数
 		SPADAS_API void memorySet(Byte value, Pointer dst, UInt setSize);
 
-		/// @brief [非安全操作] 内存拷贝（效率最高）
+		/// @brief [非安全] 内存拷贝（效率最高）
 		/// @param src 拷贝源内存起始地址
 		/// @param dst 拷贝目标内存起始地址
 		/// @param copySize 拷贝字节数
-		SPADAS_API void memoryCopy(const Pointer src, Pointer dst, UInt copySize);
+		SPADAS_API void memoryCopy(ConstPointer src, Pointer dst, UInt copySize);
 
-		/// [非安全操作] 值类型的强制转换（必须保证两个类型sizeof一致，结构体的话必须保证类型与顺序都一致）
+		/// [非安全] 值类型的强制转换（必须保证两个类型sizeof一致，结构体的话必须保证类型与顺序都一致）
 		template <typename SrcType, typename DstType>
 		DstType valueCast(SrcType val);
 
-		/// [非安全操作] 值类型数组的强制转换（必须保证两个类型sizeof一致，结构体的话必须保证类型与顺序都一致）
+		/// [非安全] 值类型数组的强制转换（必须保证两个类型sizeof一致，结构体的话必须保证类型与顺序都一致）
 		template <typename SrcType, typename DstType>
 		Array<DstType> valueArrayCast(Array<SrcType> src);
 
@@ -4276,7 +4446,7 @@ namespace spadas
 		/// 转为字符串(yyyy-MM-dd-HH-mm-ss)
 		String toString();
 
-		/// 转为时间（方便旧版本兼容）
+		/// 转为时间
 		Time toTime();
 
 	private:
@@ -4284,16 +4454,32 @@ namespace spadas
 	};
 
 	/// 时间偏置同步状态
-	enum class TimeOffsetSync
+	class SPADAS_API TimeOffsetSync
 	{
-		/// 未同步或同步源未知
-		None = 0,
+	public:
+		enum class Value
+		{
+			Default = 0,
 
-		/// 已与授时服务器时间同步
-		Server = 1,
+			/// 未同步或同步源未知
+			None = 0,
 
-		/// 已与卫星时间同步
-		Gnss = 2,
+			/// 已与授时服务器时间同步
+			Server = 1,
+
+			/// 已与卫星时间同步
+			Gnss = 2,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(None);
+				ES(Server);
+				ES(Gnss);
+				default: return 0;
+			}
+		}
 	};
 
 	/// 简单时间戳
@@ -4339,7 +4525,7 @@ namespace spadas
 		Double offset;
 
 		/// 时间偏置来源
-		TimeOffsetSync offsetSync;
+		TimeOffsetSync::Value offsetSync;
 
 		/// 到达时CPU计数，0表示无效
 		ULong cpuTick;
@@ -4357,11 +4543,11 @@ namespace spadas
 		NanoPosix gnssPosix;
 
 		/// 默认构造函数
-		FullTimestamp() : offset(0), offsetSync(TimeOffsetSync::None), cpuTick(0), hostPosix(0), guestPosix(0), serverPosix(0), gnssPosix(0)
+		FullTimestamp() : offset(0), offsetSync(TimeOffsetSync::Value::None), cpuTick(0), hostPosix(0), guestPosix(0), serverPosix(0), gnssPosix(0)
 		{}
 
 		/// 从简单时间戳构造，无同步信息或Session无关时间信息
-		FullTimestamp(ShortTimestamp timestamp) : session(timestamp.session), offset(timestamp.offset), offsetSync(TimeOffsetSync::None), cpuTick(0), hostPosix(0), guestPosix(0), serverPosix(0), gnssPosix(0)
+		FullTimestamp(ShortTimestamp timestamp) : session(timestamp.session), offset(timestamp.offset), offsetSync(TimeOffsetSync::Value::None), cpuTick(0), hostPosix(0), guestPosix(0), serverPosix(0), gnssPosix(0)
 		{}
 
 		/// 是否等于（仅比较Session标识符和时间偏置）
@@ -4384,22 +4570,40 @@ namespace spadas
 	};
 
 	/// Session无关时间的类别
-	enum class TimeType
+	class SPADAS_API TimeType
 	{
-		/// 到达时CPU计数
-		CPUTick = 0,
+	public:
+		enum class Value
+		{
+			Default = 0,
 
-		/// 到达时主机Posix时间，单位纳秒
-		HostPosix = 1,
+			/// 到达时CPU计数
+			CPUTick = 0,
 
-		/// 采样时客机Posix时间，单位纳秒
-		GuestPosix = 2,
+			/// 到达时主机Posix时间，单位纳秒
+			HostPosix = 1,
 
-		/// 采样时授时服务器Posix时间，单位纳秒
-		ServerPosix = 3,
+			/// 采样时客机Posix时间，单位纳秒
+			GuestPosix = 2,
 
-		/// 采样时卫星Posix时间，单位纳秒
-		GnssPosix = 4,
+			/// 采样时授时服务器Posix时间，单位纳秒
+			ServerPosix = 3,
+
+			/// 采样时卫星Posix时间，单位纳秒
+			GnssPosix = 4,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(CPUTick);
+				ES(HostPosix);
+				ES(GuestPosix);
+				ES(ServerPosix);
+				ES(GnssPosix);
+				default: return 0;
+			}
+		}
 	};
 
 	/// 信号
@@ -4432,10 +4636,10 @@ namespace spadas
 		/// 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
 		String protocol;
 
-		/// 数值数组数据
+		/// 数值数组数据，可为空
 		Array<Double> vector;
 
-		/// [可选] 二进制数据
+		/// 二进制数据，可为空
 		Binary binary;
 
 		/// 默认构造函数
@@ -4453,10 +4657,10 @@ namespace spadas
 		/// 时间戳
 		FullTimestamp timestamp;
 
-		/// 数值数组数据
+		/// 数值数组数据，可为空
 		Array<Double> vector;
 
-		/// [可选] 二进制数据
+		/// 二进制数据，可为空
 		Binary binary;
 
 		/// 默认构造函数
@@ -4575,28 +4779,47 @@ namespace spadas
 	typedef Dictionary<Array<SessionGeneralSample> > SessionGeneralSampleTable;
 
 	/// 通用样本插值结果
-	enum class SampleInterpolationResult
+	class SPADAS_API SampleInterpolationResult
 	{
-		/// 成功插值返回
-		OK = 0,
+	public:
+		enum class Value
+		{
+			Default = 0,
 
-		/// 样本缓存为空，或样本范围整体晚于插值时间戳，或样本范围整体过早于插值时间戳
-		OutOfRange = 1,
+			/// 成功插值返回
+			OK = 0,
 
-		/// 样本不支持插值，直接返回最近样本
-		NearestInstead = 2,
+			/// 样本缓存为空，或样本范围整体晚于插值时间戳，或样本范围整体过早于插值时间戳
+			OutOfRange = 1,
 
-		/// 样本范围整体早于插值时间戳，但在阈值earlyThresh范围内，需等待新样本再进行插值
-		TooEarly = 3,
+			/// 样本不支持插值，直接返回最近样本
+			NearestInstead = 2,
 
-		/// 通用样本解析错误
-		ParseError = 4,
+			/// 样本范围整体早于插值时间戳，但在阈值earlyThresh范围内，需等待新样本再进行插值
+			TooEarly = 3,
 
-		/// 未设置样本缓存的协议
-		NoProtocol = 5,
+			/// 通用样本解析错误
+			ParseError = 4,
+
+			/// 未设置样本缓存的协议
+			NoProtocol = 5,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(OK);
+				ES(OutOfRange);
+				ES(NearestInstead);
+				ES(TooEarly);
+				ES(ParseError);
+				ES(NoProtocol);
+				default: return 0;
+			}
+		}
 	};
 
-	/// 通用样本缓存
+	/// [多线程安全] 通用样本缓存
 	class SPADAS_API SessionSampleBuffer : public Object<class SessionSampleBufferVars>
 	{
 	public:
@@ -4653,7 +4876,7 @@ namespace spadas
 		/// @param time 目标时间
 		/// @param sampleNearest 输出离目标最近样本
 		/// @returns 若样本缓存为空，则返回FALSE
-		Bool getNearest(TimeType timeType, ULong time, SessionGeneralSample& sampleNearest);
+		Bool getNearest(Enum<TimeType> timeType, ULong time, SessionGeneralSample& sampleNearest);
 
 		/// @brief 根据时间偏置寻找前后两个样本
 		/// @param offset 目标时间偏置
@@ -4668,18 +4891,18 @@ namespace spadas
 		/// @param sampleBefore 输出比时间戳早的最近样本
 		/// @param sampleAfter 输出比时间戳晚的最近样本
 		/// @returns 若无则返回FALSE
-		Bool search(TimeType timeType, ULong time, SessionGeneralSample& sampleBefore, SessionGeneralSample& sampleAfter);
+		Bool search(Enum<TimeType> timeType, ULong time, SessionGeneralSample& sampleBefore, SessionGeneralSample& sampleAfter);
 
 		/// @brief 根据时间偏置寻找前后两个样本并插值
 		/// @param offset 目标时间偏置
 		/// @param interpolatedSample 输出插值完成的样本
-		/// @param earlyThresh 用于判断缓存范围是否过早的阈值，参考 SampleInterpolationResult::TooEarly
+		/// @param earlyThresh 用于判断缓存范围是否过早的阈值，参考 spadas::SampleInterpolationResult::Value::TooEarly
 		/// @details 该模板类型必须实现以下函数：\n
 		/// - Bool fromGeneralSample(String protocol, SessionGeneralSample); \n
 		/// - static Bool supportInterpolation(); \n
 		/// - static Type interpolate(Type& s1, Double w1, Type& s2, Double w2, FullTimestamp timestamp);
 		template <typename Type>
-		SampleInterpolationResult interpolate(Double offset, Type& interpolatedSample, UInt earlyThresh = 1000/* ms */);
+		Enum<SampleInterpolationResult> interpolate(Double offset, Type& interpolatedSample, UInt earlyThresh = 1000/* ms */);
 
 	private:
 		Bool isNull() { return FALSE; }
@@ -4721,88 +4944,172 @@ namespace spadas
 	typedef Dictionary<Array<SessionMatrixSample> > SessionMatrixSampleTable;
 
 	/// 一般设备状态
-	enum class GeneralDeviceStatus
+	class SPADAS_API GeneralDeviceStatus
 	{
-		/// 未设定为自动连接模式
-		NotConnect = 0,
+	public:
+		enum class Value
+		{
+			Default = 0,
 
-		/// 连接正常
-		OK = 1,
+			/// 未设定为自动连接模式
+			NotConnect = 0,
 
-		/// 连接错误
-		Error = 2,
+			/// 连接正常
+			OK = 1,
 
-		/// 连接无错误，但存在一定问题
-		Warning = 3,
+			/// 连接错误
+			Error = 2,
+
+			/// 连接无错误，但存在一定问题
+			Warning = 3,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(NotConnect);
+				ES(OK);
+				ES(Error);
+				ES(Warning);
+				default: return 0;
+			}
+		}
 	};
 
 	/// 总线通道类型
-	enum class BusChannelType
+	class SPADAS_API BusChannelType
 	{
-		/// 无效类型
-		Invalid = 0,
+	public:
+		enum class Value
+		{
+			Default = 0,
 
-		/// CAN总线，报文数据即payload，1～8字节
-		Can = 1,
+			/// 无效类型
+			Invalid = 0,
 
-		/// CAN-FD总线，报文数据即payload，1～64字节
-		CanFD = 2,
+			/// CAN总线，报文数据即payload，1～8字节
+			Can = 1,
 
-		/// LIN总线，报文数据即payload，1～8字节
-		Lin = 3,
+			/// CAN-FD总线，报文数据即payload，1～64字节
+			CanFD = 2,
 
-		/// Flexray总线，报文数据由标志位字节(从低至高为startup,sync,null)、cycle字节和payload构成(共2～256字节)，报文ID即Slot ID
-		Flexray = 4,
+			/// LIN总线，报文数据即payload，1～8字节
+			Lin = 3,
 
-		/// 以太网总线，报文数据为包含链路层等等协议的完整以太网帧数据，报文ID定义为源MAC的后四字节(小字序)
-		Ethernet = 5,
+			/// Flexray总线，报文数据由标志位字节(从低至高为startup,sync,null)、cycle字节和payload构成(共2～256字节)，报文ID即Slot ID
+			Flexray = 4,
 
-		/// SOME/IP车载以太网总线，报文数据为包含链路层等等协议的完整以太网帧数据，报文ID即Message ID(由Service ID和Method ID组成)
-		SomeIP = 6,
+			/// 以太网总线，报文数据为包含链路层等等协议的完整以太网帧数据，报文ID定义为源MAC的后四字节(小字序)
+			Ethernet = 5,
+
+			/// SOME/IP车载以太网总线，报文数据为包含链路层等等协议的完整以太网帧数据，报文ID即Message ID(由Service ID和Method ID组成)
+			SomeIP = 6,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(Invalid);
+				ES(Can);
+				ES(CanFD);
+				ES(Lin);
+				ES(Flexray);
+				ES(Ethernet);
+				ES(SomeIP);
+				default: return 0;
+			}
+		}
 	};
 
 	/// 总线波特率
-	enum class BusBaudRate
+	class SPADAS_API BusBaudRate
 	{
-		Invalid = 0,
+	public:
+		enum class Value
+		{
+			Default = 0,
+			Invalid = 0,
 
-		CAN_5k = 1,
-		CAN_10k = 2,
-		CAN_20k = 3,
-		CAN_33k = 18,
-		CAN_40k = 4,
-		CAN_50k = 5,
-		CAN_62k = 6,
-		CAN_80k = 7,
-		CAN_83k = 8,
-		CAN_100k = 9,
-		CAN_125k = 10,
-		CAN_200k = 11,
-		CAN_250k = 12,
-		CAN_400k = 13,
-		CAN_500k = 14, // default
-		CAN_666k = 15,
-		CAN_800k = 16,
-		CAN_1M = 17,
+			CAN_5k = 1,
+			CAN_10k = 2,
+			CAN_20k = 3,
+			CAN_33k = 18,
+			CAN_40k = 4,
+			CAN_50k = 5,
+			CAN_62k = 6,
+			CAN_80k = 7,
+			CAN_83k = 8,
+			CAN_100k = 9,
+			CAN_125k = 10,
+			CAN_200k = 11,
+			CAN_250k = 12,
+			CAN_400k = 13,
+			CAN_500k = 14, // CAN默认值
+			CAN_666k = 15,
+			CAN_800k = 16,
+			CAN_1M = 17,
 
-		CANFD_500k = 101,
-		CANFD_1M = 102,
-		CANFD_2M = 103, // default
-		CANFD_4M = 104,
-		CANFD_8M = 105,
-		CANFD_6M = 106,
-		CANFD_2d5M = 107,
-		CANFD_5M = 108,
+			CANFD_500k = 101,
+			CANFD_1M = 102,
+			CANFD_2M = 103, // CAN-FD默认值
+			CANFD_4M = 104,
+			CANFD_8M = 105,
+			CANFD_6M = 106,
+			CANFD_2d5M = 107,
+			CANFD_5M = 108,
 
-		LIN_1k = 201,
-		LIN_9d6k = 202, // default
-		LIN_16d5k = 203,
-		LIN_19d2k = 204,
-		LIN_20k = 205,
+			LIN_1k = 201,
+			LIN_9d6k = 202, // LIN默认值
+			LIN_16d5k = 203,
+			LIN_19d2k = 204,
+			LIN_20k = 205,
 
-		FR_2d5M = 301,
-		FR_5M = 302,
-		FR_10M = 303, // default
+			FR_2d5M = 301,
+			FR_5M = 302,
+			FR_10M = 303, // Flexray默认值
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(Invalid);
+				ES(CAN_5k);
+				ES(CAN_10k);
+				ES(CAN_20k);
+				ES(CAN_33k);
+				ES(CAN_40k);
+				ES(CAN_50k);
+				ES(CAN_62k);
+				ES(CAN_80k);
+				ES(CAN_83k);
+				ES(CAN_100k);
+				ES(CAN_125k);
+				ES(CAN_200k);
+				ES(CAN_250k);
+				ES(CAN_400k);
+				ES(CAN_500k);
+				ES(CAN_666k);
+				ES(CAN_800k);
+				ES(CAN_1M);
+				ES(CANFD_500k);
+				ES(CANFD_1M);
+				ES(CANFD_2M);
+				ES(CANFD_4M);
+				ES(CANFD_8M);
+				ES(CANFD_6M);
+				ES(CANFD_2d5M);
+				ES(CANFD_5M);
+				ES(LIN_1k);
+				ES(LIN_9d6k);
+				ES(LIN_16d5k);
+				ES(LIN_19d2k);
+				ES(LIN_20k);
+				ES(FR_2d5M);
+				ES(FR_5M);
+				ES(FR_10M);
+				default: return 0;
+			}
+		}
 	};
 
 	/// 总线设备输出原始数据
@@ -4912,13 +5219,13 @@ namespace spadas
 	};
 
 	/// 总线设备信息
-	struct BusDeviceInfoX
+	struct BusDeviceInfo
 	{
 		/// 总线设备ID
 		BusDeviceID id;
 
 		/// 该通道支持的总线类型
-		Array<BusChannelType> types;
+		Array<Enum<BusChannelType> > types;
 
 		/// 设备通道描述
 		String description;
@@ -4927,7 +5234,7 @@ namespace spadas
 		Bool supportTransmitScheduled;
 
 		/// 默认构造函数
-		BusDeviceInfoX() : supportTransmitScheduled(FALSE)
+		BusDeviceInfo() : supportTransmitScheduled(FALSE)
 		{}
 	};
 
@@ -4938,19 +5245,19 @@ namespace spadas
 		BusDeviceID id;
 
 		/// 该通道的总线类型
-		BusChannelType type;
+		Enum<BusChannelType> type;
 
 		/// 主波特率
-		BusBaudRate rate;
+		Enum<BusBaudRate> rate;
 
-		/// 副波特率。目前仅用于 BusChannelType::CanFD ，表示arbitration bit-rate
-		BusBaudRate rate2;
+		/// 副波特率。目前仅用于 spadas::BusChannelType::Value::CanFD ，表示arbitration bit-rate
+		Enum<BusBaudRate> rate2;
 
 		/// 软件通道映射，1~16
 		UInt mapChannel;
 
 		/// 默认构造函数
-		BusDeviceConfig() : type(BusChannelType::Invalid), rate(BusBaudRate::Invalid), rate2(BusBaudRate::Invalid), mapChannel(0)
+		BusDeviceConfig() : mapChannel(0)
 		{}
 	};
 
@@ -5010,43 +5317,68 @@ namespace spadas
 	typedef Dictionary<Array<SessionBusMessage> > SessionBusMessageTable;
 
 	/// 视频数据流编码方式
-	enum class VideoDataCodec
+	class SPADAS_API VideoDataCodec
 	{
-		/// 无效
-		Invalid = 0,
+	public:
+		enum class Value
+		{
+			Default = 0,
 
-		/// MJPEG：有损编码，帧间独立
-		MJPEG = 1,
+			/// 无效
+			Invalid = 0,
 
-		/// H.264：有损编码，帧间依赖
-		H264 = 2,
+			/// MJPEG：有损编码，帧间独立
+			MJPEG = 1,
 
-		/// YUV411：无损编码，帧间独立，格式为每8像素(U0 Y0 V0 Y1 U4 Y2 V4 Y3 Y4 Y5 Y6 Y7)，每数值8bit
-		YUV411 = 3,
+			/// H.264：有损编码，帧间依赖
+			H264 = 2,
 
-		/// YUV420：无损编码，帧间独立，格式为每2x2像素(U V Y00 Y01 Y10 Y11)，每数值8bit
-		YUV420 = 4,
+			/// YUV411：无损编码，帧间独立，格式为每8像素(U0 Y0 V0 Y1 U4 Y2 V4 Y3 Y4 Y5 Y6 Y7)，每数值8bit
+			YUV411 = 3,
 
-		/// H.265：有损编码，帧间依赖
-		H265 = 5,
+			/// YUV420：无损编码，帧间独立，格式为每2x2像素(U V Y00 Y01 Y10 Y11)，每数值8bit
+			YUV420 = 4,
 
-		/// YUV422：无损编码，帧间独立，格式为每2像素(Y0 U Y1 V)，每数值8bit
-		YUV422 = 6,
+			/// H.265：有损编码，帧间依赖
+			H265 = 5,
 
-		/// RAW：无损编码，帧间独立，格式为奇数行BG，偶数行GR，每数值8bit
-		RAW = 7,
+			/// YUV422：无损编码，帧间独立，格式为每2像素(Y0 U Y1 V)，每数值8bit
+			YUV422 = 6,
 
-		/// RAW12：无损编码，帧间独立，格式为奇数行BG，偶数行GR，每数值12bit按小字序依次存储
-		RAW12 = 8,
+			/// RAW：无损编码，帧间独立，格式为奇数行BG，偶数行GR，每数值8bit
+			RAW = 7,
 
-		/// RAW14：无损编码，帧间独立，格式为奇数行BG，偶数行GR，每数值14bit按小字序依次存储
-		RAW14 = 9,
+			/// RAW12：无损编码，帧间独立，格式为奇数行BG，偶数行GR，每数值12bit按小字序依次存储
+			RAW12 = 8,
 
-		/// RAW16：无损编码，帧间独立，格式为奇数行BG，偶数行GR，每数值16bit按大字序依次存储
-		RAW16 = 10,
+			/// RAW14：无损编码，帧间独立，格式为奇数行BG，偶数行GR，每数值14bit按小字序依次存储
+			RAW14 = 9,
 
-		/// Y16：无损编码，帧间独立，每数值16bit按大字序依次存储
-		Y16 = 11,
+			/// RAW16：无损编码，帧间独立，格式为奇数行BG，偶数行GR，每数值16bit按大字序依次存储
+			RAW16 = 10,
+
+			/// Y16：无损编码，帧间独立，每数值16bit按大字序依次存储
+			Y16 = 11,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(Invalid);
+				ES(MJPEG);
+				ES(H264);
+				ES(YUV411);
+				ES(YUV420);
+				ES(H265);
+				ES(YUV422);
+				ES(RAW);
+				ES(RAW12);
+				ES(RAW14);
+				ES(RAW16);
+				ES(Y16);
+				default: return 0;
+			}
+		}
 	};
 
 	/// 视频数据流输入模式
@@ -5056,11 +5388,7 @@ namespace spadas
 		Size2D size;
 
 		/// 编码方式
-		VideoDataCodec codec;
-
-		/// 默认构造函数
-		VideoInputMode() : codec(VideoDataCodec::Invalid)
-		{}
+		Enum<VideoDataCodec> codec;
 	};
 
 	/// 视频数据流回注模式
@@ -5070,11 +5398,7 @@ namespace spadas
 		Size2D size;
 
 		/// 编码方式
-		VideoDataCodec codec;
-
-		/// 默认构造函数
-		VideoOutputMode() : codec(VideoDataCodec::Invalid)
-		{}
+		Enum<VideoDataCodec> codec;
 	};
 
 	/// 视频设备输出原始数据
@@ -5098,14 +5422,11 @@ namespace spadas
 		/// 视频原始帧的数据
 		Binary data;
 
-		/// 是否包含预览图像
-		Bool hasPreview;
-
-		/// 预览图像，640x(360-480)分辨率的BGR图像
-		ImagePointer preview;
+		/// 可选的预览图像，640x(360-480)分辨率的BGR图像
+		Optional<ImagePointer> preview;
 
 		/// 默认构造函数
-		VideoDeviceData() : cpuTick(0), guestPosix(0), gnssPosix(0), channel(0), hasPreview(FALSE)
+		VideoDeviceData() : cpuTick(0), guestPosix(0), gnssPosix(0), channel(0)
 		{}
 	};
 
@@ -5124,14 +5445,11 @@ namespace spadas
 		/// 视频原始帧的数据
 		Binary data;
 
-		/// 是否包含预览图像
-		Bool hasPreview;
-
-		/// 预览图像，640x(360-480)分辨率的BGR图像
-		ImagePointer preview;
+		/// 可选的预览图像，640x(360-480)分辨率的BGR图像
+		Optional<ImagePointer> preview;
 
 		/// 默认构造函数
-		SessionVideoRawData() : channel(0), hasPreview(FALSE)
+		SessionVideoRawData() : channel(0)
 		{}
 	};
 
@@ -5149,7 +5467,7 @@ namespace spadas
 	};
 
 	/// 视频设备信息
-	struct VideoDeviceInfoX
+	struct VideoDeviceInfo
 	{
 		/// 视频设备ID
 		VideoDeviceID id;
@@ -5167,12 +5485,12 @@ namespace spadas
 		Bool supportTransmitScheduled;
 
 		/// 默认构造函数
-		VideoDeviceInfoX() : supportTransmitScheduled(FALSE)
+		VideoDeviceInfo() : supportTransmitScheduled(FALSE)
 		{}
 	};
 
 	/// 视频设备配置
-	struct VideoDeviceConfigX
+	struct VideoDeviceConfig
 	{
 		/// 视频设备ID
 		VideoDeviceID id;
@@ -5190,7 +5508,7 @@ namespace spadas
 		UInt frameRate;
 
 		/// 默认构造函数
-		VideoDeviceConfigX() : mapChannel(0), frameRate(0)
+		VideoDeviceConfig() : mapChannel(0), frameRate(0)
 		{}
 	};
 
@@ -5221,10 +5539,10 @@ namespace spadas
 	typedef Array<Array<SessionVideoProcData> > SessionVideoProcDataTable;
 
 	/// 视频预览图像的快速输出接口
-	class SPADAS_API IVideoPreviewExpressX
+	class SPADAS_API IVideoPreviewExpress
 	{
 	public:
-		virtual ~IVideoPreviewExpressX() {};
+		virtual ~IVideoPreviewExpress() {};
 
 		/// @brief 输出预览图像
 		/// @param cpuTick 视频帧的到达时CPU计数
@@ -5247,7 +5565,7 @@ namespace spadas
 		/// @param size 视频帧的大小，像素单位
 		/// @param data 视频帧数据
 		/// @returns 是否成功发送，无效表示不确定
-		virtual OptionalBool transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data);
+		virtual OptionalBool transmitNow(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data);
 
 		/// @brief 按时间偏置预约发送视频帧（将优先按服务器Posix时间预约发送，不满足条件则按CPU计数时间发送）
 		/// @param channel 视频通道，0~23
@@ -5257,7 +5575,7 @@ namespace spadas
 		/// @param offset 时间偏置，单位秒 (必须大于该通道上一帧预约发送报文的时间戳)
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// @returns 是否成功预约发送，无效表示不确定
-		virtual OptionalBool transmitAtTimeOffset(UInt channel, VideoDataCodec codec, Size2D size, Binary data, Double offset, UInt tolerance);
+		virtual OptionalBool transmitAtTimeOffset(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, Double offset, UInt tolerance);
 
 		/// @brief 指定按服务器Posix时间预约发送视频帧 (必须大于该通道上一帧预约发送报文的时间)
 		/// @param channel 视频通道，0~23
@@ -5267,11 +5585,11 @@ namespace spadas
 		/// @param serverPosix 授时服务器Posix时间，单位纳秒
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// @returns 是否成功预约发送，无效表示不确定
-		virtual OptionalBool transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
+		virtual OptionalBool transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
 	};
 
 	/// 所有输入数据表
-	struct InputTablesX
+	struct InputTables
 	{
 		/// 通用原始数据表
 		SessionGeneralRawDataTable rawDatas;
@@ -5298,7 +5616,7 @@ namespace spadas
 		SessionMatrixSampleTable matrices;
 
 		/// 默认构造函数
-		InputTablesX() : busRawDatas(BC_NUM), videoRawDatas(VC_NUM), videoProcDatas(VC_NUM)
+		InputTables() : busRawDatas(BC_NUM), videoRawDatas(VC_NUM), videoProcDatas(VC_NUM)
 		{}
 
 		/// 清空所有数据
@@ -5316,7 +5634,7 @@ namespace spadas
 	};
 
 	/// 所有输出数据表
-	struct OutputTablesX
+	struct OutputTables
 	{
 		/// 信号数据表
 		SessionSignalTable signals;
@@ -5328,7 +5646,7 @@ namespace spadas
 		SessionMatrixSampleTable matrices;
 
 		/// 默认构造函数
-		OutputTablesX()
+		OutputTables()
 		{}
 
 		/// 清空所有数据
@@ -5341,19 +5659,36 @@ namespace spadas
 	};
 
 	/// 独立处理任务的状态
-	enum class StandaloneTaskState
+	class SPADAS_API StandaloneTaskState
 	{
-		/// 任务还未开始
-		Unknown = 0,
+	public:
+		enum class Value
+		{
+			Default = 0,
 
-		/// 任务完成
-		Finished = 1,
+			/// 任务还未开始
+			Unknown = 0,
 
-		/// 任务失败或被中止
-		Failed = 2,
+			/// 任务完成
+			Finished = 1,
 
-		/// 任务进行中
-		Progressing = 3,
+			/// 任务失败或被中止
+			Failed = 2,
+
+			/// 任务进行中
+			Progressing = 3,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(Unknown);
+				ES(Finished);
+				ES(Failed);
+				ES(Progressing);
+				default: return 0;
+			}
+		}
 	};
 
 	/// 独立处理任务的反馈接口
@@ -5365,8 +5700,8 @@ namespace spadas
 		/// @brief 设置任务处理状态和进度
 		/// @param state 任务状态
 		/// @param description 描述完成状态、失败或中止状态、任务进行状态的文本，空表示不启用
-		/// @param progress 任务进度，单位%，仅当状态为 StandaloneTaskState::Progressing 时需要设置
-		virtual void setTaskProgress(StandaloneTaskState state, String description, Double progress = 0);
+		/// @param progress 任务进度，单位%，仅当状态为 spadas::StandaloneTaskState::Value::Progressing 时需要设置
+		virtual void setTaskProgress(Enum<StandaloneTaskState> state, String description, Double progress = 0);
 
 		/// <summary>
 		///  @brief 设置任务返回值信息
@@ -5381,8 +5716,8 @@ namespace spadas
 		/// 截取源Session的时间偏置范围
 		Range srcRange;
 
-		/// 目标Session的标识符 (与旧版本兼容，等效于SessionIdentifier)
-		Time dstSession;
+		/// 目标Session的标识符
+		SessionIdentifier dstSession;
 
 		/// 目标Session的input文件夹路径
 		Path dstInputRoot;
@@ -5392,84 +5727,212 @@ namespace spadas
 	};
 
 	/// 文件写入模式
-	enum class FileWriteMode
+	class SPADAS_API FileWriteMode
 	{
-		/// 无特殊模式
-		Normal = 0,
+	public:
+		enum class Value
+		{
+			Default = 0,
 
-		/// 采集模式
-		OnlineMode = 1,
+			/// 无特殊模式
+			Normal = 0,
 
-		/// 离线处理模式
-		OfflineMode = 2,
+			/// 采集模式
+			OnlineMode = 1,
+
+			/// 离线处理模式
+			OfflineMode = 2,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(Normal);
+				ES(OnlineMode);
+				ES(OfflineMode);
+				default: return 0;
+			}
+		}
 	};
 
 	/// 文件读取模式
-	enum class FileReadMode
+	class SPADAS_API FileReadMode
 	{
-		/// 无特殊模式
-		Normal = 0,
+	public:
+		enum class Value
+		{
+			Default = 0,
 
-		/// 离线处理或离线回放模式下，从原始数据读取
-		FromRaw = 1,
+			/// 无特殊模式
+			Normal = 0,
 
-		/// 离线处理模式下，从generation读取
-		OfflineModeFromGeneration = 2,
+			/// 离线处理或离线回放模式下，从原始数据读取
+			FromRaw = 1,
 
-		/// 离线回放模式下，从generation读取
-		ReplayModeFromGeneration = 3,
+			/// 离线处理模式下，从generation读取
+			OfflineModeFromGeneration = 2,
 
-		/// 远程采集模式下，从远程主机读取
-		FromRemote = 4,
+			/// 离线回放模式下，从generation读取
+			ReplayModeFromGeneration = 3,
+
+			/// 远程采集模式下，从远程主机读取
+			FromRemote = 4,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(Normal);
+				ES(FromRaw);
+				ES(OfflineModeFromGeneration);
+				ES(ReplayModeFromGeneration);
+				ES(FromRemote);
+				default: return 0;
+			}
+		}
 	};
 
 	/// 文件读写筛选
-	enum class FileIOFilter
+	class SPADAS_API FileIOFilter
 	{
-		/// 信号数据
-		Signal = 1,
+	public:
+		enum class Value
+		{
+			Default = 0,
 
-		/// 样本数据
-		Sample = 2,
+			/// 无效值
+			Invalid = 0,
 
-		/// 矩阵数据
-		Matrix = 3,
+			/// 信号数据
+			Signal = 1,
 
-		/// 总线通道1数据，通道2等数据依次从101往上加
-		BusCH1 = 100,
+			/// 样本数据
+			Sample = 2,
 
-		/// 视频通道A数据，通道B等数据依次从201往上加
-		VideoChannelA = 200,
+			/// 矩阵数据
+			Matrix = 3,
+
+			/// 总线通道1~16数据
+			BusCH1 = 100,
+			BusCH2 = 101,
+			BusCH3 = 102,
+			BusCH4 = 103,
+			BusCH5 = 104,
+			BusCH6 = 105,
+			BusCH7 = 106,
+			BusCH8 = 107,
+			BusCH9 = 108,
+			BusCH10 = 109,
+			BusCH11 = 110,
+			BusCH12 = 111,
+			BusCH13 = 112,
+			BusCH14 = 113,
+			BusCH15 = 114,
+			BusCH16 = 115,
+
+			/// 视频通道A~X数据
+			VideoChannelA = 200,
+			VideoChannelB = 201,
+			VideoChannelC = 202,
+			VideoChannelD = 203,
+			VideoChannelE = 204,
+			VideoChannelF = 205,
+			VideoChannelG = 206,
+			VideoChannelH = 207,
+			VideoChannelI = 208,
+			VideoChannelJ = 209,
+			VideoChannelK = 210,
+			VideoChannelL = 211,
+			VideoChannelM = 212,
+			VideoChannelN = 213,
+			VideoChannelO = 214,
+			VideoChannelP = 215,
+			VideoChannelQ = 216,
+			VideoChannelR = 217,
+			VideoChannelS = 218,
+			VideoChannelT = 219,
+			VideoChannelU = 220,
+			VideoChannelV = 221,
+			VideoChannelW = 222,
+			VideoChannelX = 223,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(Invalid);
+				ES(Signal);
+				ES(Sample);
+				ES(Matrix);
+				case (Value)100: return "BusCH1";
+				case (Value)101: return "BusCH2";
+				case (Value)102: return "BusCH3";
+				case (Value)103: return "BusCH4";
+				case (Value)104: return "BusCH5";
+				case (Value)105: return "BusCH6";
+				case (Value)106: return "BusCH7";
+				case (Value)107: return "BusCH8";
+				case (Value)108: return "BusCH9";
+				case (Value)109: return "BusCH10";
+				case (Value)110: return "BusCH11";
+				case (Value)111: return "BusCH12";
+				case (Value)112: return "BusCH13";
+				case (Value)113: return "BusCH14";
+				case (Value)114: return "BusCH15";
+				case (Value)115: return "BusCH16";
+				case (Value)200: return "VideoChannelA";
+				case (Value)201: return "VideoChannelB";
+				case (Value)202: return "VideoChannelC";
+				case (Value)203: return "VideoChannelD";
+				case (Value)204: return "VideoChannelE";
+				case (Value)205: return "VideoChannelF";
+				case (Value)206: return "VideoChannelG";
+				case (Value)207: return "VideoChannelH";
+				case (Value)208: return "VideoChannelI";
+				case (Value)209: return "VideoChannelJ";
+				case (Value)210: return "VideoChannelK";
+				case (Value)211: return "VideoChannelL";
+				case (Value)212: return "VideoChannelM";
+				case (Value)213: return "VideoChannelN";
+				case (Value)214: return "VideoChannelO";
+				case (Value)215: return "VideoChannelP";
+				case (Value)216: return "VideoChannelQ";
+				case (Value)217: return "VideoChannelR";
+				case (Value)218: return "VideoChannelS";
+				case (Value)219: return "VideoChannelT";
+				case (Value)220: return "VideoChannelU";
+				case (Value)221: return "VideoChannelV";
+				case (Value)222: return "VideoChannelW";
+				case (Value)223: return "VideoChannelX";
+				default: return 0;
+			}
+		}
 	};
 
 	/// 文件读写基本信息
 	struct FileIOBasicInfo
 	{
-		/// Session标识符 (与旧版本兼容，等效于SessionIdentifier)
-		Time session;
+		/// Session标识符
+		SessionIdentifier session;
 
 		/// 筛选项，空表示不进行筛选
-		Array<FileIOFilter> filter;
+		Array<Enum<FileIOFilter> > filter;
 
 		/// 文件写入模式
-		FileWriteMode writeMode;
+		Enum<FileWriteMode> writeMode;
 
 		/// 文件读取模式
-		FileReadMode readMode;
+		Enum<FileReadMode> readMode;
 
 		/// 数据密码（非加密文件无需使用）
 		String password;
-
-		/// 默认构造函数
-		FileIOBasicInfo() : writeMode(FileWriteMode::Normal), readMode(FileReadMode::Normal)
-		{}
 	};
 
 	/// 文件读写扩展信息
 	struct FileIOExtInfo
 	{
 		/// 各总线通道类型，空表示无总线数据读写
-		Array<BusChannelType> busChannelTypes;
+		Array<Enum<BusChannelType> > busChannelTypes;
 
 		/// 总线报文名称表，key为总线报文ID字符串
 		Dictionary<String> busMessageNameTable;
@@ -5554,9 +6017,9 @@ namespace spadas
 
 		/// @brief 根据基准时间戳的时间偏置反算CPU计数、主机Posix时间、授时服务器Posix时间、卫星Posix时间等
 		/// @param srcTimestamp 基准时间戳
-		/// @param timeType 输出的时间类型，不支持 spadas::TimeType::GuestPosix
+		/// @param timeType 输出的时间类型，不支持 spadas::TimeType::Value::GuestPosix
 		/// @return 输出的Session无关时间，0表示失败
-		virtual ULong calcTime(ShortTimestamp srcTimestamp, TimeType timeType);
+		virtual ULong calcTime(ShortTimestamp srcTimestamp, Enum<TimeType> timeType);
 	};
 
 	// 插件相关实用功能 //////////////////////////////////////////////////////////////
@@ -5732,7 +6195,7 @@ namespace spadas
 		/// 此数据是否支持指定序号的字段
 		Bool has(Int flagIndex);
 
-		/// [非安全操作] [可修改] 获取当前定义下的数据类型引用（使用字段前应先调用has方法确定是否支持）
+		/// [非安全] 获取当前定义下的数据类型引用（使用字段前应先调用has方法确定是否支持）
 		Type& cast();
 
 	private:
@@ -5770,11 +6233,11 @@ namespace spadas
 
 	// 插件API //////////////////////////////////////////////////////////////
 
-	/// 通用功能插件接口 1.5
-	class SPADAS_API IPluginV105
+	/// 通用功能插件接口 2.0
+	class SPADAS_API IPluginV200
 	{
 	public:
-		virtual ~IPluginV105() {};
+		virtual ~IPluginV200() {};
 
 		/// @brief 获取插件类型ID
 		/// @returns 插件类型ID
@@ -5842,14 +6305,14 @@ namespace spadas
 		virtual Array<String> getGuestSyncChannelNames();
 	};
 
-	/// 获取通用功能插件接口的全局函数定义，函数名应为get_plugin_v105
-	typedef Interface<IPluginV105>(*GetPluginV105)();
+	/// 获取通用功能插件接口的全局函数定义，函数名应为get_plugin_v200
+	typedef Interface<IPluginV200>(*GetPluginV200)();
 
-	/// 一般设备插件接口 2.2
-	class SPADAS_API IDevicePluginV202
+	/// 一般设备插件接口 3.0
+	class SPADAS_API IDevicePluginV300
 	{
 	public:
-		virtual ~IDevicePluginV202() {};
+		virtual ~IDevicePluginV300() {};
 
 		/// @brief 配置设备，在函数内部根据配置实现连接、断开、或重连（仅在非Session时段被调用）
 		/// @param config 配置信息，应包含是否连接设备的配置
@@ -5861,13 +6324,13 @@ namespace spadas
 		/// @brief 获取设备连接状态
 		/// @param info 输出设备连接信息
 		/// @returns 返回设备状态信息
-		virtual GeneralDeviceStatus getDeviceStatus(String& info);
+		virtual Enum<GeneralDeviceStatus> getDeviceStatus(String& info);
 
 		/// @brief [可选] 获取各子设备的连接状态
 		/// @returns 返回各子设备的连接状态，数组长度即子设备数量
-		virtual Array<GeneralDeviceStatus> getChildDeviceStatus();
+		virtual Array<Enum<GeneralDeviceStatus> > getChildDeviceStatus();
 
-		/// @brief 获取设备新数据
+		/// @brief [可选] 获取设备新数据
 		/// @returns 返回新获取的数据
 		virtual Array<GeneralDeviceData> getDeviceNewData();
 
@@ -5896,18 +6359,18 @@ namespace spadas
 		virtual Bool transmitGeneralDataScheduled(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance);
 	};
 
-	/// 获取一般设备插件接口的全局函数定义，函数名应为get_device_plugin_v202
-	typedef Interface<IDevicePluginV202>(*GetDevicePluginV202)();
+	/// 获取一般设备插件接口的全局函数定义，函数名应为get_device_plugin_v300
+	typedef Interface<IDevicePluginV300>(*GetDevicePluginV300)();
 
-	/// 总线设备插件接口 2.1
-	class SPADAS_API IBusPluginV201
+	/// 总线设备插件接口 3.0
+	class SPADAS_API IBusPluginV300
 	{
 	public:
-		virtual ~IBusPluginV201() {};
+		virtual ~IBusPluginV300() {};
 
 		/// @brief 获取总线设备列表
 		/// @returns 返回总线设备列表
-		virtual Array<BusDeviceInfoX> getBusDeviceList();
+		virtual Array<BusDeviceInfo> getBusDeviceList();
 
 		/// @brief 打开总线设备（在开始Session时被调用）
 		/// @param configs 希望打开的总线设备通道列表及相关配置
@@ -5916,7 +6379,7 @@ namespace spadas
 		/// 关闭总线设备（在结束Session时被调用）
 		virtual void closeBusDevice();
 
-		/// @brief 获取一帧数据
+		/// @brief [可选] 获取一帧数据
 		/// @param rxData 输出一帧数据（若有）
 		/// @returns 返回是否成功获取一帧数据
 		virtual Bool receiveBusMessage(BusDeviceData& rxData);
@@ -5946,27 +6409,27 @@ namespace spadas
 		virtual Array<BusChannelPayload> getBusPayload();
 	};
 
-	/// 获取总线设备插件接口的全局函数定义，函数名应为get_bus_plugin_v201
-	typedef Interface<IBusPluginV201>(*GetBusPluginV201)();
+	/// 获取总线设备插件接口的全局函数定义，函数名应为get_bus_plugin_v300
+	typedef Interface<IBusPluginV300>(*GetBusPluginV300)();
 
-	/// 视频设备插件接口 4.2
-	class SPADAS_API IVideoPluginV402
+	/// 视频设备插件接口 5.0
+	class SPADAS_API IVideoPluginV500
 	{
 	public:
-		virtual ~IVideoPluginV402() {};
+		virtual ~IVideoPluginV500() {};
 
 		/// @brief 获取视频设备列表
 		/// @returns 视频设备列表
-		virtual Array<VideoDeviceInfoX> getVideoDeviceList();
+		virtual Array<VideoDeviceInfo> getVideoDeviceList();
 
 		/// @brief 打开视频设备（在开始Session时被调用）
 		/// @param configs 希望打开的视频设备通道列表及相关配置
-		virtual Bool openVideoDevice(Array<VideoDeviceConfigX> configs);
+		virtual Bool openVideoDevice(Array<VideoDeviceConfig> configs);
 
 		/// 关闭总线设备（在结束Session时被调用）
 		virtual void closeVideoDevice();
 
-		/// @brief 获取一帧数据
+		/// @brief [可选] 获取一帧数据
 		/// @param frame 输出一帧数据（若有）
 		/// @returns 返回是否成功输出一帧数据
 		virtual Bool queryVideoFrame(VideoDeviceData& frame);
@@ -5977,7 +6440,7 @@ namespace spadas
 		/// @param size 视频帧大小，像素单位
 		/// @param data 视频帧数据
 		/// @returns 返回是否成功发送一帧数据
-		virtual Bool transmitVideoFrame(UInt channel, VideoDataCodec codec, Size2D size, Binary data);
+		virtual Bool transmitVideoFrame(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data);
 
 		/// @brief [可选] 预约发送一帧数据（相同通道的预约发送时间已确保递增）
 		/// @param channel 视频通道，0~23，对应A~X
@@ -5987,7 +6450,7 @@ namespace spadas
 		/// @param serverPosix 预约发送的授时服务器Posix时间，单位纳秒
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// @returns 返回是否成功预约发送一帧数据
-		virtual Bool transmitVideoFrameScheduled(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
+		virtual Bool transmitVideoFrameScheduled(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
 
 		/// @brief [可选] 对视频设备进行额外设置（在openVideoDevice前被调用）
 		/// @param extra 配置信息
@@ -5999,21 +6462,21 @@ namespace spadas
 
 		/// @brief [可选] 设置使用指定的视频预览图像的快速输出接口
 		/// @param previewExpress 视频预览图像的快速输出接口
-		virtual void useVideoPreviewExpress(Interface<IVideoPreviewExpressX> previewExpress);
+		virtual void useVideoPreviewExpress(Interface<IVideoPreviewExpress> previewExpress);
 
 		/// @brief [可选] 获取视频设备独占关键字，其他插件匹配此关键字的视频设备将被禁用
 		/// @returns 返回视频设备独占关键字
 		virtual Array<String> getExclusiveKeywords();
 	};
 
-	/// 获取视频设备插件接口的全局函数定义，函数名应为get_video_plugin_v402
-	typedef Interface<IVideoPluginV402>(*GetVideoPluginV402)();
+	/// 获取视频设备插件接口的全局函数定义，函数名应为get_video_plugin_v500
+	typedef Interface<IVideoPluginV500>(*GetVideoPluginV500)();
 
-	/// 原生数据处理插件接口 6.2
-	class SPADAS_API IProcessorPluginV602
+	/// 原生数据处理插件接口 7.0
+	class SPADAS_API IProcessorPluginV700
 	{
 	public:
-		virtual ~IProcessorPluginV602() {};
+		virtual ~IProcessorPluginV700() {};
 
 		/// [可选] 是否为在线限定的数据处理（默认为FALSE）
 		virtual Bool isProcessorOnlineOnly();
@@ -6033,7 +6496,7 @@ namespace spadas
 		/// @param inputs 输入数据表
 		/// @param sampleBuffers 样本缓存表
 		/// @param outputs 输出数据表
-		virtual void processData(InputTablesX inputs, SessionSampleBufferTable sampleBuffers, OutputTablesX outputs);
+		virtual void processData(InputTables inputs, SessionSampleBufferTable sampleBuffers, OutputTables outputs);
 
 		/// @brief [可选] 设置使用指定的时间相关服务接口
 		/// @param timeServer 时间相关服务接口
@@ -6052,14 +6515,14 @@ namespace spadas
 		virtual void useVideoTransmitter(Interface<IVideoFrameTransmitter> videoTransmitter);
 	};
 
-	/// 获取原生数据处理插件接口的全局函数定义，函数名应为get_processor_plugin_v602
-	typedef Interface<IProcessorPluginV602>(*GetProcessorPluginV602)();
+	/// 获取原生数据处理插件接口的全局函数定义，函数名应为get_processor_plugin_v700
+	typedef Interface<IProcessorPluginV700>(*GetProcessorPluginV700)();
 
-	/// 文件读写插件接口 1.3
-	class SPADAS_API IFilePluginV103
+	/// 文件读写插件接口 2.0
+	class SPADAS_API IFilePluginV200
 	{
 	public:
-		virtual ~IFilePluginV103() {};
+		virtual ~IFilePluginV200() {};
 
 		/// @brief [可选] 获取适用于指定读取器的所有文件的最大时长
 		/// @param readerName 读取器名称
@@ -6089,7 +6552,7 @@ namespace spadas
 		/// @param targetOffset 读取的目标时间偏置，单位秒
 		/// @param shouldEnd 是否准备关闭
 		/// @returns 后续是否还有数据，若所有文件已读取至末尾则返回FALSE
-		virtual Bool readFilesData(String readerName, InputTablesX inputs, Double targetOffset, Flag shouldEnd);
+		virtual Bool readFilesData(String readerName, InputTables inputs, Double targetOffset, Flag shouldEnd);
 
 		/// @brief [可选] 关闭读取文件
 		/// @param readerName 读取器名称
@@ -6111,7 +6574,7 @@ namespace spadas
 		/// @param inputs 输入数据表，从表中获取数据写入文件（其中视频首帧图像的所有依赖帧时间戳为0）
 		/// @param busMessages 按时间戳排序的所有通道总线数据
 		/// @param shouldEnd 是否准备关闭
-		virtual void writeFilesData(String writerName, InputTablesX inputs, Array<SessionBusRawData> busMessages, Flag shouldEnd);
+		virtual void writeFilesData(String writerName, InputTables inputs, Array<SessionBusRawData> busMessages, Flag shouldEnd);
 
 		/// @brief [可选] 关闭写入文件
 		/// @param writerName 写入器名称
@@ -6143,8 +6606,8 @@ namespace spadas
 		virtual void setFileExtraConfig(String extra);
 	};
 
-	/// 获取文件读写插件接口的全局函数定义，函数名应为get_file_plugin_v103
-	typedef Interface<IFilePluginV103>(*GetFilePluginV103)();
+	/// 获取文件读写插件接口的全局函数定义，函数名应为get_file_plugin_v200
+	typedef Interface<IFilePluginV200>(*GetFilePluginV200)();
 }
 
 #endif

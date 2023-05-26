@@ -1,16 +1,20 @@
 ﻿
-namespace spadas_internal
+#include "spadas.h"
+
+namespace console_internal
 {
+	using namespace spadas;
+
     // default console and console interface
 	class DefaultConsole : public Object<Vars>, public IConsole
 	{
 	public:
 		DefaultConsole();
-		void print(String text, Enum<MessageLevel> level);
-		Bool supportScan();
-		String scan();
-		Bool supportCheckKey();
-		Enum<Key> checkKey();
+		void print(String text, Enum<MessageLevel> level) override;
+		Bool supportScan() override;
+		String scan() override;
+		Bool supportCheckKey() override;
+		Enum<Key> checkKey() override;
 	};
 	extern Interface<IConsole> cs;
 

@@ -1,6 +1,10 @@
 ﻿
 #include "spadas.h"
 
+#if defined(SPADAS_ENV_NILRT)
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
+
 namespace spadas
 {
 	class MagicNumberVars : public Vars
@@ -74,10 +78,4 @@ Word MagicNumber::getHash()
 {
 	if (!vars) return 0;
 	return (Byte)vars->magic[0] ^ (Byte)vars->magic[1] ^ (Byte)vars->magic[2] ^ (Byte)vars->magic[3];
-}
-
-String MagicNumber::toString()
-{
-	if (!vars) return String();
-	else return Binary((Byte*)vars->magic, 4);
 }

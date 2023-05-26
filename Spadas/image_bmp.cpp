@@ -1,7 +1,5 @@
 ﻿
-#include "spadas.h"
-
-#include "image_bz.h"
+#include "image.h"
 
 namespace image_internal
 {
@@ -9,25 +7,25 @@ namespace image_internal
     
 	struct FileHeader
 	{
-		UInt fileSize;							// out: using
-		Word reserved1;					// out: 0
-		Word reserved2;					// out: 0
-		UInt dataOffset;					// inout: using
+		UInt fileSize;				// out: using
+		Word reserved1;				// out: 0
+		Word reserved2;				// out: 0
+		UInt dataOffset;			// inout: using
 	};
     
 	struct InfoHeader
 	{
-		UInt infoHeaderSize;			// inout: 40
-		UInt width;							//	inout: using
-		UInt height;							//	inout: using
-		Word nPlanes;						// inout: 1
-		Word nBitsPerPixel;				// 8(Palette), 24(BGR), 32(BGRA)
-		UInt compressType;				// inout: 0
-		UInt dataSize;						// out: 0
-		Int horizontalResolution;		// out: 2795
-		Int verticalResolution;			// out: 2795
-		UInt nColors;						// inout: 256
-		UInt nImportantColors;			// out: 256
+		UInt infoHeaderSize;		// inout: 40
+		UInt width;					//	inout: using
+		UInt height;				//	inout: using
+		Word nPlanes;				// inout: 1
+		Word nBitsPerPixel;			// 8(Palette), 24(BGR), 32(BGRA)
+		UInt compressType;			// inout: 0
+		UInt dataSize;				// out: 0
+		Int horizontalResolution;	// out: 2795
+		Int verticalResolution;		// out: 2795
+		UInt nColors;				// inout: 256
+		UInt nImportantColors;		// out: 256
 	};
 }
 
@@ -92,18 +90,18 @@ Image::Image(Path bmpFilePath)
                 aNotZeroSum += (a[i] != 0);
                 aNot255Sum += (a[i] != 255);
             }
-            if ((aNotZeroSum == 0 || aNot255Sum == 0) && rgbNotSameSum == 0) outputFormat = PixelFormat::ByteGray;
-            else outputFormat = PixelFormat::ByteBGRA;
+            if ((aNotZeroSum == 0 || aNot255Sum == 0) && rgbNotSameSum == 0) outputFormat = PixelFormat::Value::ByteGray;
+            else outputFormat = PixelFormat::Value::ByteBGRA;
         }
             break;
         case 24:
             srcNChannels = 3;
-            outputFormat = PixelFormat::ByteBGR;
+            outputFormat = PixelFormat::Value::ByteBGR;
             usePalette = FALSE;
             break;
         case 32:
             srcNChannels = 4;
-            outputFormat = PixelFormat::ByteBGRA;
+            outputFormat = PixelFormat::Value::ByteBGRA;
             usePalette = FALSE;
             break;
         default:
@@ -118,7 +116,7 @@ Image::Image(Path bmpFilePath)
     UInt srcStep = ((infoHeader.width * srcNChannels - 1) & 0xfffffffc) + 4;
     switch (outputFormat.value())
     {
-        case PixelFormat::ByteGray:
+        case PixelFormat::Value::ByteGray:
         {
             for (UInt v = 0; v < infoHeader.height; v++)
             {
@@ -131,7 +129,7 @@ Image::Image(Path bmpFilePath)
             }
         }
             break;
-        case PixelFormat::ByteBGR:
+        case PixelFormat::Value::ByteBGR:
         {
             for (UInt v = 0; v < infoHeader.height; v++)
             {
@@ -139,7 +137,7 @@ Image::Image(Path bmpFilePath)
             }
         }
             break;
-        case PixelFormat::ByteBGRA:
+        case PixelFormat::Value::ByteBGRA:
         {
             if (usePalette)
             {
@@ -183,9 +181,9 @@ void Image::save(Path bmpFilePath)
     
 	/* convert pixel format */
     Enum<PixelFormat> outputFormat;
-    if (PixelFormat::hasAlpha(vars->format)) outputFormat = PixelFormat::ByteBGRA;
-    else if (PixelFormat::isColor(vars->format)) outputFormat = PixelFormat::ByteBGR;
-    else outputFormat = PixelFormat::ByteGray;
+    if (PixelFormat::hasAlpha(vars->format)) outputFormat = PixelFormat::Value::ByteBGRA;
+    else if (PixelFormat::isColor(vars->format)) outputFormat = PixelFormat::Value::ByteBGR;
+    else outputFormat = PixelFormat::Value::ByteGray;
     
 	Image in(*this);
     if (vars->format != outputFormat) in = convert(outputFormat);
@@ -196,10 +194,10 @@ void Image::save(Path bmpFilePath)
     
 	UInt dstStep = ((in.width() * PixelFormat::nChannels(outputFormat) - 1) & 0xfffffffc) + 4;
     
-	fileHeader.fileSize = 54 + (outputFormat == PixelFormat::ByteGray ? 1024 : 0) + in.height() * dstStep;
+	fileHeader.fileSize = 54 + (outputFormat == PixelFormat::Value::ByteGray ? 1024 : 0) + in.height() * dstStep;
 	fileHeader.reserved1 = 0;
 	fileHeader.reserved2 = 0;
-	fileHeader.dataOffset = 54 + (outputFormat == PixelFormat::ByteGray ? 1024 : 0);
+	fileHeader.dataOffset = 54 + (outputFormat == PixelFormat::Value::ByteGray ? 1024 : 0);
     
 	infoHeader.infoHeaderSize = 40;
 	infoHeader.width = in.width();
@@ -210,8 +208,8 @@ void Image::save(Path bmpFilePath)
 	infoHeader.dataSize = 0;
 	infoHeader.horizontalResolution = 2795;
 	infoHeader.verticalResolution = 2795;
-	infoHeader.nColors = (outputFormat == PixelFormat::ByteGray ? 256 : 0);
-	infoHeader.nImportantColors = (outputFormat == PixelFormat::ByteGray ? 256 : 0);
+	infoHeader.nColors = (outputFormat == PixelFormat::Value::ByteGray ? 256 : 0);
+	infoHeader.nImportantColors = (outputFormat == PixelFormat::Value::ByteGray ? 256 : 0);
     
 	/* copy image data to buffer */
 	Binary fileData(fileHeader.fileSize);
@@ -224,7 +222,7 @@ void Image::save(Path bmpFilePath)
     
     switch (outputFormat.value())
     {
-        case PixelFormat::ByteGray:
+        case PixelFormat::Value::ByteGray:
         {
             Byte *dstPaletteData = &fileData[54];
             Byte *dstPixelData = &fileData[54 + 1024];
@@ -241,8 +239,8 @@ void Image::save(Path bmpFilePath)
             }
         }
             break;
-        case PixelFormat::ByteBGR:
-        case PixelFormat::ByteBGRA:
+        case PixelFormat::Value::ByteBGR:
+        case PixelFormat::Value::ByteBGRA:
         {
             Byte *dstData = &fileData[54];
             for (UInt v = 0; v < infoHeader.height; v++)

@@ -7,8 +7,9 @@
             "DEPENDS_X86_WINDOWS": "spadas",
             "DEPENDS_X86_LINUX": "spadas",
             "DEPENDS_ARM_LINUX": "spadas",
-            "DEPENDS_X86_MACOS": "spadas",
-            "FRAMEWORKS_X86_MACOS": "",
+            "DEPENDS_ARM_MACOS": "spadas",
+            "DEPENDS_X86_NILRT": "spadas",
+            "FRAMEWORKS_ARM_MACOS": "",
         }
     },
     "inputs": [
@@ -87,17 +88,9 @@
                 "MODE=debug",
                 "PLATFORM=${input:helper_platform_code}",
                 "DEPENDS=${input:helper_platform_env_var_depends}",
+                "FRAMEWORKS=${input:helper_platform_env_var_frameworks}",
             ],
             "problemMatcher":"$gcc",
-            "osx": {
-                "args": [
-                    "-j${input:helper_thread_count}",
-                    "MODE=debug",
-                    "PLATFORM=${input:helper_platform_code}",
-                    "DEPENDS=${input:helper_platform_env_var_depends}",
-                    "FRAMEWORKS=${input:helper_platform_env_var_frameworks}",
-                ],
-            }
         },
         {
             "type": "process",
@@ -107,10 +100,11 @@
             "args": [ "Done." ],
             "dependsOrder": "sequence",
             "dependsOn": [
-                "(子任务)发布构建(X86-Windows目标)",
-                "(子任务)发布构建(X86-Ubuntu1804目标)",
-                "(子任务)发布构建(Arm-Ubuntu1604目标)",
-                "(子任务)发布构建(X86-MacOS1010目标)",
+                "(子任务)执行发布构建(X86-Windows10目标)",
+                "(子任务)执行发布构建(X86-Ubuntu2204目标)",
+                "(子任务)执行发布构建(Arm-Ubuntu2204目标)",
+                "(子任务)执行发布构建(Arm-MacOS1203目标)",
+                "(子任务)执行发布构建(X86-NILRT17目标)",
             ],
             "problemMatcher":[],
         },
@@ -129,7 +123,8 @@
 
         {
             "type": "process",
-            "label": "(子任务)发布构建(X86-Windows目标)",
+            "label": "(子任务)执行发布构建(X86-Windows10目标)",
+            "hide": true,
             "command": "make",
             "args": [
                 "-j${input:helper_thread_count}",
@@ -141,7 +136,8 @@
         },
         {
             "type": "process",
-            "label": "(子任务)发布构建(X86-Ubuntu1804目标)",
+            "label": "(子任务)执行发布构建(X86-Ubuntu2204目标)",
+            "hide": true,
             "command": "make",
             "args": [
                 "-j${input:helper_thread_count}",
@@ -153,7 +149,8 @@
         },
         {
             "type": "process",
-            "label": "(子任务)发布构建(Arm-Ubuntu1604目标)",
+            "label": "(子任务)执行发布构建(Arm-Ubuntu2204目标)",
+            "hide": true,
             "command": "make",
             "args": [
                 "-j${input:helper_thread_count}",
@@ -165,14 +162,28 @@
         },
         {
             "type": "process",
-            "label": "(子任务)发布构建(X86-MacOS1010目标)",
+            "label": "(子任务)执行发布构建(Arm-MacOS1203目标)",
+            "hide": true,
             "command": "make",
             "args": [
                 "-j${input:helper_thread_count}",
                 "MODE=release",
-                "PLATFORM=macos",
-                "DEPENDS=${DEPENDS_X86_MACOS}",
-                "FRAMEWORKS=${FRAMEWORKS_X86_MACOS}",
+                "PLATFORM=macosarm",
+                "DEPENDS=${DEPENDS_ARM_MACOS}",
+                "FRAMEWORKS=${FRAMEWORKS_ARM_MACOS}",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
+            "label": "(子任务)执行发布构建(X86-NILRT17目标)",
+            "hide": true,
+            "command": "make",
+            "args": [
+                "-j${input:helper_thread_count}",
+                "MODE=release",
+                "PLATFORM=nilrt",
+                "DEPENDS=${DEPENDS_X86_NILRT}",
             ],
             "problemMatcher":"$gcc",
         },

@@ -1,7 +1,5 @@
 ﻿
-#include "spadas.h"
-
-#include "image_bz.h"
+#include "image.h"
 
 using namespace image_internal;
 using namespace spadas::math;
@@ -263,16 +261,16 @@ void image_internal::mergeStereoByte(Image src[2], Image& dst, Enum<MergeMode> t
 {
     switch (targetMergeMode.value())
     {
-        case MergeMode::FullSideBySide:
+        case MergeMode::Value::FullSideBySide:
             mergeFSBS<Byte>(src, dst, nChannels);
             break;
-        case MergeMode::HalfSideBySide:
+        case MergeMode::Value::HalfSideBySide:
             mergeHSBS<Byte>(src, dst, nChannels);
             break;
-        case MergeMode::LineByLineLR:
+        case MergeMode::Value::LineByLineLR:
             mergeLBL(src, dst, TRUE);
             break;
-        case MergeMode::LineByLineRL:
+        case MergeMode::Value::LineByLineRL:
             mergeLBL(src, dst, FALSE);
             break;
         default:
@@ -283,16 +281,16 @@ void image_internal::mergeStereoWord(Image src[2], Image& dst, Enum<MergeMode> t
 {
     switch (targetMergeMode.value())
     {
-        case MergeMode::FullSideBySide:
+        case MergeMode::Value::FullSideBySide:
             mergeFSBS<Word>(src, dst, nChannels);
             break;
-        case MergeMode::HalfSideBySide:
+        case MergeMode::Value::HalfSideBySide:
             mergeHSBS<Word>(src, dst, nChannels);
             break;
-        case MergeMode::LineByLineLR:
+        case MergeMode::Value::LineByLineLR:
             mergeLBL(src, dst, TRUE);
             break;
-        case MergeMode::LineByLineRL:
+        case MergeMode::Value::LineByLineRL:
             mergeLBL(src, dst, FALSE);
             break;
         default:
@@ -303,16 +301,16 @@ void image_internal::splitStereoByte(Image src, Image dst[2], Enum<MergeMode> sr
 {
     switch (srcMergeMode.value())
     {
-        case MergeMode::HalfSideBySide:
+        case MergeMode::Value::HalfSideBySide:
             splitHSBS<Byte>(src, dst, nChannels);
             break;
-        case MergeMode::FullSideBySide:
+        case MergeMode::Value::FullSideBySide:
             splitFSBS<Byte>(src, dst);
             break;
-        case MergeMode::LineByLineLR:
+        case MergeMode::Value::LineByLineLR:
             splitLBL<Byte>(src, dst, nChannels, TRUE, FALSE);
             break;
-        case MergeMode::LineByLineRL:
+        case MergeMode::Value::LineByLineRL:
             splitLBL<Byte>(src, dst, nChannels, FALSE, FALSE);
             break;
         default:
@@ -323,16 +321,16 @@ void image_internal::splitStereoWord(Image src, Image dst[2], Enum<MergeMode> sr
 {
     switch (srcMergeMode.value())
     {
-        case MergeMode::HalfSideBySide:
+        case MergeMode::Value::HalfSideBySide:
             splitHSBS<Word>(src, dst, nChannels);
             break;
-        case MergeMode::FullSideBySide:
+        case MergeMode::Value::FullSideBySide:
             splitFSBS<Word>(src, dst);
             break;
-        case MergeMode::LineByLineLR:
+        case MergeMode::Value::LineByLineLR:
             splitLBL<Word>(src, dst, nChannels, TRUE, FALSE);
             break;
-        case MergeMode::LineByLineRL:
+        case MergeMode::Value::LineByLineRL:
             splitLBL<Word>(src, dst, nChannels, FALSE, FALSE);
             break;
         default:

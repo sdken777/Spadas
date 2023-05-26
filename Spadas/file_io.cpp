@@ -1,6 +1,4 @@
 ﻿
-#include "spadas.h"
-
 #include "file.h"
 
 namespace spadas
@@ -51,7 +49,6 @@ namespace spadas
 }
 
 using namespace spadas;
-using namespace spadas_internal;
 using namespace file_internal;
 
 const String spadas::File::TypeName = "spadas.File";

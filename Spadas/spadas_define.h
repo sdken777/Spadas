@@ -2,21 +2,22 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 新增IPluginV105
-#define SPADAS_VERSION_MAJOR 8
-#define SPADAS_VERSION_MINOR 8
-#define SPADAS_VERSION_BUILD 3
+// 版本定义 // 使用XToolsUni，新支持MacOS-Arm和NILRT。字符编码全平台统一为UTF8。新增Vars::spinEnter/Leave方法，SpinLocked类。优化as/is,移除cast。新增Safe类实现重定向多线程安全。新增StringSpan和StringAppender。String和StringSpan都基于StringCommon，并增加toNumber方法。split和subString都返回StringSpan类型。移除String::updateLength。优化字符串处理效率。改良Enum框架，实现有效性判断和转字符串。Matrix模板化。使用C++标准库中的function。规范注释[]标签。移除SpadasSupport。优化msys控制台IO。ArrayElem改为class，ListElem不继承Object，ImagePointer改为class。多个类的clear方法改为set，避免混淆。Stream固定使用自旋锁。移除OpenCV兼容。math::round/floor/ceil返回Long。TimeWithMS.substrct改为minus。VideoDeviceData.hasPreview/preview合并
+#define SPADAS_VERSION_MAJOR 9
+#define SPADAS_VERSION_MINOR 0
+#define SPADAS_VERSION_BUILD 0
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.8.3\n
+* 本文档对应Spadas版本：9.0.0\n
 *
 * \n
 * \section top1 基本功能概述
 * \subsection f1 1. 引用计数
 * 实现一个引用计数类需要先声明一个 spadas::Vars 的子类用于定义私有成员变量，所有变量都定义在public域内。\n
 * 然后声明一个以该Vars子类作为模板类型的 spadas::Object 子类，用于定义功能函数。\n
-* 该Object子类只需实现构造函数（且必须实现一个无参数构造函数），而无需实现拷贝构造函数、析构函数、等于号重载等，即可实现引用计数。\n
+* 该Object子类即可实现引用计数，且该对象的拷贝构造函数、析构函数都为多线程安全操作。\n
+* 如需要重定向操作的多线程安全(包括等于号赋值操作， spadas::Object::setVars 等)，应使用 spadas::Safe 。\n
 * 功能函数内部可通过vars->的方式访问私有成员变量。\n
 *
 * \subsection f2 2. 对象容器
@@ -35,7 +36,7 @@
 *   - spadas::Binary : 二进制数据块
 *   - spadas::String : 字符串
 *   - spadas::XML : XML
-*   - spadas::DoubleMat : 矩阵
+*   - spadas::IntMat spadas::FloatMat spadas::DoubleMat : 矩阵
 *
 * \subsection f4 4. 控制台
 * 控制台功能包括文字打印、文字和按键获取、弹出信息窗口等。具体请参考命名空间 spadas::console \n
@@ -50,18 +51,26 @@
 * 具体请参考命名空间 spadas::math \n
 *
 * \subsection f8 8. 多线程
-* 实现多线程需要声明一个 spadas::Object 和 spadas::IWorkflow 的子类，并实现IWorkflow中定义的接口方法（其中可选部分可不实现）。\n
-* 在程序中启动多线程需要调用静态函数 spadas::Threads::start 。\n
-* 停止线程需要调用成员函数 spadas::Threads::stop ，若没有Threads对象可通过静态函数 spadas::Threads::getThreadsOf 获得。\n
-* 另外，多线程中需要经常使用 spadas::Lock 确保线程间数据访问的安全；而线程间同步可通过 spadas::Flag 或 spadas::Barrier 实现。\n
+* 多线程可实现以下两类场景：\n
+* - 启动多个子线程或以循环为主的场景，可实现 spadas::IWorkflow ，通过 spadas::Threads::start 开始，需要结束时调用 spadas::Threads::stop
+* - 启动单个子线程执行任务的场景，可实现 spadas::ITask ，通过 spadas::TaskManager::start 开始，需要中断时调用 spadas::TaskManager::stop
+* 多线程中需要经常使用 spadas::Lock 或 spadas::SpinLocked 确保线程间操作和数据访问的安全。
+* 另外，线程间同步可通过 spadas::Flag 或 spadas::Barrier 实现。\n
 *
 * \subsection f9 9. 其他功能
 * Spadas还提供以下功能：
-* - spadas::Time : 日期与时间，可通过 spadas::utility::getTime 获取
+* - spadas::Time spadas::TimeWithMS : 日期与时间
 * - spadas::Timer : 计时器
 * - spadas::Tick : 振荡器
-* - spadas::MemoryMap : 内存映射
 * - spadas::MemoryMapStream : 基于内存映射的数据流
+* - spadas::LibraryLoader : 动态加载库文件
+* 以及 spadas::system 和 spadas::utility 命名空间下的功能。
+*
+* \subsection f10 10. 注释标签
+* 在类和函数等的注释前可能有以下几类标签，以方括号表示：
+* - 非安全: 涉及到指针或引用等，如操作不当可能导致程序崩溃
+* - 多线程安全: 在不进行重定向操作的前提下，该对象的所有方法都为多线程安全操作。如有重定向，仍需使用 spadas::Safe 。另外该类的 spadas::Vars::isSpinLockManaged 应返回TRUE
+* - 可选: 接口中非必须实现的方法
 *
 * \n
 * \section top2 插件框架概述
@@ -70,12 +79,12 @@
 *   - 定义这些全局函数需要前缀SPADAS_DEFAULT_API
 *
 * \subsection p2 2. 插件接口种类
-*   - 通用功能插件接口: spadas::IPluginVxxx ，对应的全局函数定义: spadas::GetPluginVxxx（其中xxx表示接口版本，如103、201等等，下同）
-*   - 原生数据处理插件接口: spadas::IProcessorPluginVxxx ，对应的全局函数定义: spadas::GetProcessorPluginVxxx
-*   - 一般设备插件接口: spadas::IDevicePluginVxxx ，对应的全局函数定义: spadas::GetDevicePluginVxxx
-*   - 总线设备插件接口: spadas::IBusPluginVxxx ，对应的全局函数定义: spadas::GetBusPluginVxxx
-*   - 视频设备插件接口: spadas::IVideoPluginVxxx ，对应的全局函数定义: spadas::GetVideoPluginVxxx
-*   - 文件读写插件接口: spadas::IFilePluginVxxx ，对应的全局函数定义: spadas::GetFilePluginVxxx
+*   - 通用功能插件接口: IPluginVxxx ，对应的全局函数定义: GetPluginVxxx（其中xxx表示接口版本，如103、201等等，下同）
+*   - 原生数据处理插件接口: IProcessorPluginVxxx ，对应的全局函数定义: GetProcessorPluginVxxx
+*   - 一般设备插件接口: IDevicePluginVxxx ，对应的全局函数定义: GetDevicePluginVxxx
+*   - 总线设备插件接口: IBusPluginVxxx ，对应的全局函数定义: GetBusPluginVxxx
+*   - 视频设备插件接口: IVideoPluginVxxx ，对应的全局函数定义: GetVideoPluginVxxx
+*   - 文件读写插件接口: IFilePluginVxxx ，对应的全局函数定义: GetFilePluginVxxx
 *
 * \subsection p3 3. 插件库种类
 *   - 通用功能库: 关键字"native_"或"libnative_"，支持通用功能插件接口
@@ -87,101 +96,51 @@
 *   - 混合设备库: 关键字"mix_"或"libmix_"，支持通用功能插件接口、一般设备插件接口、总线设备插件接口、视频设备插件接口
 *
 * \subsection p4 4. 实现通用功能插件接口
-* 以下接口函数必须实现：
-*   - spadas::IPluginVxxx::getPluginType
-*   - spadas::IPluginVxxx::getPluginVersion
-* 
-* 以下接口函数可选实现：
-*   - spadas::IPluginVxxx::closePlugin
-*   - spadas::IPluginVxxx::initLanguage
-*   - spadas::IPluginVxxx::useLogger
-*   - spadas::IPluginVxxx::setAppFilesPath
-*   - spadas::IPluginVxxx::onCrossData
-*   - spadas::IPluginVxxx::useCrossTransmitter
-*   - spadas::IPluginVxxx::onCrossCall
-*   - spadas::IPluginVxxx::useCrossCaller
-*   - spadas::IPluginVxxx::onStartOnlineSession
-*   - spadas::IPluginVxxx::onStopOnlineSession
-*   - spadas::IPluginVxxx::getStandaloneTaskNames
-*   - spadas::IPluginVxxx::runStandaloneTask
-*   - spadas::IPluginVxxx::getGuestSyncChannelNames
+* spadas::IPluginV200 中必须实现的方法包括：
+*   - getPluginType
+*   - getPluginVersion
 *
 * \subsection p5 5. 实现原生数据处理插件接口
-* 以下接口函数必须实现：
-*   - spadas::IProcessorPluginVxxx::setProcessorConfig
-*   - spadas::IProcessorPluginVxxx::disableProcessor
-*   - spadas::IProcessorPluginVxxx::processData
-*
-* 以下接口函数可选实现：
-*   - spadas::IProcessorPluginVxxx::isProcessorOnlineOnly
-*   - spadas::IProcessorPluginVxxx::isProcessorOfflineOnly
-*   - spadas::IProcessorPluginVxxx::useTimeServer
-*   - spadas::IProcessorPluginVxxx::useGeneralTransmitter
-*   - spadas::IProcessorPluginVxxx::useBusTransmitter
-*   - spadas::IProcessorPluginVxxx::useVideoTransmitter
+* spadas::IProcessorPluginV700 中必须实现的方法包括：
+*   - setProcessorConfig
+*   - disableProcessor
+*   - processData
 *
 * \subsection p6 6. 实现一般设备插件接口
-* 以下接口函数必须实现：
-*   - spadas::IDevicePluginVxxx::setDeviceConnection
-*   - spadas::IDevicePluginVxxx::disconnectDevice
-*   - spadas::IDevicePluginVxxx::getDeviceStatus
-*   - spadas::IDevicePluginVxxx::getDeviceNewData
-*
-* 以下接口函数可选实现：
-*   - spadas::IDevicePluginVxxx::getChildDeviceStatus
-*   - spadas::IDevicePluginVxxx::getTransmittableProtocols
-*   - spadas::IDevicePluginVxxx::getScheduledTransmittableProtocols
-*   - spadas::IDevicePluginVxxx::transmitGeneralData
-*   - spadas::IDevicePluginVxxx::transmitGeneralDataScheduled
+* spadas::IDevicePluginV300 中必须实现的方法包括：
+*   - setDeviceConnection
+*   - disconnectDevice
+*   - getDeviceStatus
 *
 * \subsection p7 7. 实现总线设备插件接口
-* 以下接口函数必须实现：
-*   - spadas::IBusPluginVxxx::getBusDeviceList
-*   - spadas::IBusPluginVxxx::openBusDevice
-*   - spadas::IBusPluginVxxx::closeBusDevice
-*   - spadas::IBusPluginVxxx::receiveBusMessage
-*
-* 以下接口函数可选实现：
-*   - spadas::IBusPluginVxxx::transmitBusMessage
-*   - spadas::IBusPluginVxxx::transmitBusMessageScheduled
-*   - spadas::IBusPluginVxxx::setBusExtraConfig
-*   - spadas::IBusPluginVxxx::getBusPayload
+* spadas::IBusPluginV300 中必须实现的方法包括：
+*   - getBusDeviceList
+*   - openBusDevice
+*   - closeBusDevice
 *
 * \subsection p8 8. 实现视频设备插件接口
-* 以下接口函数必须实现：
-*   - spadas::IVideoPluginVxxx::getVideoDeviceList
-*   - spadas::IVideoPluginVxxx::openVideoDevice
-*   - spadas::IVideoPluginVxxx::closeVideoDevice
-*   - spadas::IVideoPluginVxxx::queryVideoFrame
-*
-* 以下接口函数可选实现：
-*   - spadas::IVideoPluginVxxx::transmitVideoFrame
-*   - spadas::IVideoPluginVxxx::transmitVideoFrameScheduled
-*   - spadas::IVideoPluginVxxx::setVideoExtraConfig
-*   - spadas::IVideoPluginVxxx::getVideoDeviceNewData
-*   - spadas::IVideoPluginVxxx::useVideoPreviewExpress
-*   - spadas::IVideoPluginVxxx::getExclusiveKeywords
+* spadas::IVideoPluginV500 中必须实现的方法包括：
+*   - getVideoDeviceList
+*   - openVideoDevice
+*   - closeVideoDevice
 *
 * \subsection p9 9. 实现文件读写插件接口
-* 此类插件可支持文件读取、文件写入、以及文件截取。\n\n
+* spadas::IFilePluginV200 可实现文件读取、文件写入、以及文件截取。\n\n
 *
-* 文件读取需要实现以下接口函数：
-*   - spadas::IFilePluginVxxx::getFilesDuration
-*   - spadas::IFilePluginVxxx::openReadFiles
-*   - spadas::IFilePluginVxxx::readFilesData
-*   - spadas::IFilePluginVxxx::closeReadFiles
+* 文件读取需要实现的方法包括：
+*   - getFilesDuration
+*   - openReadFiles
+*   - readFilesData
+*   - closeReadFiles
 *
-* 文件写入需要实现以下接口函数：
-*   - spadas::IFilePluginVxxx::openWriteFiles
-*   - spadas::IFilePluginVxxx::writeFilesData
-*   - spadas::IFilePluginVxxx::closeWriteFiles
+* 文件写入需要实现的方法包括：
+*   - openWriteFiles
+*   - writeFilesData
+*   - closeWriteFiles
 *
-* 文件截取需要实现以下接口函数：
-*   - spadas::IFilePluginVxxx::hasDataFiles
-*   - spadas::IFilePluginVxxx::pickSession
-*
-* 以下接口函数可选实现：
-*   - spadas::IFilePluginVxxx::setFileExtraConfig
+* 文件截取需要实现的方法包括：
+*   - hasDataFiles
+*   - pickSession
 */
 
 // CPU架构检查
@@ -202,7 +161,7 @@
 #define SPADAS_DEFAULT_API __declspec(dllexport)
 #define SPADAS_WINDOWS_DLLIMPORT __declspec(dllimport)
 #endif
-#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
 #define SPADAS_DEFAULT_API __attribute__ ((visibility("default")))
 #endif
 
@@ -235,13 +194,6 @@
 #define SPADAS_WARNING_RETURN_MSG(condition, msg) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + SPADAS_LOCATION + "] "#condition + ". " + msg); return; }
 #define SPADAS_WARNING_RETURNVAL_MSG(condition, msg, returnVal) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + SPADAS_LOCATION + "] "#condition + ". " + msg); return (returnVal); }
 
-// 用于调试打印
-#if defined(SPADAS_DEBUG)
-#define SPADAS_DEBUG_MSG(msg) spadas::console::print((spadas::String)"[" + SPADAS_LOCATION + "] " + msg)
-#else
-#define SPADAS_DEBUG_MSG(msg)
-#endif
-
 // 避免宏定义冲突
 #if defined(TRUE)
 #undef TRUE
@@ -270,10 +222,14 @@
 #endif
 
 // 支持可变参数列表
-#include <stdarg.h>
+#include <cstdarg>
 
 // 支持指定位置构造函数
 #include <new>
+
+// 支持lambda表达式变量
+#include <functional>
+#define Func typename std::function
 
 // 空指针
 #ifndef NULL
@@ -283,6 +239,9 @@
 // 字符串转换
 #define SS (spadas::String)
 
+// 方便实现枚举值转字符串
+#define ES(val) case Value::val: return #val
+
 // 无限值定义
 #define FINF spadas::math::finf()
 #define NFINF spadas::math::nfinf()
@@ -290,20 +249,12 @@
 #define NDINF spadas::math::ndinf()
 
 // 方便变量数据定义
-#define SPADAS_VARS_DEF(classType, baseVarsType) virtual String getTypeName() override { return classType::TypeName; } virtual ListNode<String> getBaseChain() override { return genBaseChain(baseVarsType::getTypeName(), baseVarsType::getBaseChain()); }
-
-// 调试用
-#if defined(SPADAS_DEBUG)
-#define SPADAS_BINARY_DUMMY_BYTES 12
-#define SPADAS_STRING_DUMMY_BYTES 16
-#endif
+#define SPADAS_VARS_DEF(classType, baseVarsType) virtual spadas::String getTypeName() override { return classType::TypeName; } \
+virtual spadas::Bool isType(spadas::ULong typeID) override { return typeID == classType::TypeName.getID() || baseVarsType::isType(typeID); } \
+virtual spadas::Bool isType(spadas::String typeName) override { return typeName == classType::TypeName || baseVarsType::isType(typeName); }
 
 // 通道数量定义
 #define BC_NUM 16 // 总线
 #define VC_NUM 24 // 视频
-
-// OpenCV兼容性
-typedef struct _IplImage IplImage;
-typedef struct CvMat CvMat;
 
 #endif

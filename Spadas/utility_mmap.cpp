@@ -100,11 +100,7 @@ MemoryMap::MemoryMap(Path file, PointerInt offset, PointerInt size)
 
 void MemoryMap::unmap()
 {
-	if (vars)
-	{
-		vars->unmap();
-		setVars(0, FALSE);
-	}
+	if (vars) vars->unmap();
 }
 
 Pointer MemoryMap::getPointer()
@@ -113,11 +109,13 @@ Pointer MemoryMap::getPointer()
 	return vars->virtualPointer;
 }
 
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
 
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#undef NULL
+#define NULL 0
 
 namespace spadas
 {
@@ -147,7 +145,7 @@ namespace spadas
 				fileDescriptor = UINF;
 			}
 		}
-		
+
 		MemoryMapVars()
 		{
 			fileDescriptor = UINF;
@@ -178,7 +176,7 @@ MemoryMap::MemoryMap(Path file, PointerInt offset, PointerInt size)
 
 	String fileFullPath = file.fullPath();
 
-	UInt fileDescriptor = (UInt)open((Char*)fileFullPath.bytes(), O_RDWR);
+	UInt fileDescriptor = (UInt)open(fileFullPath.chars().data(), O_RDWR);
 	SPADAS_ERROR_RETURN(fileDescriptor == UINF);
 
 	Pointer ptr = (Byte*)mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, (off_t)offset);
@@ -197,11 +195,7 @@ MemoryMap::MemoryMap(Path file, PointerInt offset, PointerInt size)
 
 void MemoryMap::unmap()
 {
-	if (vars)
-	{
-		vars->unmap();
-		setVars(0, FALSE);
-	}
+	if (vars) vars->unmap();
 }
 
 Pointer MemoryMap::getPointer()
@@ -227,7 +221,11 @@ namespace spadas
         UInt slotCount;
         Bool host;
         Bool mode;
-        Lock lock;
+
+		Bool isSpinLockManaged() override
+		{
+			return TRUE;
+		}
     };
 }
 
@@ -241,8 +239,10 @@ MemoryMapStream::MemoryMapStream() : Object<MemoryMapStreamVars>(new MemoryMapSt
 }
 Bool MemoryMapStream::isOpen()
 {
-    LockProxy p(vars->lock);
-    return vars->mm.isValid();
+    vars->spinEnter();
+    Bool res = vars->mm.isValid();
+	vars->spinLeave();
+	return res;
 }
 Bool MemoryMapStream::open(Path path, UInt slotSize, UInt slotCount, Bool mode, Bool host)
 {
@@ -253,7 +253,7 @@ Bool MemoryMapStream::open(Path path, UInt slotSize, UInt slotCount, Bool mode, 
     if (slotSize < 16 || slotSize > 1048576) return FALSE;
     if (slotCount < 1 || slotCount > 1024) return FALSE;
 
-    LockProxy p(vars->lock);
+    vars->spinEnter();
 
     vars->path = path;
     vars->slotSize = slotSize;
@@ -266,31 +266,46 @@ Bool MemoryMapStream::open(Path path, UInt slotSize, UInt slotCount, Bool mode, 
     if (vars->host)
     {
         vars->path.fileCreate(mmFileSize);
-        if (!vars->path.exist()) return FALSE;
+        if (!vars->path.exist())
+		{
+			vars->spinLeave();
+			return FALSE;
+		}
     }
 
     vars->mm = MemoryMap(path, 0, mmFileSize);
 
+	vars->spinLeave();
     return TRUE;
 }
 void MemoryMapStream::close()
 {
-    LockProxy p(vars->lock);
+    vars->spinEnter();
 
-    if (!vars->mm.isValid()) return;
+    if (!vars->mm.isValid())
+	{
+		vars->spinLeave();
+		return;
+	}
 
     vars->mm.unmap();
     vars->mm = MemoryMap();
     if (vars->host) vars->path.remove();
-}
-MemoryMapSendResult MemoryMapStream::send(Pointer dataPtr, UInt byteCount)
-{
-    if (!vars->mode) return MemoryMapSendResult::WrongMode;
-    if (byteCount == 0) return MemoryMapSendResult::WrongSize;
-    if (byteCount > vars->slotSize * vars->slotCount) return MemoryMapSendResult::WrongSize;
 
-    LockProxy p(vars->lock);
-    if (!vars->mm.isValid()) return MemoryMapSendResult::NotOpen;
+	vars->spinLeave();
+}
+Enum<MemoryMapSendResult> MemoryMapStream::send(Pointer dataPtr, UInt byteCount)
+{
+    if (!vars->mode) return MemoryMapSendResult::Value::WrongMode;
+    if (byteCount == 0) return MemoryMapSendResult::Value::WrongSize;
+    if (byteCount > vars->slotSize * vars->slotCount) return MemoryMapSendResult::Value::WrongSize;
+
+    vars->spinEnter();
+    if (!vars->mm.isValid())
+	{
+		vars->spinLeave();
+		return MemoryMapSendResult::Value::NotOpen;
+	}
 
     UInt slotNeeded = (byteCount + vars->slotSize - 1) / vars->slotSize;
     UInt finalSlotByteCount = byteCount % vars->slotSize;
@@ -299,7 +314,11 @@ MemoryMapSendResult MemoryMapStream::send(Pointer dataPtr, UInt byteCount)
     Byte *ptr = (Byte*)vars->mm.getPointer();
     ULong sendCount = *(ULong*)&ptr[0];
     ULong receiveCount = *(ULong*)&ptr[8];
-    if (sendCount + slotNeeded > receiveCount + vars->slotCount) return MemoryMapSendResult::QueueFull;
+    if (sendCount + slotNeeded > receiveCount + vars->slotCount)
+	{
+		vars->spinLeave();
+		return MemoryMapSendResult::Value::QueueFull;
+	}
 
 	Byte* dataBytePtr = (Byte*)dataPtr;
     for (UInt i = 0; i < slotNeeded; i++)
@@ -311,9 +330,10 @@ MemoryMapSendResult MemoryMapStream::send(Pointer dataPtr, UInt byteCount)
 
     *(ULong*)&ptr[0] = (sendCount + slotNeeded); // 一次性修改，保证接收时的完整性(最后一个packet肯定是一帧的末尾packet)
 
-    return MemoryMapSendResult::OK;
+	vars->spinLeave();
+    return MemoryMapSendResult::Value::OK;
 }
-MemoryMapSendResult MemoryMapStream::send(Binary data)
+Enum<MemoryMapSendResult> MemoryMapStream::send(Binary data)
 {
     return send(data.data(), data.size());
 }
@@ -321,8 +341,12 @@ Array<Binary> MemoryMapStream::receive()
 {
     if (vars->mode) return Array<Binary>();
     
-    LockProxy p(vars->lock);
-    if (!vars->mm.isValid()) return Array<Binary>();
+    vars->spinEnter();
+    if (!vars->mm.isValid())
+	{
+		vars->spinLeave();
+		return Array<Binary>();
+	}
 
     Byte *ptr = (Byte*)vars->mm.getPointer();
     ULong sendCount = *(ULong*)&ptr[0];
@@ -364,5 +388,6 @@ Array<Binary> MemoryMapStream::receive()
     
     *(ULong*)&ptr[8] = sendCount;
 
+	vars->spinLeave();
     return output.toArray();
 }

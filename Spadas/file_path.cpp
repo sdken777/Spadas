@@ -1,13 +1,11 @@
 ﻿
-#include "spadas.h"
-
 #include "file.h"
 
 namespace file_internal
 {
 	Bool/* isValid */ getContentsString(String pathString, Bool& isAbsolute, String& rootString, String& contentsString, Char separator)
 	{
-		Byte *pathStringData = pathString.bytes();
+		const Byte *pathStringData = pathString.bytes();
 		if ((Byte)separator == 0x2f) // Linux style
 		{
 			if (pathString.length() >= 2 && pathStringData[1] == (Byte)':') return FALSE;
@@ -21,7 +19,7 @@ namespace file_internal
 			else if (pathStringData[0] == (Byte)separator)
 			{
 				isAbsolute = TRUE;
-				contentsString = String(pathString, Region(1, UINF));
+				contentsString = pathString.subString(1);
 			}
 			else
 			{
@@ -36,8 +34,8 @@ namespace file_internal
 			isAbsolute = pathString.length() >= 2 && pathStringData[1] == (Byte)':';
 			if (isAbsolute)
 			{
-				rootString = String(pathString, Region(0, 2));
-				contentsString = String(pathString, Region(3, UINF));
+				rootString = pathString.subString(0, 2);
+				contentsString = pathString.subString(3);
 			}
 			else
 			{
@@ -56,12 +54,12 @@ namespace file_internal
 		Char separator = getSeparatorChar();
 
 		if (workPathString.isEmpty() || workPathString.bytes()[workPathString.length() - 1] != (Byte)separator) return ListNode<String>();
-		workPathString = String(workPathString, Region(0, workPathString.length() - 1));
+		workPathString = workPathString.subString(0, workPathString.length() - 1);
 
 		Bool dummy;
 		String rootString, contentsString;
 		getContentsString(workPathString, dummy, rootString, contentsString, separator);
-		Array<String> contents = contentsString.split(separator);
+		Array<StringSpan> contents = contentsString.split(separator);
 
 		workPathComponents.value() = rootString;
 		for (UInt i = 0; i < contents.size(); i++)
@@ -156,7 +154,6 @@ namespace spadas
 
 using namespace spadas;
 using namespace spadas::console;
-using namespace spadas_internal;
 using namespace file_internal;
 
 const String spadas::Path::TypeName = "spadas.Path";
@@ -179,7 +176,7 @@ Path::Path(String pathString)
 	
 	/* check if pathString is a folder and remove the last separator */
 	Bool isFolder = !pathString.isEmpty() && pathString.bytes()[pathString.length() - 1] == (Byte)separator;
-	if (isFolder) pathString = String(pathString, Region(0, pathString.length() - 1));
+	if (isFolder) pathString = pathString.subString(0, pathString.length() - 1);
 	
 	/* check if pathString is absolute and get root and contents */
 	Bool isAbsolute;
@@ -188,7 +185,7 @@ Path::Path(String pathString)
 	if (!isValid) return;
 
 	/* generate components loop */
-	Array<String> contents = contentsString.split(separator);
+	Array<StringSpan> contents = contentsString.split(separator);
 	if (isAbsolute)
 	{
 		setVars(new PathVars(), TRUE);
@@ -235,7 +232,7 @@ String Path::name()
 	Array<UInt> dotIndices = fileFullName.search(".");
 	
 	if (dotIndices.isEmpty()) return fileFullName;
-	else return String(fileFullName, Region(0, dotIndices[dotIndices.size() - 1]));
+	else return fileFullName.subString(0, dotIndices[dotIndices.size() - 1]);
 }
 
 String Path::extension()
@@ -246,7 +243,7 @@ String Path::extension()
 	Array<UInt> dotIndices = fileFullName.search(".");
 	
 	if (dotIndices.isEmpty()) return String();
-	else return String(fileFullName, Region(dotIndices[dotIndices.size() - 1], UINF));
+	else return fileFullName.subString(dotIndices[dotIndices.size() - 1]);
 }
 
 String Path::fullName()
@@ -355,7 +352,7 @@ void file_internal::moveOrCopy(Path srcPath, Path dstPath, Bool isCopy, Bool mer
 			for (UInt i = 0; i < srcContents.size(); i++)
 			{
 				String srcContentString = srcContents[i].fullPath();
-				String childPath = String(srcContentString, Region(srcPathLen, UINF));
+				String childPath = srcContentString.subString(srcPathLen);
 				Path dstContent = dstPath.childPath(childPath);
 				String dstContentString = dstContent.fullPath();
 				if (dstContent.isFolder())
@@ -532,7 +529,7 @@ Path Path::childPath(String pathString)
 	
 	/* check if pathString is a folder and remove the last separator */
 	Bool isFolder = !pathString.isEmpty() && pathString.bytes()[pathString.length() - 1] == (Byte)separator;
-	if (isFolder) pathString = String(pathString, Region(0, pathString.length() - 1));
+	if (isFolder) pathString = pathString.subString(0, pathString.length() - 1);
 	
 	/* check if pathString is absolute and get root and contents */
 	Bool isAbsolute;
@@ -540,7 +537,7 @@ Path Path::childPath(String pathString)
 	Bool isValid = getContentsString(pathString, isAbsolute, rootString, contentsString, separator);
 	SPADAS_ERROR_RETURNVAL(!isValid || isAbsolute, Path());
 
-	Array<String> contents = contentsString.split(separator);
+	Array<StringSpan> contents = contentsString.split(separator);
 	
 	/* generate components loop */
 	Path out;
@@ -600,7 +597,7 @@ Bool Path::contain(Path path, String& pathString)
 	}
 	else
 	{
-		pathString = String(dstPath, Region(srcPathLen, UINF));
+		pathString = dstPath.subString(srcPathLen);
 		return TRUE;
 	}
 }

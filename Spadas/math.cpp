@@ -1,6 +1,5 @@
 ﻿
 #include "spadas.h"
-
 #include <stdlib.h>
 #include <math.h>
 
@@ -285,7 +284,7 @@ Array<Float> spadas::math::random(UInt size)
 	srand(timePtr[0] + timePtr[1]);
 
 	Array<Float> out(size);
-	Float k = 1.0f / RAND_MAX;
+	Float k = 1.0f / (Float)RAND_MAX;
 	for (UInt i = 0; i < size; i++)
 	{
 		out[i] = (Float)rand() * k;
@@ -301,7 +300,7 @@ Array<Double> spadas::math::randomD(UInt size)
 	srand(timePtr[0] + timePtr[1]);
 
 	Array<Double> out(size);
-	Double k = 1.0f / RAND_MAX;
+	Double k = 1.0f / (Float)RAND_MAX;
 	for (UInt i = 0; i < size; i++)
 	{
 		out[i] = (Double)rand() * k;

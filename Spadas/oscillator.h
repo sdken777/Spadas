@@ -1,6 +1,10 @@
 ﻿
-namespace spadas_internal
+#include "spadas.h"
+
+namespace oscillator_internal
 {
+	using namespace spadas;
+
 	void sleepTime(UInt time);
 	
 	class Oscillator : public Object<class OscillatorVars>

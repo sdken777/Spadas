@@ -1,13 +1,12 @@
 
-#include "spadas.h"
-
-using namespace spadas;
-
 #if defined(SPADAS_ENV_WINDOWS)
 
+#include "spadas.h"
 #include <windows.h>
 #include <iphlpapi.h>
 #include <icmpapi.h>
+
+using namespace spadas;
 
 Bool spadas::system::ping(String ip, UInt timeout)
 {
@@ -16,7 +15,7 @@ Bool spadas::system::ping(String ip, UInt timeout)
 	HANDLE iHwnd;
 	iHwnd = IcmpCreateFile();
 
-	IPAddr pAddr = (IPAddr)inet_addr((Char*)ip.bytes());
+	IPAddr pAddr = (IPAddr)inet_addr(ip.chars().data());
 	icmp_echo_reply pData;
 	IcmpSendEcho(iHwnd, pAddr, NULL, 0, NULL, (LPVOID)&pData, sizeof(icmp_echo_reply), timeout);
 
@@ -25,19 +24,24 @@ Bool spadas::system::ping(String ip, UInt timeout)
 	return pData.Status == 0;
 }
 
-#elif defined(SPADAS_ENV_LINUX)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
 
+#include "spadas.h"
 #include <stdio.h>
 #include <string.h>
+#undef NULL
+#define NULL 0
+
+using namespace spadas;
 
 Bool spadas::system::ping(String ip, UInt timeout)
 {
 	if (ip.isEmpty()) return FALSE;
 
-	Int t = math::max(1, math::ceil((Double)timeout / 1000));
+	Int t = math::max(1, (Int)math::ceil((Double)timeout / 1000));
 	String command = (String)"ping -c 1 -W " + t + " " + ip;
 
-	FILE *pf = popen((Char*)command.bytes(), "r");
+	FILE *pf = popen(command.chars().data(), "r");
 	if (pf == NULL) return FALSE;
 
 	char result[2048] = {0};
@@ -50,7 +54,7 @@ Bool spadas::system::ping(String ip, UInt timeout)
 
 	pclose(pf);
 
-	Array<String> comps = String(result).split("\n");
+	Array<StringSpan> comps = String(result).split("\n");
 	for (UInt i = 0; i < comps.size(); i++)
 	{
 		if (!comps[i].search("bytes from").isEmpty()) return TRUE;
@@ -61,8 +65,11 @@ Bool spadas::system::ping(String ip, UInt timeout)
 
 #elif defined(SPADAS_ENV_MACOS)
 
+#include "spadas.h"
 #include <stdio.h>
 #include <string.h>
+
+using namespace spadas;
 
 Bool spadas::system::ping(String ip, UInt timeout)
 {
@@ -70,7 +77,7 @@ Bool spadas::system::ping(String ip, UInt timeout)
 
 	String command = (String)"ping -c 1 -W " + timeout + " " + ip;
 
-	FILE *pf = popen((Char*)command.bytes(), "r");
+	FILE *pf = popen(command.chars().data(), "r");
 	if (pf == NULL) return FALSE;
 
 	char result[2048] = {0};
@@ -83,7 +90,7 @@ Bool spadas::system::ping(String ip, UInt timeout)
 
 	pclose(pf);
 
-	Array<String> comps = String(result).split("\n");
+	Array<StringSpan> comps = String(result).split("\n");
 	for (UInt i = 0; i < comps.size(); i++)
 	{
 		if (!comps[i].search(" 0.0\% packet loss").isEmpty()) return TRUE;

@@ -1,10 +1,7 @@
 ﻿
-#include "spadas.h"
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
 
 #include "file.h"
-
-#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
-
 #include <memory.h>
 #include <sys/stat.h>
 #include <wchar.h>
@@ -14,6 +11,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pwd.h>
+#undef NULL
+#define NULL 0
 
 #if defined(SPADAS_ENV_MACOS)
 #include <CoreFoundation/CoreFoundation.h>
@@ -28,7 +27,7 @@ namespace file_internal
 		return '/';
 	}
 
-#if defined(SPADAS_ENV_LINUX)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
 	String getExecutableFolderPathString()
 	{
 		Char procname[FILENAME_MAX];
@@ -41,7 +40,7 @@ namespace file_internal
 		Array<UInt> slashLocations = executablePathString.search('/');
 		if (slashLocations.isEmpty()) return String();
 
-		return String(executablePathString, Region(0, slashLocations.last() + 1));
+		return executablePathString.subString(0, slashLocations.last() + 1);
 	}
 
 	String getWorkPathString()
@@ -79,7 +78,7 @@ namespace file_internal
 		Array<UInt> slashLocations = executablePathString.search('/');
 		if (slashLocations.isEmpty()) return String();
 
-		return String(executablePathString, Region(0, slashLocations.last() + 1));
+		return executablePathString.subString(0, slashLocations.last() + 1);
 	}
 
 	String getWorkPathString()
@@ -102,7 +101,7 @@ namespace file_internal
 			Array<UInt> slashLocations = bundlePathString.search('/');
 			if (slashLocations.isEmpty()) return String();
 
-			return String(bundlePathString, Region(0, slashLocations.last() + 1));
+			return bundlePathString.subString(0, slashLocations.last() + 1);
 		}
 		else
 		{
@@ -125,7 +124,7 @@ namespace file_internal
 
 	Pointer fileOpen(String file, Bool outputMode)
 	{
-		return (Pointer)fopen((Char*)file.bytes(), outputMode ? "w+" : "r");
+		return (Pointer)fopen(file.chars().data(), outputMode ? "w+" : "r");
 	}
 
 	void fileClose(Pointer file)
@@ -135,34 +134,30 @@ namespace file_internal
 
 	void filePrint(Pointer file, String text)
 	{
-		fprintf((FILE*)file, "%s\n", (Char*)text.bytes());
+		fwrite(text.bytes(), 1, text.length(), (FILE*)file);
+
+		const unsigned char enter = '\n';
+		fwrite(&enter, 1, 1, (FILE*)file);
 	}
 
 	String fileScan(Pointer file, Char buffer[SCAN_SIZE], Bool isUtf8)
 	{
 		Char *buf = fgets(buffer, SCAN_SIZE, (FILE*)file);
+		if (!buf) return String();
 
-		String out;
-		if (buf)
+		buf[SCAN_SIZE - 1] = 0;
+		UInt len = (UInt)strlen(buf);
+		if (len == 0) return String();
+
+		// remove LF, CR or CRLF
+		if (buf[len - 1] == 10)
 		{
-			buf[SCAN_SIZE - 1] = 0;
-			UInt len = (UInt)strlen(buf);
-
-			// remove LF, CR or CRLF
-			if (len >= 1)
-			{
-				if (buf[len - 1] == 10)
-				{
-					if (len >= 2 && buf[len - 2] == 13) buf[len - 2] = 0;
-					else buf[len - 1] = 0;
-				}
-				else if (buf[len - 1] == 13) buf[len - 1] = 0;
-			}
-
-			out = buf;
+			if (len >= 2 && buf[len - 2] == 13) buf[len - 2] = 0;
+			else buf[len - 1] = 0;
 		}
+		else if (buf[len - 1] == 13) buf[len - 1] = 0;
 
-		return out;
+		return buf;
 	}
 
 	Binary fileInput(Pointer file, UInt size, ULong fileSize, ULong filePos)
@@ -203,14 +198,14 @@ namespace file_internal
 	Bool fileExist(String file)
 	{
 		struct stat buf;
-		if (stat((Char*)file.bytes(), &buf) != 0) return FALSE;
+		if (stat(file.chars().data(), &buf) != 0) return FALSE;
 		return (buf.st_mode & S_IFMT) == S_IFREG;
 	}
 
 	void fileCopy(String srcFile, String dstFile)
 	{
-		FILE *in = fopen((Char*)srcFile.bytes(), "r");
-		FILE *out = fopen((Char*)dstFile.bytes(), "w+" );
+		FILE *in = fopen(srcFile.chars().data(), "r");
+		FILE *out = fopen(dstFile.chars().data(), "w+" );
 		if (!in || !out) return;
 
 		fseek(in , 0 , SEEK_END);
@@ -230,39 +225,39 @@ namespace file_internal
 
 	void fileMove(String srcFile, String dstFile)
 	{
-		rename((Char*)srcFile.bytes(), (Char*)dstFile.bytes());
+		rename(srcFile.chars().data(), dstFile.chars().data());
 	}
 
 	void fileRemove(String file)
 	{
-		remove((Char*)file.bytes());
+		remove(file.chars().data());
 	}
 
 	Bool folderExist(String folder)
 	{
 		struct stat buf;
-		if (stat((Char*)folder.bytes(), &buf) != 0) return FALSE;
+		if (stat(folder.chars().data(), &buf) != 0) return FALSE;
 		return (buf.st_mode & S_IFMT) == S_IFDIR;
 	}
 
 	void folderCreate(String folder)
 	{
-		mkdir((Char*)folder.bytes(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+		mkdir(folder.chars().data(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 	}
 
 	void folderMove(String srcFolder, String dstFolder)
 	{
-		rename((Char*)srcFolder.bytes(), (Char*)dstFolder.bytes());
+		rename(srcFolder.chars().data(), dstFolder.chars().data());
 	}
 
 	void folderRemove(String folder)
 	{
-		rmdir((Char*)folder.bytes());
+		rmdir(folder.chars().data());
 	}
 
 	Array<String> folderGetContents(String targetFolder)
 	{
-		DIR *folder = opendir((Char*)targetFolder.bytes());
+		DIR *folder = opendir(targetFolder.chars().data());
 		if (folder == NULL) return Array<String>();
 
 		String separator = getSeparatorChar();

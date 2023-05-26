@@ -26,7 +26,7 @@ namespace timer_interval
 
 #endif
 
-#if defined(SPADAS_ENV_LINUX)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
 
 #include <time.h>
 

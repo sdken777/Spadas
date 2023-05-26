@@ -1,11 +1,6 @@
 ﻿
-#if defined(SPADAS_DEBUG)
-#undef SPADAS_DEBUG
-#endif
-
 #include "spadas.h"
-
-#include "string_bz.h"
+#include "string_spadas.h"
 
 namespace string_internal
 {
@@ -61,7 +56,6 @@ String String::createWithSize(UInt size)
 
 	Byte* newVarsRaw = new Byte[sizeof(StringVars) + size];
 	StringVars* newVars = new (newVarsRaw)StringVars(size, &newVarsRaw[sizeof(StringVars)]);
-	newVars->data[0] = 0;
 	newVars->length = 0;
 
 	String out;
@@ -167,7 +161,7 @@ String String::createHexString(Binary bin, UInt nBytesPerRow)
 
 	String space = " ";
 	String enter = "\n";
-	String out = String::createWithSize(3 * binSize + nRows + 1);
+	String out = String::createWithSize(3 * binSize + nRows);
 	for (UInt i = 0; i < nRows - 1; i++)
 	{
 		for (UInt j = 0; j < nBytesPerRow; j++)
@@ -194,13 +188,33 @@ String String::mergeStrings(Array<String> strs, String separator)
 	{
 		size += strs[i].length();
 	}
-	size += (strs.size() - 1) * separator.length() + 1;
+	size += (strs.size() - 1) * separator.length();
 	
 	String out = String::createWithSize(size);
 	for (UInt i = 0; i < strs.size(); i++)
 	{
 		if (i != 0) out += separator;
 		out += strs[i];
+	}
+	return out;
+}
+
+String String::mergeStrings(Array<StringSpan> spans, String separator)
+{
+	if (spans.isEmpty()) return String();
+	
+	UInt size = 0;
+	for (UInt i = 0; i < spans.size(); i++)
+	{
+		size += spans[i].length();
+	}
+	size += (spans.size() - 1) * separator.length();
+	
+	String out = String::createWithSize(size);
+	for (UInt i = 0; i < spans.size(); i++)
+	{
+		if (i != 0) out += separator;
+		out += spans[i];
 	}
 	return out;
 }

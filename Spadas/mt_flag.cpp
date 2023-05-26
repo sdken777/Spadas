@@ -1,6 +1,4 @@
 ﻿
-#include "spadas.h"
-
 #include "oscillator.h"
 
 #if defined(SPADAS_ENV_WINDOWS)
@@ -24,6 +22,10 @@ namespace spadas
 			CloseHandle(hEventSet);
 			CloseHandle(hEventReset);
         }
+		Bool isSpinLockManaged() override
+		{
+			return TRUE;
+		}
 		void set()
 		{
 			SetEvent(hEventSet);
@@ -38,7 +40,7 @@ namespace spadas
 }
 
 using namespace spadas;
-using namespace spadas_internal;
+using namespace oscillator_internal;
 
 Bool Flag::check()
 {
@@ -55,11 +57,13 @@ Bool Flag::waitReset(UInt waitTime)
 	return WaitForSingleObject(vars->hEventReset, waitTime) != WAIT_TIMEOUT;
 }
 
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
 
 #include <errno.h>
 #include <pthread.h>
 #include <sys/time.h>
+#undef NULL
+#define NULL 0
 
 namespace spadas
 {
@@ -70,12 +74,12 @@ namespace spadas
 
 		volatile Bool flag;
 		volatile Bool waitingSet, waitingReset;
-		pthread_mutex_t lock;
+		pthread_mutex_t mutex;
 		pthread_cond_t setSignal, resetSignal;
 		
         FlagVars() : flag(FALSE), waitingSet(FALSE), waitingReset(FALSE)
         {
-            pthread_mutex_init(&lock, NULL);
+            pthread_mutex_init(&mutex, NULL);
             pthread_cond_init(&setSignal, NULL);
             pthread_cond_init(&resetSignal, NULL);
         }
@@ -83,11 +87,15 @@ namespace spadas
         {
             pthread_cond_destroy(&setSignal);
             pthread_cond_destroy(&resetSignal);
-            pthread_mutex_destroy(&lock);
+            pthread_mutex_destroy(&mutex);
         }
+		Bool isSpinLockManaged() override
+		{
+			return TRUE;
+		}
         void set()
         {
-            pthread_mutex_lock(&lock);
+            pthread_mutex_lock(&mutex);
 			if (!flag)
 			{
 				flag = TRUE;
@@ -97,11 +105,11 @@ namespace spadas
 					pthread_cond_broadcast(&setSignal);
 				}
 			}
-            pthread_mutex_unlock(&lock);
+            pthread_mutex_unlock(&mutex);
         }
         void reset()
         {
-            pthread_mutex_lock(&lock);
+            pthread_mutex_lock(&mutex);
 			if (flag)
 			{
 				flag = FALSE;
@@ -111,22 +119,22 @@ namespace spadas
 					pthread_cond_broadcast(&resetSignal);
 				}
 			}
-            pthread_mutex_unlock(&lock);
+            pthread_mutex_unlock(&mutex);
         }
 	};
 }
 
 using namespace spadas;
-using namespace spadas_internal;
+using namespace oscillator_internal;
 
 Bool Flag::waitSet(UInt waitTime)
 {
 	int ret;
-	pthread_mutex_lock(&vars->lock);
+	pthread_mutex_lock(&vars->mutex);
 	{
 		if (vars->flag)
 		{
-			pthread_mutex_unlock(&vars->lock);
+			pthread_mutex_unlock(&vars->mutex);
 			return TRUE;
 		}
 		
@@ -139,9 +147,9 @@ Bool Flag::waitSet(UInt waitTime)
 		timeInfo.tv_nsec = (time_t)(targetMicro % 1000000ull) * 1000;
 
 		vars->waitingSet = TRUE;
-		ret = pthread_cond_timedwait(&vars->setSignal, &vars->lock, &timeInfo);
+		ret = pthread_cond_timedwait(&vars->setSignal, &vars->mutex, &timeInfo);
 	}
-	pthread_mutex_unlock(&vars->lock);
+	pthread_mutex_unlock(&vars->mutex);
 
 	if (ret == 0) return TRUE;
 	else if (ret == ETIMEDOUT) return FALSE;
@@ -155,11 +163,11 @@ Bool Flag::waitSet(UInt waitTime)
 Bool Flag::waitReset(UInt waitTime)
 {
 	int ret = 0;
-	pthread_mutex_lock(&vars->lock);
+	pthread_mutex_lock(&vars->mutex);
 	{
 		if (!vars->flag)
 		{
-			pthread_mutex_unlock(&vars->lock);
+			pthread_mutex_unlock(&vars->mutex);
 			return TRUE;
 		}
 		
@@ -172,9 +180,9 @@ Bool Flag::waitReset(UInt waitTime)
 		timeInfo.tv_nsec = (time_t)(targetMicro % 1000000ull) * 1000;
 
 		vars->waitingReset = TRUE;
-		ret = pthread_cond_timedwait(&vars->resetSignal, &vars->lock, &timeInfo);
+		ret = pthread_cond_timedwait(&vars->resetSignal, &vars->mutex, &timeInfo);
 	}
-	pthread_mutex_unlock(&vars->lock);
+	pthread_mutex_unlock(&vars->mutex);
 
 	if (ret == 0) return TRUE;
 	else if (ret == ETIMEDOUT) return FALSE;

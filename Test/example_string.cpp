@@ -13,18 +13,14 @@ void exampleString()
 	console::print("- 1 -");
 
 	String str = "Hello天气不错";
+	console::print(SS"console::print: " + str);
 
-	Byte *strBytes = str.bytes(); // 任何平台都为UTF8
-	console::print(SS"bytes: " + String::merge(Array<Byte>(strBytes, str.byteSize()), ","));
+	Array<Char> strChars = str.chars(); // UTF8字符
+	console::print(SS"chars字符: " + String::merge(Array<Byte>((Byte*)strChars.data(), strChars.size()), ","));
 
-	Array<Char> strChars = str.chars(); // Windows下为ANSI，Linux下为UTF8
-	console::print(SS"chars: " + String::merge(Array<Byte>((Byte*)strChars.data(), strChars.size()), ","));
-
-	Array<WChar> strWChars = str.wchars(); // Windows下为UTF16，Linux下为UTF32
-	if (sizeof(WChar) == 4) console::print(SS"wchars: " + String::merge(Array<UInt>((UInt*)strWChars.data(), strWChars.size()), ","));
-	else if (sizeof(WChar) == 2) console::print(SS"wchars: " + String::merge(Array<Word>((Word*)strWChars.data(), strWChars.size()), ","));
-	
-	console::print(SS"console::print: " + str); // Spadas打印无需考虑字符编码问题
+	Array<WChar> strWChars = str.wchars(); // Windows下为UTF16字符，Linux下为UTF32字符
+	if (sizeof(WChar) == 4) console::print(SS"wchars字符: " + String::merge(Array<UInt>((UInt*)strWChars.data(), strWChars.size()), ","));
+	else if (sizeof(WChar) == 2) console::print(SS"wchars字符: " + String::merge(Array<Word>((Word*)strWChars.data(), strWChars.size()), ","));
 
 	// 部分结构体和所有类实现toString函数
 	console::print("- 2 -");

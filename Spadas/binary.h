@@ -1,4 +1,6 @@
 ﻿
+#include "spadas.h"
+
 namespace spadas
 {
 	class BinaryVars : public Vars
@@ -7,17 +9,8 @@ namespace spadas
 		SPADAS_VARS_DEF(Binary, Vars)
 
 		UInt size;
-		Byte *data;
-		BinaryVars* binded;
-		BinaryVars(UInt size0, Byte* data0) : size(size0), data(data0), binded(NULL)
+		Byte* data;
+		BinaryVars(UInt size0, Byte* data0) : size(size0), data(data0)
 		{ }
-		BinaryVars(UInt size0, Byte* data0, BinaryVars* binded0) : size(size0), data(data0), binded(binded0)
-		{
-			binded->retain();
-		}
-		~BinaryVars()
-		{
-			if (binded) binded->release();
-		}
 	};
 }

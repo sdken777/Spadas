@@ -1,4 +1,5 @@
 ﻿
+
 #include "spadas.h"
 
 #if defined(SPADAS_ENV_WINDOWS)
@@ -23,9 +24,11 @@ void leaveLock(CRITICAL_SECTION *context)
 	LeaveCriticalSection(context);
 }
 
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
 
 #include <pthread.h>
+#undef NULL
+#define NULL 0
 
 typedef pthread_mutex_t LockContext;
 void initLock(pthread_mutex_t *context)
@@ -52,11 +55,8 @@ namespace spadas
 	class LockVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(Lock, Vars)
-
 		volatile UInt threadID;
 		LockContext context;
-		Atom spinLock;
 		Bool isSpin;
 		LockVars(Bool isSpin) : threadID(0), isSpin(isSpin)
 		{
@@ -65,6 +65,10 @@ namespace spadas
 		~LockVars()
 		{
 			if (!isSpin) releaseLock(&context);
+		}
+		Bool isSpinLockManaged() override
+		{
+			return TRUE;
 		}
 	};
 }
@@ -90,11 +94,12 @@ void Lock::enter()
 {
 	if (vars->isSpin)
 	{
-		while (!vars->spinLock.cas(0, 1)) {}
+		vars->spinEnter();
 	}
 	else
 	{
 		UInt threadID = Threads::getCurrentThreadID();
+		SPADAS_ERROR_RETURN(threadID == 0);
 		SPADAS_ERROR_RETURN(vars->threadID == threadID);
 		enterLock(&vars->context);
 		vars->threadID = threadID;
@@ -105,21 +110,19 @@ void Lock::leave()
 {
 	if (vars->isSpin)
 	{
-		while (TRUE)
-		{
-			Int oldVal = vars->spinLock.get();
-			if (oldVal != 1 || vars->spinLock.cas(1, 0)) break;
-		}
+		vars->spinLeave();
 	}
 	else
 	{
-		SPADAS_ERROR_RETURN(vars->threadID != Threads::getCurrentThreadID());
+		UInt threadID = Threads::getCurrentThreadID();
+		SPADAS_ERROR_RETURN(threadID == 0);
+		SPADAS_ERROR_RETURN(vars->threadID != threadID);
 		vars->threadID = 0;
 		leaveLock(&vars->context);
 	}
 }
 
-LockProxy::LockProxy(Lock lock0) : lock(lock0), released(FALSE)
+LockProxy::LockProxy(Lock& lock0) : lock(lock0), released(FALSE)
 {
 	lock.enter();
 }

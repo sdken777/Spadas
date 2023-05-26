@@ -1,14 +1,9 @@
 ﻿
-#if defined(SPADAS_DEBUG)
-#undef SPADAS_DEBUG
-#endif
-
-#include "spadas.h"
-
 #include "binary.h"
-
 #include <string.h>
 #include <memory.h>
+#undef NULL
+#define NULL 0
 
 using namespace spadas;
 
@@ -130,7 +125,7 @@ Optional<Binary> Binary::createFromBase64(String base64)
 	if (base64.isEmpty()) return Binary();
 
 	UInt base64DecodedLen;
-	Byte *base64DecodedBytes = base64Decode((Char*)base64.bytes(), base64DecodedLen, true);
+	Byte *base64DecodedBytes = base64Decode(base64.chars().data(), base64DecodedLen, true);
 	if (base64DecodedBytes == NULL) return Optional<Binary>();
 
 	Binary base64Decoded(base64DecodedBytes, base64DecodedLen);

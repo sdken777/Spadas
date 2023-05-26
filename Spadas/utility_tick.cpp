@@ -1,6 +1,4 @@
 ﻿
-#include "spadas.h"
-
 #include "oscillator.h"
 
 namespace spadas
@@ -24,7 +22,7 @@ namespace spadas
 }
 
 using namespace spadas;
-using namespace spadas_internal;
+using namespace oscillator_internal;
 
 const String spadas::Tick::TypeName = "spadas.Tick";
 

@@ -1,12 +1,10 @@
 ﻿
-#include "spadas.h"
-
 #include "oscillator.h"
 #include "console.h"
 
 namespace spadas
 {
-    using namespace spadas_internal;
+    using namespace oscillator_internal;
     
 	class ThreadsVars : public Vars
 	{
@@ -20,10 +18,11 @@ namespace spadas
 		Array<Bool> beginRet;
 		Flag allBegin, allEnd;
         Flag shouldEnd;
-        Lock lock;
 
-		ThreadsVars() : lock(TRUE)
-		{}
+		Bool isSpinLockManaged() override
+		{
+			return TRUE;
+		}
 	};
     
     class ThreadsManager
@@ -172,7 +171,8 @@ namespace spadas
 }
 
 using namespace spadas;
-using namespace spadas_internal;
+using namespace oscillator_internal;
+using namespace console_internal;
 
 const String spadas::Threads::TypeName = "spadas.Threads";
 
@@ -201,12 +201,12 @@ void threadCreate(ThreadsVars *vars)
 
 UInt __stdcall threadFunc(Pointer param)
 
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
 
 #include <pthread.h>
 #include <unistd.h>
 
-#if defined(SPADAS_ENV_LINUX)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
 #include <linux/unistd.h>
 UInt Threads::getCurrentThreadID()
 {
@@ -246,7 +246,7 @@ Pointer threadFunc(Pointer param)
     ThreadsVars *vars = (ThreadsVars*)param;
 
     // get thread index
-	vars->lock.enter();
+	vars->spinEnter();
     UInt threadIndex = UINF;
     for (UInt i = 0; i < vars->status.threadStatus.size(); i++)
     {
@@ -262,7 +262,7 @@ Pointer threadFunc(Pointer param)
     ThreadStatus& status = vars->status.threadStatus[threadIndex];
 	UInt curThreadID = Threads::getCurrentThreadID();
     status.threadID = curThreadID;
-	vars->lock.leave();
+	vars->spinLeave();
 	
 	// thread initialization
 	Bool ret = vars->workflow->onThreadBegin(threadIndex);
@@ -281,12 +281,12 @@ Pointer threadFunc(Pointer param)
 		Float thisProcessTime = (Float)vars->timers[threadIndex].check();
 
 		// update status and get time interval
-		vars->lock.enter();
+		vars->spinEnter();
 		status.averageProcessTime = status.averageProcessTime.isValid() ? updateTime(status.averageProcessTime.value(), thisProcessTime) : thisProcessTime;
 		UInt timeInterval;
 		if (status.userTimeInterval.isValid()) timeInterval = status.userTimeInterval.value();
 		else timeInterval = vars->workflow->getTimeInterval(threadIndex);
-		vars->lock.leave();
+		vars->spinLeave();
 
 		// wait
 		if (timeInterval < 1000)
@@ -299,10 +299,10 @@ Pointer threadFunc(Pointer param)
 			while (!vars->shouldEnd.check())
 			{
 				// get time interval
-				vars->lock.enter();
+				vars->spinEnter();
 				if (status.userTimeInterval.isValid()) timeInterval = status.userTimeInterval.value();
 				else timeInterval = vars->workflow->getTimeInterval(threadIndex);
-				vars->lock.leave();
+				vars->spinLeave();
 
 				// wait
 				Float longWaitTimerCheck = (Float)longWaitTimer.check();
@@ -357,9 +357,9 @@ Threads::Threads()
 Bool Threads::isRunning()
 {
 	if (!vars) return FALSE;
-	vars->lock.enter();
+	vars->spinEnter();
 	Bool isRunning = vars->status.isActive;
-	vars->lock.leave();
+	vars->spinLeave();
 	return isRunning;
 }
 
@@ -395,7 +395,7 @@ Interface<IWorkflow> Threads::getWorkflow()
 WorkflowStatus Threads::getWorkflowStatus()
 {
 	if (!vars) return WorkflowStatus();
-    vars->lock.enter();
+    vars->spinEnter();
     WorkflowStatus out = vars->status;
     out.workflowName = vars->status.workflowName.clone();
     out.threadStatus = vars->status.threadStatus.clone();
@@ -404,7 +404,7 @@ WorkflowStatus Threads::getWorkflowStatus()
         out.threadStatus[i].threadName = vars->status.threadStatus[i].threadName.clone();
         out.threadStatus[i].currentLoopTime = (Float)vars->timers[i].check();
     }
-    vars->lock.leave();
+    vars->spinLeave();
 	return out;
 }
 
@@ -415,9 +415,9 @@ void Threads::useUserTimeInterval(UInt threadIndex, UInt interval)
     if (threadIndex >= nThreads) return;
 	SPADAS_ERROR_RETURN(!vars->workflow->supportUserTimeInterval(threadIndex));
 
-	vars->lock.enter();
+	vars->spinEnter();
     vars->status.threadStatus[threadIndex].userTimeInterval = interval;
-	vars->lock.leave();
+	vars->spinLeave();
 }
 
 void Threads::useDefaultTimeInterval(UInt threadIndex)
@@ -425,9 +425,9 @@ void Threads::useDefaultTimeInterval(UInt threadIndex)
 	if (!vars) return;
     UInt nThreads = vars->status.threadStatus.size();
     if (threadIndex >= nThreads) return;
-	vars->lock.enter();
+	vars->spinEnter();
 	vars->status.threadStatus[threadIndex].userTimeInterval = Optional<UInt>();
-	vars->lock.leave();
+	vars->spinLeave();
 }
 
 Threads Threads::start(Interface<IWorkflow> workflow, Array<Bool>& threadsRet)
