@@ -8,8 +8,10 @@
             "DEPENDS_X86_WINDOWS": "winmm ws2_32 iphlpapi",
             "DEPENDS_X86_LINUX": "pthread dl",
             "DEPENDS_ARM_LINUX": "pthread dl",
+            "DEPENDS_X86_MACOS": "pthread dl",
             "DEPENDS_ARM_MACOS": "pthread dl",
             "DEPENDS_X86_NILRT": "pthread dl",
+            "FRAMEWORKS_X86_MACOS": "CoreServices",
             "FRAMEWORKS_ARM_MACOS": "CoreServices",
         }
     },
@@ -110,9 +112,10 @@
             ],
             "dependsOrder": "sequence",
             "dependsOn": [
-                "(子任务)执行发布构建(X86-Windows10目标)",
-                "(子任务)执行发布构建(X86-Ubuntu2204目标)",
-                "(子任务)执行发布构建(Arm-Ubuntu2204目标)",
+                "(子任务)执行发布构建(X86-Windows7目标)",
+                "(子任务)执行发布构建(X86-Ubuntu1804目标)",
+                "(子任务)执行发布构建(Arm-Ubuntu1604目标)",
+                "(子任务)执行发布构建(X86-MacOS1013目标)",
                 "(子任务)执行发布构建(Arm-MacOS1203目标)",
                 "(子任务)执行发布构建(X86-NILRT17目标)",
                 "(子任务)创建include文件夹",
@@ -134,7 +137,7 @@
 
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(X86-Windows10目标)",
+            "label": "(子任务)执行发布构建(X86-Windows7目标)",
             "hide": true,
             "command": "make",
             "args": [
@@ -148,7 +151,7 @@
         },
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(X86-Ubuntu2204目标)",
+            "label": "(子任务)执行发布构建(X86-Ubuntu1804目标)",
             "hide": true,
             "command": "make",
             "args": [
@@ -161,7 +164,7 @@
         },
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(Arm-Ubuntu2204目标)",
+            "label": "(子任务)执行发布构建(Arm-Ubuntu1604目标)",
             "hide": true,
             "command": "make",
             "args": [
@@ -169,6 +172,20 @@
                 "MODE=release",
                 "PLATFORM=linuxarm",
                 "DEPENDS=${DEPENDS_ARM_LINUX}",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
+            "label": "(子任务)执行发布构建(X86-MacOS1013目标)",
+            "hide": true,
+            "command": "make",
+            "args": [
+                "-j${input:helper_thread_count}",
+                "MODE=release",
+                "PLATFORM=macos",
+                "DEPENDS=${DEPENDS_X86_MACOS}",
+                "FRAMEWORKS=${FRAMEWORKS_X86_MACOS}",
             ],
             "problemMatcher":"$gcc",
         },

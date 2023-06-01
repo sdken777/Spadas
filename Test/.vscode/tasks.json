@@ -7,8 +7,10 @@
             "DEPENDS_X86_WINDOWS": "spadas",
             "DEPENDS_X86_LINUX": "spadas",
             "DEPENDS_ARM_LINUX": "spadas",
+            "DEPENDS_X86_MACOS": "spadas",
             "DEPENDS_ARM_MACOS": "spadas",
             "DEPENDS_X86_NILRT": "spadas",
+            "FRAMEWORKS_X86_MACOS": "",
             "FRAMEWORKS_ARM_MACOS": "",
         }
     },
@@ -100,9 +102,10 @@
             "args": [ "Done." ],
             "dependsOrder": "sequence",
             "dependsOn": [
-                "(子任务)执行发布构建(X86-Windows10目标)",
-                "(子任务)执行发布构建(X86-Ubuntu2204目标)",
-                "(子任务)执行发布构建(Arm-Ubuntu2204目标)",
+                "(子任务)执行发布构建(X86-Windows7目标)",
+                "(子任务)执行发布构建(X86-Ubuntu1804目标)",
+                "(子任务)执行发布构建(Arm-Ubuntu1604目标)",
+                "(子任务)执行发布构建(X86-MacOS1013目标)",
                 "(子任务)执行发布构建(Arm-MacOS1203目标)",
                 "(子任务)执行发布构建(X86-NILRT17目标)",
             ],
@@ -123,7 +126,7 @@
 
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(X86-Windows10目标)",
+            "label": "(子任务)执行发布构建(X86-Windows7目标)",
             "hide": true,
             "command": "make",
             "args": [
@@ -136,7 +139,7 @@
         },
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(X86-Ubuntu2204目标)",
+            "label": "(子任务)执行发布构建(X86-Ubuntu1804目标)",
             "hide": true,
             "command": "make",
             "args": [
@@ -149,7 +152,7 @@
         },
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(Arm-Ubuntu2204目标)",
+            "label": "(子任务)执行发布构建(Arm-Ubuntu1604目标)",
             "hide": true,
             "command": "make",
             "args": [
@@ -157,6 +160,20 @@
                 "MODE=release",
                 "PLATFORM=linuxarm",
                 "DEPENDS=${DEPENDS_ARM_LINUX}",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
+            "label": "(子任务)执行发布构建(X86-MacOS1013目标)",
+            "hide": true,
+            "command": "make",
+            "args": [
+                "-j${input:helper_thread_count}",
+                "MODE=release",
+                "PLATFORM=macos",
+                "DEPENDS=${DEPENDS_X86_MACOS}",
+                "FRAMEWORKS=${FRAMEWORKS_X86_MACOS}",
             ],
             "problemMatcher":"$gcc",
         },

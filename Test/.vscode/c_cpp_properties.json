@@ -1,10 +1,10 @@
 {
     "configurations": [
         {
-            "name": "Windows主机/X86-Windows10目标",
+            "name": "Windows主机/X86-Windows7目标",
             "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
             "compilerArgs": [
-                "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-windows10",
+                "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-windows7",
                 "--target=x86_64-w64-mingw32"
             ],
             "includePath": [
@@ -17,14 +17,14 @@
                 "SPADAS_ARCH_X86"
             ],
             "intelliSenseMode": "clang-x64",
-            "cppStandard": "c++17"
+            "cppStandard": "c++11"
         },
         {
-            "name": "Windows主机/X86-Ubuntu2204目标",
+            "name": "Windows主机/X86-Ubuntu1804目标",
             "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
             "compilerArgs": [
-                "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-ubuntu2204",
-                "--target=x86_64-ubuntu22.04-linux-gnu"
+                "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-ubuntu1804",
+                "--target=x86_64-ubuntu18.04-linux-gnu"
             ],
             "includePath": [
                 "${workspaceFolder}",
@@ -36,14 +36,14 @@
                 "SPADAS_ARCH_X86"
             ],
             "intelliSenseMode": "clang-x64",
-            "cppStandard": "c++17"
+            "cppStandard": "c++11"
         },
         {
-            "name": "Windows主机/Arm-Ubuntu2204目标",
+            "name": "Windows主机/Arm-Ubuntu1604目标",
             "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
             "compilerArgs": [
-                "--sysroot=C:\\msys64\\opt\\xtools-uni\\arm-ubuntu2204",
-                "--target=aarch64-ubuntu22.04-linux-gnu"
+                "--sysroot=C:\\msys64\\opt\\xtools-uni\\arm-ubuntu1604",
+                "--target=aarch64-ubuntu16.04-linux-gnu"
             ],
             "includePath": [
                 "${workspaceFolder}",
@@ -55,7 +55,26 @@
                 "SPADAS_ARCH_ARM"
             ],
             "intelliSenseMode": "clang-arm64",
-            "cppStandard": "c++17"
+            "cppStandard": "c++11"
+        },
+        {
+            "name": "Windows主机/X86-MacOS1013目标",
+            "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
+            "compilerArgs": [
+                "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-macos1013",
+                "--target=x86_64-apple-darwin14"
+            ],
+            "includePath": [
+                "${workspaceFolder}",
+                "${workspaceFolder}\\..\\include",
+                // "${workspaceFolder}\\..\\includem",
+            ],
+            "defines": [
+                "SPADAS_ENV_MACOS",
+                "SPADAS_ARCH_X86"
+            ],
+            "intelliSenseMode": "clang-x64",
+            "cppStandard": "c++11"
         },
         {
             "name": "Windows主机/Arm-MacOS1203目标",
@@ -74,7 +93,7 @@
                 "SPADAS_ARCH_ARM"
             ],
             "intelliSenseMode": "clang-arm64",
-            "cppStandard": "c++17"
+            "cppStandard": "c++11"
         },
         {
             "name": "Windows主机/X86-NILRT17目标",
@@ -96,10 +115,10 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "非Windows主机/X86-Windows10目标",
+            "name": "非Windows主机/X86-Windows7目标",
             "compilerPath": "/opt/clang-15/bin/clang++",
             "compilerArgs": [
-                "--sysroot=/opt/xtools-uni/x86-windows10",
+                "--sysroot=/opt/xtools-uni/x86-windows7",
                 "--target=x86_64-w64-mingw32"
             ],
             "includePath": [
@@ -112,14 +131,14 @@
                 "SPADAS_ARCH_X86"
             ],
             "intelliSenseMode": "clang-x64",
-            "cppStandard": "c++17"
+            "cppStandard": "c++11"
         },
         {
-            "name": "非Windows主机/X86-Ubuntu2204目标",
+            "name": "非Windows主机/X86-Ubuntu1804目标",
             "compilerPath": "/opt/clang-15/bin/clang++",
             "compilerArgs": [
-                "--sysroot=/opt/xtools-uni/x86-ubuntu2204",
-                "--target=x86_64-ubuntu22.04-linux-gnu"
+                "--sysroot=/opt/xtools-uni/x86-ubuntu1804",
+                "--target=x86_64-ubuntu18.04-linux-gnu"
             ],
             "includePath": [
                 "${workspaceFolder}",
@@ -131,14 +150,14 @@
                 "SPADAS_ARCH_X86"
             ],
             "intelliSenseMode": "clang-x64",
-            "cppStandard": "c++17"
+            "cppStandard": "c++11"
         },
         {
-            "name": "非Windows主机/Arm-Ubuntu2204目标",
+            "name": "非Windows主机/Arm-Ubuntu1604目标",
             "compilerPath": "/opt/clang-15/bin/clang++",
             "compilerArgs": [
-                "--sysroot=/opt/xtools-uni/arm-ubuntu2204",
-                "--target=aarch64-ubuntu22.04-linux-gnu"
+                "--sysroot=/opt/xtools-uni/arm-ubuntu1604",
+                "--target=aarch64-ubuntu16.04-linux-gnu"
             ],
             "includePath": [
                 "${workspaceFolder}",
@@ -150,7 +169,26 @@
                 "SPADAS_ARCH_ARM"
             ],
             "intelliSenseMode": "clang-arm64",
-            "cppStandard": "c++17"
+            "cppStandard": "c++11"
+        },
+        {
+            "name": "非Windows主机/X86-MacOS1013目标",
+            "compilerPath": "/opt/clang-15/bin/clang++",
+            "compilerArgs": [
+                "--sysroot=/opt/xtools-uni/x86-macos1013",
+                "--target=x86_64-apple-darwin14"
+            ],
+            "includePath": [
+                "${workspaceFolder}",
+                "${workspaceFolder}/../include",
+                // "${workspaceFolder}/../includem",
+            ],
+            "defines": [
+                "SPADAS_ENV_MACOS",
+                "SPADAS_ARCH_X86"
+            ],
+            "intelliSenseMode": "clang-x64",
+            "cppStandard": "c++11"
         },
         {
             "name": "非Windows主机/Arm-MacOS1203目标",
@@ -169,7 +207,7 @@
                 "SPADAS_ARCH_ARM"
             ],
             "intelliSenseMode": "clang-arm64",
-            "cppStandard": "c++17"
+            "cppStandard": "c++11"
         },
         {
             "name": "非Windows主机/X86-NILRT17目标",
