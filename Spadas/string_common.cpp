@@ -92,6 +92,7 @@ StringAppender StringCommon::operator +(String append)
 	UInt originLength = length();
 	UInt appendLength = append.length();
 	UInt totalLength = originLength + appendLength;
+	if (totalLength == 0) return String();
 
 	String out = String::createWithSize(totalLength * 2);
 	if (originLength != 0) utility::memoryCopy(bytes(), out.getVars()->data, originLength);
