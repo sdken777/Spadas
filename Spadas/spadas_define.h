@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 使用XToolsUni，新支持MacOS-Arm和NILRT。字符编码全平台统一为UTF8。新增Vars::spinEnter/Leave方法，SpinLocked类。优化as/is,移除cast。新增Safe类实现重定向多线程安全。新增StringSpan和StringAppender。String和StringSpan都基于StringCommon，并增加toNumber方法。split和subString都返回StringSpan类型。移除String::updateLength。优化字符串处理效率。改良Enum框架，实现有效性判断和转字符串。Matrix模板化。使用C++标准库中的function。规范注释[]标签。移除SpadasSupport。优化msys控制台IO。ArrayElem改为class，ListElem不继承Object，ImagePointer改为class。多个类的clear方法改为set，避免混淆。Stream固定使用自旋锁。移除OpenCV兼容。math::round/floor/ceil返回Long。TimeWithMS.substrct改为minus。VideoDeviceData.hasPreview/preview合并
+// 版本定义 // 修正StringCommon::operator+
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 0
+#define SPADAS_VERSION_BUILD 1
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：9.0.0\n
+* 本文档对应Spadas版本：9.0.1\n
 *
 * \n
 * \section top1 基本功能概述
