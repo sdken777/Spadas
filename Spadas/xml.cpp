@@ -167,15 +167,17 @@ namespace xml_internal
 	Array<XMLAttribute> unpackAttributes(String attributesString)
 	{
 		Array<StringSpan> subStrings = attributesString.split("\"");
+		if (subStrings.size() < 2) return Array<XMLAttribute>();
 
-		Array<XMLAttribute> out(subStrings.size() / 2);
-		for (UInt i = 0; i < out.size(); i++)
+		UInt outSize = subStrings.size() / 2;
+		Array<XMLAttribute> out(outSize);
+		UInt nAttribs = 0;
+		for (UInt i = 0; i < outSize; i++)
 		{
-			XMLAttribute& attribute = out[i];
 			String nameString = subStrings[2 * i];
 			String valueString = subStrings[2 * i + 1];
 
-			if (!nameString.isEmpty()) continue;
+			if (nameString.isEmpty()) continue;
 
 			Binary buffer(nameString.length());
 			Byte *attributeNameData = buffer.data();
@@ -197,9 +199,15 @@ namespace xml_internal
 			}
 			if (k == 0) continue;
 
+			buffer.trim(k);
+
+			XMLAttribute& attribute = out[nAttribs++];
 			attribute.name = buffer;
 			attribute.value = decodeES(valueString);
 		}
+		if (nAttribs == 0) return Array<XMLAttribute>();
+
+		out.trim(nAttribs);
 		return out;
 	}
 
