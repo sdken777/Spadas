@@ -26,7 +26,7 @@ BusMessageID::BusMessageID(String text) : message(0), text(text)
 	Array<StringSpan> comps = text.split(":");
 	if (comps.size() != 2) return;
 
-	protocol = comps[0];
+	protocol = comps[0].clone();
 
 	Int id = 0;
 	if (comps[1].toNumber(id)) message = id;
@@ -52,8 +52,8 @@ BusSignalID::BusSignalID(String text) : message(0), text(text)
 	Array<StringSpan> comps = text.split(":");
 	if (comps.size() != 3) return;
 
-	protocol = comps[0];
-	signal = comps[2];
+	protocol = comps[0].clone();
+	signal = comps[2].clone();
 
 	Int id = 0;
 	if (comps[1].toNumber(id)) message = id;

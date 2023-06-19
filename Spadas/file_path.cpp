@@ -19,7 +19,7 @@ namespace file_internal
 			else if (pathStringData[0] == (Byte)separator)
 			{
 				isAbsolute = TRUE;
-				contentsString = pathString.subString(1);
+				contentsString = pathString.subString(1).clone();
 			}
 			else
 			{
@@ -34,8 +34,8 @@ namespace file_internal
 			isAbsolute = pathString.length() >= 2 && pathStringData[1] == (Byte)':';
 			if (isAbsolute)
 			{
-				rootString = pathString.subString(0, 2);
-				contentsString = pathString.subString(3);
+				rootString = pathString.subString(0, 2).clone();
+				contentsString = pathString.subString(3).clone();
 			}
 			else
 			{
@@ -54,7 +54,7 @@ namespace file_internal
 		Char separator = getSeparatorChar();
 
 		if (workPathString.isEmpty() || workPathString.bytes()[workPathString.length() - 1] != (Byte)separator) return ListNode<String>();
-		workPathString = workPathString.subString(0, workPathString.length() - 1);
+		workPathString = workPathString.subString(0, workPathString.length() - 1).clone();
 
 		Bool dummy;
 		String rootString, contentsString;
@@ -64,7 +64,7 @@ namespace file_internal
 		workPathComponents.value() = rootString;
 		for (UInt i = 0; i < contents.size(); i++)
 		{
-			workPathComponents.insertPrevious(contents[i]);
+			workPathComponents.insertPrevious(contents[i].clone());
 		}
 		return workPathComponents;
 	}
@@ -176,7 +176,7 @@ Path::Path(String pathString)
 	
 	/* check if pathString is a folder and remove the last separator */
 	Bool isFolder = !pathString.isEmpty() && pathString.bytes()[pathString.length() - 1] == (Byte)separator;
-	if (isFolder) pathString = pathString.subString(0, pathString.length() - 1);
+	if (isFolder) pathString = pathString.subString(0, pathString.length() - 1).clone();
 	
 	/* check if pathString is absolute and get root and contents */
 	Bool isAbsolute;
@@ -190,7 +190,7 @@ Path::Path(String pathString)
 	{
 		setVars(new PathVars(), TRUE);
 		vars->components.value() = rootString;
-		for (UInt i = 0; i < contents.size(); i++) vars->components.insertPrevious(contents[i]);
+		for (UInt i = 0; i < contents.size(); i++) vars->components.insertPrevious(contents[i].clone());
 	}
 	else
 	{
@@ -198,7 +198,7 @@ Path::Path(String pathString)
 		setVars(new PathVars(), TRUE);
 		vars->components.collapse();
 		vars->components = pathsInfo.workPathComponents.cloneList();
-		for (UInt i = 0; i < contents.size(); i++) vars->components.insertPrevious(contents[i]);
+		for (UInt i = 0; i < contents.size(); i++) vars->components.insertPrevious(contents[i].clone());
 	}
 	
 	/* remove components "." and ".." */
@@ -232,7 +232,7 @@ String Path::name()
 	Array<UInt> dotIndices = fileFullName.search(".");
 	
 	if (dotIndices.isEmpty()) return fileFullName;
-	else return fileFullName.subString(0, dotIndices[dotIndices.size() - 1]);
+	else return fileFullName.subString(0, dotIndices[dotIndices.size() - 1]).clone();
 }
 
 String Path::extension()
@@ -243,7 +243,7 @@ String Path::extension()
 	Array<UInt> dotIndices = fileFullName.search(".");
 	
 	if (dotIndices.isEmpty()) return String();
-	else return fileFullName.subString(dotIndices[dotIndices.size() - 1]);
+	else return fileFullName.subString(dotIndices[dotIndices.size() - 1]).clone();
 }
 
 String Path::fullName()
@@ -352,7 +352,7 @@ void file_internal::moveOrCopy(Path srcPath, Path dstPath, Bool isCopy, Bool mer
 			for (UInt i = 0; i < srcContents.size(); i++)
 			{
 				String srcContentString = srcContents[i].fullPath();
-				String childPath = srcContentString.subString(srcPathLen);
+				String childPath = srcContentString.subString(srcPathLen).clone();
 				Path dstContent = dstPath.childPath(childPath);
 				String dstContentString = dstContent.fullPath();
 				if (dstContent.isFolder())
@@ -529,7 +529,7 @@ Path Path::childPath(String pathString)
 	
 	/* check if pathString is a folder and remove the last separator */
 	Bool isFolder = !pathString.isEmpty() && pathString.bytes()[pathString.length() - 1] == (Byte)separator;
-	if (isFolder) pathString = pathString.subString(0, pathString.length() - 1);
+	if (isFolder) pathString = pathString.subString(0, pathString.length() - 1).clone();
 	
 	/* check if pathString is absolute and get root and contents */
 	Bool isAbsolute;
@@ -544,7 +544,7 @@ Path Path::childPath(String pathString)
 	out.setVars(new PathVars(), TRUE);
 	out.vars->components.collapse();
 	out.vars->components = vars->components.cloneList();
-	for (UInt i = 0; i < contents.size(); i++) out.vars->components.insertPrevious(contents[i]);
+	for (UInt i = 0; i < contents.size(); i++) out.vars->components.insertPrevious(contents[i].clone());
 	
 	/* remove components "." and ".." */
 	ListNode<String> currentNode = out.vars->components.next();
@@ -597,7 +597,7 @@ Bool Path::contain(Path path, String& pathString)
 	}
 	else
 	{
-		pathString = dstPath.subString(srcPathLen);
+		pathString = dstPath.subString(srcPathLen).clone();
 		return TRUE;
 	}
 }

@@ -488,7 +488,7 @@ namespace spadas
 		Object(VarsType *newVars, Bool isNew);
 		
 		/// 析构函数，变量数据的引用减1
-		virtual ~Object();
+		~Object();
 		
 		/// 创建引用对象，直接指向另一个对象的变量数据（作为基类被隐式调用）
 		Object(const Object<VarsType>& obj);
@@ -1598,97 +1598,8 @@ namespace spadas
 
 	// 字符串 //////////////////////////////////////////////////////////////
 
-	/// 字符串通用处理
-	class SPADAS_API StringCommon
-	{
-	public:
-		/// [非安全] 取得字符串UTF-8数据的头指针 (只读且不以0结尾)
-		virtual const Byte *bytes() = 0;
-
-		/// 取得字符串长度 (UTF-8字节数)
-		virtual UInt length() = 0;
-
-		/// 克隆出一个新对象
-		String clone();
-
-		/// 转换为Char数组，以0结尾（因此有效长度为数组长度-1）
-		Array<Char> chars();
-
-		/// 转换为WChar数组，以0结尾（因此有效长度为数组长度-1）
-		Array<WChar> wchars();
-
-		/// 是否为空字符串
-		Bool isEmpty();
-
-		/// @brief 在本字符串后拼接另一个字符串（不会更改本对象数据，且可多个字符串连加）
-		/// @param string 将拼接的另一个字符串
-		/// @returns 字符串拼接器
-		StringAppender operator +(String string);
-
-		/// 转换并返回 spadas::Int 数字
-		Optional<Int> toInt();
-
-		/// 转换并返回 spadas::Long 数字
-		Optional<Long> toLong();
-
-		/// 转换并返回 spadas::Float 数值
-		Optional<Float> toFloat();
-
-		/// 转换并返回 spadas::Double 数值
-		Optional<Double> toDouble();
-
-		/// 转换并输出 spadas::Int 数字，返回是否转换成功
-		Bool toNumber(Int& number);
-
-		/// 转换并输出 spadas::Long 数字，返回是否转换成功
-		Bool toNumber(Long& number);
-
-		/// 转换并输出 spadas::Float 数字，返回是否转换成功
-		Bool toNumber(Float& number);
-
-		/// 转换并输出 spadas::Double 数字，返回是否转换成功
-		Bool toNumber(Double& number);
-		
-		/// 转换为UTF-8二进制数据块（不以0结尾）
-		Binary toBinary();
-
-		/// 转换为全大写字符串
-		String toUpper();
-
-		/// 转换为全小写字符串
-		String toLower();
-
-		/// 是否以指定字符串开头
-		Bool startsWith(String target);
-
-		/// 是否以指定字符串结尾
-		Bool endsWith(String target);
-
-		/// 搜索目标字符串，返回所有发现目标的首字符位置。如"bananana"搜"nana"，返回{2, 4}
-		Array<UInt> search(String target);
-		
-		/// 用指定字符串对本字符串进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串不含target时，若本字符串为空则返回空数组，非空则返回标量数组
-		Array<StringSpan> split(String target);
-
-		/// 将本字符串中oldString部分替换为newString，并返回替换后的字符串
-		String replace(String oldString, String newString);
-
-		/// @brief 取得子字符串，其数据绑定至本字符串的数据，或片段的原字符串数据
-		/// @param index 子字符串在本字符串或字符串片段的起始位置
-		/// @param length 字符串长度
-		/// @param trimStart 是否裁剪掉开始处的空格
-		/// @param trimEnd 是否裁剪掉结尾处的空格
-		/// @return 子字符串
-		StringSpan subString(UInt index, UInt length = UINF, Bool trimStart = FALSE, Bool trimEnd = FALSE);
-
-	protected:
-		Word getHashCode();
-		virtual ~StringCommon();
-		virtual StringSpan genStringSpan(UInt index, UInt length) = 0;
-	};
-
 	/// 字符串
-	class SPADAS_API String : public Object<class StringVars>, public StringCommon
+	class SPADAS_API String : public Object<class StringVars>
 	{
 	public:
 		/// 类名称
@@ -1809,14 +1720,87 @@ namespace spadas
 		/// 是否小于，按照系统默认字符串排序顺序
 		Bool operator <(String string);
 
+		/// [非安全] 取得字符串UTF-8数据的头指针 (只读且不以0结尾)
+		const Byte *bytes();
+
+		/// 取得字符串长度 (UTF-8字节数)
+		UInt length();
+
+		/// 是否为空字符串
+		Bool isEmpty();
+
 		/// 获取哈希值
 		Word getHash();
 
-		/// [非安全] 取得字符串UTF-8数据的头指针 (只读且不以0结尾)
-		const Byte *bytes() override;
+		/// 克隆出一个新对象
+		String clone();
 
-		/// 取得字符串长度 (UTF-8字节数)
-		UInt length() override;
+		/// 转换为Char数组，以0结尾（因此有效长度为数组长度-1）
+		Array<Char> chars();
+
+		/// 转换为WChar数组，以0结尾（因此有效长度为数组长度-1）
+		Array<WChar> wchars();
+
+		/// @brief 在本字符串后拼接另一个字符串（不会更改本对象数据，且可多个字符串连加）
+		/// @param string 将拼接的另一个字符串
+		/// @returns 字符串拼接器
+		StringAppender operator +(String string);
+
+		/// 转换并返回 spadas::Int 数字
+		Optional<Int> toInt();
+
+		/// 转换并返回 spadas::Long 数字
+		Optional<Long> toLong();
+
+		/// 转换并返回 spadas::Float 数值
+		Optional<Float> toFloat();
+
+		/// 转换并返回 spadas::Double 数值
+		Optional<Double> toDouble();
+
+		/// 转换并输出 spadas::Int 数字，返回是否转换成功
+		Bool toNumber(Int& number);
+
+		/// 转换并输出 spadas::Long 数字，返回是否转换成功
+		Bool toNumber(Long& number);
+
+		/// 转换并输出 spadas::Float 数字，返回是否转换成功
+		Bool toNumber(Float& number);
+
+		/// 转换并输出 spadas::Double 数字，返回是否转换成功
+		Bool toNumber(Double& number);
+		
+		/// 转换为UTF-8二进制数据块（不以0结尾）
+		Binary toBinary();
+
+		/// 转换为全大写字符串
+		String toUpper();
+
+		/// 转换为全小写字符串
+		String toLower();
+
+		/// 是否以指定字符串开头
+		Bool startsWith(String target);
+
+		/// 是否以指定字符串结尾
+		Bool endsWith(String target);
+
+		/// 搜索目标字符串，返回所有发现目标的首字符位置。如"bananana"搜"nana"，返回{2, 4}
+		Array<UInt> search(String target);
+		
+		/// 用指定字符串对本字符串进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串不含target时，若本字符串为空则返回空数组，非空则返回标量数组
+		Array<StringSpan> split(String target);
+
+		/// 将本字符串中oldString部分替换为newString，并返回替换后的字符串
+		String replace(String oldString, String newString);
+
+		/// @brief 取得子字符串，其数据绑定至本字符串的数据
+		/// @param index 子字符串在本字符串的起始位置
+		/// @param length 字符串长度
+		/// @param trimStart 是否裁剪掉开始处的空格
+		/// @param trimEnd 是否裁剪掉结尾处的空格
+		/// @return 子字符串
+		StringSpan subString(UInt index, UInt length = UINF, Bool trimStart = FALSE, Bool trimEnd = FALSE);
 
 		/// @brief 在本字符串后拼接另一个字符串(将更改本对象数据)
 		/// @param string 拼接的另一个字符串
@@ -1957,13 +1941,12 @@ namespace spadas
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
-		StringSpan genStringSpan(UInt index, UInt length) override;
 		void initBuffer(UInt dataSize);
 		void ensureBuffer(UInt appendSize);
 	};
 
 	/// 字符串片段，数据绑定至原字符串的数据
-	class SPADAS_API StringSpan : public StringCommon
+	class SPADAS_API StringSpan
 	{
 	public:
 		/// 创建空片段
@@ -1990,24 +1973,92 @@ namespace spadas
 		/// 是否小于，按照系统默认字符串排序顺序
 		Bool operator <(StringSpan span);
 
+		/// [非安全] 取得字符串片段UTF-8数据的头指针 (只读且不以0结尾)
+		const Byte *bytes();
+
+		/// 取得字符串片段长度 (UTF-8字节数)
+		UInt length();
+
+		/// 是否为空字符串片段
+		Bool isEmpty();
+
 		/// 获取哈希值
 		Word getHash();
 
-		/// [非安全] 取得字符串UTF-8数据的头指针 (只读且不以0结尾)
-		const Byte *bytes() override;
+		/// 克隆出一个新字符串对象
+		String clone();
 
-		/// 取得字符串片段长度 (UTF-8字节数)
-		UInt length() override;
+		/// 转换为Char数组，以0结尾（因此有效长度为数组长度-1）
+		Array<Char> chars();
 
-		/// 转字符串
-		String toString();
+		/// 转换为WChar数组，以0结尾（因此有效长度为数组长度-1）
+		Array<WChar> wchars();
+
+		/// @brief 在本字符串片段后拼接另一个字符串（不会更改本对象数据，且可多个字符串连加）
+		/// @param string 将拼接的另一个字符串
+		/// @returns 字符串拼接器
+		StringAppender operator +(String string);
+
+		/// 转换并返回 spadas::Int 数字
+		Optional<Int> toInt();
+
+		/// 转换并返回 spadas::Long 数字
+		Optional<Long> toLong();
+
+		/// 转换并返回 spadas::Float 数值
+		Optional<Float> toFloat();
+
+		/// 转换并返回 spadas::Double 数值
+		Optional<Double> toDouble();
+
+		/// 转换并输出 spadas::Int 数字，返回是否转换成功
+		Bool toNumber(Int& number);
+
+		/// 转换并输出 spadas::Long 数字，返回是否转换成功
+		Bool toNumber(Long& number);
+
+		/// 转换并输出 spadas::Float 数字，返回是否转换成功
+		Bool toNumber(Float& number);
+
+		/// 转换并输出 spadas::Double 数字，返回是否转换成功
+		Bool toNumber(Double& number);
+		
+		/// 转换为UTF-8二进制数据块（不以0结尾）
+		Binary toBinary();
+
+		/// 转换为全大写字符串
+		String toUpper();
+
+		/// 转换为全小写字符串
+		String toLower();
+
+		/// 是否以指定字符串开头
+		Bool startsWith(String target);
+
+		/// 是否以指定字符串结尾
+		Bool endsWith(String target);
+
+		/// 搜索目标字符串，返回所有发现目标的首字符位置。如"bananana"搜"nana"，返回{2, 4}
+		Array<UInt> search(String target);
+		
+		/// 用指定字符串对本字符串片段进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串片段不含target时，若本字符串片段为空则返回空数组，非空则返回标量数组
+		Array<StringSpan> split(String target);
+
+		/// 将本字符串片段中oldString部分替换为newString，并返回替换后的字符串
+		String replace(String oldString, String newString);
+
+		/// @brief 取得子字符串，其数据绑定至本字符串片段的原字符串数据
+		/// @param index 子字符串在本字符串片段的起始位置
+		/// @param length 字符串长度
+		/// @param trimStart 是否裁剪掉开始处的空格
+		/// @param trimEnd 是否裁剪掉结尾处的空格
+		/// @return 子字符串
+		StringSpan subString(UInt index, UInt length = UINF, Bool trimStart = FALSE, Bool trimEnd = FALSE);
 
 	private:
 		String source;
 		UInt idx;
 		UInt len;
-		UInt toStringCount;
-		StringSpan genStringSpan(UInt index, UInt length) override;
 	};
 
 	/// 字符串拼接器，用于加速+运算符

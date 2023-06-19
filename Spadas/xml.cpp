@@ -156,8 +156,8 @@ namespace xml_internal
 		if (spaceLocations.size() == 0) tag = bracketContent.clone();
 		else
 		{
-			tag = bracketContent.subString(0, spaceLocations[0]);
-			attributesString = bracketContent.subString(spaceLocations[0]+1);
+			tag = bracketContent.subString(0, spaceLocations[0]).clone();
+			attributesString = bracketContent.subString(spaceLocations[0]+1).clone();
 		}
 		
 		if (tag.isEmpty()) return FALSE;
@@ -174,8 +174,8 @@ namespace xml_internal
 		UInt nAttribs = 0;
 		for (UInt i = 0; i < outSize; i++)
 		{
-			String nameString = subStrings[2 * i];
-			String valueString = subStrings[2 * i + 1];
+			String nameString = subStrings[2 * i].clone();
+			String valueString = subStrings[2 * i + 1].clone();
 
 			if (nameString.isEmpty()) continue;
 
@@ -293,15 +293,15 @@ namespace xml_internal
 			switch (bracketTypes[i])
 			{
 				case BracketType::Start:
-					bracketContents[i] = rawString.subString(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-1);
+					bracketContents[i] = rawString.subString(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-1).clone();
 					break;
 					
 				case BracketType::End:
-					bracketContents[i] = rawString.subString(leftAngleLocations[i]+2, rightAngleLocations[i]-leftAngleLocations[i]-2);
+					bracketContents[i] = rawString.subString(leftAngleLocations[i]+2, rightAngleLocations[i]-leftAngleLocations[i]-2).clone();
 					break;
 					
 				case BracketType::Atom:
-					bracketContents[i] = rawString.subString(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-2);
+					bracketContents[i] = rawString.subString(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-2).clone();
 					break;
 					
 				default:
@@ -311,7 +311,7 @@ namespace xml_internal
 			/* get external content */
 			if (i != nBrackets - 1)
 			{
-				externalContents[i] = decodeES(rawString.subString(rightAngleLocations[i]+1, leftAngleLocations[i+1]-rightAngleLocations[i]-1));
+				externalContents[i] = decodeES(rawString.subString(rightAngleLocations[i]+1, leftAngleLocations[i+1]-rightAngleLocations[i]-1).clone());
 			}
 		}
 		
