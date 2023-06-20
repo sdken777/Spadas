@@ -733,18 +733,32 @@ namespace spadas
 	{
 		if (!this->vars) return;
 		const Int n = this->vars->size;
+		if (n < 2) return;
+		Type* data = this->vars->data;
+		Array<UInt> indexArr(n);
+		UInt* indices = indexArr.data();
+		for (Int i = 0; i < n; i++)
+		{
+			indices[i] = i;
+		}
 		for (Int i = 0; i < n - 1; i++)
 		{
 			for (Int j = 0; j < n - i - 1; j++)
 			{
-				if (this->vars->data[j] > this->vars->data[j + 1])
+				if (data[indices[j]] > data[indices[j + 1]])
 				{
-					Type tmp = this->vars->data[j];
-					this->vars->data[j] = this->vars->data[j + 1];
-					this->vars->data[j + 1] = tmp;
+					UInt tmp = indices[j];
+					indices[j] = indices[j + 1];
+					indices[j + 1] = tmp;
 				}
 			}
 		}
+		Array<Type> newArr = Array<Type>::createUninitialized(n);
+		for (Int i = 0; i < n; i++)
+		{
+			newArr.initialize(i, data[indices[i]]);
+		}
+		this->setVars(newArr.getVars(), FALSE);
 	}
 
 	template<typename Type>
@@ -752,18 +766,32 @@ namespace spadas
 	{
 		if (!this->vars) return;
 		const Int n = this->vars->size;
+		if (n < 2) return;
+		Type* data = this->vars->data;
+		Array<UInt> indexArr(n);
+		UInt* indices = indexArr.data();
+		for (Int i = 0; i < n; i++)
+		{
+			indices[i] = i;
+		}
 		for (Int i = 0; i < n - 1; i++)
 		{
 			for (Int j = 0; j < n - i - 1; j++)
 			{
-				if (func(this->vars->data[j], this->vars->data[j + 1]))
+				if (func(data[indices[j]], data[indices[j + 1]]))
 				{
-					Type tmp = this->vars->data[j];
-					this->vars->data[j] = this->vars->data[j + 1];
-					this->vars->data[j + 1] = tmp;
+					UInt tmp = indices[j];
+					indices[j] = indices[j + 1];
+					indices[j + 1] = tmp;
 				}
 			}
 		}
+		Array<Type> newArr = Array<Type>::createUninitialized(n);
+		for (Int i = 0; i < n; i++)
+		{
+			newArr.initialize(i, data[indices[i]]);
+		}
+		this->setVars(newArr.getVars(), FALSE);
 	}
 
 	template<typename Type>
