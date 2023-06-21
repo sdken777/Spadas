@@ -6,14 +6,8 @@ using namespace string_internal;
 StringSpan::StringSpan() : idx(0), len(0)
 {}
 
-StringSpan::StringSpan(String& sourceString, UInt index, UInt length) : source(sourceString), idx(0), len(0)
-{
-	UInt srcLength = source.length();
-	SPADAS_ERROR_RETURN(index >= srcLength);
-
-	len = math::min(length, srcLength - index);
-	if (len > 0) idx = index;
-}
+StringSpan::StringSpan(String& sourceString, UInt index, UInt length) : source(sourceString), idx(index), len(length)
+{}
 
 Bool StringSpan::operator ==(StringSpan span)
 {
@@ -124,17 +118,17 @@ String StringSpan::clone()
 
 Array<Char> StringSpan::chars()
 {
-	return StringCommon::chars(bytes(), length());
+	return StringCommon::chars(bytes(), len);
 }
 
 Array<WChar> StringSpan::wchars()
 {
-	return StringCommon::wchars(bytes(), length());
+	return StringCommon::wchars(bytes(), len);
 }
 
 StringAppender StringSpan::operator +(String string)
 {
-	return StringCommon::operatorPlus(bytes(), length(), string);
+	return StringCommon::operatorPlus(bytes(), len, string);
 }
 
 Optional<Int> StringSpan::toInt()
@@ -217,39 +211,22 @@ Bool StringSpan::endsWith(String target)
 
 Array<UInt> StringSpan::search(String target)
 {
-	return StringCommon::search(bytes(), length(), target);
-}
-
-struct StringSpanStruct
-{
-public:
-	String source;
-	UInt idx;
-	UInt len;
-};
-
-StringSpan genStringSpanFromStringSpan(Pointer obj, UInt index, UInt length)
-{
-	StringSpanStruct *thisSpan = (StringSpanStruct*)obj;
-	SPADAS_ERROR_RETURNVAL(index >= thisSpan->len, StringSpan());
-
-	ULong mergedIndex = (ULong)thisSpan->idx + index;
-	SPADAS_ERROR_RETURNVAL(mergedIndex > UINF, StringSpan());
-
-	return StringSpan(thisSpan->source, (UInt)mergedIndex, math::min(length, thisSpan->len - index));
+	return StringCommon::search(bytes(), len, target);
 }
 
 Array<StringSpan> StringSpan::split(String target)
 {
-	return StringCommon::split(bytes(), length(), target, this, genStringSpanFromStringSpan);
+	if (len) return StringCommon::split(source, idx, len, target);
+	else return Array<StringSpan>();
 }
 
 String StringSpan::replace(String oldString, String newString)
 {
-	return StringCommon::replace(bytes(), length(), oldString, newString);
+	return StringCommon::replace(bytes(), len, oldString, newString);
 }
 
-StringSpan StringSpan::subString(UInt index, UInt length, Bool trimStart, Bool trimEnd)
+StringSpan StringSpan::sub(UInt index, UInt length, Bool trimStart, Bool trimEnd)
 {
-	return StringCommon::subString(index, length, trimStart, trimEnd, this, genStringSpanFromStringSpan);
+	SPADAS_ERROR_RETURNVAL(len == 0, StringSpan());
+	return StringCommon::sub(source, idx, len, index, length, trimStart, trimEnd);
 }

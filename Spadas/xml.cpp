@@ -156,8 +156,8 @@ namespace xml_internal
 		if (spaceLocations.size() == 0) tag = bracketContent.clone();
 		else
 		{
-			tag = bracketContent.subString(0, spaceLocations[0]).clone();
-			attributesString = bracketContent.subString(spaceLocations[0]+1).clone();
+			tag = bracketContent.sub(0, spaceLocations[0]).clone();
+			attributesString = bracketContent.sub(spaceLocations[0]+1).clone();
 		}
 		
 		if (tag.isEmpty()) return FALSE;
@@ -293,15 +293,15 @@ namespace xml_internal
 			switch (bracketTypes[i])
 			{
 				case BracketType::Start:
-					bracketContents[i] = rawString.subString(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-1).clone();
+					bracketContents[i] = rawString.sub(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-1).clone();
 					break;
 					
 				case BracketType::End:
-					bracketContents[i] = rawString.subString(leftAngleLocations[i]+2, rightAngleLocations[i]-leftAngleLocations[i]-2).clone();
+					bracketContents[i] = rawString.sub(leftAngleLocations[i]+2, rightAngleLocations[i]-leftAngleLocations[i]-2).clone();
 					break;
 					
 				case BracketType::Atom:
-					bracketContents[i] = rawString.subString(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-2).clone();
+					bracketContents[i] = rawString.sub(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-2).clone();
 					break;
 					
 				default:
@@ -311,7 +311,7 @@ namespace xml_internal
 			/* get external content */
 			if (i != nBrackets - 1)
 			{
-				externalContents[i] = decodeES(rawString.subString(rightAngleLocations[i]+1, leftAngleLocations[i+1]-rightAngleLocations[i]-1).clone());
+				externalContents[i] = decodeES(rawString.sub(rightAngleLocations[i]+1, leftAngleLocations[i+1]-rightAngleLocations[i]-1).clone());
 			}
 		}
 		

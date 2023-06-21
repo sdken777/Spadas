@@ -1433,14 +1433,10 @@ Array<UInt> String::search(String target)
 	return StringCommon::search(bytes(), length(), target);
 }
 
-StringSpan genStringSpanFromString(Pointer obj, UInt index, UInt length)
-{
-	return StringSpan(*(String*)obj, index, length);
-}
-
 Array<StringSpan> String::split(String target)
 {
-	return StringCommon::split(bytes(), length(), target, this, genStringSpanFromString);
+	if (vars) return StringCommon::split(*this, 0, vars->length, target);
+	else return Array<StringSpan>();
 }
 
 String String::replace(String oldString, String newString)
@@ -1448,9 +1444,10 @@ String String::replace(String oldString, String newString)
 	return StringCommon::replace(bytes(), length(), oldString, newString);
 }
 
-StringSpan String::subString(UInt index, UInt length, Bool trimStart, Bool trimEnd)
+StringSpan String::sub(UInt index, UInt length, Bool trimStart, Bool trimEnd)
 {
-	return StringCommon::subString(index, length, trimStart, trimEnd, this, genStringSpanFromString);
+	SPADAS_ERROR_RETURNVAL(!vars, StringSpan());
+	return StringCommon::sub(*this, 0, vars->length, index, length, trimStart, trimEnd);
 }
 
 void String::ensureBuffer(UInt appendSize)

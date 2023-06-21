@@ -95,6 +95,9 @@ namespace spadas
 	// 数组
 	template <typename Type> class Array;
 
+	// 数组片段
+	template <typename Type> class ArraySpan;
+
 	// 链表节点
 	template <typename Type> class ListNode;
 
@@ -736,11 +739,17 @@ namespace spadas
 		/// @param size 源数据数组大小
 		Array(const Type arr[], UInt size);
 
+		/// [非安全] 取得数组的头指针
+		Type *data();
+
 		/// 取得数组大小
 		UInt size();
 
-		/// [非安全] 取得数组的头指针
-		Type *data();
+		/// 是否为空数组
+		Bool isEmpty();
+
+		/// 克隆出一个新对象 (所有元素调用=号拷贝)
+		Array<Type> clone();
 
 		/// 取得数组中某个元素的引用
 		Type& operator [](UInt index);
@@ -751,33 +760,17 @@ namespace spadas
 		/// 取得数组中最后一个元素的引用
 		Type& last();
 
-		/// 取得从第一个元素的遍历器，可修改元素
-		ArrayElem<Type> firstElem();
-
-		/// 取得从最后一个元素开始的遍历器，可修改元素
-		ArrayElem<Type> lastElem();
-
-		/// 取得子数组，其数据绑定至本数组的数据
-		Array<Type> subArray(UInt index, UInt size = UINF);
-
-		/// 是否为空数组
-		Bool isEmpty();
+		/// @brief 在本数组后方拼接另一个数组
+		/// @param arr 将拼接的另一个数组
+		/// @returns 拼接后的数组
+		Array<Type> operator +(Array<Type> arr);
 
 		/// 缩减数组大小
 		void trim(UInt size);
 		
-		/// 克隆出一个新对象 (所有元素调用=号拷贝)
-		Array<Type> clone();
-
 		/// 对所有元素赋同一个值
 		void set(Type value);
-		
-		/// @brief 从另一个数组的某个子区域拷贝数据到本数组的某个位置
-		/// @param src 源数据数组
-		/// @param srcRegion 从源数组拷贝的区域
-		/// @param thisOffset 拷贝至本数组的起始位置
-		void copy(Array<Type> src, Region srcRegion, UInt thisOffset);
-		
+
 		/// 数组中是否包含某个值
 		Bool contain(Type val);
 
@@ -790,6 +783,12 @@ namespace spadas
 		/// 返回数组中所有指定函数返回TRUE的元素序号
 		Array<UInt> searchAs(Func<Bool(Type&)> func);
 
+		/// 按从小到大排序，需要Type支持>重载符
+		void sort();
+
+		/// 根据指定函数(判断是否大于)，按从小到大排序
+		void sortAs(Func<Bool(Type&, Type&)> func);
+
 		/// 按指定函数转换为其他类型数组
 		template <typename TargetType>
 		Array<TargetType> convert(Func<TargetType(Type&)> func);
@@ -797,12 +796,30 @@ namespace spadas
 		/// @brief 根据指定的大小分割为多个数组
 		/// @param sizes 将分割成的每个数组的大小
 		/// @returns 分割后的多个数组
-		Array<Array<Type> > split(Array<UInt> sizes);
+		Array<ArraySpan<Type> > split(Array<UInt> sizes);
 
-		/// @brief 在本数组后方拼接另一个数组
-		/// @param arr 将拼接的另一个数组
-		/// @returns 拼接后的数组
-		Array<Type> operator +(Array<Type> arr);
+		/// 转换为基类或派生类对象的数组（具体行为参考 spadas::Object::as ）
+		template <typename TargetType>
+		Array<TargetType> asArray();
+
+		/// 转换为基类或派生类对象的数组，并输出每个元素是否转换成功的数组（具体行为参考 spadas::Object::as ）
+		template <typename TargetType>
+		Array<TargetType> asArray(Array<Bool>& ok);
+
+		/// 取得子数组，其数据绑定至本数组的数据
+		ArraySpan<Type> sub(UInt index, UInt size = UINF);
+
+		/// 取得从第一个元素的遍历器，可修改元素
+		ArrayElem<Type> firstElem();
+
+		/// 取得从最后一个元素开始的遍历器，可修改元素
+		ArrayElem<Type> lastElem();
+
+		/// @brief 从另一个数组的某个子区域拷贝数据到本数组的某个位置
+		/// @param src 源数据数组
+		/// @param srcRegion 从源数组拷贝的区域
+		/// @param thisOffset 拷贝至本数组的起始位置
+		void copy(Array<Type> src, Region srcRegion, UInt thisOffset);
 
 		/// 创建一个标量数组（只含有一个元素）
 		static Array<Type> scalar(Type element);
@@ -827,6 +844,85 @@ namespace spadas
 		/// @returns 合并后的数组
 		static Array<Type> merge(Array<Array<Type> > arrs);
 
+		/// @brief 合并多个数组片段
+		/// @param spans 将合并的多个数组片段
+		/// @returns 合并后的数组
+		static Array<Type> merge(Array<ArraySpan<Type> > spans);
+
+	private:
+		Bool isNull() { return FALSE; }
+		Bool isValid() { return FALSE; }
+	};
+
+	/// 定长数组片段，数据绑定至原定长数组的数据
+	template <typename Type> class ArraySpan
+	{
+	public:
+		/// 创建空片段
+		ArraySpan();
+
+		/// [非安全] 绑定至原定长数组
+		ArraySpan(Array<Type>& sourceArray, UInt index, UInt size);
+
+		/// [非安全] 取得数组片段的头指针
+		Type *data();
+
+		/// 取得数组片段大小
+		UInt size();
+
+		/// 是否为空数组片段
+		Bool isEmpty();
+
+		/// 克隆出一个新对象 (所有元素调用=号拷贝)
+		Array<Type> clone();
+
+		/// 取得数组片段中某个元素的引用
+		Type& operator [](UInt index);
+
+		/// 取得数组片段中第一个元素的引用
+		Type& first();
+
+		/// 取得数组片段中最后一个元素的引用
+		Type& last();
+
+		/// @brief 在本数组片段后方拼接另一个数组
+		/// @param arr 将拼接的另一个数组
+		/// @returns 拼接后的数组
+		Array<Type> operator +(Array<Type> arr);
+
+		/// 缩减数组片段大小
+		void trim(UInt size);
+		
+		/// 对所有元素赋同一个值
+		void set(Type value);
+		
+		/// 数组中是否包含某个值
+		Bool contain(Type val);
+
+		/// 数组中是否包含指定函数返回TRUE的某个值
+		Bool containAs(Func<Bool(Type&)> func);
+
+		/// 返回数组中所有等于某个值的元素序号
+		Array<UInt> search(Type val);
+
+		/// 返回数组中所有指定函数返回TRUE的元素序号
+		Array<UInt> searchAs(Func<Bool(Type&)> func);
+
+		/// 按从小到大排序，需要Type支持>重载符
+		void sort();
+
+		/// 根据指定函数(判断是否大于)，按从小到大排序
+		void sortAs(Func<Bool(Type&, Type&)> func);
+
+		/// 按指定函数转换为其他类型数组
+		template <typename TargetType>
+		Array<TargetType> convert(Func<TargetType(Type&)> func);
+		
+		/// @brief 根据指定的大小分割为多个数组
+		/// @param sizes 将分割成的每个数组的大小
+		/// @returns 分割后的多个数组
+		Array<ArraySpan<Type> > split(Array<UInt> sizes);
+
 		/// 转换为基类或派生类对象的数组（具体行为参考 spadas::Object::as ）
 		template <typename TargetType>
 		Array<TargetType> asArray();
@@ -835,15 +931,13 @@ namespace spadas
 		template <typename TargetType>
 		Array<TargetType> asArray(Array<Bool>& ok);
 
-		/// 按从小到大排序，需要Type支持>重载符
-		void sort();
-
-		/// 根据指定函数(判断是否大于)，按从小到大排序
-		void sortAs(Func<Bool(Type&, Type&)> func);
+		/// 取得子数组，其数据绑定至原数组的数据
+		ArraySpan<Type> sub(UInt index, UInt size = UINF);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Array<Type> source;
+		UInt idx;
+		UInt siz;
 	};
 
 	/// spadas::ListNode 模板类的变量数据
@@ -1542,7 +1636,7 @@ namespace spadas
 		Byte& operator [](UInt index);
 
 		/// 取得子数据块，其数据绑定至本数据块的数据
-		Binary subBinary(UInt index, UInt size = UINF);
+		Binary sub(UInt index, UInt size = UINF);
 
 		/// 本对象是否无效（大小为0）
 		Bool isEmpty();
@@ -1800,7 +1894,7 @@ namespace spadas
 		/// @param trimStart 是否裁剪掉开始处的空格
 		/// @param trimEnd 是否裁剪掉结尾处的空格
 		/// @return 子字符串
-		StringSpan subString(UInt index, UInt length = UINF, Bool trimStart = FALSE, Bool trimEnd = FALSE);
+		StringSpan sub(UInt index, UInt length = UINF, Bool trimStart = FALSE, Bool trimEnd = FALSE);
 
 		/// @brief 在本字符串后拼接另一个字符串(将更改本对象数据)
 		/// @param string 拼接的另一个字符串
@@ -1918,31 +2012,26 @@ namespace spadas
 		/// @param nBytesPerRow 每行打印的字节数
 		/// @returns 二进制数据块的表述字符串
 		static String createHexString(Binary bin, UInt nBytesPerRow = 8);
-		
-		/// @brief 拼接多个字符串，字符串间以指定分割符分割
-		/// @param strs 输入的多个字符串
-		/// @param separator 分隔符
-		/// @returns 按指定分隔符拼接的字符串
-		static String mergeStrings(Array<String> strs, String separator = "\n");
 
 		/// @brief 拼接多个字符串片段，片段间以指定分割符分割
 		/// @param strs 输入的多个字符串片段
 		/// @param separator 分隔符
 		/// @returns 按指定分隔符拼接的字符串
-		static String mergeStrings(Array<StringSpan> spans, String separator = "\n");
+		static String merge(Array<StringSpan> spans, String separator = ", ");
 
 		/// @brief 以String构造函数拼接数组，字符串间以指定分割符分割
 		/// @param strs 输入数组
 		/// @param separator 分隔符
 		/// @returns 按指定分隔符拼接的字符串
 		template <typename Type>
-		static String merge(Array<Type> arr, String separator = "\n");
+		static String merge(Array<Type> arr, String separator = ", ");
 
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
 		void initBuffer(UInt dataSize);
 		void ensureBuffer(UInt appendSize);
+		static String mergeStrings(Array<String> strs, String separator);
 	};
 
 	/// 字符串片段，数据绑定至原字符串的数据
@@ -1952,8 +2041,8 @@ namespace spadas
 		/// 创建空片段
 		StringSpan();
 
-		/// 绑定至原字符串
-		StringSpan(String& sourceString, UInt index, UInt length = UINF);
+		/// [非安全] 绑定至原字符串
+		StringSpan(String& sourceString, UInt index, UInt length);
 
 		/// 是否等于
 		Bool operator ==(StringSpan span);
@@ -2053,7 +2142,7 @@ namespace spadas
 		/// @param trimStart 是否裁剪掉开始处的空格
 		/// @param trimEnd 是否裁剪掉结尾处的空格
 		/// @return 子字符串
-		StringSpan subString(UInt index, UInt length = UINF, Bool trimStart = FALSE, Bool trimEnd = FALSE);
+		StringSpan sub(UInt index, UInt length = UINF, Bool trimStart = FALSE, Bool trimEnd = FALSE);
 
 	private:
 		String source;
@@ -3124,7 +3213,7 @@ namespace spadas
 		void drawLayer(Image layer, CoordInt2D dstOffset);
 
 		/// 取得子图像，其数据绑定至本图像的数据
-		Image subImage(Region2D region);
+		Image sub(Region2D region);
 
 		/// 取得图像指针，仅ByteGray和ByteBGR支持
 		Optional<ImagePointer> imagePointer();

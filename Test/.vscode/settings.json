@@ -10,6 +10,12 @@
         "*.vcxproj.filters": true
     },
     "files.associations": {
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "complex": "cpp",
+        "*.tcc": "cpp",
+        "list": "cpp",
+        "unordered_map": "cpp",
+        "algorithm": "cpp",
+        "new": "cpp"
     }
 }

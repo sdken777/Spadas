@@ -40,7 +40,7 @@ namespace file_internal
 		Array<UInt> slashLocations = executablePathString.search('/');
 		if (slashLocations.isEmpty()) return String();
 
-		return executablePathString.subString(0, slashLocations.last() + 1).clone();
+		return executablePathString.sub(0, slashLocations.last() + 1).clone();
 	}
 
 	String getWorkPathString()
@@ -78,7 +78,7 @@ namespace file_internal
 		Array<UInt> slashLocations = executablePathString.search('/');
 		if (slashLocations.isEmpty()) return String();
 
-		return executablePathString.subString(0, slashLocations.last() + 1).clone();
+		return executablePathString.sub(0, slashLocations.last() + 1).clone();
 	}
 
 	String getWorkPathString()
@@ -101,7 +101,7 @@ namespace file_internal
 			Array<UInt> slashLocations = bundlePathString.search('/');
 			if (slashLocations.isEmpty()) return String();
 
-			return bundlePathString.subString(0, slashLocations.last() + 1).clone();
+			return bundlePathString.sub(0, slashLocations.last() + 1).clone();
 		}
 		else
 		{

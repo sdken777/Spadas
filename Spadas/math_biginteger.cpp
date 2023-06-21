@@ -1432,7 +1432,7 @@ Optional<BigInteger> BigInteger::createFromString(String decimalString)
 
 	BigInteger ret;
 	ret.vars->sign = !isNegative;
-	ret.vars->rossi = Rossi((isNegative ? decimalString.subString(1).clone() : decimalString).chars().data(), 10);
+	ret.vars->rossi = Rossi((isNegative ? decimalString.sub(1).clone() : decimalString).chars().data(), 10);
 	return ret;
 }
 

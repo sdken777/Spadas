@@ -78,7 +78,7 @@ Byte& Binary::operator [](UInt index)
 	return vars->data[index];
 }
 
-Binary Binary::subBinary(UInt index, UInt size)
+Binary Binary::sub(UInt index, UInt size)
 {
 	SPADAS_ERROR_RETURNVAL(!vars || index >= vars->size, Binary());
 	size = math::min(size, vars->size - index);

@@ -27,7 +27,7 @@ namespace file_internal
 		Array<UInt> slashLocations = bufferString.search('\\');
 		
 		if (slashLocations.isEmpty()) return String();
-		else return bufferString.subString(0, slashLocations.last() + 1).clone();
+		else return bufferString.sub(0, slashLocations.last() + 1).clone();
 	}
 	String getWorkPathString()
 	{

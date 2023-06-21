@@ -19,7 +19,7 @@ namespace file_internal
 			else if (pathStringData[0] == (Byte)separator)
 			{
 				isAbsolute = TRUE;
-				contentsString = pathString.subString(1).clone();
+				contentsString = pathString.sub(1).clone();
 			}
 			else
 			{
@@ -34,8 +34,8 @@ namespace file_internal
 			isAbsolute = pathString.length() >= 2 && pathStringData[1] == (Byte)':';
 			if (isAbsolute)
 			{
-				rootString = pathString.subString(0, 2).clone();
-				contentsString = pathString.subString(3).clone();
+				rootString = pathString.sub(0, 2).clone();
+				contentsString = pathString.sub(3).clone();
 			}
 			else
 			{
@@ -54,7 +54,7 @@ namespace file_internal
 		Char separator = getSeparatorChar();
 
 		if (workPathString.isEmpty() || workPathString.bytes()[workPathString.length() - 1] != (Byte)separator) return ListNode<String>();
-		workPathString = workPathString.subString(0, workPathString.length() - 1).clone();
+		workPathString = workPathString.sub(0, workPathString.length() - 1).clone();
 
 		Bool dummy;
 		String rootString, contentsString;
@@ -176,7 +176,7 @@ Path::Path(String pathString)
 	
 	/* check if pathString is a folder and remove the last separator */
 	Bool isFolder = !pathString.isEmpty() && pathString.bytes()[pathString.length() - 1] == (Byte)separator;
-	if (isFolder) pathString = pathString.subString(0, pathString.length() - 1).clone();
+	if (isFolder) pathString = pathString.sub(0, pathString.length() - 1).clone();
 	
 	/* check if pathString is absolute and get root and contents */
 	Bool isAbsolute;
@@ -232,7 +232,7 @@ String Path::name()
 	Array<UInt> dotIndices = fileFullName.search(".");
 	
 	if (dotIndices.isEmpty()) return fileFullName;
-	else return fileFullName.subString(0, dotIndices[dotIndices.size() - 1]).clone();
+	else return fileFullName.sub(0, dotIndices[dotIndices.size() - 1]).clone();
 }
 
 String Path::extension()
@@ -243,7 +243,7 @@ String Path::extension()
 	Array<UInt> dotIndices = fileFullName.search(".");
 	
 	if (dotIndices.isEmpty()) return String();
-	else return fileFullName.subString(dotIndices[dotIndices.size() - 1]).clone();
+	else return fileFullName.sub(dotIndices[dotIndices.size() - 1]).clone();
 }
 
 String Path::fullName()
@@ -352,7 +352,7 @@ void file_internal::moveOrCopy(Path srcPath, Path dstPath, Bool isCopy, Bool mer
 			for (UInt i = 0; i < srcContents.size(); i++)
 			{
 				String srcContentString = srcContents[i].fullPath();
-				String childPath = srcContentString.subString(srcPathLen).clone();
+				String childPath = srcContentString.sub(srcPathLen).clone();
 				Path dstContent = dstPath.childPath(childPath);
 				String dstContentString = dstContent.fullPath();
 				if (dstContent.isFolder())
@@ -529,7 +529,7 @@ Path Path::childPath(String pathString)
 	
 	/* check if pathString is a folder and remove the last separator */
 	Bool isFolder = !pathString.isEmpty() && pathString.bytes()[pathString.length() - 1] == (Byte)separator;
-	if (isFolder) pathString = pathString.subString(0, pathString.length() - 1).clone();
+	if (isFolder) pathString = pathString.sub(0, pathString.length() - 1).clone();
 	
 	/* check if pathString is absolute and get root and contents */
 	Bool isAbsolute;
@@ -597,7 +597,7 @@ Bool Path::contain(Path path, String& pathString)
 	}
 	else
 	{
-		pathString = dstPath.subString(srcPathLen).clone();
+		pathString = dstPath.sub(srcPathLen).clone();
 		return TRUE;
 	}
 }

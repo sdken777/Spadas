@@ -318,6 +318,167 @@ namespace spadas
 	}
 
 	// 数组实现 ///////////////////////////////////////////////////////
+	namespace internal
+	{
+		template <typename Type>
+		Array<Type> arrayCommonPlus(Type* data, UInt size, Array<Type>& arr)
+		{
+			if (size > 0)
+			{
+				UInt arrSize = arr.size();
+				if (size > 0)
+				{
+					Type *arrData = arr.data();
+					Array<Type> out = Array<Type>::createUninitialized(size + arrSize);
+					for (UInt i = 0; i < size; i++) out.initialize(i, data[i]);
+					for (UInt i = size, j = 0; j < arrSize; i++, j++) out.initialize(i, arrData[j]);
+					return out;
+				}
+				else return Array<Type>(data, size);
+			}
+			else return arr.clone();
+		}
+
+		template <typename Type>
+		void arrayCommonSet(Type* data, UInt size, Type& value)
+		{
+			for (UInt i = 0; i < size; i++)
+			{
+				data[i] = value;
+			}
+		}
+
+		template <typename Type>
+		Bool arrayCommonContain(Type* data, UInt size, Func<Bool(Type&)>& func)
+		{
+			for (UInt i = 0; i < size; i++)
+			{
+				if (func(data[i])) return TRUE;
+			}
+			return FALSE;
+		}
+
+		template <typename Type>
+		Array<UInt> arrayCommonSearch(Type* data, UInt size, Func<Bool(Type&)>& func)
+		{
+			if (size >= 64)
+			{
+				ArrayX<UInt> bufIndices(size >= 8192 ? (size >= 1048576 ? 256 : 64) : 16);
+				for (UInt i = 0; i < size; i++)
+				{
+					if (func(data[i])) bufIndices.append(i);
+				}
+				return bufIndices.toArray();
+			}
+			else
+			{
+				Array<UInt> bufIndices(size);
+				UInt nBufIndices = 0;
+				for (UInt i = 0; i < size; i++)
+				{
+					if (func(data[i])) bufIndices[nBufIndices++] = i;
+				}
+				if (nBufIndices == 0) return Array<UInt>();
+				bufIndices.trim(nBufIndices);
+				return bufIndices;
+			}
+		}
+
+		template <typename Type>
+		void arrayCommonSort(Type* data, UInt size, Func<Bool(Type&, Type&)>& func)
+		{
+			const Int n = (Int)size;
+			if (n < 2) return;
+			Array<UInt> indexArr(n);
+			UInt* indices = indexArr.data();
+			for (Int i = 0; i < n; i++)
+			{
+				indices[i] = i;
+			}
+			for (Int i = 0; i < n - 1; i++)
+			{
+				for (Int j = 0; j < n - i - 1; j++)
+				{
+					if (func(data[indices[j]], data[indices[j + 1]]))
+					{
+						UInt tmp = indices[j];
+						indices[j] = indices[j + 1];
+						indices[j + 1] = tmp;
+					}
+				}
+			}
+			Array<Type> buffer(data, n);
+			Type* bufferData = buffer.data();
+			for (Int i = 0; i < n; i++)
+			{
+				data[i] = bufferData[indices[i]];
+			}
+		}
+
+		template <typename Type, typename TargetType>
+		Array<TargetType> arrayCommonConvert(Type* data, UInt size, Func<TargetType(Type&)>& func)
+		{
+			Array<TargetType> output = Array<TargetType>::createUninitialized(size);
+			for (UInt i = 0; i < size; i++)
+			{
+				output.initialize(i, func(data[i]));
+			}
+			return output;
+		}
+
+		template <typename Type>
+		Array<ArraySpan<Type> > arrayCommonSplit(Array<Type>& source, UInt spanIndex, UInt spanSize, Array<UInt>& sizes)
+		{
+			UInt totalSize = 0;
+			for (UInt i = 0; i < sizes.size(); i++) totalSize += sizes[i];
+			SPADAS_ERROR_RETURNVAL(totalSize != spanSize, Array<ArraySpan<Type> >());
+			Array<ArraySpan<Type> > out = Array<ArraySpan<Type> >::createUninitialized(sizes.size());
+			UInt curIndex = spanIndex;
+			for (UInt i = 0; i < sizes.size(); i++)
+			{
+				UInt subArraySize = sizes[i];
+				if (subArraySize == 0)
+				{
+					out.initialize(i, ArraySpan<Type>());
+				}
+				else
+				{
+					out.initialize(i, ArraySpan<Type>(source, curIndex, subArraySize));
+					curIndex += subArraySize;
+				}
+			}
+			return out;
+		}
+
+		template <typename Type, typename TargetType>
+		Array<TargetType> arrayCommonAsArray(Type* data, UInt size)
+		{
+			Array<TargetType> output = Array<TargetType>::createUninitialized(size);
+			for (UInt i = 0; i < size; i++) output.initialize(i, data[i].template as<TargetType>());
+			return output;
+		}
+
+		template <typename Type, typename TargetType>
+		Array<TargetType> arrayCommonAsArray(Type* data, UInt size, Array<Bool>& ok)
+		{
+			Array<TargetType> output = Array<TargetType>::createUninitialized(size);
+			ok = Array<Bool>(size);
+			for (UInt i = 0; i < size; i++) output.initialize(i, data[i].template as<TargetType>(ok[i]));
+			return output;
+		}
+
+		template <typename Type>
+		ArraySpan<Type> arrayCommonSub(Array<Type>& source, UInt spanIndex, UInt spanLength, UInt subIndex, UInt subLength, UInt& reserveSize)
+		{
+			SPADAS_ERROR_RETURNVAL(subIndex >= spanLength, ArraySpan<Type>());
+			if (subLength == 0) return ArraySpan<Type>();
+
+			subLength = math::min(subLength, spanLength - subIndex);
+			reserveSize = spanIndex + subIndex + subLength;
+			return ArraySpan<Type>(source, spanIndex + subIndex, subLength);
+		}
+	}
+
 	template<typename Type> class ArrayVars : public Vars
 	{
 	public:
@@ -330,7 +491,8 @@ namespace spadas
 		{
 			if (!__is_trivial(Type))
 			{
-				for (UInt i = 0; i < size; i++)
+				UInt count = math::max(size, reserveSize);
+				for (UInt i = 0; i < count; i++)
 				{
 					(&data[i])->~Type();
 				}
@@ -388,15 +550,28 @@ namespace spadas
 	}
 
 	template<typename Type>
+	Type *Array<Type>::data()
+	{
+		return this->vars ? this->vars->data : 0;
+	}
+
+	template<typename Type>
 	UInt Array<Type>::size()
 	{
 		return this->vars ? this->vars->size : 0;
 	}
 
 	template<typename Type>
-	Type *Array<Type>::data()
+	Bool Array<Type>::isEmpty()
 	{
-		return this->vars ? this->vars->data : 0;
+		return this->vars == 0;
+	}
+
+	template<typename Type>
+	Array<Type> Array<Type>::clone()
+	{
+		if (!this->vars) return Array<Type>();
+		else return Array<Type>(this->vars->data, this->vars->size);
 	}
 
 	template<typename Type>
@@ -421,33 +596,10 @@ namespace spadas
 	}
 
 	template<typename Type>
-	ArrayElem<Type> Array<Type>::firstElem()
+	Array<Type> Array<Type>::operator +(Array<Type> arr)
 	{
-		this->vars->reserveSize = this->vars->size;
-		return ArrayElem<Type>(*this, 0);
-	}
-
-	template<typename Type>
-	ArrayElem<Type> Array<Type>::lastElem()
-	{
-		this->vars->reserveSize = this->vars->size;
-		return ArrayElem<Type>(*this, this->vars ? (this->vars->size - 1) : UINF);
-	}
-
-	template<typename Type>
-	Array<Type> Array<Type>::subArray(UInt index, UInt size)
-	{
-		SPADAS_ERROR_RETURNVAL(!this->vars || index >= this->vars->size, Array<Type>());
-		size = math::min(size, this->vars->size - index);
-		if (size == 0) return Array<Type>();
-		this->vars->reserveSize = index + size;
-		return Array<Type>(&this->vars->data[index], size);
-	}
-
-	template<typename Type>
-	Bool Array<Type>::isEmpty()
-	{
-		return this->vars == 0;
+		if (!this->vars) return arr.clone();
+		else return internal::arrayCommonPlus<Type>(this->vars->data, this->vars->size, arr);
 	}
 
 	template<typename Type>
@@ -468,20 +620,127 @@ namespace spadas
 	}
 
 	template<typename Type>
-	Array<Type> Array<Type>::clone()
-	{
-		if (!this->vars) return Array<Type>();
-		else return Array<Type>(this->vars->data, this->vars->size);
-	}
-
-	template<typename Type>
 	void Array<Type>::set(Type value)
 	{
 		if (!this->vars) return;
-		for (UInt i = 0; i < this->vars->size; i++)
+		else internal::arrayCommonSet<Type>(this->vars->data, this->vars->size, value);
+	}
+
+	template<typename Type>
+	Bool Array<Type>::contain(Type val)
+	{
+		if (!this->vars) return FALSE;
+		else
 		{
-			this->vars->data[i] = value;
+			Func<Bool(Type&)> func = [val](Type& v){ return v == val; };
+			return internal::arrayCommonContain<Type>(this->vars->data, this->vars->size, func);
 		}
+	}
+
+	template<typename Type>
+	Bool Array<Type>::containAs(Func<Bool(Type&)> func)
+	{
+		if (!this->vars) return FALSE;
+		else return internal::arrayCommonContain<Type>(this->vars->data, this->vars->size, func);
+	}
+
+	template<typename Type>
+	Array<UInt> Array<Type>::search(Type val)
+	{
+		if (!this->vars) return Array<UInt>();
+		else
+		{
+			Func<Bool(Type&)> func = [val](Type& v){ return v == val; };
+			return internal::arrayCommonSearch<Type>(this->vars->data, this->vars->size, func);
+		}
+	}
+
+	template<typename Type>
+	Array<UInt> Array<Type>::searchAs(Func<Bool(Type&)> func)
+	{
+		if (!this->vars) return Array<UInt>();
+		else return internal::arrayCommonSearch<Type>(this->vars->data, this->vars->size, func);
+	}
+
+	template<typename Type>
+	void Array<Type>::sort()
+	{
+		if (!this->vars) return;
+		else
+		{
+			Func<Bool(Type&, Type&)> func = [](Type& a, Type& b){ return a > b; };
+			internal::arrayCommonSort<Type>(this->vars->data, this->vars->size, func);
+		}
+	}
+
+	template<typename Type>
+	void Array<Type>::sortAs(Func<Bool(Type&, Type&)> func)
+	{
+		if (!this->vars) return;
+		else internal::arrayCommonSort<Type>(this->vars->data, this->vars->size, func);
+	}
+
+	template<typename Type>
+	template<typename TargetType>
+	Array<TargetType> Array<Type>::convert(Func<TargetType(Type&)> func)
+	{
+		if (!this->vars) return Array<TargetType>();
+		else return internal::arrayCommonConvert<Type, TargetType>(this->vars->data, this->vars->size, func);
+	}
+
+	template<typename Type>
+	Array<ArraySpan<Type> > Array<Type>::split(Array<UInt> sizes)
+	{
+		if (!this->vars) return Array<ArraySpan<Type> >();
+		else
+		{
+			this->vars->reserveSize = math::max(this->vars->reserveSize, this->vars->size);
+			return internal::arrayCommonSplit(*this, 0, this->vars->size, sizes);
+		}
+	}
+
+	template<typename Type>
+	template<typename TargetType>
+	Array<TargetType> Array<Type>::asArray()
+	{
+		if (!this->vars) return Array<TargetType>();
+		else return internal::arrayCommonAsArray<Type, TargetType>(this->vars->data, this->vars->size);
+	}
+
+	template<typename Type>
+	template<typename TargetType>
+	Array<TargetType> Array<Type>::asArray(Array<Bool>& ok)
+	{
+		if (!this->vars)
+		{
+			ok = Array<Bool>();
+			return Array<TargetType>();
+		}
+		else return internal::arrayCommonAsArray<Type, TargetType>(this->vars->data, this->vars->size, ok);
+	}
+
+	template<typename Type>
+	ArraySpan<Type> Array<Type>::sub(UInt index, UInt size)
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars, ArraySpan<Type>());
+		UInt reserveSize = 0;
+		ArraySpan<Type> output = internal::arrayCommonSub(*this, 0, this->vars->size, index, size, reserveSize);
+		this->vars->reserveSize = math::max(this->vars->reserveSize, reserveSize);
+		return output;
+	}
+
+	template<typename Type>
+	ArrayElem<Type> Array<Type>::firstElem()
+	{
+		this->vars->reserveSize = math::max(this->vars->reserveSize, this->vars->size);
+		return ArrayElem<Type>(*this, 0);
+	}
+
+	template<typename Type>
+	ArrayElem<Type> Array<Type>::lastElem()
+	{
+		this->vars->reserveSize = math::max(this->vars->reserveSize, this->vars->size);
+		return ArrayElem<Type>(*this, this->vars ? (this->vars->size - 1) : UINF);
 	}
 
 	template<typename Type>
@@ -497,147 +756,6 @@ namespace spadas
 		{
 			dstData[dstI] = srcData[srcI];
 		}
-	}
-
-	template<typename Type>
-	Bool Array<Type>::contain(Type val)
-	{
-		if (!this->vars) return FALSE;
-		UInt size = this->vars->size;
-		Type *data = this->vars->data;
-		for (UInt i = 0; i < size; i++)
-		{
-			if (data[i] == val) return TRUE;
-		}
-		return FALSE;
-	}
-
-	template<typename Type>
-	Bool Array<Type>::containAs(Func<Bool(Type&)> func)
-	{
-		if (!this->vars) return FALSE;
-		UInt size = this->vars->size;
-		Type *data = this->vars->data;
-		for (UInt i = 0; i < size; i++)
-		{
-			if (func(data[i])) return TRUE;
-		}
-		return FALSE;
-	}
-
-	template<typename Type>
-	Array<UInt> Array<Type>::search(Type val)
-	{
-		if (!this->vars) return Array<UInt>();
-		UInt size = this->vars->size;
-		Type *data = this->vars->data;
-		if (size >= 64)
-		{
-			ArrayX<UInt> bufIndices(size >= 8192 ? (size >= 1048576 ? 256 : 64) : 16);
-			for (UInt i = 0; i < size; i++)
-			{
-				if (data[i] == val) bufIndices.append(i);
-			}
-			return bufIndices.toArray();
-		}
-		else
-		{
-			Array<UInt> bufIndices(size);
-			UInt nBufIndices = 0;
-			for (UInt i = 0; i < size; i++)
-			{
-				if (data[i] == val) bufIndices[nBufIndices++] = i;
-			}
-			if (nBufIndices == 0) return Array<UInt>();
-			bufIndices.trim(nBufIndices);
-			return bufIndices;
-		}
-	}
-
-	template<typename Type>
-	Array<UInt> Array<Type>::searchAs(Func<Bool(Type&)> func)
-	{
-		if (!this->vars) return Array<UInt>();
-		UInt size = this->vars->size;
-		Type *data = this->vars->data;
-		if (size >= 64)
-		{
-			ArrayX<UInt> bufIndices(size >= 8192 ? (size >= 1048576 ? 256 : 64) : 16);
-			for (UInt i = 0; i < size; i++)
-			{
-				if (func(data[i])) bufIndices.append(i);
-			}
-			return bufIndices.toArray();
-		}
-		else
-		{
-			Array<UInt> bufIndices(size);
-			UInt nBufIndices = 0;
-			for (UInt i = 0; i < size; i++)
-			{
-				if (func(data[i])) bufIndices[nBufIndices++] = i;
-			}
-			if (nBufIndices == 0) return Array<UInt>();
-			bufIndices.trim(nBufIndices);
-			return bufIndices;
-		}
-	}
-
-	template<typename Type>
-	template <typename TargetType>
-	Array<TargetType> Array<Type>::convert(Func<TargetType(Type&)> func)
-	{
-		if (!this->vars) return Array<TargetType>();
-		Array<TargetType> output = Array<TargetType>::createUninitialized(this->vars->size);
-		for (UInt i = 0; i < this->vars->size; i++)
-		{
-			output.initialize(i, func(this->vars->data[i]));
-		}
-		return output;
-	}
-
-	template<typename Type>
-	Array<Array<Type> > Array<Type>::split(Array<UInt> sizes)
-	{
-		if (!this->vars) return Array<Array<Type> >();
-		UInt totalSize = 0;
-		for (UInt i = 0; i < sizes.size(); i++) totalSize += sizes[i];
-		SPADAS_ERROR_RETURNVAL(totalSize != this->vars->size, Array<Array<Type> >());
-		Array<Array<Type> > out(sizes.size());
-		UInt n = 0;
-		for (UInt i = 0; i < sizes.size(); i++)
-		{
-			UInt subArraySize = sizes[i];
-			if (subArraySize == 0) continue;
-			Array<Type> subArray = Array<Type>::createUninitialized(subArraySize);
-			for (UInt j = 0; j < subArraySize; j++)
-			{
-				subArray.initialize(j, this->vars->data[n++]);
-			}
-			out[i] = subArray;
-		}
-		return out;
-	}
-
-	template<typename Type>
-	Array<Type> Array<Type>::operator +(Array<Type> arr)
-	{
-		if (this->vars)
-		{
-			if (!arr.vars) return clone();
-			else
-			{
-				UInt thisSize = this->vars->size;
-				Type *thisData = this->vars->data;
-				UInt arrSize = arr.vars->size;
-				Type *arrData = arr.vars->data;
-				Array<Type> out = Array<Type>::createUninitialized(thisSize + arrSize);
-				for (UInt i = 0; i < thisSize; i++) out.initialize(i, thisData[i]);
-				for (UInt i = thisSize, j = 0; j < arrSize; i++, j++) out.initialize(i, arrData[j]);
-				return out;
-			}
-		}
-		else return arr.clone();
 	}
 
 	template<typename Type>
@@ -704,94 +822,194 @@ namespace spadas
 	}
 
 	template<typename Type>
-	template<typename TargetType>
-	Array<TargetType> Array<Type>::asArray()
+	Array<Type> Array<Type>::merge(Array<ArraySpan<Type> > spans)
 	{
-		if (!this->vars) return Array<TargetType>();
-		Array<TargetType> output = Array<TargetType>::createUninitialized(this->vars->size);
-		for (UInt i = 0; i < this->vars->size; i++) output.initialize(i, this->vars->data[i].template as<TargetType>());
-		return output;
+		UInt totalSize = 0;
+		for (UInt i = 0; i < spans.size(); i++) totalSize += spans[i].size();
+		if (totalSize == 0) return Array<Type>();
+		SPADAS_ERROR_RETURNVAL(totalSize > ARRAY_SIZE_LIMIT, Array<Type>());
+		Array<Type> out = Array<Type>::createUninitialized(totalSize);
+		UInt n = 0;
+		for (UInt i = 0; i < spans.size(); i++)
+		{
+			ArraySpan<Type>& span = spans[i];
+			Type *srcData = span.data();
+			UInt copySize = span.size();
+			for (UInt j = 0; j < copySize; j++) out.initialize(n++, srcData[j]);
+		}
+		return out;
+	}
+
+	template<typename Type>
+	ArraySpan<Type>::ArraySpan() : idx(0), siz(0)
+	{}
+
+	template<typename Type>
+	ArraySpan<Type>::ArraySpan(Array<Type>& sourceArray, UInt index, UInt size) : source(sourceArray), idx(index), siz(size)
+	{}
+
+	template<typename Type>
+	Type* ArraySpan<Type>::data()
+	{
+		return this->siz == 0 ? 0 : (this->source.data() + this->idx);
+	}
+
+	template<typename Type>
+	UInt ArraySpan<Type>::size()
+	{
+		return this->siz;
+	}
+
+	template<typename Type>
+	Bool ArraySpan<Type>::isEmpty()
+	{
+		return this->siz == 0;
+	}
+
+	template<typename Type>
+	Array<Type> ArraySpan<Type>::clone()
+	{
+		if (!this->siz) return Array<Type>();
+		else return Array<Type>(this->source.data() + this->idx, this->siz);
+	}
+
+	template<typename Type>
+	Type& ArraySpan<Type>::operator [](UInt index)
+	{
+		SPADAS_ERROR_RETURNVAL(index >= this->siz, *(new Type));
+		return this->source.data()[this->idx + index];
+	}
+
+	template<typename Type>
+	Type& ArraySpan<Type>::first()
+	{
+		SPADAS_ERROR_RETURNVAL(this->siz == 0, *(new Type));
+		return this->source.data()[this->idx];
+	}
+
+	template<typename Type>
+	Type& ArraySpan<Type>::last()
+	{
+		SPADAS_ERROR_RETURNVAL(this->siz == 0, *(new Type));
+		return this->source.data()[this->idx + this->siz - 1];
+	}
+
+	template<typename Type>
+	Array<Type> ArraySpan<Type>::operator +(Array<Type> arr)
+	{
+		if (!this->siz) return arr.clone();
+		else return internal::arrayCommonPlus<Type>(this->source.data() + this->idx, this->siz, arr);
+	}
+
+	template<typename Type>
+	void ArraySpan<Type>::trim(UInt size)
+	{
+		SPADAS_ERROR_RETURN(size == 0);
+		if (size < this->siz) this->siz = size;
+	}
+
+	template<typename Type>
+	void ArraySpan<Type>::set(Type value)
+	{
+		if (!this->siz) return;
+		else internal::arrayCommonSet<Type>(this->source.data() + this->idx, this->siz, value);
+	}
+
+	template<typename Type>
+	Bool ArraySpan<Type>::contain(Type val)
+	{
+		if (!this->siz) return FALSE;
+		else
+		{
+			Func<Bool(Type&)> func = [val](Type& v){ return v == val; };
+			return internal::arrayCommonContain<Type>(this->source.data() + this->idx, this->siz, func);
+		}
+	}
+
+	template<typename Type>
+	Bool ArraySpan<Type>::containAs(Func<Bool(Type&)> func)
+	{
+		if (!this->siz) return FALSE;
+		else return internal::arrayCommonContain<Type>(this->source.data() + this->idx, this->siz, func);
+	}
+
+	template<typename Type>
+	Array<UInt> ArraySpan<Type>::search(Type val)
+	{
+		if (!this->siz) return Array<UInt>();
+		else
+		{
+			Func<Bool(Type&)> func = [val](Type& v){ return v == val; };
+			return internal::arrayCommonSearch<Type>(this->source.data() + this->idx, this->siz, func);
+		}
+	}
+
+	template<typename Type>
+	Array<UInt> ArraySpan<Type>::searchAs(Func<Bool(Type&)> func)
+	{
+		if (!this->siz) return Array<UInt>();
+		else return internal::arrayCommonSearch<Type>(this->source.data() + this->idx, this->siz, func);
+	}
+
+	template<typename Type>
+	void ArraySpan<Type>::sort()
+	{
+		if (!this->siz) return;
+		else
+		{
+			Func<Bool(Type&, Type&)> func = [](Type& a, Type& b){ return a > b; };
+			internal::arrayCommonSort<Type>(this->source.data() + this->idx, this->siz, func);
+		}
+	}
+
+	template<typename Type>
+	void ArraySpan<Type>::sortAs(Func<Bool(Type&, Type&)> func)
+	{
+		if (!this->siz) return;
+		else internal::arrayCommonSort<Type>(this->source.data() + this->idx, this->siz, func);
 	}
 
 	template<typename Type>
 	template<typename TargetType>
-	Array<TargetType> Array<Type>::asArray(Array<Bool>& ok)
+	Array<TargetType> ArraySpan<Type>::convert(Func<TargetType(Type&)> func)
 	{
-		if (!this->vars)
+		if (!this->siz) return Array<TargetType>();
+		else return internal::arrayCommonConvert<Type, TargetType>(this->source.data() + this->idx, this->siz, func);
+	}
+
+	template<typename Type>
+	Array<ArraySpan<Type> > ArraySpan<Type>::split(Array<UInt> sizes)
+	{
+		if (!this->siz) return Array<ArraySpan<Type> >();
+		else return internal::arrayCommonSplit(this->source, this->idx, this->siz, sizes);
+	}
+
+	template<typename Type>
+	template<typename TargetType>
+	Array<TargetType> ArraySpan<Type>::asArray()
+	{
+		if (!this->siz) return Array<TargetType>();
+		else return internal::arrayCommonAsArray<Type, TargetType>(this->source.data() + this->idx, this->siz);
+	}
+
+	template<typename Type>
+	template<typename TargetType>
+	Array<TargetType> ArraySpan<Type>::asArray(Array<Bool>& ok)
+	{
+		if (!this->siz)
 		{
 			ok = Array<Bool>();
 			return Array<TargetType>();
 		}
-		Array<TargetType> output = Array<TargetType>::createUninitialized(this->vars->size);
-		ok = Array<Bool>(this->vars->size);
-		for (UInt i = 0; i < this->vars->size; i++) output.initialize(i, this->vars->data[i].template as<TargetType>(ok[i]));
-		return output;
+		else return internal::arrayCommonAsArray<Type, TargetType>(this->source.data() + this->idx, this->siz, ok);
 	}
 
 	template<typename Type>
-	void Array<Type>::sort()
+	ArraySpan<Type> ArraySpan<Type>::sub(UInt index, UInt size)
 	{
-		if (!this->vars) return;
-		const Int n = this->vars->size;
-		if (n < 2) return;
-		Type* data = this->vars->data;
-		Array<UInt> indexArr(n);
-		UInt* indices = indexArr.data();
-		for (Int i = 0; i < n; i++)
-		{
-			indices[i] = i;
-		}
-		for (Int i = 0; i < n - 1; i++)
-		{
-			for (Int j = 0; j < n - i - 1; j++)
-			{
-				if (data[indices[j]] > data[indices[j + 1]])
-				{
-					UInt tmp = indices[j];
-					indices[j] = indices[j + 1];
-					indices[j + 1] = tmp;
-				}
-			}
-		}
-		Array<Type> newArr = Array<Type>::createUninitialized(n);
-		for (Int i = 0; i < n; i++)
-		{
-			newArr.initialize(i, data[indices[i]]);
-		}
-		this->setVars(newArr.getVars(), FALSE);
-	}
-
-	template<typename Type>
-	void Array<Type>::sortAs(Func<Bool(Type&, Type&)> func)
-	{
-		if (!this->vars) return;
-		const Int n = this->vars->size;
-		if (n < 2) return;
-		Type* data = this->vars->data;
-		Array<UInt> indexArr(n);
-		UInt* indices = indexArr.data();
-		for (Int i = 0; i < n; i++)
-		{
-			indices[i] = i;
-		}
-		for (Int i = 0; i < n - 1; i++)
-		{
-			for (Int j = 0; j < n - i - 1; j++)
-			{
-				if (func(data[indices[j]], data[indices[j + 1]]))
-				{
-					UInt tmp = indices[j];
-					indices[j] = indices[j + 1];
-					indices[j + 1] = tmp;
-				}
-			}
-		}
-		Array<Type> newArr = Array<Type>::createUninitialized(n);
-		for (Int i = 0; i < n; i++)
-		{
-			newArr.initialize(i, data[indices[i]]);
-		}
-		this->setVars(newArr.getVars(), FALSE);
+		SPADAS_ERROR_RETURNVAL(this->siz == 0, ArraySpan<Type>());
+		UInt dummy = 0;
+		return internal::arrayCommonSub(this->source, this->idx, this->siz, index, size, dummy);
 	}
 
 	template<typename Type>
@@ -1837,8 +2055,8 @@ namespace spadas
 			{
 				Byte* leaf0Data = new Byte[sizeof(internal::ArrayXNode<Type>) + sizeof(Type) * this->vars->segmentSize];
 				Byte* leaf1Data = new Byte[sizeof(internal::ArrayXNode<Type>) + sizeof(Type) * this->vars->segmentSize];
-				internal::ArrayXNode<Type>* leaf0Node = NULL;
-				internal::ArrayXNode<Type>* leaf1Node = NULL;
+				internal::ArrayXNode<Type>* leaf0Node = 0;
+				internal::ArrayXNode<Type>* leaf1Node = 0;
 				if (this->vars->withDefault)
 				{
 					leaf0Node = new (leaf0Data)internal::ArrayXNode<Type>((Type*)&leaf0Data[sizeof(internal::ArrayXNode<Type>)], this->vars->segmentSize, *this->vars->defaultValue);

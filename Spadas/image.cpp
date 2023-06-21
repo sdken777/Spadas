@@ -168,7 +168,7 @@ void Image::drawLayer(Image layer, CoordInt2D offset)
     }
 }
 
-Image Image::subImage(Region2D region)
+Image Image::sub(Region2D region)
 {
 	SPADAS_ERROR_RETURNVAL(!vars, Image());
 
@@ -435,7 +435,7 @@ Image Image::resize(Size2D outputSize, Bool undistort, Enum<ResizeMode> mode)
         table.init();
 		
         Image image(outputSize, vars->format, FALSE);
-		Image sub(*this);
+		Image subImage(*this);
 		if (undistort)
 		{
 			UInt srcWidth = vars->width;
@@ -447,16 +447,16 @@ Image Image::resize(Size2D outputSize, Bool undistort, Enum<ResizeMode> mode)
 			{
 				UInt srcWidth0 = max(1u, dstWidth * srcHeight / dstHeight);
                 UInt srcStartCol = (srcWidth - srcWidth0) / 2;
-                sub = subImage(Region2D(CoordInt2D::uv(srcStartCol, 0), Size2D::wh(srcWidth0, srcHeight)));
+                subImage = sub(Region2D(CoordInt2D::uv(srcStartCol, 0), Size2D::wh(srcWidth0, srcHeight)));
 			}
 			else  // clip Up-Down
 			{
 				UInt srcHeight0 = max(1u, srcWidth * dstHeight / dstWidth);
                 UInt srcStartRow = (srcHeight - srcHeight0) / 2;
-                sub = subImage(Region2D(CoordInt2D::uv(0, srcStartRow), Size2D::wh(srcWidth, srcHeight0)));
+                subImage = sub(Region2D(CoordInt2D::uv(0, srcStartRow), Size2D::wh(srcWidth, srcHeight0)));
 			}
 		}
-		resizeNearestOrBilinear(sub, image, mode);
+		resizeNearestOrBilinear(subImage, image, mode);
         return image;
 	}
 	
