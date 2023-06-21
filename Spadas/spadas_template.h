@@ -691,12 +691,9 @@ namespace spadas
 	template<typename Type>
 	Array<ArraySpan<Type> > Array<Type>::split(Array<UInt> sizes)
 	{
-		if (!this->vars) return Array<ArraySpan<Type> >();
-		else
-		{
-			this->vars->reserveSize = math::max(this->vars->reserveSize, this->vars->size);
-			return internal::arrayCommonSplit(*this, 0, this->vars->size, sizes);
-		}
+		SPADAS_ERROR_RETURNVAL(!this->vars, Array<ArraySpan<Type> >());
+		this->vars->reserveSize = math::max(this->vars->reserveSize, this->vars->size);
+		return internal::arrayCommonSplit(*this, 0, this->vars->size, sizes);
 	}
 
 	template<typename Type>
@@ -980,8 +977,8 @@ namespace spadas
 	template<typename Type>
 	Array<ArraySpan<Type> > ArraySpan<Type>::split(Array<UInt> sizes)
 	{
-		if (!this->siz) return Array<ArraySpan<Type> >();
-		else return internal::arrayCommonSplit(this->source, this->idx, this->siz, sizes);
+		SPADAS_ERROR_RETURNVAL(this->siz == 0, Array<ArraySpan<Type> >());
+		return internal::arrayCommonSplit(this->source, this->idx, this->siz, sizes);
 	}
 
 	template<typename Type>

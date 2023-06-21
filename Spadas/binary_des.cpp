@@ -320,12 +320,8 @@ void genSubKey(Binary sha1, int offset, std::bitset<48>& bits)
 	byteToBitset(sha1[offset + 5], bits, 40);
 }
 
-Binary Binary::toDES(String key)
+Binary binary_internal::desEncode(Binary sha1, const Byte* data, UInt rawsize)
 {
-	if (!vars) return Binary();
-	if (key.isEmpty()) key = "spadas";
-
-	Binary sha1 = key.toBinary().toSHA1();
 	Binary sha1ex(21, 0);
 	for (UInt i = 0; i < sha1.size(); i++) sha1ex[i] = sha1[i];
 
@@ -347,9 +343,7 @@ Binary Binary::toDES(String key)
 	genSubKey(sha1ex, 5, subKey[14]);
 	genSubKey(sha1ex, 11, subKey[15]);
 
-	UInt rawsize = vars->size;
 	UInt size = (rawsize % 8 == 0) ? rawsize : ((rawsize / 8 + 1) * 8);
-	Byte *data = vars->data;
 
 	Array<std::bitset<64> > input(size / 8);
 	for (UInt i = 0; i < rawsize; i++)
@@ -368,17 +362,14 @@ Binary Binary::toDES(String key)
 	{
 		bitsetToByte(output[i / 8], (i % 8) * 8, ret[i]);
 	}
-
 	return ret;
 }
 
-Optional<Binary> Binary::createFromDES(Binary encrypted, String key)
+Optional<Binary> binary_internal::desDecode(Binary encrypted, Binary sha1)
 {
 	if (encrypted.isEmpty()) return Binary();
 	if (encrypted.size() % 8 != 0) return Optional<Binary>();
-	if (key.isEmpty()) key = "spadas";
 
-	Binary sha1 = key.toBinary().toSHA1();
 	Binary sha1ex(21, 0);
 	for (UInt i = 0; i < sha1.size(); i++) sha1ex[i] = sha1[i];
 

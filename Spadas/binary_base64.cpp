@@ -34,7 +34,7 @@ void initBase64DecodeTable()
 	base64DecodeTable[(unsigned char)'='] = 0;
 }
 
-unsigned char* base64Decode(char* in, unsigned int& resultSize, bool trimTrailingZeros)
+unsigned char* binary_internal::base64Decode(char* in, unsigned int& resultSize, bool trimTrailingZeros)
 {
 	if (!haveInitedBase64DecodeTable)
 	{
@@ -78,7 +78,7 @@ unsigned char* base64Decode(char* in, unsigned int& resultSize, bool trimTrailin
 	return result;
 }
 
-char* base64Encode(char const* origSigned, unsigned origLength)
+char* binary_internal::base64Encode(char const* origSigned, unsigned origLength)
 {
 	unsigned char const* orig = (unsigned char const*)origSigned; // in case any input bytes have the MSB set  
 	if (orig == NULL) return NULL;
@@ -117,30 +117,5 @@ char* base64Encode(char const* origSigned, unsigned origLength)
 	}
 
 	result[numResultBytes] = 0;
-	return result;
-}
-
-Optional<Binary> Binary::createFromBase64(String base64)
-{
-	if (base64.isEmpty()) return Binary();
-
-	UInt base64DecodedLen;
-	Byte *base64DecodedBytes = base64Decode(base64.chars().data(), base64DecodedLen, true);
-	if (base64DecodedBytes == NULL) return Optional<Binary>();
-
-	Binary base64Decoded(base64DecodedBytes, base64DecodedLen);
-	delete[] base64DecodedBytes;
-	return base64Decoded;
-}
-
-String Binary::toBase64()
-{
-	if (!vars) return String();
-
-	Char *base64EncodedChars = base64Encode((Char*)vars->data, vars->size);
-	if (base64EncodedChars == NULL) return String();
-
-	String result = base64EncodedChars;
-	delete[] base64EncodedChars;
 	return result;
 }

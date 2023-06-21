@@ -101,6 +101,12 @@ namespace spadas
 	// 链表节点
 	template <typename Type> class ListNode;
 
+	// 二进制数据
+	class Binary;
+
+	// 二进制数据片段
+	class BinarySpan;
+
 	// 图像对
 	struct ImagePair;
 
@@ -1626,51 +1632,37 @@ namespace spadas
 		/// @returns 解码后的数据块，若失败则返回无效对象
 		static Optional<Binary> createFromDES(Binary encrypted, String key);
 
-		/// 取得数据块大小
-		UInt size();
-
 		/// [非安全] 取得数据块的头指针
 		Byte *data();
 
-		/// 取得某个字节的引用
-		Byte& operator [](UInt index);
+		/// 取得数据块大小
+		UInt size();
 
-		/// 取得子数据块，其数据绑定至本数据块的数据
-		Binary sub(UInt index, UInt size = UINF);
-
-		/// 本对象是否无效（大小为0）
+		/// 数据是否为空
 		Bool isEmpty();
-		
-		/// 缩减数据块大小
-		void trim(UInt size);
 
 		/// 克隆出一个新对象
 		Binary clone();
-		
-		/// 对所有字节赋同一个值
-		void set(Byte val);
 
-		/// @brief 从另一个数据块的某个子区域拷贝数据到本数据块的某个位置
-		/// @param src 源数据数组
-		/// @param srcRegion 从源数组拷贝的区域
-		/// @param dstOffset 拷贝至本数据块的起始位置
-		void copy(Binary src, Region srcRegion, UInt dstOffset);
-		
-		/// @brief 根据指定的大小分割为多个数据块
-		/// @param sizes 将分割成的每个数据块的大小（字节单位）
-		/// @returns 分割后的多个数据块
-		Array<Binary> split(Array<UInt> sizes);
-
-		/// @brief 合并多个数据块
-		/// @param binaries 将合并的多个数据块
-		/// @returns 合并后的数据块
-		static Binary merge(Array<Binary> binaries);
+		/// 取得某个字节的引用
+		Byte& operator [](UInt index);
 
 		/// @brief 在本数据块后拼接另一个数据块
 		/// @param bin 将拼接的另一个数据块
 		/// @returns 拼接后的数据块
 		Binary operator +(Binary bin);
 
+		/// 缩减数据块大小
+		void trim(UInt size);
+
+		/// 对所有字节赋同一个值
+		void set(Byte val);
+
+		/// @brief 根据指定的大小分割为多个数据块
+		/// @param sizes 将分割成的每个数据块的大小（字节单位）
+		/// @returns 分割后的多个数据块
+		Array<BinarySpan> split(Array<UInt> sizes);
+		
 		/// 生成逆序数据块
 		Binary reverse();
 
@@ -1685,9 +1677,87 @@ namespace spadas
 		/// @returns DES加密后的数据块
 		Binary toDES(String key);
 
+		/// 取得子数据块，其数据绑定至本数据块的数据
+		BinarySpan sub(UInt index, UInt size = UINF);
+
+		/// @brief 从另一个数据块的某个子区域拷贝数据到本数据块的某个位置
+		/// @param src 源数据数组
+		/// @param srcRegion 从源数组拷贝的区域
+		/// @param dstOffset 拷贝至本数据块的起始位置
+		void copy(Binary src, Region srcRegion, UInt dstOffset);
+
+		/// @brief 合并多个数据块
+		/// @param binaries 将合并的多个数据块
+		/// @returns 合并后的数据块
+		static Binary merge(Array<Binary> binaries);
+
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
+	};
+
+	/// 二进制数据片段，绑定至原二进制数据
+	class SPADAS_API BinarySpan
+	{
+	public:
+		/// 创建空片段
+		BinarySpan();
+
+		/// [非安全] 绑定至原二进制数据
+		BinarySpan(Binary& sourceBinary, UInt index, UInt size);
+
+		/// [非安全] 取得数据片段的头指针
+		Byte *data();
+
+		/// 取得数据片段大小
+		UInt size();
+
+		/// 数据片段是否为空
+		Bool isEmpty();
+
+		/// 克隆出一个新对象
+		Binary clone();
+
+		/// 取得某个字节的引用
+		Byte& operator [](UInt index);
+
+		/// @brief 在本数据片段后拼接另一个数据块
+		/// @param bin 将拼接的另一个数据块
+		/// @returns 拼接后的数据块
+		Binary operator +(Binary bin);
+
+		/// 缩减数据片段大小
+		void trim(UInt size);
+
+		/// 对所有字节赋同一个值
+		void set(Byte val);
+
+		/// @brief 根据指定的大小分割为多个数据片段
+		/// @param sizes 将分割成的每个数据片段的大小（字节单位）
+		/// @returns 分割后的多个数据片段
+		Array<BinarySpan> split(Array<UInt> sizes);
+		
+		/// 生成逆序数据块
+		Binary reverse();
+
+		/// 加密为Base64字符串
+		String toBase64();
+
+		/// SHA1加密
+		Binary toSHA1();
+
+		/// @brief DES加密(本数据块长度建议为8的倍数，若不满足则以0填满)
+		/// @param key DES密钥
+		/// @returns DES加密后的数据块
+		Binary toDES(String key);
+
+		/// 取得子数据片段，其数据绑定至原数据块的数据
+		BinarySpan sub(UInt index, UInt size = UINF);
+
+	private:
+		Binary source;
+		UInt idx;
+		UInt siz;
 	};
 
 	// 字符串 //////////////////////////////////////////////////////////////
