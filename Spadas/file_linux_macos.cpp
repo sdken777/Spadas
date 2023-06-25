@@ -122,6 +122,27 @@ namespace file_internal
 		else return homePath + "SpadasFiles/";
 	}
 
+	Bool isPathStringValid(String pathString, UInt& rootLength, Bool& isAbsolute)
+	{
+		UInt len = pathString.length();
+		const Byte* bytes = pathString.bytes();
+
+		if (len >= 2 && bytes[1] == (Byte)':') return FALSE; // windows style
+
+		if (len >= 1 && (bytes[0] == '/' || bytes[0] == '\\'))
+		{
+			rootLength = 0;
+			isAbsolute = TRUE;
+			return TRUE;
+		}
+		else
+		{
+			rootLength = 0;
+			isAbsolute = FALSE;
+			return TRUE;
+		}
+	}
+
 	Pointer fileOpen(String file, Bool outputMode)
 	{
 		return (Pointer)fopen(file.chars().data(), outputMode ? "w+" : "r");

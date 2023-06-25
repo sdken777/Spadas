@@ -57,6 +57,35 @@ namespace file_internal
 		return '\\';
 	}
 
+	Bool isPathStringValid(String pathString, UInt& rootLength, Bool& isAbsolute)
+	{
+		UInt len = pathString.length();
+		const Byte* bytes = pathString.bytes();
+
+		if (len >= 1 && (bytes[0] == (Byte)'/' || bytes[0] == (Byte)'\\')) return FALSE; // unix style
+
+		if (len >= 3 && bytes[1] == (Byte)':' && (bytes[2] == '/' || bytes[2] == '\\'))
+		{
+			Byte drive = bytes[0];
+			Bool validDrive = FALSE;
+			if (drive >= (Byte)'A' && drive <= (Byte)'Z') validDrive = TRUE;
+			else if (drive >= (Byte)'a' && drive <= (Byte)'z') validDrive = TRUE;
+			if (validDrive)
+			{
+				rootLength = 2;
+				isAbsolute = TRUE;
+				return TRUE;
+			}
+			else return FALSE;
+		}
+		else
+		{
+			rootLength = 0;
+			isAbsolute = FALSE;
+			return TRUE;
+		}
+	}
+
 	// file I/O operations
 	Pointer fileOpen(String fileName, Bool outputMode)
 	{

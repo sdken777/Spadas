@@ -2528,8 +2528,8 @@ namespace spadas
 
 		/// @brief 基于一个绝对路径或相对路径的字符串初始化
 		/// @param pathString 绝对路径或相对路径字符串，相对路径将基于当前工作目录 \n
-		/// - 若为文件夹，需显式的以路径分隔符/或\结尾 \n
-		/// - 若为空字符串或"."都表示"./"，即当前工作目录
+		/// - 若为文件夹，需显式的以路径分隔符"/"或"\"结尾 \n
+		/// - 可加入"../"或"..\"表示上层文件夹
 		Path(String pathString);
 
 		/// 取得文件或文件夹名称（不包含后缀）
@@ -2541,7 +2541,7 @@ namespace spadas
 		/// 取得文件或文件夹全名 (名称加后缀)
 		String fullName();
 
-		/// 取得文件或文件夹的绝对路径字符串 (文件夹以路径分隔符/或\结尾)
+		/// 取得文件或文件夹的绝对路径字符串 (文件夹以路径分隔符"/"或"\"结尾)
 		String fullPath();
 
 		/// 比较两个路径是否一致
@@ -2601,7 +2601,7 @@ namespace spadas
 		/// (仅限文件夹) 生成子文件夹路径（无需在末尾加路径分隔符）
 		Path childFolder(String childFullName);
 
-		/// (仅限文件夹) 输入当前文件夹内的相对路径，生成文件或文件夹路径 (文件夹以路径分隔符/或\结尾)
+		/// (仅限文件夹) 输入当前文件夹内的相对路径，生成文件或文件夹路径 (文件夹以路径分隔符"/"或"\"结尾)
 		Path childPath(String pathString);
 
 		/// (仅限文件夹) 检查目标路径是否包含在当前文件夹内
@@ -2628,10 +2628,10 @@ namespace spadas
 		/// 获得SpadasFiles目录
 		static Path spadasFilesPath();
 
-		/// 设置工作目录 (注意应以路径分隔符/或\结尾)
+		/// 设置工作目录 (注意应以路径分隔符"/"或"\"结尾)
 		static void setWorkPath(String pathString);
 
-		/// 设置可执行程序所在目录 (注意应以路径分隔符/或\结尾)
+		/// 设置可执行程序所在目录 (注意应以路径分隔符"/"或"\"结尾)
 		static void setExecutableFolderPath(String pathString);
 	};
 

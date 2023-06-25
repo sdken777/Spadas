@@ -9,15 +9,13 @@ namespace file_internal
 	class PathsInfo
 	{
 	public:
-		String workPath;
-		ListNode<String> workPathComponents;
-		String executableFolderPath;
-		String homePath;
-		String spadasFilesPath;
+		Array<StringSpan> workPathComponents;
+		Array<StringSpan> executableFolderPathComponents;
+		Array<StringSpan> homePathComponents;
+		Array<StringSpan> spadasFilesPathComponents;
 		PathsInfo();
 		void setWorkPath(String path);
 		void setExecutableFolderPath(String path);
-		~PathsInfo();
 	};
 	extern PathsInfo pathsInfo;
 
@@ -26,6 +24,7 @@ namespace file_internal
 	String getHomePathString();
 	String getSpadasFilesPathString();
 	Char getSeparatorChar();
+	Bool isPathStringValid(String pathString, UInt& rootLength, Bool& isAbsolute);
 
 	// file I/O operations
 	const UInt SCAN_SIZE = 1048576; // 1024 * 1024

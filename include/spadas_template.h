@@ -729,14 +729,14 @@ namespace spadas
 	template<typename Type>
 	ArrayElem<Type> Array<Type>::firstElem()
 	{
-		this->vars->reserveSize = math::max(this->vars->reserveSize, this->vars->size);
+		if (this->vars) this->vars->reserveSize = math::max(this->vars->reserveSize, this->vars->size);
 		return ArrayElem<Type>(*this, 0);
 	}
 
 	template<typename Type>
 	ArrayElem<Type> Array<Type>::lastElem()
 	{
-		this->vars->reserveSize = math::max(this->vars->reserveSize, this->vars->size);
+		if (this->vars) this->vars->reserveSize = math::max(this->vars->reserveSize, this->vars->size);
 		return ArrayElem<Type>(*this, this->vars ? (this->vars->size - 1) : UINF);
 	}
 
@@ -2123,19 +2123,27 @@ namespace spadas
 	template<typename Type>
 	void ArrayX<Type>::setSize(UInt size)
 	{
-		if (size == this->vars->size) return;
-		SPADAS_ERROR_RETURN(size < this->vars->size || size > ARRAYX_SIZE_LIMIT);
 		if (!this->vars)
 		{
 			Byte* newVarsRaw = new Byte[sizeof(ArrayXVars<Type>) + sizeof(Type) * 16];
 			ArrayXVars<Type>* newVars = new (newVarsRaw)ArrayXVars<Type>(16, 4, (Type*)&newVarsRaw[sizeof(ArrayXVars<Type>)]);
 			this->setVars(newVars, TRUE);
 		}
+		if (size == this->vars->size) return;
+		SPADAS_ERROR_RETURN(size < this->vars->size || size > ARRAYX_SIZE_LIMIT);
 		UInt index = size - 1;
 		UInt segment = (index >> this->vars->segmentSizePower) + 1;
 		UInt localIndex = index & this->vars->segmentSizeMask;
-		this->vars->lastSegment = this->vars->accessingSegment = segment;
-		this->vars->lastNode = this->vars->accessingNode = (internal::ArrayXNode<Type>*)getSegmentNode(segment);
+		this->vars->lastSegment = segment;
+		if (segment == this->vars->accessingSegment)
+		{
+			this->vars->lastNode = this->vars->accessingNode;
+		}
+		else
+		{
+			this->vars->accessingSegment = segment;
+			this->vars->lastNode = this->vars->accessingNode = (internal::ArrayXNode<Type>*)getSegmentNode(segment);
+		}
 		this->vars->lastNextIndex = localIndex + 1;
 		this->vars->size = size;
 	}
