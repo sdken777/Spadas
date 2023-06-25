@@ -1908,14 +1908,14 @@ namespace spadas
 	template<typename Type>
 	void ArrayX<Type>::setSize(UInt size)
 	{
-		if (size == this->vars->size) return;
-		SPADAS_ERROR_RETURN(size < this->vars->size || size > ARRAYX_SIZE_LIMIT);
 		if (!this->vars)
 		{
 			Byte* newVarsRaw = new Byte[sizeof(ArrayXVars<Type>) + sizeof(Type) * 16];
 			ArrayXVars<Type>* newVars = new (newVarsRaw)ArrayXVars<Type>(16, 4, (Type*)&newVarsRaw[sizeof(ArrayXVars<Type>)]);
 			this->setVars(newVars, TRUE);
 		}
+		if (size == this->vars->size) return;
+		SPADAS_ERROR_RETURN(size < this->vars->size || size > ARRAYX_SIZE_LIMIT);
 		UInt index = size - 1;
 		UInt segment = (index >> this->vars->segmentSizePower) + 1;
 		UInt localIndex = index & this->vars->segmentSizeMask;
