@@ -2660,6 +2660,12 @@ namespace spadas
 		/// 以文本输出模式创建或重新创建文件（UTF-8编码，带BOM头，回车符\n）
 		static File createText(Path filePath);
 
+		/// 以二进制输出模式打开文件（若不存在则创建）并在尾部追加内容
+		static File appendBinary(Path filePath);
+
+		/// 以文本输出模式打开文件（若不存在则创建）并在尾部追加内容（将检测UTF-8 BOM头）
+		static File appendText(Path filePath);
+
 		/// 关闭文件I/O（在输出模式下，关闭前将缓冲区中所有数据写入磁盘）
 		void close();
 

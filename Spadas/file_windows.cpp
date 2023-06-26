@@ -87,10 +87,10 @@ namespace file_internal
 	}
 
 	// file I/O operations
-	Pointer fileOpen(String fileName, Bool outputMode)
+	Pointer fileOpen(String fileName, Bool outputMode, Bool appendMode)
 	{
 		FILE *file;
-		_wfopen_s(&file, fileName.wchars().data(), outputMode ? L"wb+" : L"rb");
+		_wfopen_s(&file, fileName.wchars().data(), outputMode ? (appendMode ? L"ab+" : L"wb+") : L"rb");
 		return (Pointer)file;
 	}
 
@@ -99,12 +99,30 @@ namespace file_internal
 		if (file) fclose((FILE*)file);
 	}
 
-	void filePrint(Pointer file, String text)
+	void filePrint(Pointer file, String text, Bool isUtf8)
 	{
-		fwrite(text.bytes(), sizeof(Byte), text.length(), (FILE*)file);
+		if (isUtf8)
+		{
+			if (!text.isEmpty()) fwrite(text.bytes(), sizeof(Byte), text.length(), (FILE*)file);
 
-		const Byte enter = '\n';
-		fwrite(&enter, sizeof(Byte), 1, (FILE*)file);
+			const Byte enter = '\n';
+			fwrite(&enter, sizeof(Byte), 1, (FILE*)file);
+		}
+		else
+		{
+			if (!text.isEmpty())
+			{
+				Array<WChar> wchars = text.wchars();
+				Array<Char> chars(wchars.size() * 3);
+				UInt charsLength = wCharToAnsi(wchars.data(), wchars.size() - 1, (Byte*)chars.data(), chars.size());
+				chars[charsLength] = 0;
+
+				fwrite(chars.data(), sizeof(Char), charsLength, (FILE*)file);
+			}
+
+			const Byte enter[2] = { '\r', '\n' };
+			fwrite(enter, sizeof(Byte) * 2, 1, (FILE*)file);
+		}
 	}
 
 	String fileScan(Pointer file, Char buffer[SCAN_SIZE], Bool isUtf8)

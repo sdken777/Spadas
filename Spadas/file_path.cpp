@@ -434,7 +434,7 @@ ULong Path::fileSize()
 	SPADAS_ERROR_RETURNVAL(vars->isFolder, 0);
 	SPADAS_ERROR_RETURNVAL(!exist(), 0);
 	
-	Pointer filePtr = fileOpen(vars->getPathString(), FALSE);
+	Pointer filePtr = fileOpen(vars->getPathString(), FALSE, FALSE);
 	SPADAS_ERROR_RETURNVAL(filePtr == NULL, 0);
 	
 	ULong size = fileGetSize(filePtr);
@@ -454,7 +454,7 @@ void Path::fileCreate(UInt size)
 
 	if (!folderExist(parentFolder.vars->getPathString())) parentFolder.folderMake();
 	
-	Pointer file = fileOpen(vars->getPathString(), TRUE);
+	Pointer file = fileOpen(vars->getPathString(), TRUE, FALSE);
 	SPADAS_ERROR_RETURN(file == NULL);
 
 	if (size != 0)

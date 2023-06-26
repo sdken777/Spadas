@@ -143,9 +143,9 @@ namespace file_internal
 		}
 	}
 
-	Pointer fileOpen(String file, Bool outputMode)
+	Pointer fileOpen(String file, Bool outputMode, Bool appendMode)
 	{
-		return (Pointer)fopen(file.chars().data(), outputMode ? "w+" : "r");
+		return (Pointer)fopen(file.chars().data(), outputMode ? (appendMode ? "a+" : "w+") : "r");
 	}
 
 	void fileClose(Pointer file)
@@ -153,9 +153,9 @@ namespace file_internal
 		fclose((FILE*)file);
 	}
 
-	void filePrint(Pointer file, String text)
+	void filePrint(Pointer file, String text, Bool isUtf8)
 	{
-		fwrite(text.bytes(), 1, text.length(), (FILE*)file);
+		if (!text.isEmpty()) fwrite(text.bytes(), 1, text.length(), (FILE*)file);
 
 		const unsigned char enter = '\n';
 		fwrite(&enter, 1, 1, (FILE*)file);

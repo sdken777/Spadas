@@ -34,12 +34,12 @@ namespace file_internal
 	// file I/O operations
 	const UInt SCAN_SIZE = 1048576; // 1024 * 1024
 
-	Pointer fileOpen(String fileName, Bool outputMode);
+	Pointer fileOpen(String fileName, Bool outputMode, Bool appendMode);
 	void fileClose(Pointer file);
-	void filePrint(Pointer file, String text);
+	void filePrint(Pointer file, String text/* can be empty */, Bool isUtf8);
 	String fileScan(Pointer file, Char buffer[SCAN_SIZE], Bool isUtf8);
 	Binary fileInput(Pointer file, UInt inputSize, ULong fileSize, ULong filePos);
-	void fileOutput(Pointer file, Binary data);
+	void fileOutput(Pointer file, Binary data/* not empty */);
 	void fileFlush(Pointer file);
 	ULong fileGetSize(Pointer file); // should be called before any I/O
 	ULong filePos(Pointer file);
