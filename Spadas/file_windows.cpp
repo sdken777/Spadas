@@ -220,7 +220,7 @@ namespace file_internal
 			if (!file || !fileExist) break;
 
 			String fileName = fileInfo.cFileName;
-			if (fileName == "." || fileName == "..") continue;
+			if (fileName.isEmpty() || fileName == "." || fileName == "..") continue;
 
 			if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) out[out.size()] = fileName + separator;
 			else out[out.size()] = fileName;
