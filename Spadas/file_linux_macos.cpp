@@ -287,7 +287,7 @@ namespace file_internal
 		while ((content = readdir(folder)) != NULL)
 		{
 			String fileName = content->d_name;
-			if (fileName == "." || fileName == "..") continue;
+			if (fileName.isEmpty() || fileName == "." || fileName == "..") continue;
 
 			Bool isFolder = FALSE;
 			if ((Int)content->d_type == (Int)DT_UNKNOWN)

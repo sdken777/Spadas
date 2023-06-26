@@ -16,11 +16,11 @@ namespace math_internal
 	}
 	Float getThresh(Float s0)
 	{
-		return s0 * 0.0000001f;
+		return math::abs(s0) * 0.0000001f;
 	}
 	Double getThresh(Double s0)
 	{
-		return s0 * 0.000000000000001;
+		return math::abs(s0) * 0.000000000000001;
 	}
 	inline Float sign(Float a, Float b)
 	{
@@ -463,7 +463,7 @@ FloatMat spadas::math::inverse(FloatMat src)
 	s1.set(0);
 	for (UInt i = 0; i < dim; i++)
 	{
-		s1(i, i) = s(i, i) <= thresh ? 0 : (Float)1 / s(i, i);
+		s1(i, i) = math::abs(s(i, i)) <= thresh ? 0 : (Float)1 / s(i, i);
 	}
 	
 	return v * s1 * u.transpose();
@@ -483,7 +483,7 @@ DoubleMat spadas::math::inverse(DoubleMat src)
 	s1.set(0);
 	for (UInt i = 0; i < dim; i++)
 	{
-		s1(i, i) = s(i, i) <= thresh ? 0 : (Double)1 / s(i, i);
+		s1(i, i) = math::abs(s(i, i)) <= thresh ? 0 : (Double)1 / s(i, i);
 	}
 	
 	return v * s1 * u.transpose();
