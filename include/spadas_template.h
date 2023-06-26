@@ -2561,21 +2561,28 @@ namespace spadas
 	template<typename Type> class StreamVars : public Vars
 	{
 	public:
-		UInt nEnqueued;
-		UInt nDequeued;
-		UInt nDiscarded;
-		volatile UInt nElements;
 		UInt capacity;
+		volatile UInt nElements;
+		UInt nDiscarded;
 		Bool discardable;
 		volatile Bool terminated;
-		ListNode<Type> origin;
-		StreamVars() : nEnqueued(0), nDequeued(0), nDiscarded(0), nElements(0), capacity(0), discardable(FALSE), terminated(FALSE)
-		{
-			origin.joinNext(origin);
-		}
+		Type *buffer;
+		Type *toEnqueue;
+		Type *toDequeue;
+		StreamVars(UInt capacity, Type *buffer, Bool discardable) : capacity(capacity), nElements(0), nDiscarded(0), discardable(discardable), terminated(FALSE), buffer(buffer), toEnqueue(buffer), toDequeue(0)
+		{ }
 		~StreamVars()
 		{
-			origin.collapse();
+			if (!__is_trivial(Type))
+			{
+				Type *bufferEnd = buffer + capacity;
+				while (toDequeue)
+				{
+					toDequeue->~Type();
+					if (++toDequeue == bufferEnd) toDequeue = buffer;
+					if (toDequeue == toEnqueue) toDequeue = 0;
+				}
+			}
 		}
 		Bool isSpinLockManaged() override
 		{
@@ -2584,58 +2591,26 @@ namespace spadas
 	};
 
 	template<typename Type>
-	Stream<Type>::Stream() : Object<StreamVars<Type> >(new StreamVars<Type>(), TRUE)
+	Stream<Type>::Stream()
 	{
-		this->vars->capacity = 1;
-		this->vars->discardable = TRUE;
+		Byte* newVarsRaw = new Byte[sizeof(StreamVars<Type>) + sizeof(Type)];
+		StreamVars<Type>* newVars = new (newVarsRaw)StreamVars<Type>(1, (Type*)&newVarsRaw[sizeof(StreamVars<Type>)], TRUE);
+		this->setVars(newVars, TRUE);
 	}
 
 	template<typename Type>
-	Stream<Type>::Stream(UInt capacity, Bool discardable) : Object<StreamVars<Type> >(new StreamVars<Type>(), TRUE)
+	Stream<Type>::Stream(UInt capacity, Bool discardable)
 	{
-		this->vars->capacity = math::max(1u, capacity);
-		this->vars->discardable = discardable;
+		capacity = math::max(1u, capacity);
+		Byte* newVarsRaw = new Byte[sizeof(StreamVars<Type>) + sizeof(Type) * capacity];
+		StreamVars<Type>* newVars = new (newVarsRaw)StreamVars<Type>(capacity, (Type*)&newVarsRaw[sizeof(StreamVars<Type>)], discardable);
+		this->setVars(newVars, TRUE);
 	}
 
 	template<typename Type>
 	UInt Stream<Type>::capacity()
 	{
 		return this->vars->capacity;
-	}
-
-	template<typename Type>
-	void Stream<Type>::setCapacity(UInt capacity)
-	{
-		capacity = math::max(1u, capacity);
-		if (this->vars->capacity == capacity) return;
-		this->vars->spinEnter();
-		this->vars->capacity = capacity;
-		if (this->vars->capacity < this->vars->nElements)
-		{
-			UInt nRemove = this->vars->nElements - this->vars->capacity;
-			for (UInt i = 0; i < nRemove; i++) this->vars->origin.removeNext();
-			this->vars->nDiscarded += nRemove;
-			this->vars->nElements -= nRemove;
-		}
-		this->vars->spinLeave();
-	}
-
-	template<typename Type>
-	UInt Stream<Type>::nEnqueued()
-	{
-		return this->vars->nEnqueued;
-	}
-
-	template<typename Type>
-	UInt Stream<Type>::nDequeued()
-	{
-		return this->vars->nDequeued;
-	}
-
-	template<typename Type>
-	UInt Stream<Type>::nDiscarded()
-	{
-		return this->vars->nDiscarded;
 	}
 
 	template<typename Type>
@@ -2651,17 +2626,23 @@ namespace spadas
 	}
 
 	template<typename Type>
+	UInt Stream<Type>::nDiscarded()
+	{
+		return this->vars->nDiscarded;
+	}
+
+	template<typename Type>
 	Type Stream<Type>::first()
 	{
 		this->vars->spinEnter();
-		if (this->vars->nElements == 0)
+		if (!this->vars->toDequeue)
 		{
 			this->vars->spinLeave();
 			return Type();
 		}
 		else
 		{
-			Type output = this->vars->origin.next().value();
+			Type output = *this->vars->toDequeue;
 			this->vars->spinLeave();
 			return output;
 		}
@@ -2678,7 +2659,7 @@ namespace spadas
 		}
 		else
 		{
-			Type output = this->vars->origin.previous().value();
+			Type output = *((this->vars->toEnqueue == this->vars->buffer ? (this->vars->buffer + this->vars->capacity) : this->vars->toEnqueue) - 1);
 			this->vars->spinLeave();
 			return output;
 		}
@@ -2702,18 +2683,24 @@ namespace spadas
 		}
 		if (this->vars->terminated)
 		{
-			SPADAS_WARNING_MSG("this->vars->terminated");
 			this->vars->spinLeave();
+			SPADAS_WARNING_MSG("this->vars->terminated");
 			return;
 		}
-		this->vars->origin.insertPrevious(newElement);
-		this->vars->nEnqueued++;
+		Type *bufferEnd = this->vars->buffer + this->vars->capacity;
 		if (this->vars->nElements == this->vars->capacity)
 		{
-			this->vars->origin.removeNext();
+			if (!__is_trivial(Type))
+			{
+				this->vars->toEnqueue->~Type();
+			}
+			if (++this->vars->toDequeue == bufferEnd) this->vars->toDequeue = this->vars->buffer;
 			this->vars->nDiscarded++;
 		}
 		else this->vars->nElements++;
+		new (this->vars->toEnqueue)Type(newElement);
+		if (!this->vars->toDequeue) this->vars->toDequeue = this->vars->toEnqueue;
+		if (++this->vars->toEnqueue == bufferEnd) this->vars->toEnqueue = this->vars->buffer;
 		this->vars->spinLeave();
 	}
 
@@ -2738,14 +2725,20 @@ namespace spadas
 			this->vars->spinLeave();
 			return FALSE;
 		}
-		this->vars->origin.insertPrevious(newElement);
-		this->vars->nEnqueued++;
+		Type *bufferEnd = this->vars->buffer + this->vars->capacity;
 		if (this->vars->nElements == this->vars->capacity)
 		{
-			this->vars->origin.removeNext();
+			if (!__is_trivial(Type))
+			{
+				this->vars->toEnqueue->~Type();
+			}
+			if (++this->vars->toDequeue == bufferEnd) this->vars->toDequeue = this->vars->buffer;
 			this->vars->nDiscarded++;
 		}
 		else this->vars->nElements++;
+		new (this->vars->toEnqueue)Type(newElement);
+		if (!this->vars->toDequeue) this->vars->toDequeue = this->vars->toEnqueue;
+		if (++this->vars->toEnqueue == bufferEnd) this->vars->toEnqueue = this->vars->buffer;
 		this->vars->spinLeave();
 		return TRUE;
 	}
@@ -2768,20 +2761,26 @@ namespace spadas
 			this->vars->spinEnter();
 			if (this->vars->terminated)
 			{
-				SPADAS_WARNING_MSG("this->vars->terminated");
 				this->vars->spinLeave();
+				SPADAS_WARNING_MSG("this->vars->terminated");
 				return;
 			}
+			Type *bufferEnd = this->vars->buffer + this->vars->capacity;
 			for (UInt i = 0; i < elemSize; i++)
 			{
-				this->vars->origin.insertPrevious(newElements[i]);
-				this->vars->nEnqueued++;
 				if (this->vars->nElements == this->vars->capacity)
 				{
-					this->vars->origin.removeNext();
+					if (!__is_trivial(Type))
+					{
+						this->vars->toEnqueue->~Type();
+					}
+					if (++this->vars->toDequeue == bufferEnd) this->vars->toDequeue = this->vars->buffer;
 					this->vars->nDiscarded++;
 				}
 				else this->vars->nElements++;
+				new (this->vars->toEnqueue)Type(newElements[i]);
+				if (!this->vars->toDequeue) this->vars->toDequeue = this->vars->toEnqueue;
+				if (++this->vars->toEnqueue == bufferEnd) this->vars->toEnqueue = this->vars->buffer;
 			}
 			this->vars->spinLeave();
 		}
@@ -2808,16 +2807,22 @@ namespace spadas
 				this->vars->spinLeave();
 				return FALSE;
 			}
+			Type *bufferEnd = this->vars->buffer + this->vars->capacity;
 			for (UInt i = 0; i < elemSize; i++)
 			{
-				this->vars->origin.insertPrevious(newElements[i]);
-				this->vars->nEnqueued++;
 				if (this->vars->nElements == this->vars->capacity)
 				{
-					this->vars->origin.removeNext();
+					if (!__is_trivial(Type))
+					{
+						this->vars->toEnqueue->~Type();
+					}
+					if (++this->vars->toDequeue == bufferEnd) this->vars->toDequeue = this->vars->buffer;
 					this->vars->nDiscarded++;
 				}
 				else this->vars->nElements++;
+				new (this->vars->toEnqueue)Type(newElements[i]);
+				if (!this->vars->toDequeue) this->vars->toDequeue = this->vars->toEnqueue;
+				if (++this->vars->toEnqueue == bufferEnd) this->vars->toEnqueue = this->vars->buffer;
 			}
 			this->vars->spinLeave();
 			return TRUE;
@@ -2830,35 +2835,43 @@ namespace spadas
 		this->vars->spinEnter();
 		UInt nOuts = math::min(this->vars->nElements, num);
 		Array<Type> out = Array<Type>::createUninitialized(nOuts);
+		Type *bufferEnd = this->vars->buffer + this->vars->capacity;
 		for (UInt i = 0; i < nOuts; i++)
 		{
-			out.initialize(i, this->vars->origin.next().value());
-			this->vars->origin.removeNext();
+			out.initialize(i, *this->vars->toDequeue);
+			if (!__is_trivial(Type))
+			{
+				this->vars->toDequeue->~Type();
+			}
+			if (++this->vars->toDequeue == bufferEnd) this->vars->toDequeue = this->vars->buffer;
 		}
-		this->vars->nDequeued += nOuts;
 		this->vars->nElements -= nOuts;
+		if (this->vars->nElements == 0) this->vars->toDequeue = 0;
 		this->vars->spinLeave();
 		return out;
 	}
 
 	template<typename Type>
-	template<typename TargetType>
-	Array<Type> Stream<Type>::dequeueLessThan(TargetType target)
+	Array<Type> Stream<Type>::dequeue(Func<Bool(Type&)> func)
 	{
 		this->vars->spinEnter();
-		List<Type> out;
+		ArrayX<Type> out;
+		Type *bufferEnd = this->vars->buffer + this->vars->capacity;
 		for (UInt i = 0; i < this->vars->nElements; i++)
 		{
-			Type& val = this->vars->origin.next().value();
-			if (val < target)
+			if (func(*this->vars->toDequeue))
 			{
-				out.addToTail(val);
-				this->vars->origin.removeNext();
+				out.append(*this->vars->toDequeue);
+				if (!__is_trivial(Type))
+				{
+					this->vars->toDequeue->~Type();
+				}
+				if (++this->vars->toDequeue == bufferEnd) this->vars->toDequeue = this->vars->buffer;
 			}
 			else break;
 		}
-		this->vars->nDequeued += out.size();
 		this->vars->nElements -= out.size();
+		if (this->vars->nElements == 0) this->vars->toDequeue = 0;
 		this->vars->spinLeave();
 		return out.toArray();
 	}
@@ -2892,12 +2905,20 @@ namespace spadas
 	void Stream<Type>::reset()
 	{
 		this->vars->spinEnter();
-		this->vars->origin.collapse();
-		this->vars->origin.joinNext(this->vars->origin);
-		this->vars->nEnqueued = 0;
-		this->vars->nDequeued = 0;
-		this->vars->nDiscarded = 0;
+		if (!__is_trivial(Type))
+		{
+			Type *bufferEnd = this->vars->buffer + this->vars->capacity;
+			while (this->vars->toDequeue)
+			{
+				this->vars->toDequeue->~Type();
+				if (++this->vars->toDequeue == bufferEnd) this->vars->toDequeue = this->vars->buffer;
+				if (this->vars->toDequeue == this->vars->toEnqueue) this->vars->toDequeue = 0;
+			}
+		}
+		else this->vars->toDequeue = 0;
+		this->vars->toEnqueue = this->vars->buffer;
 		this->vars->nElements = 0;
+		this->vars->nDiscarded = 0;
 		this->vars->terminated = FALSE;
 		this->vars->spinLeave();
 	}

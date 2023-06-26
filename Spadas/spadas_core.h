@@ -1337,26 +1337,17 @@ namespace spadas
 		/// 创建指定容量的数据流，并指定其元素是否可丢弃
 		Stream(UInt capacity, Bool discardable = TRUE);
 
-		/// 更新数据流的容量，并舍弃多余的元素
-		void setCapacity(UInt capacity);
-
 		/// 取得数据流的容量
 		UInt capacity();
-		
-		/// 获得本数据流已推入的元素数目
-		UInt nEnqueued();
-		
-		/// 获得本数据流已取出的元素数目
-		UInt nDequeued();
-		
-		/// 获得本数据流已丢弃的元素数目
-		UInt nDiscarded();
-		
-		/// 取得本数据流中缓存的元素数目，该值应为nEnqueued() - nDequeued() - nDiscarded()
+
+		/// 取得本数据流中缓存的元素数目
 		UInt nElements();
 
 		/// 本数据流未缓存任何元素
 		Bool isEmpty();
+
+		/// 获得本数据流已丢弃的元素数目
+		UInt nDiscarded();
 
 		/// 获取首个(最早推入)元素
 		Type first();
@@ -1379,20 +1370,19 @@ namespace spadas
 		/// 尝试取出指定数量的元素，实际取出数量以返回对象为准 (返回的数组中序号0的元素为最早)
 		Array<Type> dequeue(UInt amount = UINF);
 
-		/// 尝试取出小于指定值的连续元素 (返回的数组中序号0的元素为最早)
-		template <typename TargetType>
-		Array<Type> dequeueLessThan(TargetType target);
+		/// 尝试取出所有满足条件(指定函数返回TRUE)的连续元素 (返回的数组中序号0的元素为最早)
+		Array<Type> dequeue(Func<Bool(Type&)> func);
 
 		/// 等待所有元素取出 (若检测到interrupt则返回FALSE)
 		Bool waitAllDequeued(Flag interrupt, Bool spin);
 
-		/// 终止数据流，使其变为“已终止状态”。终止后将无法推入任何元素，但可取出
+		/// 终止数据流，使其变为"已终止状态"。终止后将无法推入任何元素，但可取出
 		void terminate();
 
-		/// 本数据流是否为“已终止状态”
+		/// 本数据流是否为"已终止状态"
 		Bool isTerminated();
 
-		/// 重置数据流：将清空所有缓存中的元素，移除“已终止状态”，并清除nEnqueued等统计数据。但不会改变数据流容量和“元素可丢弃属性”
+		/// 重置数据流：将清空所有缓存中的元素，移除"已终止状态"，并清除nEnqueued等统计数据。但不会改变数据流容量和"元素可丢弃属性"
 		void reset();
 
 	private:
