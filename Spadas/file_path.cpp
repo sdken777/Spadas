@@ -67,19 +67,17 @@ namespace file_internal
 		return TRUE;
 	}
 
-	void addFolderContents(ArrayX<Path>& contents, Path folderPath, String folderString)
+	String componentsToString(Array<StringSpan>& components, Bool isFolder)
 	{
 		Char separator = getSeparatorChar();
-		for (auto e = folderGetContents(folderString).firstElem(); e.valid(); ++e)
+		String out = String::createWithSize(256);
+		for (auto e = components.firstElem(); e.valid(); ++e)
 		{
-			String& contentString = e.value();
-			Path contentPath = folderPath.childPath(contentString);
-			contents.append(contentPath);
-			if (contentString.bytes()[contentString.length() - 1] == (Byte)separator) // folder
-			{
-				addFolderContents(contents, contentPath, folderString + contentString);
-			}
+			if (e.index() > 0) out += separator;
+			out += e.value();
 		}
+		if (isFolder) out += separator;
+		return out;
 	}
 
 	PathsInfo::PathsInfo()
@@ -87,29 +85,49 @@ namespace file_internal
 		Bool dummy = FALSE;
 
 		String executableFolderPath = getExecutableFolderPathString();
-		if (!executableFolderPath.isEmpty()) parsePathString(executableFolderPath, TRUE, executableFolderPathComponents, dummy);
+		if (!executableFolderPath.isEmpty() && parsePathString(executableFolderPath, TRUE, executableFolderPathComponents, dummy))
+		{
+			executableFolderPathString = componentsToString(executableFolderPathComponents, TRUE);
+		}
 		
 		String workPath = getWorkPathString();
-		if (!workPath.isEmpty()) parsePathString(workPath, TRUE, workPathComponents, dummy);
+		if (!workPath.isEmpty() && parsePathString(workPath, TRUE, workPathComponents, dummy))
+		{
+			workPathString = componentsToString(workPathComponents, TRUE);
+		}
 		
 		String homePath = getHomePathString();
-		if (!homePath.isEmpty()) parsePathString(homePath, TRUE, homePathComponents, dummy);
+		if (!homePath.isEmpty() && parsePathString(homePath, TRUE, homePathComponents, dummy))
+		{
+			homePathString = componentsToString(homePathComponents, TRUE);
+		}
 		
 		String spadasFilesPath = getSpadasFilesPathString();
-		if (!spadasFilesPath.isEmpty()) parsePathString(spadasFilesPath, TRUE, spadasFilesPathComponents, dummy);
+		if (!spadasFilesPath.isEmpty() && parsePathString(spadasFilesPath, TRUE, spadasFilesPathComponents, dummy))
+		{
+			spadasFilesPathString = componentsToString(spadasFilesPathComponents, TRUE);
+		}
 		if (!spadasFilesPath.isEmpty() && !folderExist(spadasFilesPath)) folderCreate(spadasFilesPath);
 	}
 	void PathsInfo::setWorkPath(String path)
 	{
 		Array<StringSpan> components;
 		Bool isFolder = FALSE;
-		if (parsePathString(path, TRUE, components, isFolder) && isFolder && folderExist(path)) workPathComponents = components;
+		if (parsePathString(path, TRUE, components, isFolder) && isFolder && folderExist(path))
+		{
+			workPathComponents = components;
+			workPathString = componentsToString(workPathComponents, TRUE);
+		}
 	}
 	void PathsInfo::setExecutableFolderPath(String path)
 	{
 		Array<StringSpan> components;
 		Bool isFolder = FALSE;
-		if (parsePathString(path, TRUE, components, isFolder) && isFolder && folderExist(path)) executableFolderPathComponents = components;
+		if (parsePathString(path, TRUE, components, isFolder) && isFolder && folderExist(path))
+		{
+			executableFolderPathComponents = components;
+			executableFolderPathString = componentsToString(executableFolderPathComponents, TRUE);
+		}
 	}
 	PathsInfo pathsInfo;
 }
@@ -123,21 +141,31 @@ namespace spadas
 
 		Bool isFolder;
 		Array<StringSpan> components; // 首个为root
-		PathVars()
+		String pathString; // 仅用于set
+
+		PathVars() : isFolder(FALSE)
+		{}
+		PathVars(Array<StringSpan>& dirComponent, String dirPathString, StringSpan childFullName, Bool isFolder) : isFolder(isFolder)
 		{
-			isFolder = FALSE;
+			components = Array<StringSpan>::createUninitialized(dirComponent.size() + 1);
+			for (auto e = dirComponent.firstElem(); e.valid(); ++e) components.initialize(e.index(), e.value());
+			components.initialize(dirComponent.size(), childFullName);
+			if (!dirPathString.isEmpty())
+			{
+				pathString = String::createWithSize(dirPathString.length() + childFullName.length() + 1);
+				pathString += dirPathString;
+				pathString += childFullName;
+				if (isFolder) pathString += file_internal::getSeparatorChar();
+			}
+		}
+		String getPathString()
+		{
+			if (pathString.isEmpty()) pathString = file_internal::componentsToString(components, isFolder);
+			return pathString;
 		}
 		String toString() override
 		{
-			Char separator = file_internal::getSeparatorChar();
-			String out = String::createWithSize(256);
-			for (auto e = components.firstElem(); e.valid(); ++e)
-			{
-				if (e.index() > 0) out += separator;
-				out += e.value();
-			}
-			if (isFolder) out += separator;
-			return out;
+			return getPathString().clone();
 		}
 	};
 }
@@ -202,30 +230,64 @@ String Path::fullName()
 String Path::fullPath()
 {
 	SPADAS_ERROR_RETURNVAL(!vars, String());
-	return vars->toString();
+	return vars->getPathString().clone();
 }
 
 Bool Path::operator ==(Path path)
 {
-	return fullPath() == path.fullPath();
+	if (vars)
+	{
+		if (path.vars)
+		{
+			if (vars->isFolder != path.vars->isFolder) return FALSE;
+			if (vars->components.size() != path.vars->components.size()) return FALSE;
+			StringSpan *srcSpans = vars->components.data();
+			StringSpan *targetSpans = path.vars->components.data();
+			UInt nComponents = vars->components.size();
+			for (UInt i = 0; i < nComponents; i++)
+			{
+				if (srcSpans[i] != targetSpans[i]) return FALSE;
+			}
+			return TRUE;
+		}
+		else return FALSE;
+	}
+	else return path.vars == NULL;
 }
 
 Bool Path::operator !=(Path path)
 {
-	return fullPath() != path.fullPath();
+	if (vars)
+	{
+		if (path.vars)
+		{
+			if (vars->isFolder != path.vars->isFolder) return TRUE;
+			if (vars->components.size() != path.vars->components.size()) return TRUE;
+			StringSpan *srcSpans = vars->components.data();
+			StringSpan *targetSpans = path.vars->components.data();
+			UInt nComponents = vars->components.size();
+			for (UInt i = 0; i < nComponents; i++)
+			{
+				if (srcSpans[i] != targetSpans[i]) return TRUE;
+			}
+			return FALSE;
+		}
+		else return TRUE;
+	}
+	else return path.vars != NULL;
 }
 
 Word Path::getHash()
 {
-	return fullPath().getHash();
+	if (!vars) return 0;
+	else return vars->components.last().getHash();
 }
 
 Bool Path::exist()
 {
 	SPADAS_ERROR_RETURNVAL(!vars, FALSE);
-	String fullPathString = vars->toString();
-	if (vars->isFolder) return folderExist(fullPathString);
-	else return fileExist(fullPathString);
+	if (vars->isFolder) return folderExist(vars->getPathString());
+	else return fileExist(vars->getPathString());
 }
 
 Bool Path::isFile()
@@ -244,23 +306,22 @@ void Path::remove()
 {
 	SPADAS_ERROR_RETURN(!vars);
 
-	String fullPathString = vars->toString();
 	if (vars->isFolder)
 	{
-		if (!folderExist(fullPathString)) return;
+		if (!folderExist(vars->getPathString())) return;
 
 		for (auto e = folderContents(TRUE).lastElem(); e.valid(); --e)
 		{
-			String contentPathString = e->fullPath();
-			if (e->isFolder()) folderRemove(contentPathString);
-			else fileRemove(contentPathString);
+			if (!e->vars) continue;
+			if (e->vars->isFolder) folderRemove(e->vars->getPathString());
+			else fileRemove(e->vars->getPathString());
 		}
 
-		folderRemove(fullPathString);
+		folderRemove(vars->getPathString());
 	}
 	else
 	{
-		if (fileExist(fullPathString)) fileRemove(fullPathString);
+		if (fileExist(vars->getPathString())) fileRemove(vars->getPathString());
 	}
 }
 
@@ -370,10 +431,10 @@ void Path::copyTo(Path dstPath, Bool mergeDst)
 ULong Path::fileSize()
 {
 	SPADAS_ERROR_RETURNVAL(!vars, 0);
-	SPADAS_ERROR_RETURNVAL(!exist(), 0);
 	SPADAS_ERROR_RETURNVAL(vars->isFolder, 0);
+	SPADAS_ERROR_RETURNVAL(!exist(), 0);
 	
-	Pointer filePtr = fileOpen(vars->toString(), FALSE);
+	Pointer filePtr = fileOpen(vars->getPathString(), FALSE);
 	SPADAS_ERROR_RETURNVAL(filePtr == NULL, 0);
 	
 	ULong size = fileGetSize(filePtr);
@@ -388,15 +449,12 @@ void Path::fileCreate(UInt size)
 	SPADAS_ERROR_RETURN(vars->isFolder);
 
 	Path parentFolder = this->parentFolder();
-	SPADAS_ERROR_RETURN(parentFolder.isNull());
+	SPADAS_ERROR_RETURN(!parentFolder.vars);
+	SPADAS_ERROR_RETURN(fileExist(parentFolder.vars->getPathString()));
 
-	String parentFolderString = parentFolder.fullPath();
-	SPADAS_ERROR_RETURN(fileExist(parentFolderString));
-
-	if (!folderExist(parentFolderString)) parentFolder.folderMake();
+	if (!folderExist(parentFolder.vars->getPathString())) parentFolder.folderMake();
 	
-	String filePathString = fullPath();
-	Pointer file = fileOpen(filePathString, TRUE);
+	Pointer file = fileOpen(vars->getPathString(), TRUE);
 	SPADAS_ERROR_RETURN(file == NULL);
 
 	if (size != 0)
@@ -413,14 +471,13 @@ void Path::folderMake()
 	SPADAS_ERROR_RETURN(!vars);
 	SPADAS_ERROR_RETURN(!vars->isFolder);
 	
-	String folderPath = fullPath();
-	SPADAS_ERROR_RETURN(fileExist(folderPath));
-	if (folderExist(folderPath)) return;
+	SPADAS_ERROR_RETURN(fileExist(vars->getPathString()));
+	if (folderExist(vars->getPathString())) return;
 	
 	Path parent = parentFolder();
 	if (parent.isValid()) parent.folderMake();
 	
-	folderCreate(folderPath);
+	folderCreate(vars->getPathString());
 }
 
 Path Path::childFile(String childName)
@@ -434,14 +491,8 @@ Path Path::childFile(String childName)
 	SPADAS_ERROR_RETURNVAL(len == 2 && bytes[0] == (Byte)'.' && bytes[1] == (Byte)'.', Path());
 	SPADAS_ERROR_RETURNVAL(bytes[len - 1] == (Byte)getSeparatorChar(), Path());
 
-	PathVars *newVars = new PathVars();
-	newVars->isFolder = FALSE;
-	newVars->components = Array<StringSpan>::createUninitialized(vars->components.size() + 1);
-	for (UInt i = 0; i < vars->components.size(); i++) newVars->components.initialize(i, vars->components[i]);
-	newVars->components.initialize(vars->components.size(), childName.sub(0));
-
 	Path path;
-	path.setVars(newVars, TRUE);
+	path.setVars(new PathVars(vars->components, String(), StringSpan(childName, 0, childName.length()), FALSE), TRUE);
     return path;
 }
 
@@ -455,15 +506,9 @@ Path Path::childFolder(String childName)
 	SPADAS_ERROR_RETURNVAL(len == 1 && bytes[0] == (Byte)'.', Path());
 	SPADAS_ERROR_RETURNVAL(len == 2 && bytes[0] == (Byte)'.' && bytes[1] == (Byte)'.', Path());
 	SPADAS_ERROR_RETURNVAL(bytes[len - 1] == (Byte)getSeparatorChar(), Path());
-	
-	PathVars *newVars = new PathVars();
-	newVars->isFolder = TRUE;
-	newVars->components = Array<StringSpan>::createUninitialized(vars->components.size() + 1);
-	for (UInt i = 0; i < vars->components.size(); i++) newVars->components.initialize(i, vars->components[i]);
-	newVars->components.initialize(vars->components.size(), childName.sub(0));
 
 	Path path;
-	path.setVars(newVars, TRUE);
+	path.setVars(new PathVars(vars->components, String(), StringSpan(childName, 0, childName.length()), TRUE), TRUE);
     return path;
 }
 
@@ -471,7 +516,7 @@ Path Path::childPath(String pathString)
 {
 	SPADAS_ERROR_RETURNVAL(!vars || !vars->isFolder, Path());
 
-	pathString = fullPath() + pathString;
+	pathString = vars->getPathString() + pathString;
 
 	Bool isFolder = FALSE;
 	Array<StringSpan> components;
@@ -503,13 +548,13 @@ Bool Path::contain(Path path, String& pathString)
 	SPADAS_ERROR_RETURNVAL(!vars || !vars->isFolder, FALSE);
 	SPADAS_ERROR_RETURNVAL(!path.vars, FALSE);
 
-	String srcPath = fullPath();
-	String dstPath = path.fullPath();
-	UInt srcPathLen = srcPath.length();
-	UInt dstPathLen = dstPath.length();
+	String srcPathString = vars->getPathString();
+	String dstPathString = path.vars->getPathString();
+	UInt srcPathLen = srcPathString.length();
+	UInt dstPathLen = dstPathString.length();
 
 	if (dstPathLen < srcPathLen) return FALSE;
-	if (!dstPath.startsWith(srcPath)) return FALSE;
+	if (!dstPathString.startsWith(srcPathString)) return FALSE;
 
 	if (dstPathLen == srcPathLen)
 	{
@@ -518,7 +563,7 @@ Bool Path::contain(Path path, String& pathString)
 	}
 	else
 	{
-		pathString = dstPath.sub(srcPathLen).clone();
+		pathString = dstPathString.sub(srcPathLen).clone();
 		return TRUE;
 	}
 }
@@ -539,26 +584,52 @@ Path Path::parentFolder()
     return path;
 }
 
+void Path::addFolderContents(ArrayX<Path>& contents, String folderPathString, Array<StringSpan>& folderComponents)
+{
+	for (auto e = folderGetContents(folderPathString).firstElem(); e.valid(); ++e)
+	{
+		String& content = e.value();
+		Char lastChar = (Char)content.bytes()[content.length() - 1];
+		Bool contentIsFolder = lastChar == '/' || lastChar == '\\';
+		StringSpan contentFullName(content, 0, contentIsFolder ? (content.length() - 1) : content.length());
+
+		Path path;
+		path.setVars(new PathVars(folderComponents, folderPathString, contentFullName, contentIsFolder), TRUE);
+		contents.append(path);
+
+		if (contentIsFolder)
+		{
+			addFolderContents(contents, path.vars->getPathString(), path.vars->components);
+		}
+	}
+}
+
 Array<Path> Path::folderContents(Bool includeAllLevels)
 {
 	SPADAS_ERROR_RETURNVAL(!vars || !vars->isFolder, Array<Path>());
 
-	String targetFolder = fullPath();
-	if (!folderExist(targetFolder)) return Array<Path>();
+	if (!folderExist(vars->getPathString())) return Array<Path>();
 
 	if (includeAllLevels)
 	{
 		ArrayX<Path> buf(256, Path());
-		addFolderContents(buf, *this, targetFolder);
+		addFolderContents(buf, vars->getPathString(), vars->components);
 		return buf.toArray();
 	}
 	else
 	{
-		Array<String> contents = folderGetContents(targetFolder);
+		Array<String> contents = folderGetContents(vars->getPathString());
 		Array<Path> out = Array<Path>::createUninitialized(contents.size());
-		for (UInt i = 0; i < out.size(); i++)
+		for (auto e = contents.firstElem(); e.valid(); ++e)
 		{
-			out.initialize(i, childPath(contents[i]));
+			String& content = e.value();
+			Char lastChar = (Char)content.bytes()[content.length() - 1];
+			Bool contentIsFolder = lastChar == '/' || lastChar == '\\';
+			StringSpan contentFullName(content, 0, contentIsFolder ? (content.length() - 1) : content.length());
+
+			Path path;
+			path.setVars(new PathVars(vars->components, vars->getPathString(), contentFullName, contentIsFolder), TRUE);
+			out.initialize(e.index(), path);
 		}
 		return out;
 	}
@@ -575,7 +646,8 @@ Path Path::workPath()
 
 	PathVars *newVars = new PathVars();
 	newVars->isFolder = TRUE;
-	newVars->components = pathsInfo.workPathComponents.clone();
+	newVars->components = pathsInfo.workPathComponents;
+	newVars->pathString = pathsInfo.workPathString;
     
     Path path;
 	path.setVars(newVars, TRUE);
@@ -588,7 +660,8 @@ Path Path::executableFolderPath()
 
 	PathVars *newVars = new PathVars();
 	newVars->isFolder = TRUE;
-	newVars->components = pathsInfo.executableFolderPathComponents.clone();
+	newVars->components = pathsInfo.executableFolderPathComponents;
+	newVars->pathString = pathsInfo.executableFolderPathString;
     
     Path path;
 	path.setVars(newVars, TRUE);
@@ -601,7 +674,8 @@ Path Path::homePath()
 
 	PathVars *newVars = new PathVars();
 	newVars->isFolder = TRUE;
-	newVars->components = pathsInfo.homePathComponents.clone();
+	newVars->components = pathsInfo.homePathComponents;
+	newVars->pathString = pathsInfo.homePathString;
     
     Path path;
 	path.setVars(newVars, TRUE);
@@ -614,7 +688,8 @@ Path Path::spadasFilesPath()
 
 	PathVars *newVars = new PathVars();
 	newVars->isFolder = TRUE;
-	newVars->components = pathsInfo.spadasFilesPathComponents.clone();
+	newVars->components = pathsInfo.spadasFilesPathComponents;
+	newVars->pathString = pathsInfo.spadasFilesPathString;
     
     Path path;
 	path.setVars(newVars, TRUE);

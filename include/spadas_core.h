@@ -2633,6 +2633,9 @@ namespace spadas
 
 		/// 设置可执行程序所在目录 (注意应以路径分隔符"/"或"\"结尾)
 		static void setExecutableFolderPath(String pathString);
+
+	private:
+		static void addFolderContents(ArrayX<Path>& contents, String folderPathString, Array<StringSpan>& folderComponents);
 	};
 
 	/// 文件数据I/O

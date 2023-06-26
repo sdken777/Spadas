@@ -10,9 +10,14 @@ namespace file_internal
 	{
 	public:
 		Array<StringSpan> workPathComponents;
+		String workPathString;
 		Array<StringSpan> executableFolderPathComponents;
+		String executableFolderPathString;
 		Array<StringSpan> homePathComponents;
+		String homePathString;
 		Array<StringSpan> spadasFilesPathComponents;
+		String spadasFilesPathString;
+
 		PathsInfo();
 		void setWorkPath(String path);
 		void setExecutableFolderPath(String path);
