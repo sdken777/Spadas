@@ -11,6 +11,8 @@ void exampleBaseObject();
 void exampleForElement();
 void exampleLambda();
 void exampleArrayX();
+void exampleList();
+void exampleXML();
 void examplePointTo();
 void exampleEqual();
 void exampleMap();
@@ -44,6 +46,12 @@ void runExamples()
 
     print("\n-- Example: ArrayX --");
     exampleArrayX();
+
+    print("\n-- Example: List --");
+    exampleList();
+
+    print("\n-- Example: XML --");
+    exampleXML();
 
     print("\n-- Example: Point To --");
     examplePointTo();

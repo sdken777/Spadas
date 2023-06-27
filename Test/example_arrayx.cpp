@@ -6,17 +6,19 @@ using namespace spadas;
 
 void exampleArrayX()
 {
-	// 效率较Spadas6有大幅提高
+	// ArrayX扩展效率测试
 	Timer timer;
 	ArrayX<UInt> arrx;
-	for (UInt i = 0; i < 10000000/* 一千万次 */; i++) arrx.append(i); // 扩展
+	for (UInt i = 0; i < 10000000/* 一千万次 */; i++) arrx.append(i);
 	console::print(SS"Append: " + timer.check());
 
+	// ArrayX转数组效率测试
 	timer.start();
-	Array<UInt> arr = arrx.toArray(); // 转数组
+	Array<UInt> arr = arrx.toArray();
 	console::print(SS"To array: " + timer.check());
 
+	// ArrayX析构效率测试
 	timer.start();
-	arrx = ArrayX<UInt>(); // 析构
+	arrx = ArrayX<UInt>();
 	console::print(SS"Release: " + timer.check());
 }
