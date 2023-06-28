@@ -50,8 +50,8 @@ void runExamples()
     print("\n-- Example: List --");
     exampleList();
 
-    // print("\n-- Example: XML --");
-    // exampleXML();
+    print("\n-- Example: XML --");
+    exampleXML();
 
     print("\n-- Example: Point To --");
     examplePointTo();

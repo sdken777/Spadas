@@ -226,9 +226,9 @@ namespace xml_internal
 		return out;
 	}
 	
-	Bool readXMLBinary(Binary xmlBinary, XMLNode& out)
+	Bool readXMLBinary(BinarySpan xmlBinary, XML& xml)
 	{
-		String rawString(xmlBinary);
+		String rawString(xmlBinary.clone());
 		
 		/* split with the angle brackets */
 		Array<UInt> leftRaw = rawString.search('<');
@@ -318,7 +318,9 @@ namespace xml_internal
 		SPADAS_ERROR_RETURNVAL(startBracketNum != endBracketNum, FALSE);
 		
 		/* generate an XML tree */
-		XMLNode root, current = root;
+		XMLNode root = xml.globalRoot();
+		XMLNode current;
+		UInt rootCount = 0;
 
 		for (UInt i = 0; i < nBrackets; i++)
 		{
@@ -329,17 +331,26 @@ namespace xml_internal
 				String tag, attributesString;
 				SPADAS_ERROR_RETURNVAL(!extractTag(bracketContents[i], tag, attributesString), FALSE);
 
-				current = current.addLeaf(XMLElement(tag, unpackAttributes(attributesString), externalContents[i]));
+				if (current.valid())
+				{
+					current = current.addLeaf(XMLElement(tag, unpackAttributes(attributesString), externalContents[i]));
+				}
+				else
+				{
+					rootCount++;
+					SPADAS_ERROR_RETURNVAL(rootCount > 1, FALSE);
+					current = root;
+					current->tag = tag;
+					current->attributes = unpackAttributes(attributesString);
+					current->content = externalContents[i];
+				}
 			}
 
 			if (bracketTypes[i] == BracketType::End)
 			{
 				SPADAS_ERROR_RETURNVAL(bracketContents[i] != current.value().tag, FALSE);
-				
-				XMLNode upNode = current.root();
-				SPADAS_ERROR_RETURNVAL(upNode == current, FALSE);
-
-				current = upNode;
+				SPADAS_ERROR_RETURNVAL(!current.valid(), FALSE);
+				current = current.root();
 			}
 			
 			if (bracketTypes[i] == BracketType::Atom)
@@ -347,14 +358,21 @@ namespace xml_internal
 				String tag, attributesString;
 				SPADAS_ERROR_RETURNVAL(!extractTag(bracketContents[i], tag, attributesString), FALSE);
 
-				current.addLeaf(XMLElement(tag, unpackAttributes(attributesString), String()));
+				if (current.valid())
+				{
+					current.addLeaf(XMLElement(tag, unpackAttributes(attributesString), String()));
+				}
+				else
+				{
+					rootCount++;
+					SPADAS_ERROR_RETURNVAL(rootCount > 1, FALSE);
+					root->tag = tag;
+					root->attributes = unpackAttributes(attributesString);
+					root->content = String();
+				}
 			}
 		}
-		
-		SPADAS_ERROR_RETURNVAL(root.nLeaves() != 1, FALSE);
 
-		out = root.leafAt(0);
-		out.cutRoot();
 		return TRUE;
 	}
 	
@@ -394,11 +412,16 @@ namespace xml_internal
 				"</" + element.tag + ">" + lineEnding;
 			}
 			
-			out = outString.toBinary();
+			if (depth == 0) out = String("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n").toBinary() + outString.toBinary();
+			else out = outString.toBinary();
 		}
 		else
 		{
 			UInt size = 0, index = 0;
+
+			Binary headerBinary;
+			if (depth == 0) headerBinary = String("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n").toBinary();
+			size += headerBinary.size();
 			
 			Binary startBinary = String(tabText + "<" + startBracketContent + ">" + lineEnding).toBinary();
 			size += startBinary.size();
@@ -415,6 +438,12 @@ namespace xml_internal
 			size += endBinary.size();
 			
 			out = Binary(size);
+
+			if (!headerBinary.isEmpty())
+			{
+				utility::memoryCopy(headerBinary.data(), &out[index], headerBinary.size());
+				index += headerBinary.size();
+			}
 			
 			utility::memoryCopy(startBinary.data(), &out[index], startBinary.size());
 			index += startBinary.size();
@@ -434,16 +463,85 @@ namespace xml_internal
 
 namespace spadas
 {
+	const UInt XML_CELL_ARRAY_SEGMENT_SIZE = 256;
+	const UInt XML_TEXT_TABLE_SIZE_SMALL = 64;
+	const UInt XML_TEXT_TABLE_COUNT_THRESH = 256;
+	const UInt XML_TEXT_TABLE_SIZE_LARGE = 4096;
+
+	struct XMLCell
+	{
+		XMLElement elem;
+		XMLCell* root;
+		List<XMLCell*> leaves;
+
+		XMLCell() : root(NULL)
+		{}
+		XMLCell(XMLElement elem) : elem(elem), root(NULL)
+		{}
+	};
+
 	class XMLVars : public Vars
 	{
     public:
 		SPADAS_VARS_DEF(XML, Vars)
 
-		XMLNode globalRoot;
-        ~XMLVars()
-        {
-            globalRoot.collapse();
-        }
+		ArrayX<XMLCell> cells; // 首个为根节点
+		Map<StringSpan, String> textTable;
+
+		XMLVars() : cells(XML_CELL_ARRAY_SEGMENT_SIZE), textTable(XML_TEXT_TABLE_SIZE_SMALL)
+		{
+			cells.append(XMLElement("root", 0, String()));
+		}
+		XMLVars(XMLNode rootNode) : cells(XML_CELL_ARRAY_SEGMENT_SIZE), textTable(XML_TEXT_TABLE_SIZE_SMALL)
+		{
+			XMLCell& rootCell = cells.append(rootNode.value());
+			cloneXMLNode(rootNode, rootCell);
+		}
+		void checkTableSize()
+		{
+			if (textTable.size() == XML_TEXT_TABLE_COUNT_THRESH)
+			{
+				Map<StringSpan, String> newTable(XML_TEXT_TABLE_SIZE_LARGE);
+				for (auto pair = textTable.keyValues().firstElem(); pair.valid(); ++pair)
+				{
+					newTable[pair->key] = pair->value;
+				}
+				textTable = newTable;
+			}
+		}
+		String touchText(StringSpan& key, StringSpan& val)
+		{
+			String output;
+			if (textTable.tryGet(key, output)) return output;
+			else
+			{
+				checkTableSize();
+				String valString = val.clone();
+				textTable[key] = valString;
+				return valString;
+			}
+		}
+		String touchText(StringSpan& key, String& val)
+		{
+			String output;
+			if (textTable.tryGet(key, output)) return output;
+			else
+			{
+				checkTableSize();
+				textTable[key] = val;
+				return val;
+			}
+		}
+		void cloneXMLNode(XMLNode& node, XMLCell& cell)
+		{
+			for (auto e = node.leaves().firstElem(); e.valid(); ++e)
+			{
+				XMLCell& newCell = cells.append(e->value());
+				newCell.root = &cell;
+				cell.leaves.addToTail(&newCell);
+				cloneXMLNode(e.value(), newCell);
+			}
+		}
 	};
 }
 
@@ -451,6 +549,9 @@ using namespace spadas;
 using namespace xml_internal;
 
 const String spadas::XML::TypeName = "spadas.XML";
+const String unknownTag = "unknown";
+
+// XMLAttribute ///////////////////////////////////////////////////////////////////////////
 
 XMLAttribute::XMLAttribute()
 {
@@ -460,24 +561,147 @@ XMLAttribute::XMLAttribute(String name0, String value0) : name(name0), value(val
 {
 }
 
-XMLElement::XMLElement() : tag("unknown")
+// XMLElement ///////////////////////////////////////////////////////////////////////////
+
+XMLElement::XMLElement() : tag(unknownTag)
 {
 }
-XMLElement::XMLElement(String tag0) : tag(tag0.isEmpty() ? "unknown" : tag0)
+XMLElement::XMLElement(String tag0) : tag(tag0.isEmpty() ? unknownTag : tag0)
 {
 }
-XMLElement::XMLElement(String tag0, Array<XMLAttribute> attributes0, String content0) : tag(tag0.isEmpty() ? "unknown" : tag0), attributes(attributes0), content(content0)
+XMLElement::XMLElement(String tag0, Array<XMLAttribute> attributes0, String content0) : tag(tag0.isEmpty() ? unknownTag : tag0), attributes(attributes0), content(content0)
 {
 }
+
+// XMLNode ///////////////////////////////////////////////////////////////////////////
+
+XMLNode::XMLNode() : cell(NULL)
+{}
+
+XMLNode::XMLNode(XML xml, Pointer cell) : xml(xml), cell(cell)
+{}
+
+Bool XMLNode::valid()
+{
+	return cell != NULL;
+}
+
+XMLElement& XMLNode::value()
+{
+	SPADAS_ERROR_RETURNVAL(!cell, *(new XMLElement()));
+	return ((XMLCell*)cell)->elem;
+}
+
+XMLElement* XMLNode::operator ->()
+{
+	SPADAS_ERROR_RETURNVAL(!cell, new XMLElement());
+	return &((XMLCell*)cell)->elem;
+}
+
+XMLNode XMLNode::root()
+{
+	SPADAS_ERROR_RETURNVAL(!cell, XMLNode());
+	return XMLNode(xml, ((XMLCell*)cell)->root);
+}
+
+UInt XMLNode::nLeaves()
+{
+	SPADAS_ERROR_RETURNVAL(!cell, 0);
+	return ((XMLCell*)cell)->leaves.size();
+}
+
+Array<XMLNode> XMLNode::leaves()
+{
+	SPADAS_ERROR_RETURNVAL(!cell, Array<XMLNode>());
+
+	UInt leafCount = ((XMLCell*)cell)->leaves.size();
+	if (leafCount == 0) return Array<XMLNode>();
+
+	Array<XMLNode> output = Array<XMLNode>::createUninitialized(leafCount);
+	for (auto e = ((XMLCell*)cell)->leaves.head(); e.valid(); ++e)
+	{
+		output.initialize(e.index(), XMLNode(xml, e.value()));
+	}
+	return output;
+}
+
+Array<XMLNode> XMLNode::leavesWithTagName(String tagName)
+{
+	SPADAS_ERROR_RETURNVAL(!cell, Array<XMLNode>());
+	SPADAS_ERROR_RETURNVAL(tagName.isEmpty(), Array<XMLNode>());
+
+	ArrayX<XMLNode> output;
+	for (auto e = ((XMLCell*)cell)->leaves.head(); e.valid(); ++e)
+	{
+		if (e.value()->elem.tag == tagName) output.append(XMLNode(xml, e.value()));
+	}
+	return output.toArray();
+}
+
+Bool XMLNode::firstLeafWithTagName(String tagName, XMLNode& output)
+{
+	SPADAS_ERROR_RETURNVAL(!cell, FALSE);
+	SPADAS_ERROR_RETURNVAL(tagName.isEmpty(), FALSE);
+
+	for (auto e = ((XMLCell*)cell)->leaves.head(); e.valid(); ++e)
+	{
+		if (e.value()->elem.tag == tagName)
+		{
+			output = XMLNode(xml, e.value());
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+Dictionary<String> XMLNode::attributesToDictionary()
+{
+	SPADAS_ERROR_RETURNVAL(!cell, Dictionary<String>());
+
+	Dictionary<String> out;
+	for (auto e = ((XMLCell*)cell)->elem.attributes.firstElem(); e.valid(); ++e)
+	{
+		out[e->name] = e->value;
+	}
+	return out;
+}
+
+void XMLNode::dictionaryToAttributes(Dictionary<String> dict)
+{
+	SPADAS_ERROR_RETURN(!cell);
+
+	ArrayX<XMLAttribute> buf;
+	if (!dict.isEmpty())
+	{
+		for (auto pair = dict.keyValues().firstElem(); pair.valid(); ++pair)
+		{
+			if (pair->key.isEmpty()) continue;
+			StringSpan keySpan(pair->key, 0, pair->key.length());
+			String key = xml.getVars()->touchText(keySpan, pair->key);
+			buf.append(XMLAttribute(key, pair->value));
+		}
+	}
+	((XMLCell*)cell)->elem.attributes = buf.toArray();
+}
+
+XMLNode XMLNode::addLeaf(XMLElement val)
+{
+	SPADAS_ERROR_RETURNVAL(!cell, XMLNode());
+
+	XMLCell *newCell = &xml.getVars()->cells.append(XMLCell(val));
+	newCell->root = (XMLCell*)cell;
+	((XMLCell*)cell)->leaves.addToTail(newCell);
+	return XMLNode(xml, newCell);
+}
+
+// XML ///////////////////////////////////////////////////////////////////////////
 
 XML::XML()
 {
 }
 
-XML::XML(XMLNode xmlRoot) : Object<class XMLVars>(new XMLVars(), TRUE)
+XML::XML(XMLNode xmlRoot) : Object<class XMLVars>(new XMLVars(xmlRoot), TRUE)
 {
-	vars->globalRoot = xmlRoot.cloneTree();
-	if (vars->globalRoot.value().tag.isEmpty()) vars->globalRoot.value().tag = "root";
 }
 
 Optional<XML> XML::createFromFile(Path xmlFilePath)
@@ -495,48 +719,39 @@ Optional<XML> XML::createFromFile(Path xmlFilePath)
 	SPADAS_ERROR_RETURNVAL((binary[0] == 0xFE && binary[1] == 0xFF) || (binary[0] == 0xFF && binary[1] == 0xFE), Optional<XML>());
 	SPADAS_ERROR_RETURNVAL((binary[0] == 0 && binary[1] == 0 && binary[2] == 0xFE && binary[3] == 0xFF) || (binary[0] == 0xFF && binary[1] == 0xFE && binary[2] == 0 && binary[3] == 0), Optional<XML>());
 
+	BinarySpan span;
     if (binary[0] == 0xEF && binary[1] == 0xBB && binary[2] == 0xBF)
     {
-        Binary tmp(binary.size()-3);
-        utility::memoryCopy(&binary[3], tmp.data(), binary.size()-3);
-        binary = tmp;
+		span = binary.sub(3);
     }
 	else
 	{
 		SPADAS_WARNING_MSG("No BOM");
+		span = binary.sub(0);
 	}
 
-	return createFromBinary(binary);
+	XML xml;
+	if (readXMLBinary(span, xml)) return xml;
+	else return Optional<XML>();
 }
 
 Optional<XML> XML::createFromBinary(Binary xmlBinary)
 {
-	XMLNode globalRoot;
-	Bool ret = readXMLBinary(xmlBinary, globalRoot);
-	if (!ret) return Optional<XML>();
-	
-	if (globalRoot.value().tag.isEmpty()) globalRoot.value().tag = "root";
-	
 	XML xml;
-	xml.setVars(new XMLVars(), TRUE);
-	xml.vars->globalRoot = globalRoot;
-	return xml;
+	if (readXMLBinary(xmlBinary.sub(0), xml)) return xml;
+	else return Optional<XML>();
 }
 
 XML XML::clone()
 {
 	if (!vars) return XML();
-    else return XML(vars->globalRoot);
+    else return XML(globalRoot());
 }
 
 XMLNode XML::globalRoot()
 {
-	if (!vars)
-	{
-		setVars(new XMLVars(), TRUE);
-		vars->globalRoot->tag = "root";
-	}
-	return vars->globalRoot;
+	if (!vars) setVars(new XMLVars(), TRUE);
+	return XMLNode(*this, &vars->cells[0]);
 }
 
 void XML::save(Path xmlFilePath)
@@ -554,16 +769,11 @@ void XML::save(Path xmlFilePath)
 
 	if (!vars)
 	{
-		String xmlString = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root/>\n";
-		file.output(xmlString.toBinary());
+		file.output(String("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root/>\n").toBinary());
 	}
 	else
 	{
-		String header = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
-		file.output(header.toBinary());
-
-		Binary xmlBinary = writeXMLNodeBinary(vars->globalRoot, 0);
-		file.output(xmlBinary);
+		file.output(writeXMLNodeBinary(globalRoot(), 0));
 	}
 }
 
@@ -571,77 +781,10 @@ Binary XML::toBinary()
 {
 	if (!vars)
 	{
-		String xmlString = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root/>\n";
-		return xmlString.toBinary();
+		return String("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root/>\n").toBinary();
 	}
 	else
 	{
-		String header = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
-		return header.toBinary() + writeXMLNodeBinary(vars->globalRoot, 0);
+		return writeXMLNodeBinary(globalRoot(), 0);
 	}
-}
-
-Array<XMLNode> XML::nodeLeavesWithTagName(XMLNode node, String tagName)
-{
-	SPADAS_ERROR_RETURNVAL(tagName.isEmpty(), Array<XMLNode>());
-
-	UInt nLeaves = node.nLeaves();
-	Array<XMLNode> leaves = node.leaves();
-	Array<UInt> okIndices(nLeaves);
-	UInt okNum = 0;
-	for (UInt i = 0; i < leaves.size(); i++)
-	{
-		if (leaves[i].value().tag == tagName) okIndices[okNum++] = i;
-	}
-	Array<XMLNode> out = Array<XMLNode>::createUninitialized(okNum);
-	for (UInt i = 0; i < okNum; i++)
-	{
-		out.initialize(i, leaves[okIndices[i]]);
-	}
-	return out;
-}
-
-Bool XML::firstNodeLeafWithTagName(XMLNode node, String tagName, XMLNode& output)
-{
-	SPADAS_ERROR_RETURNVAL(tagName.isEmpty(), FALSE);
-
-	UInt nLeaves = node.nLeaves();
-	if (nLeaves == 0) return FALSE;
-
-	Array<XMLNode> leaves = node.leaves();
-	for (UInt i = 0; i < nLeaves; i++)
-	{
-		if (leaves[i].value().tag != tagName) continue;
-
-		output = leaves[i];
-		return TRUE;
-	}
-
-	return FALSE;
-}
-
-Dictionary<String> XML::attributesToDictionary(Array<XMLAttribute> attributes)
-{
-	UInt nAttribs = attributes.size();
-	Dictionary<String> out;
-
-	XMLAttribute *attribsData = attributes.data();
-	for (UInt i = 0; i < nAttribs; i++)
-	{
-		out[attribsData[i].name] = attribsData[i].value;
-	}
-	return out;
-}
-
-Array<XMLAttribute> XML::dictionaryToAttributes(Dictionary<String> dict)
-{
-	Array<String> keys = dict.keys();
-	ArrayX<XMLAttribute> buf;
-
-	UInt nKeys = keys.size();
-	for (UInt i = 0; i < nKeys; i++)
-	{
-		if (!keys[i].isEmpty()) buf[buf.size()] = XMLAttribute(keys[i], dict[keys[i]]);
-	}
-	return buf.toArray(Region(0, buf.size()));
 }

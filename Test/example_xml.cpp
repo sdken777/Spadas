@@ -10,7 +10,7 @@ void exampleXML()
 	Timer timer;
 	XML xml;
 	UInt counter = 0;
-	Array<String> attribNames(1000);
+	Array<String> attribNames(100);
 	for (UInt n = 0; n < attribNames.size(); n++)
 	{
 		attribNames[n] = SS"number" + (n + 1);
@@ -19,8 +19,8 @@ void exampleXML()
 	{
 		XMLElement elem;
 		elem.tag = "numbers";
-		elem.attributes = Array<XMLAttribute>(1000);
-		for (UInt n = 0; n < 1000/* 一千个属性 */; n++)
+		elem.attributes = Array<XMLAttribute>(100);
+		for (UInt n = 0; n < 100/* 一百个属性 */; n++)
 		{
 			elem.attributes[n].name = attribNames[n];
 			elem.attributes[n].value = counter++;

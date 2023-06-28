@@ -107,6 +107,9 @@ namespace spadas
 	// 二进制数据片段
 	class BinarySpan;
 
+	// XML元素节点
+	class XMLNode;
+
 	// 图像对
 	struct ImagePair;
 
@@ -1186,8 +1189,8 @@ namespace spadas
 		/// 扩展大小至指定值
 		void setSize(UInt size);
 
-		/// 在数组末尾扩展1个元素
-		void append(Type val);
+		/// 在数组末尾扩展1个元素，并返回数组中该元素的引用
+		Type& append(Type val);
 
 		/// 在数组末尾扩展多个元素
 		void append(Array<Type> vals);
@@ -1258,11 +1261,11 @@ namespace spadas
 		/// 移动至下个元素
 		void operator ++();
 
-		/// 在当前元素前插入值
-		void insertPrevious(Type val);
+		/// 在当前元素前插入新元素，并返回链表总该元素的引用
+		Type& insertPrevious(Type val);
 
-		/// 在当前元素后插入值
-		void insertNext(Type val);
+		/// 在当前元素后插入新元素，并返回链表总该元素的引用
+		Type& insertNext(Type val);
 
 		/// 移除当前元素
 		void remove();
@@ -1303,16 +1306,16 @@ namespace spadas
 		/// 取得从末尾元素开始的遍历器（使用该对象时，不可调用链表的add/remove/clear等方法，或再创建其他ListElem）
 		ListElem<Type> tail();
 
-		/// 添加至首
-		void addToHead(Type val);
+		/// 添加为首个元素，并返回链表中该元素的引用
+		Type& addToHead(Type val);
 
-		/// 添加至尾
-		void addToTail(Type val);
+		/// 添加为末尾元素，并返回链表中该元素的引用
+		Type& addToTail(Type val);
 
-		/// 移除首
+		/// 移除首个元素
 		void removeHead();
 
-		/// 移除尾
+		/// 移除末尾元素
 		void removeTail();
 
 		/// 移除等于某个值的所有元素
@@ -2754,9 +2757,6 @@ namespace spadas
 		SPADAS_API XMLElement(String tag, Array<XMLAttribute> attributes, String content);
 	};
 
-	/// XML元素节点
-	typedef TreeNode<XMLElement> XMLNode;
-
 	/// XML文档对象
 	class SPADAS_API XML : public Object<class XMLVars>
 	{
@@ -2788,21 +2788,57 @@ namespace spadas
 		/// 由UTF-8编码的二进制数据创建XML文档
 		static Optional<XML> createFromBinary(Binary xmlBinary);
 
-		/// 获得输入节点的所有具有指定标签名字的子节点
-		static Array<XMLNode> nodeLeavesWithTagName(XMLNode node, String tagName);
-
-		/// 获得输入节点的首个具有指定标签名字的子节点，若不存在返回FALSE
-		static Bool firstNodeLeafWithTagName(XMLNode node, String tagName, XMLNode& output);
-
-		/// XML属性数组转换为字符串型字典（可指定输出字典的容量，但以实际输出为准）
-		static Dictionary<String> attributesToDictionary(Array<XMLAttribute> attributes);
-
-		/// 字符串型字典转换为XML属性数组
-		static Array<XMLAttribute> dictionaryToAttributes(Dictionary<String> dict);
-
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
+	};
+
+	/// XML元素节点
+	class SPADAS_API XMLNode
+	{
+	public:
+		/// 创建无效节点
+		XMLNode();
+
+		/// 构造函数，输入cell为空也为无效节点
+		XMLNode(XML xml, Pointer cell);
+
+		/// 是否为有效节点
+		Bool valid();
+
+		/// 取得XML元素数据的引用
+		XMLElement& value();
+
+		/// 使用XML元素数据的字段或方法
+		XMLElement* operator ->();
+
+		/// 取得根方向节点 (若不存在则返回无效节点)
+		XMLNode root();
+
+		/// 取得子节点个数
+		UInt nLeaves();
+
+		/// 取得所有子节点
+		Array<XMLNode> leaves();
+
+		/// 获得所有具有指定标签名字的子节点
+		Array<XMLNode> leavesWithTagName(String tagName);
+
+		/// 获得首个具有指定标签名字的子节点，若不存在返回FALSE
+		Bool firstLeafWithTagName(String tagName, XMLNode& output);
+
+		/// XML属性数组转换为字符串型字典
+		Dictionary<String> attributesToDictionary();
+
+		/// 按字符串型字典设置XML属性数组 (将替换原有的属性数组)
+		void dictionaryToAttributes(Dictionary<String> dict);
+
+		/// 按指定XML元素数据添加子节点，并返回该节点
+		XMLNode addLeaf(XMLElement val);
+
+	private:
+		XML xml;
+		Pointer cell;
 	};
 
 	// 图像 //////////////////////////////////////////////////////////////

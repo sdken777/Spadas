@@ -2149,7 +2149,7 @@ namespace spadas
 	}
 
 	template<typename Type>
-	void ArrayX<Type>::append(Type val)
+	Type& ArrayX<Type>::append(Type val)
 	{
 		if (!this->vars)
 		{
@@ -2159,7 +2159,7 @@ namespace spadas
 		}
 		if (this->vars->lastNextIndex >= this->vars->segmentSize)
 		{
-			SPADAS_ERROR_RETURN(this->vars->size >= ARRAYX_SIZE_LIMIT);
+			SPADAS_ERROR_RETURNVAL(this->vars->size >= ARRAYX_SIZE_LIMIT, *(new Type));
 			UInt segment = (this->vars->size >> this->vars->segmentSizePower) + 1;
 			this->vars->lastSegment = this->vars->accessingSegment = segment;
 			this->vars->lastNode = this->vars->accessingNode = (internal::ArrayXNode<Type>*)getSegmentNode(segment);
@@ -2169,13 +2169,17 @@ namespace spadas
 		if (__is_trivial(Type) || this->vars->withDefault)
 		{
 			this->vars->size++;
-			targetNode.buffer[this->vars->lastNextIndex++] = val;
+			Type& valRef = targetNode.buffer[this->vars->lastNextIndex++];
+			valRef = val;
+			return valRef;
 		}
 		else
 		{
 			this->vars->size++;
-			new (&targetNode.buffer[this->vars->lastNextIndex++])Type(val);
+			Type& valRef = targetNode.buffer[this->vars->lastNextIndex++];
+			new (&valRef)Type(val);
 			targetNode.initialized++;
+			return valRef;
 		}
 	}
 
@@ -2406,10 +2410,10 @@ namespace spadas
 	}
 
 	template<typename Type>
-	void List<Type>::addToHead(Type val)
+	Type& List<Type>::addToHead(Type val)
 	{
 		if (!this->vars) this->setVars(new ListVars<Type>(), TRUE);
-		else SPADAS_ERROR_RETURN(this->vars->elemRefs > 0);
+		else SPADAS_ERROR_RETURNVAL(this->vars->elemRefs > 0, *(new Type));
 		if (this->vars->lastSeg->used == internal::LIST_SEGMENT_SIZE)
 		{
 			internal::ListSegment<Type> *newSeg = this->vars->createSegment();
@@ -2430,13 +2434,14 @@ namespace spadas
 			this->vars->head = this->vars->tail = targetCell;
 		}
 		this->vars->size++;
+		return targetCell->val;
 	}
 
 	template<typename Type>
-	void List<Type>::addToTail(Type val)
+	Type& List<Type>::addToTail(Type val)
 	{
 		if (!this->vars) this->setVars(new ListVars<Type>(), TRUE);
-		else SPADAS_ERROR_RETURN(this->vars->elemRefs > 0);
+		else SPADAS_ERROR_RETURNVAL(this->vars->elemRefs > 0, *(new Type));
 		if (this->vars->lastSeg->used == internal::LIST_SEGMENT_SIZE)
 		{
 			internal::ListSegment<Type> *newSeg = this->vars->createSegment();
@@ -2457,6 +2462,7 @@ namespace spadas
 			this->vars->head = this->vars->tail = targetCell;
 		}
 		this->vars->size++;
+		return targetCell->val;
 	}
 
 	template<typename Type>
@@ -2721,9 +2727,9 @@ namespace spadas
 	}
 
 	template<typename Type>
-	void ListElem<Type>::insertPrevious(Type val)
+	Type& ListElem<Type>::insertPrevious(Type val)
 	{
-		if (!this->cell) return;
+		SPADAS_ERROR_RETURNVAL(!this->cell, *(new Type));
 		internal::ListCell<Type> *curCell = (internal::ListCell<Type>*)this->cell;
 		ListVars<Type> *listVars = this->list.getVars();
 		if (listVars->lastSeg->used == internal::LIST_SEGMENT_SIZE)
@@ -2745,12 +2751,13 @@ namespace spadas
 		this->prevIndex = this->idx;
 		this->idx++;
 		if (this->nextCell) this->nextIndex++;
+		return targetCell->val;
 	}
 
 	template<typename Type>
-	void ListElem<Type>::insertNext(Type val)
+	Type& ListElem<Type>::insertNext(Type val)
 	{
-		if (!this->cell) return;
+		SPADAS_ERROR_RETURNVAL(!this->cell, *(new Type));
 		internal::ListCell<Type> *curCell = (internal::ListCell<Type>*)this->cell;
 		ListVars<Type> *listVars = this->list.getVars();
 		if (listVars->lastSeg->used == internal::LIST_SEGMENT_SIZE)
@@ -2770,6 +2777,7 @@ namespace spadas
 		listVars->size++;
 		this->nextCell = targetCell;
 		this->nextIndex = this->idx + 1;
+		return targetCell->val;
 	}
 
 	template<typename Type>
