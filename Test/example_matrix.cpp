@@ -39,5 +39,5 @@ void exampleMatrix()
 	for (UInt i = 0; i < b.dimAt(0); i++) bArr[i] = b(i, 0);
 
 	Array<Double> x2 = math::solve(a, bArr);
-	console::print(SS"求解a*x=b: " + String::merge(x2, ","));
+	console::print(SS"求解a*x=b: " + String::merge(x2));
 }

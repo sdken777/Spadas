@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // Stream改为基于数组实现。移除方法Stream::setCapacity, nEnqueued, nDequeued。Stream::dequeueLessThan改为lambda表达式。spinEnter/Leave不作线程ID判断
+// 版本定义 // 重构List实现。新增List::removeAs
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 11
+#define SPADAS_VERSION_BUILD 12
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：9.0.11\n
+* 本文档对应Spadas版本：9.0.12\n
 *
 * \n
 * \section top1 基本功能概述

@@ -719,6 +719,7 @@ namespace spadas
 		Type *data;
 		UInt size;
 		UInt idx;
+		ArrayElem<Type>& operator =(const ArrayElem<Type>& elem) { return *this; }
 	};
 
 	/// spadas::Array 模板类的变量数据
@@ -1216,7 +1217,13 @@ namespace spadas
 	{
 	public:
 		/// 构造函数，由 List::head 和 List::tail 调用生成
-		ListElem(ListNode<Type> node, Bool valid, UInt index, ListNode<Type> prevNode, Bool prevValid, ListNode<Type> nextNode, Bool nextValid, List<Type> list);
+		ListElem(List<Type> list, Pointer cell, UInt index);
+
+		/// 拷贝构造函数
+		ListElem(const ListElem<Type>& elem);
+
+		/// 析构函数
+		~ListElem();
 
 		/// 当前元素是否在链表中
 		Bool valid();
@@ -1261,16 +1268,14 @@ namespace spadas
 		void remove();
 	
 	private:
-		ListNode<Type> node;
-		Bool vld;
-		UInt idx;
-		ListNode<Type> prevNode;
-		Bool prevValid;
-		UInt prevIndex;
-		ListNode<Type> nextNode;
-		Bool nextValid;
-		UInt nextIndex;
 		List<Type> list;
+		Pointer cell;
+		Pointer prevCell;
+		Pointer nextCell;
+		UInt idx;
+		UInt prevIndex;
+		UInt nextIndex;
+		ListElem<Type>& operator =(const ListElem<Type>& elem) { return *this; }
 	};
 
 	/// 链表
@@ -1312,6 +1317,9 @@ namespace spadas
 
 		/// 移除等于某个值的所有元素
 		void remove(Type val);
+
+		/// 移除满足条件(指定函数返回TRUE)的所有元素
+		void removeAs(Func<Bool(Type&)> func);
 
 		/// 清空链表
 		void clear();
@@ -1371,7 +1379,7 @@ namespace spadas
 		Array<Type> dequeue(UInt amount = UINF);
 
 		/// 尝试取出所有满足条件(指定函数返回TRUE)的连续元素 (返回的数组中序号0的元素为最早)
-		Array<Type> dequeue(Func<Bool(Type&)> func);
+		Array<Type> dequeueAs(Func<Bool(Type&)> func);
 
 		/// 等待所有元素取出 (若检测到interrupt则返回FALSE)
 		Bool waitAllDequeued(Flag interrupt, Bool spin);

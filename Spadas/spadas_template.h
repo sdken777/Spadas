@@ -2266,165 +2266,378 @@ namespace spadas
 	}
 
 	// 链表实现 ///////////////////////////////////////////////////////
+	namespace internal
+	{
+		const UInt LIST_SEGMENT_SIZE = 16;
+
+		template<typename Type> struct ListSegment;
+
+		template<typename Type> struct ListCell
+		{
+			Type val;
+			ListCell<Type> *prev;
+			ListCell<Type> *next;
+			ListSegment<Type> *owner;
+			ListCell(Type& val, ListSegment<Type> *owner) : val(val), prev(0), next(0), owner(owner)
+			{ }
+		};
+
+		template<typename Type> struct ListSegment
+		{
+			ListCell<Type> *buffer;
+			ListSegment<Type> *prev;
+			ListSegment<Type> *next;
+			UInt used;
+			UInt unused;
+			ListSegment(ListCell<Type> *buffer) : buffer(buffer), prev(0), next(0), used(0), unused(0)
+			{ }
+		};
+	}
+
 	template<typename Type> class ListVars : public Vars
 	{
 	public:
 		UInt size;
-		ListNode<Type> origin;
-		ListVars() : size(0)
+		volatile Int elemRefs;
+		internal::ListSegment<Type> *firstSeg;
+		internal::ListSegment<Type> *lastSeg;
+		internal::ListCell<Type> *head;
+		internal::ListCell<Type> *tail;
+		ListVars() : size(0), elemRefs(0), head(0), tail(0)
 		{
-			origin.joinNext(origin);
+			firstSeg = lastSeg = createSegment();
 		}
 		~ListVars()
 		{
-			origin.collapse();
+			releaseSegments();
+		}
+		internal::ListSegment<Type> *createSegment()
+		{
+			Byte* newBytes = new Byte[sizeof(internal::ListSegment<Type>) + sizeof(internal::ListCell<Type>) * internal::LIST_SEGMENT_SIZE];
+			return new (newBytes)internal::ListSegment<Type>((internal::ListCell<Type>*)&newBytes[sizeof(internal::ListSegment<Type>)]);
+		}
+		void releaseSegments()
+		{
+			if (!__is_trivial(Type))
+			{
+				if (head)
+				{
+					internal::ListCell<Type> *curCell = head;
+					while (TRUE)
+					{
+						internal::ListCell<Type> *nextCell = curCell->next;
+						curCell->~ListCell();
+						if (curCell == tail) break;
+						else curCell = nextCell;
+					}
+				}
+			}
+			internal::ListSegment<Type> *curSeg = firstSeg;
+			while (TRUE)
+			{
+				internal::ListSegment<Type> *nextSeg = curSeg->next;
+				delete[] (Byte*)curSeg;
+				if (curSeg == lastSeg) break;
+				else curSeg = nextSeg;
+			}
+			size = 0;
+			firstSeg = lastSeg = 0;
+			head = tail = 0;
+		}
+		void removeSegment(internal::ListSegment<Type> *seg)
+		{
+			if (seg == firstSeg) firstSeg = seg->next;
+			if (seg == lastSeg) lastSeg = seg->prev;
+			if (seg->prev) seg->prev->next = seg->next;
+			if (seg->next) seg->next->prev = seg->prev;
+			delete[] (Byte*)seg;
+			if (!firstSeg) firstSeg = lastSeg = createSegment();
 		}
 	};
 
 	template<typename Type>
-	List<Type>::List() : Object<ListVars<Type> >(new ListVars<Type>(), TRUE)
+	List<Type>::List()
 	{}
 
 	template<typename Type>
-	List<Type>::List(Array<Type> arr) : Object<ListVars<Type> >(new ListVars<Type>(), TRUE)
+	List<Type>::List(Array<Type> arr)
 	{
-		if (arr.isEmpty()) return;
-		UInt arrSize = arr.size();
-		for (UInt i = 0; i < arrSize; i++) this->vars->origin.insertPrevious(arr[i]);
-		this->vars->size = arrSize;
+		for (auto e = arr.firstElem(); e.valid(); ++e) this->addToTail(e.value());
 	}
 
 	template<typename Type>
 	List<Type> List<Type>::clone()
 	{
-		List<Type> output;
-		output.vars->origin.collapse();
-		output.vars->origin = this->vars->origin.cloneList();
-		output.vars->size = this->vars->size;
-		return output;
+		return List<Type>(this->toArray());
 	}
 
 	template<typename Type>
 	Bool List<Type>::isEmpty()
 	{
-		return this->vars->size == 0;
+		return !this->vars || this->vars->size == 0;
 	}
 
 	template<typename Type>
 	UInt List<Type>::size()
 	{
-		return this->vars->size;
+		return this->vars ? this->vars->size : 0;
 	}
 
 	template<typename Type>
 	ListElem<Type> List<Type>::head()
 	{
-		ListNode<Type> origin = this->vars->origin;
-		ListNode<Type> target = origin.next();
-		ListNode<Type> next = target.next();
-		return ListElem<Type>(target, target != origin, target != origin ? 0 : UINF, origin, FALSE, next, next != origin, *this);
+		if (this->vars && this->vars->size > 0)
+		{
+			SPADAS_ERROR_RETURNVAL(this->vars->elemRefs > 0, ListElem<Type>(List<Type>(), 0, UINF));
+			return ListElem<Type>(*this, this->vars->head, 0);
+		}
+		return ListElem<Type>(List<Type>(), 0, UINF);
 	}
 
 	template<typename Type>
 	ListElem<Type> List<Type>::tail()
 	{
-		ListNode<Type> origin = this->vars->origin;
-		ListNode<Type> target = origin.previous();
-		ListNode<Type> prev = target.previous();
-		return ListElem<Type>(target, target != origin, target != origin ? (this->vars->size - 1) : UINF, prev, prev != origin, origin, FALSE, *this);
+		if (this->vars && this->vars->size > 0)
+		{
+			SPADAS_ERROR_RETURNVAL(this->vars->elemRefs > 0, ListElem<Type>(List<Type>(), 0, UINF));
+			return ListElem<Type>(*this, this->vars->tail, this->vars->size - 1);
+		}
+		return ListElem<Type>(List<Type>(), 0, UINF);
 	}
 
 	template<typename Type>
 	void List<Type>::addToHead(Type val)
 	{
-		this->vars->origin.insertNext(val);
+		if (!this->vars) this->setVars(new ListVars<Type>(), TRUE);
+		else SPADAS_ERROR_RETURN(this->vars->elemRefs > 0);
+		if (this->vars->lastSeg->used == internal::LIST_SEGMENT_SIZE)
+		{
+			internal::ListSegment<Type> *newSeg = this->vars->createSegment();
+			newSeg->prev = this->vars->lastSeg;
+			this->vars->lastSeg->next = newSeg;
+			this->vars->lastSeg = newSeg;
+		}
+		internal::ListCell<Type> *targetCell = this->vars->lastSeg->buffer + this->vars->lastSeg->used++;
+		new (targetCell)internal::ListCell<Type>(val, this->vars->lastSeg);
+		if (this->vars->size > 0)
+		{
+			targetCell->next = this->vars->head;
+			this->vars->head->prev = targetCell;
+			this->vars->head = targetCell;
+		}
+		else
+		{
+			this->vars->head = this->vars->tail = targetCell;
+		}
 		this->vars->size++;
 	}
 
 	template<typename Type>
 	void List<Type>::addToTail(Type val)
 	{
-		this->vars->origin.insertPrevious(val);
+		if (!this->vars) this->setVars(new ListVars<Type>(), TRUE);
+		else SPADAS_ERROR_RETURN(this->vars->elemRefs > 0);
+		if (this->vars->lastSeg->used == internal::LIST_SEGMENT_SIZE)
+		{
+			internal::ListSegment<Type> *newSeg = this->vars->createSegment();
+			newSeg->prev = this->vars->lastSeg;
+			this->vars->lastSeg->next = newSeg;
+			this->vars->lastSeg = newSeg;
+		}
+		internal::ListCell<Type> *targetCell = this->vars->lastSeg->buffer + this->vars->lastSeg->used++;
+		new (targetCell)internal::ListCell<Type>(val, this->vars->lastSeg);
+		if (this->vars->size > 0)
+		{
+			targetCell->prev = this->vars->tail;
+			this->vars->tail->next = targetCell;
+			this->vars->tail = targetCell;
+		}
+		else
+		{
+			this->vars->head = this->vars->tail = targetCell;
+		}
 		this->vars->size++;
 	}
 
 	template<typename Type>
 	void List<Type>::removeHead()
 	{
-		if (this->vars->size == 0) return;
-		this->vars->origin.removeNext();
+		if (!this->vars || this->vars->size == 0) return;
+		SPADAS_ERROR_RETURN(this->vars->elemRefs > 0);
+		internal::ListCell<Type> *targetCell = this->vars->head;
+		internal::ListSegment<Type> *targetSeg = targetCell->owner;
+		if (this->vars->size > 1)
+		{
+			this->vars->head = targetCell->next;
+			this->vars->head->prev = 0;
+		}
+		else
+		{
+			this->vars->head = this->vars->tail = 0;
+		}
+		if (!__is_trivial(Type)) targetCell->~ListCell();
+		if (++targetSeg->unused == internal::LIST_SEGMENT_SIZE) this->vars->removeSegment(targetSeg);
 		this->vars->size--;
 	}
 
 	template<typename Type>
 	void List<Type>::removeTail()
 	{
-		if (this->vars->size == 0) return;
-		this->vars->origin.removePrevious();
+		if (!this->vars || this->vars->size == 0) return;
+		SPADAS_ERROR_RETURN(this->vars->elemRefs > 0);
+		internal::ListCell<Type> *targetCell = this->vars->tail;
+		internal::ListSegment<Type> *targetSeg = targetCell->owner;
+		if (this->vars->size > 1)
+		{
+			this->vars->tail = targetCell->prev;
+			this->vars->tail->next = 0;
+		}
+		else
+		{
+			this->vars->head = this->vars->tail = 0;
+		}
+		if (!__is_trivial(Type)) targetCell->~ListCell();
+		if (++targetSeg->unused == internal::LIST_SEGMENT_SIZE) this->vars->removeSegment(targetSeg);
 		this->vars->size--;
 	}
 
 	template<typename Type>
 	void List<Type>::remove(Type val)
 	{
-		ListNode<Type> node = this->vars->origin.next();
-		while (node != this->vars->origin)
+		if (!this->vars || this->vars->size == 0) return;
+		SPADAS_ERROR_RETURN(this->vars->elemRefs > 0);
+		internal::ListCell<Type> *curCell = this->vars->head;
+		while (TRUE)
 		{
-			Bool shouldRemove = node.value() == val;
-			node = node.next();
-			if (shouldRemove)
+			Bool isHead = curCell == this->vars->head;
+			Bool isTail = curCell == this->vars->tail;
+			internal::ListCell<Type> *prevCell = curCell->prev;
+			internal::ListCell<Type> *nextCell = curCell->next;
+			internal::ListSegment<Type> *curOwner = curCell->owner;
+			if (curCell->val == val)
 			{
-				node.removePrevious();
+				if (isHead) this->vars->head = nextCell;
+				if (isTail) this->vars->tail = prevCell;
+				if (prevCell) prevCell->next = nextCell;
+				if (nextCell) nextCell->prev = prevCell;
+				if (!__is_trivial(Type)) curCell->~ListCell();
+				if (++curOwner->unused == internal::LIST_SEGMENT_SIZE) this->vars->removeSegment(curOwner);
 				this->vars->size--;
 			}
+			if (isTail) break;
+			else curCell = nextCell;
+		}
+	}
+
+	template<typename Type>
+	void List<Type>::removeAs(Func<Bool(Type&)> func)
+	{
+		if (!this->vars || this->vars->size == 0) return;
+		SPADAS_ERROR_RETURN(this->vars->elemRefs > 0);
+		internal::ListCell<Type> *curCell = this->vars->head;
+		while (TRUE)
+		{
+			Bool isHead = curCell == this->vars->head;
+			Bool isTail = curCell == this->vars->tail;
+			internal::ListCell<Type> *prevCell = curCell->prev;
+			internal::ListCell<Type> *nextCell = curCell->next;
+			internal::ListSegment<Type> *curOwner = curCell->owner;
+			if (func(curCell->val))
+			{
+				if (isHead) this->vars->head = nextCell;
+				if (isTail) this->vars->tail = prevCell;
+				if (prevCell) prevCell->next = nextCell;
+				if (nextCell) nextCell->prev = prevCell;
+				if (!__is_trivial(Type)) curCell->~ListCell();
+				if (++curOwner->unused == internal::LIST_SEGMENT_SIZE) this->vars->removeSegment(curOwner);
+				this->vars->size--;
+			}
+			if (isTail) break;
+			else curCell = nextCell;
 		}
 	}
 
 	template<typename Type>
 	void List<Type>::clear()
 	{
-		this->vars->origin.collapse();
-		this->vars->origin.joinNext(this->vars->origin);
-		this->vars->size = 0;
+		if (!this->vars) return;
+		SPADAS_ERROR_RETURN(this->vars->elemRefs > 0);
+		this->vars->releaseSegments();
+		this->vars->firstSeg = this->vars->lastSeg = this->vars->createSegment();
 	}
 
 	template<typename Type>
 	Array<Type> List<Type>::toArray()
 	{
+		if (!this->vars) return Array<Type>();
 		Array<Type> arr = Array<Type>::createUninitialized(this->vars->size);
-		ListNode<Type> node = this->vars->origin.next();
+		internal::ListCell<Type> *curCell = this->vars->head;
 		for (UInt i = 0; i < this->vars->size; i++)
 		{
-			arr.initialize(i, node.value());
-			node = node.next();
+			arr.initialize(i, curCell->val);
+			curCell = curCell->next;
 		}
 		return arr;
 	}
 
 	template<typename Type>
-	ListElem<Type>::ListElem(ListNode<Type> node, Bool valid, UInt index, ListNode<Type> prevNode, Bool prevValid, ListNode<Type> nextNode, Bool nextValid, List<Type> list)
-		: node(node), vld(valid), idx(index), prevNode(prevNode), prevValid(prevValid), nextNode(nextNode), nextValid(nextValid), list(list)
+	ListElem<Type>::ListElem(List<Type> list, Pointer cell, UInt index) : list(list), cell(cell), idx(index)
 	{
-		prevIndex = prevValid ? (index - 1) : UINF;
-		nextIndex = nextValid ? (index + 1) : UINF;
+		internal::ListCell<Type> *curCell = (internal::ListCell<Type>*)this->cell;
+		if (curCell && curCell->prev)
+		{
+			this->prevCell = curCell->prev;
+			this->prevIndex = index - 1;
+		}
+		else
+		{
+			this->prevCell = 0;
+			this->prevIndex = UINF;
+		}
+		if (curCell && curCell->next)
+		{
+			this->nextCell = curCell->next;
+			this->nextIndex = index + 1;
+		}
+		else
+		{
+			this->nextCell = 0;
+			this->nextIndex = UINF;
+		}
+		ListVars<Type> *listVars = list.getVars();
+		if (listVars) listVars->elemRefs++;
+	}
+
+	template<typename Type>
+	ListElem<Type>::ListElem(const ListElem<Type>& elem) : list(elem.list), cell(elem.cell), prevCell(elem.prevCell), nextCell(elem.nextCell), idx(elem.idx), prevIndex(elem.prevIndex), nextIndex(elem.nextIndex)
+	{
+		ListVars<Type> *listVars = list.getVars();
+		if (listVars) listVars->elemRefs++;
+	}
+
+	template<typename Type>
+	ListElem<Type>::~ListElem()
+	{
+		ListVars<Type> *listVars = list.getVars();
+		if (listVars) listVars->elemRefs--;
 	}
 
 	template<typename Type>
 	Bool ListElem<Type>::valid()
 	{
-		return this->vld;
+		return this->cell != 0;
 	}
 
 	template <typename Type>
 	Bool ListElem<Type>::hasPrevious()
 	{
-		return this->prevValid;
+		return this->prevCell != 0;
 	}
 
 	template <typename Type>
 	Bool ListElem<Type>::hasNext()
 	{
-		return this->nextValid;
+		return this->nextCell != 0;
 	}
 
 	template<typename Type>
@@ -2436,125 +2649,146 @@ namespace spadas
 	template<typename Type>
 	Type& ListElem<Type>::value()
 	{
-		SPADAS_ERROR_PASS(!this->vld);
-		return this->node.value();
+		SPADAS_ERROR_PASS(!this->cell);
+		internal::ListCell<Type> *curCell = (internal::ListCell<Type>*)this->cell;
+		return curCell->val;
 	}
 
 	template<typename Type>
 	Type* ListElem<Type>::operator ->()
 	{
-		SPADAS_ERROR_PASS(!this->vld);
-		return this->node.operator ->();
+		SPADAS_ERROR_PASS(!this->cell);
+		internal::ListCell<Type> *curCell = (internal::ListCell<Type>*)this->cell;
+		return &curCell->val;
 	}
 
 	template <typename Type>
 	Type& ListElem<Type>::previous()
 	{
-		SPADAS_ERROR_PASS(!this->prevValid);
-		return this->prevNode.value();
+		SPADAS_ERROR_PASS(!this->prevCell);
+		internal::ListCell<Type> *targetCell = (internal::ListCell<Type>*)this->prevCell;
+		return &targetCell->val;
 	}
 
 	template <typename Type>
 	Type& ListElem<Type>::next()
 	{
-		SPADAS_ERROR_PASS(!this->nextValid);
-		return this->nextNode.value();
+		SPADAS_ERROR_PASS(!this->nextCell);
+		internal::ListCell<Type> *targetCell = (internal::ListCell<Type>*)this->nextCell;
+		return &targetCell->val;
 	}
 
 	template <typename Type>
 	void ListElem<Type>::operator =(const Type& val)
 	{
-		SPADAS_ERROR_RETURN(!this->vld);
-		this->node.value() = val;
+		SPADAS_ERROR_RETURN(!this->cell);
+		internal::ListCell<Type> *curCell = (internal::ListCell<Type>*)this->cell;
+		curCell->val = val;
 	}
 
 	template<typename Type>
 	void ListElem<Type>::operator --()
 	{
-		if (this->vld)
+		if (this->cell)
 		{
-			this->nextValid = TRUE;
-			this->nextNode = this->node;
+			this->nextCell = this->cell;
 			this->nextIndex = this->idx;
 		}
-		this->vld = this->prevValid;
-		this->node = this->prevNode;
+		this->cell = this->prevCell;
 		this->idx = this->prevIndex;
-		if (this->vld)
+		if (this->cell)
 		{
-			this->prevNode = this->node.previous();
-			if (this->prevNode == this->list.getVars()->origin)
-			{
-				this->prevValid = FALSE;
-				this->prevIndex = UINF;
-			}
-			else
-			{
-				this->prevValid = TRUE;
-				this->prevIndex = this->idx - 1;
-			}
+			this->prevCell = ((internal::ListCell<Type>*)this->cell)->prev;
+			this->prevIndex = this->prevCell ? (this->idx - 1) : UINF;
 		}
 	}
 
 	template<typename Type>
 	void ListElem<Type>::operator ++()
 	{
-		if (this->vld)
+		if (this->cell)
 		{
-			this->prevValid = TRUE;
-			this->prevNode = this->node;
+			this->prevCell = this->cell;
 			this->prevIndex = this->idx;
 		}
-		this->vld = this->nextValid;
-		this->node = this->nextNode;
+		this->cell = this->nextCell;
 		this->idx = this->nextIndex;
-		if (this->vld)
+		if (this->cell)
 		{
-			this->nextNode = this->node.next();
-			if (this->nextNode == this->list.getVars()->origin)
-			{
-				this->nextValid = FALSE;
-				this->nextIndex = UINF;
-			}
-			else
-			{
-				this->nextValid = TRUE;
-				this->nextIndex = this->idx + 1;
-			}
+			this->nextCell = ((internal::ListCell<Type>*)this->cell)->next;
+			this->nextIndex = this->nextCell ? (this->idx + 1) : UINF;
 		}
 	}
 
 	template<typename Type>
 	void ListElem<Type>::insertPrevious(Type val)
 	{
-		if (!this->vld) return;
-		this->prevNode = this->node.insertPrevious(val);
-		this->prevValid = TRUE;
+		if (!this->cell) return;
+		internal::ListCell<Type> *curCell = (internal::ListCell<Type>*)this->cell;
+		ListVars<Type> *listVars = this->list.getVars();
+		if (listVars->lastSeg->used == internal::LIST_SEGMENT_SIZE)
+		{
+			internal::ListSegment<Type> *newSeg = listVars->createSegment();
+			newSeg->prev = listVars->lastSeg;
+			listVars->lastSeg->next = newSeg;
+			listVars->lastSeg = newSeg;
+		}
+		internal::ListCell<Type> *targetCell = listVars->lastSeg->buffer + listVars->lastSeg->used++;
+		new (targetCell)internal::ListCell<Type>(val, listVars->lastSeg);
+		targetCell->prev = curCell->prev;
+		targetCell->next = curCell;
+		if (curCell->prev) curCell->prev->next = targetCell;
+		curCell->prev = targetCell;
+		if (listVars->head == curCell) listVars->head = targetCell;
+		listVars->size++;
+		this->prevCell = targetCell;
 		this->prevIndex = this->idx;
 		this->idx++;
-		if (this->nextValid) this->nextIndex++;
-		this->list.getVars()->size++;
+		if (this->nextCell) this->nextIndex++;
 	}
 
 	template<typename Type>
 	void ListElem<Type>::insertNext(Type val)
 	{
-		if (!this->vld) return;
-		this->nextNode = this->node.insertNext(val);
-		this->nextValid = TRUE;
+		if (!this->cell) return;
+		internal::ListCell<Type> *curCell = (internal::ListCell<Type>*)this->cell;
+		ListVars<Type> *listVars = this->list.getVars();
+		if (listVars->lastSeg->used == internal::LIST_SEGMENT_SIZE)
+		{
+			internal::ListSegment<Type> *newSeg = listVars->createSegment();
+			newSeg->prev = listVars->lastSeg;
+			listVars->lastSeg->next = newSeg;
+			listVars->lastSeg = newSeg;
+		}
+		internal::ListCell<Type> *targetCell = listVars->lastSeg->buffer + listVars->lastSeg->used++;
+		new (targetCell)internal::ListCell<Type>(val, listVars->lastSeg);
+		targetCell->next = curCell->next;
+		targetCell->prev = curCell;
+		if (curCell->next) curCell->next->prev = targetCell;
+		curCell->next = targetCell;
+		if (listVars->tail == curCell) listVars->tail = targetCell;
+		listVars->size++;
+		this->nextCell = targetCell;
 		this->nextIndex = this->idx + 1;
-		this->list.getVars()->size++;
 	}
 
 	template<typename Type>
 	void ListElem<Type>::remove()
 	{
-		if (!this->vld) return;
-		this->node.removeSelf();
-		this->vld = FALSE;
+		if (!this->cell) return;
+		internal::ListCell<Type> *curCell = (internal::ListCell<Type>*)this->cell;
+		internal::ListSegment<Type> *curSeg = curCell->owner;
+		ListVars<Type> *listVars = this->list.getVars();
+		if (curCell->prev) curCell->prev->next = curCell->next;
+		else listVars->head = curCell->next;
+		if (curCell->next) curCell->next->prev = curCell->prev;
+		else listVars->tail = curCell->prev;
+		if (!__is_trivial(Type)) curCell->~ListCell();
+		if (++curSeg->unused == internal::LIST_SEGMENT_SIZE) listVars->removeSegment(curSeg);
+		listVars->size--;
+		this->cell = 0;
 		this->idx = UINF;
-		if (this->nextValid) this->nextIndex--;
-		this->list.getVars()->size--;
+		if (this->nextCell) this->nextIndex--;
 	}
 
 	// 数据流实现 ///////////////////////////////////////////////////////
@@ -2852,7 +3086,7 @@ namespace spadas
 	}
 
 	template<typename Type>
-	Array<Type> Stream<Type>::dequeue(Func<Bool(Type&)> func)
+	Array<Type> Stream<Type>::dequeueAs(Func<Bool(Type&)> func)
 	{
 		this->vars->spinEnter();
 		ArrayX<Type> out;

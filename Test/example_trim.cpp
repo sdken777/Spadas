@@ -11,5 +11,5 @@ void exampleTrim()
 	buffer[0] = 555;
 	buffer[1] = 666;
 	buffer.trim(2);
-	console::print(String::merge(buffer, ", "));
+	console::print(String::merge(buffer));
 }
