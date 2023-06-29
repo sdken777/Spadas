@@ -1245,14 +1245,33 @@ String::String(Binary binary)
 
 	UInt textLength = 0;
 	Byte *textData = binary.data();
-	for (; textLength < binary.size(); textLength++)
+	UInt binarySize = binary.size();
+	for (; textLength < binarySize; textLength++)
 	{
 		if (textData[textLength] == 0) break;
 	}
 	if (textLength == 0) return;
 
 	initBuffer(textLength);
-	utility::memoryCopy(binary.data(), vars->data, textLength);
+	utility::memoryCopy(textData, vars->data, textLength);
+	vars->length = textLength;
+}
+
+String::String(BinarySpan span)
+{
+    if (span.isEmpty()) return;
+
+	UInt textLength = 0;
+	Byte *textData = span.data();
+	UInt binarySize = span.size();
+	for (; textLength < binarySize; textLength++)
+	{
+		if (textData[textLength] == 0) break;
+	}
+	if (textLength == 0) return;
+
+	initBuffer(textLength);
+	utility::memoryCopy(textData, vars->data, textLength);
 	vars->length = textLength;
 }
 
@@ -1737,7 +1756,8 @@ void String::operator +=(Binary binary)
 
 	UInt textLength = 0;
 	Byte *textData = binary.data();
-	for (; textLength < binary.size(); textLength++)
+	UInt binarySize = binary.size();
+	for (; textLength < binarySize; textLength++)
 	{
 		if (textData[textLength] == 0) break;
 	}
@@ -1745,6 +1765,25 @@ void String::operator +=(Binary binary)
 
 	UInt originLength = vars ? vars->length : 0;
 	ensureBuffer(textLength);
-	utility::memoryCopy(binary.data(), &vars->data[originLength], textLength);
+	utility::memoryCopy(textData, &vars->data[originLength], textLength);
+	vars->length = originLength + textLength;
+}
+
+void String::operator +=(BinarySpan span)
+{
+    if (span.isEmpty()) return;
+
+	UInt textLength = 0;
+	Byte *textData = span.data();
+	UInt binarySize = span.size();
+	for (; textLength < binarySize; textLength++)
+	{
+		if (textData[textLength] == 0) break;
+	}
+	if (textLength == 0) return;
+
+	UInt originLength = vars ? vars->length : 0;
+	ensureBuffer(textLength);
+	utility::memoryCopy(textData, &vars->data[originLength], textLength);
 	vars->length = originLength + textLength;
 }

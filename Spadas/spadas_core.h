@@ -1869,6 +1869,10 @@ namespace spadas
 		/// @param binary UTF-8二进制数据（不要求以0结尾）
 		String(Binary binary);
 
+		/// @brief 从UTF-8二进制数据片段创建字符串对象
+		/// @param span UTF-8二进制数据片段（不要求以0结尾）
+		String(BinarySpan span);
+
 		/// @brief 由任意具有toString方法的结构体或对象创建字符串对象
 		template <typename Type>
 		String(Type obj);
@@ -2050,6 +2054,10 @@ namespace spadas
 		/// @brief 在本字符串后拼接UTF-8二进制数据 (将更改本对象数据)
 		/// @param binary 拼接的UTF-8二进制数据（不要求以0结尾）
 		void operator +=(Binary binary);
+
+		/// @brief 在本字符串后拼接UTF-8二进制数据片段 (将更改本对象数据)
+		/// @param span 拼接的UTF-8二进制数据片段（不要求以0结尾）
+		void operator +=(BinarySpan span);
 
 		/// 创建数据块大小（字节单位）为指定值的空字符串
 		static String createWithSize(UInt size);
