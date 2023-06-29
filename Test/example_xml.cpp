@@ -10,7 +10,7 @@ void exampleXML()
 	Timer timer;
 	XML xml;
 	UInt counter = 0;
-	Array<String> attribNames(100);
+	Array<String> attribNames(100); /* 每个节点一百个属性 */
 	for (UInt n = 0; n < attribNames.size(); n++)
 	{
 		attribNames[n] = SS"number" + (n + 1);
@@ -19,8 +19,8 @@ void exampleXML()
 	{
 		XMLElement elem;
 		elem.tag = "numbers";
-		elem.attributes = Array<XMLAttribute>(100);
-		for (UInt n = 0; n < 100/* 一百个属性 */; n++)
+		elem.attributes = Array<XMLAttribute>(attribNames.size());
+		for (UInt n = 0; n < attribNames.size(); n++)
 		{
 			elem.attributes[n].name = attribNames[n];
 			elem.attributes[n].value = counter++;
@@ -36,6 +36,16 @@ void exampleXML()
 
 	// XML反序列化效率测试
 	timer.start();
-	XML::createFromBinary(xmlBinary);
+	auto parsedXML = XML::createFromBinary(xmlBinary).value(XML());
 	console::print(SS"From binary: " + timer.check());
+
+	// 验证结果
+	UInt attribCount = 0;
+	XMLNode rootNode = parsedXML.globalRoot();
+	for (auto e = rootNode.leaves().firstElem(); e.valid(); ++e)
+	{
+		attribCount += e->value().attributes.size();
+	}
+	console::print(SS"Attribute count: " + attribCount);
+	console::print(SS"Binary size: " + xmlBinary.size() + "=" + parsedXML.toBinary().size());
 }

@@ -6,6 +6,12 @@ namespace xml_internal
 	using namespace spadas;
 	using namespace spadas::console;
 
+	const UInt STRING_STREAM_BUFFER_SIZE = 256;
+
+	String quot = "\"";
+	String space = " ";
+	Binary emptyXmlStringBinary = String("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root/>\n").toBinary();
+
 	enum class BracketType
 	{
 		Dummy = 0,
@@ -13,104 +19,221 @@ namespace xml_internal
 		End = 2,
 		Atom = 3,
 	};
-	
-	String debug_stringBracketType(BracketType type)
-	{
-		switch (type)
-		{
-		case BracketType::Dummy:
-				return "Dummy";
-			case BracketType::Start:
-				return "Start";
-			case BracketType::End:
-				return "End";
-			case BracketType::Atom:
-				return "Atom";
-		}
-		return "Dummy";
-	}
 
-	Bool okForTagOrAttributeName(String text)
+	class XmlCharsValidator
 	{
-		UInt textLength = text.length();
-		const Byte *textData = text.bytes();
-		for (UInt i = 0; i < textLength; i++)
+	public:
+		XmlCharsValidator()
 		{
-			if ((textData[i] >= '0' && textData[i] <= '9') ||
-				(textData[i] >= 'A' && textData[i] <= 'Z') ||
-				(textData[i] >= 'a' && textData[i] <= 'z') ||
-				(textData[i] == '_') ||
-				(textData[i] == '.') ||
-				(textData[i] == '-') ||
-				(textData[i] == ':')) continue;
-			return FALSE;
+			for (UInt i = 0; i < 256; i++)
+			{
+				Char c = (Char)(Byte)i;
+				flags[i] = (c >= '0' && c <= '9') ||
+					(c >= 'A' && c <= 'Z') ||
+					(c >= 'a' && c <= 'z') ||
+					(c == '_') ||
+					(c == '.') ||
+					(c == '-') ||
+					(c == ':');
+			}
 		}
-		return TRUE;
+		Bool validate(String& text)
+		{
+			UInt textLength = text.length();
+			if (textLength == 0) return FALSE;
+			const Byte *textData = text.bytes();
+			for (UInt i = 0; i < textLength; i++)
+			{
+				if (!flags[textData[i]]) return FALSE;
+			}
+			return TRUE;
+		}
+	private:
+		Bool flags[256];
 	}
-	
-	// escape sequence
-	String encodeES(String text, Bool includeQuotation)
+	xmlCharsValidator;
+
+	struct StringStreamElem
+	{
+		UInt size;
+		Byte buffer[STRING_STREAM_BUFFER_SIZE];
+		const Byte *extBuffer;
+		StringStreamElem() : size(0)
+		{}
+		StringStreamElem(const Byte* extData, UInt size) : size(size), extBuffer(extData)
+		{}
+	};
+
+	class StringStream
+	{
+	public:
+		StringStream()
+		{
+			lastBuffer = &bufferList.addToTail(StringStreamElem());
+		}
+		void enqueue(const Byte* data, UInt size)
+		{
+			if (lastBuffer->size + size > STRING_STREAM_BUFFER_SIZE)
+			{
+				if (size > STRING_STREAM_BUFFER_SIZE)
+				{
+					lastBuffer = &bufferList.addToTail(StringStreamElem(data, size));
+					return;
+				}
+				lastBuffer = &bufferList.addToTail(StringStreamElem());
+			}
+			utility::memoryCopy(data, &lastBuffer->buffer[lastBuffer->size], size);
+			lastBuffer->size += size;
+		}
+		void enqueue(Binary& bin)
+		{
+			if (bin.size() > STRING_STREAM_BUFFER_SIZE)
+			{
+				largeBinaries.append(bin);
+				lastBuffer = &bufferList.addToTail(StringStreamElem(bin.data(), bin.size()));
+			}
+			else
+			{
+				enqueue(bin.data(), bin.size());
+			}
+		}
+		Binary dequeue()
+		{
+			UInt totalSize = 0;
+			for (auto e = bufferList.head(); e.valid(); ++e)
+			{
+				totalSize += e->size;
+			}
+
+			Binary output(totalSize);
+			Byte *outputData = output.data();
+			UInt index = 0;
+			for (auto e = bufferList.head(); e.valid(); ++e)
+			{
+				utility::memoryCopy(e->size > STRING_STREAM_BUFFER_SIZE ? e->extBuffer : e->buffer, &outputData[index], e->size);
+				index += e->size;
+			}
+
+			bufferList.clear();
+			lastBuffer = &bufferList.addToTail(StringStreamElem());
+			largeBinaries = ArrayX<Binary>();
+
+			return output;
+		}
+	private:
+		List<StringStreamElem> bufferList;
+		ArrayX<Binary> largeBinaries;
+		StringStreamElem *lastBuffer;
+	};
+
+	void encodeES(String& text, Bool includeQuotation, Binary& esBuffer, StringStream& stream) // escape sequence
 	{
 		UInt textLength = text.length();
 		const Byte *textData = text.bytes();
-		UInt countAmp = 0, countLt = 0, countGt = 0, countQuot = 0;
+		UInt outLength = textLength;
 		for (UInt i = 0; i < textLength; i++)
 		{
-			if (textData[i] == '&') countAmp++;
-			else if (textData[i] == '<') countLt++;
-			else if (textData[i] == '>') countGt++;
-			else if (includeQuotation && textData[i] == '\"') countQuot++;
+			switch (textData[i])
+			{
+			case (Byte)'&':
+				outLength += 4;
+				break;
+			case (Byte)'<':
+			case (Byte)'>':
+				outLength += 3;
+				break;
+			case (Byte)'\"':
+				outLength += includeQuotation ? 5 : 0;
+				break;
+			}
 		}
+
+		if (outLength == 0) return;
 		
-		Binary buffer(textLength + countAmp * 4 + countQuot * 5 + countLt * 3 + countGt * 3);
-		if (buffer.isEmpty()) return String();
-
+		Binary buffer = outLength > STRING_STREAM_BUFFER_SIZE ? Binary(outLength) : esBuffer;
 		Byte* outData = buffer.data();
 		
 		UInt k = 0;
 		for (UInt i = 0; i < textLength; i++)
 		{
-			Byte character = textData[i];
-			if (character == '&')
+			switch (textData[i])
 			{
+			case (Byte)'&':
 				outData[k++] = '&';
 				outData[k++] = 'a';
 				outData[k++] = 'm';
 				outData[k++] = 'p';
 				outData[k++] = ';';
-			}
-			else if (character == '<')
-			{
+				break;
+			case (Byte)'<':
 				outData[k++] = '&';
 				outData[k++] = 'l';
 				outData[k++] = 't';
 				outData[k++] = ';';
-			}
-			else if (character == '>')
-			{
+				break;
+			case (Byte)'>':
 				outData[k++] = '&';
 				outData[k++] = 'g';
 				outData[k++] = 't';
 				outData[k++] = ';';
+				break;
+			case (Byte)'\"':
+				if (includeQuotation)
+				{
+					outData[k++] = '&';
+					outData[k++] = 'q';
+					outData[k++] = 'u';
+					outData[k++] = 'o';
+					outData[k++] = 't';
+					outData[k++] = ';';
+				}
+				else outData[k++] = textData[i];
+				break;
+			default:
+				outData[k++] = textData[i];
+				break;
 			}
-			else if (includeQuotation && character == '\"')
-			{
-				outData[k++] = '&';
-				outData[k++] = 'q';
-				outData[k++] = 'u';
-				outData[k++] = 'o';
-				outData[k++] = 't';
-				outData[k++] = ';';
-			}
-			else outData[k++] = character;
 		}
-		if (k == 0) return String();
+		SPADAS_ERROR_RETURN(k != outLength);
 
-		buffer.trim(k);
-		return buffer;
+		if (outLength > STRING_STREAM_BUFFER_SIZE)
+		{
+			buffer.trim(outLength);
+			stream.enqueue(buffer);
+		}
+		else
+		{
+			stream.enqueue(outData, outLength);
+		}
+	}
+
+	Bool writeTagWithoutRightBracket(XMLElement& element, Binary& esBuffer, StringStream& stream)
+	{
+		SPADAS_ERROR_RETURNVAL(!xmlCharsValidator.validate(element.tag), FALSE);
+
+		stream.enqueue((const Byte*)"<", 1);
+		stream.enqueue(element.tag.bytes(), element.tag.length());
+
+		if (!element.attributes.isEmpty())
+		{
+			stream.enqueue((const Byte*)" ", 1);
+
+			UInt lastIndex = element.attributes.size() - 1;
+			for (auto e = element.attributes.firstElem(); e.valid(); ++e)
+			{
+				SPADAS_ERROR_RETURNVAL(!xmlCharsValidator.validate(e->name), FALSE);
+				stream.enqueue(e->name.bytes(), e->name.length());
+				stream.enqueue((const Byte*)"=\"", 2);
+				encodeES(e->value, TRUE, esBuffer, stream);
+				stream.enqueue((const Byte*)"\"", 1);
+				if (e.index() != lastIndex) stream.enqueue((const Byte*)" ", 1);
+			}
+		}
+
+		return TRUE;
 	}
 	
-	String decodeES(String text)
+	String decodeES(String text) // escape sequence
 	{
 		UInt textLength = text.length();
 		const Byte *textData = text.bytes();
@@ -152,7 +275,7 @@ namespace xml_internal
 	
 	Bool extractTag(String bracketContent, String& tag, String& attributesString)
 	{
-		Array<UInt> spaceLocations = bracketContent.search(' ');
+		Array<UInt> spaceLocations = bracketContent.search(space);
 		if (spaceLocations.size() == 0) tag = bracketContent.clone();
 		else
 		{
@@ -166,7 +289,7 @@ namespace xml_internal
 
 	Array<XMLAttribute> unpackAttributes(String attributesString)
 	{
-		Array<StringSpan> subStrings = attributesString.split("\"");
+		Array<StringSpan> subStrings = attributesString.split(quot);
 		if (subStrings.size() < 2) return Array<XMLAttribute>();
 
 		UInt outSize = subStrings.size() / 2;
@@ -211,21 +334,6 @@ namespace xml_internal
 		return out;
 	}
 
-	String packAttributes(Array<XMLAttribute> attributes)
-	{
-		String out;
-		UInt size = attributes.size();
-		for (UInt i = 0; i < size; i++)
-		{
-			out += attributes[i].name;
-			out += "=\"";
-			out += encodeES(attributes[i].value, TRUE);
-			out += "\"";
-			if (i != size - 1) out += " ";
-		}
-		return out;
-	}
-	
 	Bool readXMLBinary(BinarySpan xmlBinary, XML& xml)
 	{
 		String rawString(xmlBinary.clone());
@@ -376,88 +484,52 @@ namespace xml_internal
 		return TRUE;
 	}
 	
-	Binary writeXMLNodeBinary(XMLNode node, UInt depth)
+	Bool writeXMLNodeToStream(XMLNode& node, UInt depth, Binary& esBuffer, StringStream& stream)
 	{
-		XMLElement element = node.value();
-		
-		// validate
-		SPADAS_ERROR_RETURNVAL(!okForTagOrAttributeName(element.tag), Binary());
-
-		for (UInt i = 0; i < element.attributes.size(); i++)
+		if (depth == 0)
 		{
-			SPADAS_ERROR_RETURNVAL(!okForTagOrAttributeName(element.attributes[i].name), Binary());
-		}
-		
-		String startBracketContent;
-		if (element.attributes.isEmpty()) startBracketContent = element.tag.clone();
-		else startBracketContent = element.tag + " " + packAttributes(element.attributes);
-		
-		String tabText;
-		for (UInt i = 0; i < depth; i++) tabText += "	";
-
-		String lineEnding = "\n";
-		
-		Binary out;
-		if (node.nLeaves() == 0)
-		{
-			String outString;
-			if (element.content.isEmpty())
-			{
-				outString = tabText + "<" + startBracketContent + "/>" + lineEnding;
-			}
-			else
-			{
-				outString = tabText + "<" + startBracketContent + ">" +
-				encodeES(element.content, FALSE) +
-				"</" + element.tag + ">" + lineEnding;
-			}
-			
-			if (depth == 0) out = String("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n").toBinary() + outString.toBinary();
-			else out = outString.toBinary();
+			stream.enqueue((const Byte*)"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n", 39);
 		}
 		else
 		{
-			UInt size = 0, index = 0;
+			for (UInt i = 0; i < depth; i++)
+			{
+				stream.enqueue((const Byte*)"\t", 1);
+			}
+		}
 
-			Binary headerBinary;
-			if (depth == 0) headerBinary = String("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n").toBinary();
-			size += headerBinary.size();
-			
-			Binary startBinary = String(tabText + "<" + startBracketContent + ">" + lineEnding).toBinary();
-			size += startBinary.size();
-			
-			Array<XMLNode> leaves = node.leaves();
-			Array<Binary> leavesBinaries(node.nLeaves());
-			for (UInt i = 0; i < node.nLeaves(); i++)
-			{
-				leavesBinaries[i] = writeXMLNodeBinary(leaves[i], depth + 1);
-				size += leavesBinaries[i].size();
-			}
-			
-			Binary endBinary = String(tabText + "</" + element.tag + ">" + lineEnding).toBinary();
-			size += endBinary.size();
-			
-			out = Binary(size);
+		XMLElement& element = node.value();
+		SPADAS_ERROR_RETURNVAL(element.tag.isEmpty(), FALSE);
+		if (!writeTagWithoutRightBracket(element, esBuffer, stream)) return FALSE;
 
-			if (!headerBinary.isEmpty())
+		if (node.nLeaves() == 0)
+		{
+			if (element.content.isEmpty())
 			{
-				utility::memoryCopy(headerBinary.data(), &out[index], headerBinary.size());
-				index += headerBinary.size();
+				stream.enqueue((const Byte*)"/>\n", 3);
 			}
-			
-			utility::memoryCopy(startBinary.data(), &out[index], startBinary.size());
-			index += startBinary.size();
-			
-			for (UInt i = 0; i < node.nLeaves(); i++)
+			else
 			{
-				utility::memoryCopy(leavesBinaries[i].data(), &out[index], leavesBinaries[i].size());
-				index += leavesBinaries[i].size();
+				stream.enqueue((const Byte*)">", 1);
+				encodeES(element.content, FALSE, esBuffer, stream);
+				stream.enqueue((const Byte*)"</", 2);
+				stream.enqueue(element.tag.bytes(), element.tag.length());
+				stream.enqueue((const Byte*)">\n", 2);
 			}
-			
-			utility::memoryCopy(endBinary.data(), &out[index], endBinary.size());
+		}
+		else
+		{
+			stream.enqueue((const Byte*)">\n", 2);
+			for (auto e = node.leaves().firstElem(); e.valid(); ++e)
+			{
+				if (!writeXMLNodeToStream(e.value(), depth + 1, esBuffer, stream)) return FALSE;
+			}
+			stream.enqueue((const Byte*)"</", 2);
+			stream.enqueue(element.tag.bytes(), element.tag.length());
+			stream.enqueue((const Byte*)">\n", 2);
 		}
 		
-		return out;
+		return TRUE;
 	}
 }
 
@@ -467,6 +539,9 @@ namespace spadas
 	const UInt XML_TEXT_TABLE_SIZE_SMALL = 64;
 	const UInt XML_TEXT_TABLE_COUNT_THRESH = 256;
 	const UInt XML_TEXT_TABLE_SIZE_LARGE = 4096;
+
+	const String unknownTag = "unknown";
+	const String rootTag = "root";
 
 	struct XMLCell
 	{
@@ -490,7 +565,7 @@ namespace spadas
 
 		XMLVars() : cells(XML_CELL_ARRAY_SEGMENT_SIZE), textTable(XML_TEXT_TABLE_SIZE_SMALL)
 		{
-			cells.append(XMLElement("root", 0, String()));
+			cells.append(XMLElement(rootTag, 0, String()));
 		}
 		XMLVars(XMLNode rootNode) : cells(XML_CELL_ARRAY_SEGMENT_SIZE), textTable(XML_TEXT_TABLE_SIZE_SMALL)
 		{
@@ -549,7 +624,6 @@ using namespace spadas;
 using namespace xml_internal;
 
 const String spadas::XML::TypeName = "spadas.XML";
-const String unknownTag = "unknown";
 
 // XMLAttribute ///////////////////////////////////////////////////////////////////////////
 
@@ -769,11 +843,15 @@ void XML::save(Path xmlFilePath)
 
 	if (!vars)
 	{
-		file.output(String("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root/>\n").toBinary());
+		file.output(emptyXmlStringBinary);
 	}
 	else
 	{
-		file.output(writeXMLNodeBinary(globalRoot(), 0));
+		StringStream stream;
+		Binary esBuffer(STRING_STREAM_BUFFER_SIZE);
+		XMLNode rootNode = globalRoot();
+		if (writeXMLNodeToStream(rootNode, 0, esBuffer, stream)) file.output(stream.dequeue());
+		else file.output(emptyXmlStringBinary);
 	}
 }
 
@@ -781,10 +859,14 @@ Binary XML::toBinary()
 {
 	if (!vars)
 	{
-		return String("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root/>\n").toBinary();
+		return emptyXmlStringBinary.clone();
 	}
 	else
 	{
-		return writeXMLNodeBinary(globalRoot(), 0);
+		StringStream stream;
+		Binary esBuffer(STRING_STREAM_BUFFER_SIZE);
+		XMLNode rootNode = globalRoot();
+		if (writeXMLNodeToStream(rootNode, 0, esBuffer, stream)) return stream.dequeue();
+		else return emptyXmlStringBinary.clone();
 	}
 }
