@@ -4471,27 +4471,46 @@ namespace spadas
 	/// 通用原始数据表，key为原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
 	typedef Dictionary<Array<SessionGeneralRawData> > SessionGeneralRawDataTable;
 
+	/// 通用原始数据发送结果
+	enum class GeneralTransmitResult
+	{
+		/// 未知
+		Unknown = 0,
+
+		/// 成功发送，或成功预约发送
+		OK = 1,
+
+		/// 未运行在线模式
+		NotRunning = 2,
+
+		/// 无插件支持该协议数据发送
+		PluginNotFound = 3,
+
+		/// 发送失败，或预约发送失败
+		Failed = 4,
+
+		/// 总线设备或主机未同步至授时服务器
+		NotSync = 5,
+
+		/// 不支持预约发送
+		ScheduleUnsupported = 6,
+
+		/// 时间戳乱序
+		TimeDisorder = 7,
+	};
+
 	/// 通用原始数据发送接口
-	class SPADAS_API IGeneralDataTransmitter
+	class SPADAS_API IGeneralDataTransmitterX
 	{
 	public:
-		virtual ~IGeneralDataTransmitter() {};
+		virtual ~IGeneralDataTransmitterX() {};
 
 		/// @brief 立即发送数据
 		/// @param protocol 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
 		/// @param vector 数值数组数据
 		/// @param binary 二进制数据
-		/// @returns 是否成功发送，无效表示不确定
-		virtual OptionalBool transmitNow(String protocol, Array<Double> vector, Binary binary);
-
-		/// @brief 按时间偏置预约发送数据（将优先按服务器Posix时间预约发送，不满足条件则按CPU计数时间发送）
-		/// @param protocol 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
-		/// @param vector 数值数组数据
-		/// @param binary 二进制数据
-		/// @param offset 时间偏置，单位秒 (必须大于该协议的上一帧预约发送数据的时间戳)
-		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
-		/// @returns 是否成功预约发送，无效表示不确定
-		virtual OptionalBool transmitAtTimeOffset(String protocol, Array<Double> vector, Binary binary, Double offset, UInt tolerance);
+		/// @returns 发送结果
+		virtual GeneralTransmitResult transmitNow(String protocol, Array<Double> vector, Binary binary);
 
 		/// @brief 指定按服务器Posix时间预约发送视频帧 (必须大于该协议的上一帧预约发送数据的时间戳)
 		/// @param protocol 原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
@@ -4499,8 +4518,9 @@ namespace spadas
 		/// @param binary 二进制数据
 		/// @param serverPosix 授时服务器Posix时间，单位纳秒
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
-		/// @returns 是否成功预约发送，无效表示不确定
-		virtual OptionalBool transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance);
+		/// @param guestSyncID 客机同步ID，将据此确定客机是否已与授时服务器同步（格式为"xxx.yyy"，xxx为插件类型ID，yyy为客机同步通道名称）
+		/// @returns 发送结果
+		virtual GeneralTransmitResult transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance, String guestSyncID);
 	};
 
 	/// 通用样本元素
@@ -4854,18 +4874,46 @@ namespace spadas
 	/// 总线原始数据表（长度16, 分别表示总线通道1~16）
 	typedef Array<Array<SessionBusRawData> > SessionBusRawDataTable;
 
+	/// 总线报文发送结果
+	enum class BusTransmitResult
+	{
+		/// 未知
+		Unknown = 0,
+
+		/// 成功添加至发送队列（实际发送时仍有可能失败）
+		Added = 1,
+
+		/// 未运行在线模式
+		NotRunning = 2,
+
+		/// 无效的通道（应为1~16）
+		InvalidChannel = 3,
+		
+		/// 无插件设备映射至该通道
+		PluginNotFound = 4,
+
+		/// 总线设备或主机未同步至授时服务器
+		NotSync = 5,
+
+		/// 不支持预约发送
+		ScheduleUnsupported = 6,
+
+		/// 时间戳乱序
+		TimeDisorder = 7,
+	};
+
 	/// 总线报文发送接口
-	class SPADAS_API IBusMessageTransmitter
+	class SPADAS_API IBusMessageTransmitterX
 	{
 	public:
-		virtual ~IBusMessageTransmitter() {};
+		virtual ~IBusMessageTransmitterX() {};
 
 		/// @brief 立即发送报文
 		/// @param channel 总线通道，1~16
 		/// @param id 该通道内的报文ID
 		/// @param binary 报文数据
 		/// @returns 是否成功发送，无效表示不确定
-		virtual OptionalBool transmitNow(UInt channel, UInt id, Binary binary);
+		virtual BusTransmitResult transmitNow(UInt channel, UInt id, Binary binary);
 
 		/// @brief 设定重复发送报文
 		/// @param channel 总线通道，1~16
@@ -4873,16 +4921,7 @@ namespace spadas
 		/// @param binary 报文数据
 		/// @param interval 发送周期[ms]，有效范围10~1000ms
 		/// @returns 是否成功设定重复发送，无效表示不确定
-		virtual OptionalBool transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval);
-
-		/// @brief 按时间偏置预约发送报文（将优先按授时服务器Posix时间预约发送，不满足条件则按CPU计数时间发送）
-		/// @param channel 总线通道，1~16
-		/// @param id 该通道内的报文ID
-		/// @param binary 报文数据
-		/// @param offset 时间偏置，单位秒 (必须大于该通道上一帧预约发送报文的时间戳)
-		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
-		/// @returns 是否成功预约发送，无效表示不确定
-		virtual OptionalBool transmitAtTimeOffset(UInt channel, UInt id, Binary binary, Double offset, UInt tolerance);
+		virtual BusTransmitResult transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval);
 
 		/// @brief 指定按授时服务器Posix时间预约发送报文 (必须大于该通道上一帧预约发送报文的时间)
 		/// @param channel 总线通道，1~16
@@ -4891,7 +4930,7 @@ namespace spadas
 		/// @param serverPosix 授时服务器Posix时间，单位纳秒
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// @returns 是否成功预约发送，无效表示不确定
-		virtual OptionalBool transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance);
+		virtual BusTransmitResult transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance);
 	};
 
 	/// 总线设备ID
@@ -5235,11 +5274,45 @@ namespace spadas
 		virtual void outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0);
 	};
 
+	/// 视频帧回注结果
+	enum class VideoTransmitResult
+	{
+		/// 未知
+		Unknown = 0,
+
+		/// 成功添加至发送队列（实际发送时仍有可能失败）
+		Added = 1,
+
+		/// 未运行在线模式
+		NotRunning = 2,
+
+		/// 无效的通道（应为0~23）
+		InvalidChannel = 3,
+
+		/// 无插件设备映射至该通道
+		PluginNotFound = 4,
+
+		/// 与配置的回注编码格式不一致
+		WrongCodec = 5,
+
+		/// 与配置的回注视频图像尺寸不一致
+		WrongSize = 6,
+
+		/// 总线设备或主机未同步至授时服务器
+		NotSync = 5,
+
+		/// 不支持预约发送
+		ScheduleUnsupported = 6,
+
+		/// 时间戳乱序
+		TimeDisorder = 7,
+	};
+
 	/// 视频帧回注接口
-	class SPADAS_API IVideoFrameTransmitter
+	class SPADAS_API IVideoFrameTransmitterX
 	{
 	public:
-		virtual ~IVideoFrameTransmitter() {};
+		virtual ~IVideoFrameTransmitterX() {};
 
 		/// @brief 立即发送视频帧
 		/// @param channel 视频通道，0~23
@@ -5247,17 +5320,7 @@ namespace spadas
 		/// @param size 视频帧的大小，像素单位
 		/// @param data 视频帧数据
 		/// @returns 是否成功发送，无效表示不确定
-		virtual OptionalBool transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data);
-
-		/// @brief 按时间偏置预约发送视频帧（将优先按服务器Posix时间预约发送，不满足条件则按CPU计数时间发送）
-		/// @param channel 视频通道，0~23
-		/// @param codec 视频帧的编码格式
-		/// @param size 视频帧的大小，像素单位
-		/// @param data 视频帧数据
-		/// @param offset 时间偏置，单位秒 (必须大于该通道上一帧预约发送报文的时间戳)
-		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
-		/// @returns 是否成功预约发送，无效表示不确定
-		virtual OptionalBool transmitAtTimeOffset(UInt channel, VideoDataCodec codec, Size2D size, Binary data, Double offset, UInt tolerance);
+		virtual VideoTransmitResult transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data);
 
 		/// @brief 指定按服务器Posix时间预约发送视频帧 (必须大于该通道上一帧预约发送报文的时间)
 		/// @param channel 视频通道，0~23
@@ -5267,7 +5330,7 @@ namespace spadas
 		/// @param serverPosix 授时服务器Posix时间，单位纳秒
 		/// @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// @returns 是否成功预约发送，无效表示不确定
-		virtual OptionalBool transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
+		virtual VideoTransmitResult transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
 	};
 
 	/// 所有输入数据表
@@ -6009,11 +6072,11 @@ namespace spadas
 	/// 获取视频设备插件接口的全局函数定义，函数名应为get_video_plugin_v402
 	typedef Interface<IVideoPluginV402>(*GetVideoPluginV402)();
 
-	/// 原生数据处理插件接口 6.2
-	class SPADAS_API IProcessorPluginV602
+	/// 原生数据处理插件接口 6.3
+	class SPADAS_API IProcessorPluginV603
 	{
 	public:
-		virtual ~IProcessorPluginV602() {};
+		virtual ~IProcessorPluginV603() {};
 
 		/// [可选] 是否为在线限定的数据处理（默认为FALSE）
 		virtual Bool isProcessorOnlineOnly();
@@ -6041,19 +6104,19 @@ namespace spadas
 
 		/// @brief [可选] 设置使用指定的通用原始数据发送接口
 		/// @param generalTransmitter 通用原始数据发送接口
-		virtual void useGeneralTransmitter(Interface<IGeneralDataTransmitter> generalTransmitter);
+		virtual void useGeneralTransmitter(Interface<IGeneralDataTransmitterX> generalTransmitter);
 
 		/// @brief [可选] 设置使用指定的总线报文发送接口
 		/// @param busTransmitter 总线报文发送接口
-		virtual void useBusTransmitter(Interface<IBusMessageTransmitter> busTransmitter);
+		virtual void useBusTransmitter(Interface<IBusMessageTransmitterX> busTransmitter);
 
 		/// @brief [可选] 设置使用指定的视频帧回注接口
 		/// @param videoTransmitter 视频帧回注接口
-		virtual void useVideoTransmitter(Interface<IVideoFrameTransmitter> videoTransmitter);
+		virtual void useVideoTransmitter(Interface<IVideoFrameTransmitterX> videoTransmitter);
 	};
 
-	/// 获取原生数据处理插件接口的全局函数定义，函数名应为get_processor_plugin_v602
-	typedef Interface<IProcessorPluginV602>(*GetProcessorPluginV602)();
+	/// 获取原生数据处理插件接口的全局函数定义，函数名应为get_processor_plugin_v603
+	typedef Interface<IProcessorPluginV603>(*GetProcessorPluginV603)();
 
 	/// 文件读写插件接口 1.3
 	class SPADAS_API IFilePluginV103

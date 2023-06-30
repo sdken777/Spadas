@@ -31,7 +31,7 @@ SPADAS_DEFAULT_API void get_dev_plugin_api_version(UInt& major, UInt& minor)
 SPADAS_DEFAULT_API void get_proc_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 6;
-	minor = 2;
+	minor = 3;
 }
 
 SPADAS_DEFAULT_API void get_file_plugin_api_version(UInt& major, UInt& minor)
@@ -850,6 +850,38 @@ void IProcessorPluginV602::useBusTransmitter(Interface<IBusMessageTransmitter> b
 {}
 
 void IProcessorPluginV602::useVideoTransmitter(Interface<IVideoFrameTransmitter> videoTransmitter)
+{}
+
+// 原生数据处理插件接口 6.3
+Bool IProcessorPluginV603::isProcessorOnlineOnly()
+{
+	return FALSE;
+}
+
+Bool IProcessorPluginV603::isProcessorOfflineOnly()
+{
+	return FALSE;
+}
+
+void IProcessorPluginV603::setProcessorConfig(String config, Bool onlineMode)
+{}
+
+void IProcessorPluginV603::disableProcessor()
+{}
+
+void IProcessorPluginV603::processData(InputTablesX inputs, SessionSampleBufferTable sampleBuffers, OutputTablesX outputs)
+{}
+
+void IProcessorPluginV603::useTimeServer(Interface<ITimeServer> timeServer)
+{}
+
+void IProcessorPluginV603::useGeneralTransmitter(Interface<IGeneralDataTransmitterX> generalTransmitter)
+{}
+
+void IProcessorPluginV603::useBusTransmitter(Interface<IBusMessageTransmitterX> busTransmitter)
+{}
+
+void IProcessorPluginV603::useVideoTransmitter(Interface<IVideoFrameTransmitterX> videoTransmitter)
 {}
 
 // 文件读写插件接口 1.0

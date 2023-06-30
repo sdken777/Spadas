@@ -261,6 +261,34 @@ namespace spadas
 		}
 	};
 
+	class SPADAS_API IGeneralDataTransmitter
+	{
+	public:
+		virtual ~IGeneralDataTransmitter() {};
+		virtual OptionalBool transmitNow(String protocol, Array<Double> vector, Binary binary);
+		virtual OptionalBool transmitAtTimeOffset(String protocol, Array<Double> vector, Binary binary, Double offset, UInt tolerance);
+		virtual OptionalBool transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance);
+	};
+
+	class SPADAS_API IBusMessageTransmitter
+	{
+	public:
+		virtual ~IBusMessageTransmitter() {};
+		virtual OptionalBool transmitNow(UInt channel, UInt id, Binary binary);
+		virtual OptionalBool transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval);
+		virtual OptionalBool transmitAtTimeOffset(UInt channel, UInt id, Binary binary, Double offset, UInt tolerance);
+		virtual OptionalBool transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance);
+	};
+
+	class SPADAS_API IVideoFrameTransmitter
+	{
+	public:
+		virtual ~IVideoFrameTransmitter() {};
+		virtual OptionalBool transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data);
+		virtual OptionalBool transmitAtTimeOffset(UInt channel, VideoDataCodec codec, Size2D size, Binary data, Double offset, UInt tolerance);
+		virtual OptionalBool transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
+	};
+
 	// 插件相关实用功能（旧） //////////////////////////////////////////////////////////////
 	enum class SampleState
 	{
@@ -565,6 +593,22 @@ namespace spadas
 		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
 	};
 	typedef Interface<IPluginV104>(*GetPluginV104)();
+
+	class SPADAS_API IProcessorPluginV602
+	{
+	public:
+		virtual ~IProcessorPluginV602() {};
+		virtual Bool isProcessorOnlineOnly();
+		virtual Bool isProcessorOfflineOnly();
+		virtual void setProcessorConfig(String config, Bool onlineMode);
+		virtual void disableProcessor();
+		virtual void processData(InputTablesX inputs, SessionSampleBufferTable sampleBuffers, OutputTablesX outputs);
+		virtual void useTimeServer(Interface<ITimeServer> timeServer);
+		virtual void useGeneralTransmitter(Interface<IGeneralDataTransmitter> generalTransmitter);
+		virtual void useBusTransmitter(Interface<IBusMessageTransmitter> busTransmitter);
+		virtual void useVideoTransmitter(Interface<IVideoFrameTransmitter> videoTransmitter);
+	};
+	typedef Interface<IProcessorPluginV602>(*GetProcessorPluginV602)();
 
 	// sort函数的实现 ///////////////////////////////////////////////////////
 	template<typename Type>

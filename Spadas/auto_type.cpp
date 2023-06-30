@@ -432,3 +432,38 @@ OptionalBool IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, VideoDa
 void IGeneralDeviceDataOutput::outputGeneralDeviceData(GeneralDeviceData data)
 {
 }
+
+GeneralTransmitResult IGeneralDataTransmitterX::transmitNow(String protocol, Array<Double> vector, Binary binary)
+{
+	return GeneralTransmitResult::Unknown;
+}
+
+GeneralTransmitResult IGeneralDataTransmitterX::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance, String guestSyncID)
+{
+	return GeneralTransmitResult::Unknown;
+}
+
+BusTransmitResult IBusMessageTransmitterX::transmitNow(UInt channel, UInt id, Binary binary)
+{
+	return BusTransmitResult::Unknown;
+}
+
+BusTransmitResult IBusMessageTransmitterX::transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval)
+{
+	return BusTransmitResult::Unknown;
+}
+
+BusTransmitResult IBusMessageTransmitterX::transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance)
+{
+	return BusTransmitResult::Unknown;
+}
+
+VideoTransmitResult IVideoFrameTransmitterX::transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data)
+{
+	return VideoTransmitResult::Unknown;
+}
+
+VideoTransmitResult IVideoFrameTransmitterX::transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance)
+{
+	return VideoTransmitResult::Unknown;
+}

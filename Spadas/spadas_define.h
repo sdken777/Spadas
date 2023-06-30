@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 修复Path::folderContents可能崩溃问题
+// 版本定义 // 新增IProcessorPluginV603。新增General/Bus/VideoTransmitResult。新增IGeneral/Bus/VideoDataTransmitterX，并移除相应的transmitAtTimeOffset方法。IGeneralDataTransmitter的预约发送接口增加guestSyncID参数
 #define SPADAS_VERSION_MAJOR 8
-#define SPADAS_VERSION_MINOR 8
-#define SPADAS_VERSION_BUILD 6
+#define SPADAS_VERSION_MINOR 9
+#define SPADAS_VERSION_BUILD 0
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.8.6\n
+* 本文档对应Spadas版本：8.9.0\n
 *
 * \n
 * \section top1 基本功能概述
