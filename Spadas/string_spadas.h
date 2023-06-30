@@ -54,4 +54,31 @@ namespace string_internal
 	UInt ansiToWChar(const Byte src[], UInt srcLength, WChar dst[], UInt dstSize);
 	UInt wCharToAnsi(const WChar src[], UInt srcLength, Byte dst[], UInt dstSize);
 #endif
+
+	class StringCommon
+	{
+	public:
+		static Word getHashCode(const Byte* data, UInt len);
+		static String clone(const Byte* bytes, UInt len);
+		static Array<Char> chars(const Byte* bytes, UInt len);
+		static Array<WChar> wchars(const Byte* bytes, UInt len);
+		static StringAppender operatorPlus(const Byte* bytes, UInt originLength, String& append);
+		static Optional<Int> toInt(const Byte* bytes, UInt len);
+		static Bool toNumber(const Byte* bytes, UInt len, Int& number);
+		static Optional<Long> toLong(const Byte* bytes, UInt len);
+		static Bool toNumber(const Byte* bytes, UInt len, Long& number);
+		static Optional<Float> toFloat(const Byte* bytes, UInt len);
+		static Bool toNumber(const Byte* bytes, UInt len, Float& number);
+		static Optional<Double> toDouble(const Byte* bytes, UInt len);
+		static Bool toNumber(const Byte* bytes, UInt len, Double& number);
+		static String toUpper(const Byte* bytes, UInt len);
+		static String toLower(const Byte* bytes, UInt len);
+		static Bool startsWith(const Byte* srcData, UInt srcLength, String& target);
+		static Bool endsWith(const Byte* srcData, UInt srcLength, String target);
+		static Binary toBinary(const Byte* bytes, UInt len);
+		static Array<UInt> search(const Byte* srcData, UInt srcLength, String string);
+		static Array<StringSpan> split(String& source, UInt spanIndex, UInt spanLength, String& splitter);
+		static String replace(const Byte* srcStringData, UInt srcStringLength, String& oldString, String& newString);
+		static StringSpan sub(String& source, UInt spanIndex, UInt spanLength, UInt subIndex, UInt subLength, Bool trimStart, Bool trimEnd);
+	};
 }

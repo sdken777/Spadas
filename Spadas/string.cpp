@@ -1245,14 +1245,33 @@ String::String(Binary binary)
 
 	UInt textLength = 0;
 	Byte *textData = binary.data();
-	for (; textLength < binary.size(); textLength++)
+	UInt binarySize = binary.size();
+	for (; textLength < binarySize; textLength++)
 	{
 		if (textData[textLength] == 0) break;
 	}
 	if (textLength == 0) return;
 
 	initBuffer(textLength);
-	utility::memoryCopy(binary.data(), vars->data, textLength);
+	utility::memoryCopy(textData, vars->data, textLength);
+	vars->length = textLength;
+}
+
+String::String(BinarySpan span)
+{
+    if (span.isEmpty()) return;
+
+	UInt textLength = 0;
+	Byte *textData = span.data();
+	UInt binarySize = span.size();
+	for (; textLength < binarySize; textLength++)
+	{
+		if (textData[textLength] == 0) break;
+	}
+	if (textLength == 0) return;
+
+	initBuffer(textLength);
+	utility::memoryCopy(textData, vars->data, textLength);
 	vars->length = textLength;
 }
 
@@ -1308,11 +1327,6 @@ Bool String::operator <(String string)
 	}
 }
 
-Word String::getHash()
-{
-	return getHashCode();
-}
-
 const Byte *String::bytes()
 {
 	return vars ? vars->data : NULL;
@@ -1321,6 +1335,138 @@ const Byte *String::bytes()
 UInt String::length()
 {
 	return vars ? vars->length : 0;
+}
+
+Bool String::isEmpty()
+{
+	return !vars || vars->length == 0;
+}
+
+Word String::getHash()
+{
+	if (vars) return StringCommon::getHashCode(vars->data, vars->length);
+	else return 0;
+}
+
+String String::clone()
+{
+	if (vars) return StringCommon::clone(vars->data, vars->length);
+	else return String();
+}
+
+Array<Char> String::chars()
+{
+	return StringCommon::chars(bytes(), length());
+}
+
+Array<WChar> String::wchars()
+{
+	return StringCommon::wchars(bytes(), length());
+}
+
+StringAppender String::operator +(String string)
+{
+	return StringCommon::operatorPlus(bytes(), length(), string);
+}
+
+Optional<Int> String::toInt()
+{
+	if (vars) return StringCommon::toInt(vars->data, vars->length);
+	else return Optional<Int>();
+}
+
+Optional<Long> String::toLong()
+{
+	if (vars) return StringCommon::toLong(vars->data, vars->length);
+	else return Optional<Long>();
+}
+
+Optional<Float> String::toFloat()
+{
+	if (vars) return StringCommon::toFloat(vars->data, vars->length);
+	else return Optional<Float>();
+}
+
+Optional<Double> String::toDouble()
+{
+	if (vars) return StringCommon::toDouble(vars->data, vars->length);
+	else return Optional<Double>();
+}
+
+Bool String::toNumber(Int& number)
+{
+	if (vars) return StringCommon::toNumber(vars->data, vars->length, number);
+	else return FALSE;
+}
+
+Bool String::toNumber(Long& number)
+{
+	if (vars) return StringCommon::toNumber(vars->data, vars->length, number);
+	else return FALSE;
+}
+
+Bool String::toNumber(Float& number)
+{
+	if (vars) return StringCommon::toNumber(vars->data, vars->length, number);
+	else return FALSE;
+}
+
+Bool String::toNumber(Double& number)
+{
+	if (vars) return StringCommon::toNumber(vars->data, vars->length, number);
+	else return FALSE;
+}
+
+Binary String::toBinary()
+{
+	if (vars) return StringCommon::toBinary(vars->data, vars->length);
+	else return Binary();
+}
+
+String String::toUpper()
+{
+	if (vars) return StringCommon::toUpper(vars->data, vars->length);
+	else return String();
+}
+
+String String::toLower()
+{
+	if (vars) return StringCommon::toLower(vars->data, vars->length);
+	else return String();
+}
+
+Bool String::startsWith(String target)
+{
+	if (vars) return StringCommon::startsWith(vars->data, vars->length, target);
+	else return FALSE;
+}
+
+Bool String::endsWith(String target)
+{
+	if (vars) return StringCommon::endsWith(vars->data, vars->length, target);
+	else return FALSE;
+}
+
+Array<UInt> String::search(String target)
+{
+	return StringCommon::search(bytes(), length(), target);
+}
+
+Array<StringSpan> String::split(String target)
+{
+	if (vars) return StringCommon::split(*this, 0, vars->length, target);
+	else return Array<StringSpan>();
+}
+
+String String::replace(String oldString, String newString)
+{
+	return StringCommon::replace(bytes(), length(), oldString, newString);
+}
+
+StringSpan String::sub(UInt index, UInt length, Bool trimStart, Bool trimEnd)
+{
+	SPADAS_ERROR_RETURNVAL(!vars, StringSpan());
+	return StringCommon::sub(*this, 0, vars->length, index, length, trimStart, trimEnd);
 }
 
 void String::ensureBuffer(UInt appendSize)
@@ -1610,7 +1756,8 @@ void String::operator +=(Binary binary)
 
 	UInt textLength = 0;
 	Byte *textData = binary.data();
-	for (; textLength < binary.size(); textLength++)
+	UInt binarySize = binary.size();
+	for (; textLength < binarySize; textLength++)
 	{
 		if (textData[textLength] == 0) break;
 	}
@@ -1618,11 +1765,25 @@ void String::operator +=(Binary binary)
 
 	UInt originLength = vars ? vars->length : 0;
 	ensureBuffer(textLength);
-	utility::memoryCopy(binary.data(), &vars->data[originLength], textLength);
+	utility::memoryCopy(textData, &vars->data[originLength], textLength);
 	vars->length = originLength + textLength;
 }
 
-StringSpan String::genStringSpan(UInt index, UInt length)
+void String::operator +=(BinarySpan span)
 {
-	return StringSpan(*this, index, length);
+    if (span.isEmpty()) return;
+
+	UInt textLength = 0;
+	Byte *textData = span.data();
+	UInt binarySize = span.size();
+	for (; textLength < binarySize; textLength++)
+	{
+		if (textData[textLength] == 0) break;
+	}
+	if (textLength == 0) return;
+
+	UInt originLength = vars ? vars->length : 0;
+	ensureBuffer(textLength);
+	utility::memoryCopy(textData, &vars->data[originLength], textLength);
+	vars->length = originLength + textLength;
 }

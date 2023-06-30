@@ -1,10 +1,113 @@
 ﻿
 #include "spadas.h"
 
+namespace spadas
+{
+	const UInt XML_CELL_ARRAY_SEGMENT_SIZE = 256;
+	const UInt XML_TEXT_TABLE_SIZE_SMALL = 64;
+	const UInt XML_TEXT_TABLE_SIZE_MIDDLE = 2048;
+	const UInt XML_TEXT_TABLE_SIZE_LARGE = 65536;
+
+	const String unknownTag = "unknown";
+	const String rootTag = "root";
+
+	struct XMLCell
+	{
+		XMLElement elem;
+		XMLCell* root;
+		List<XMLCell*> leaves;
+
+		XMLCell() : root(NULL)
+		{}
+		XMLCell(XMLElement elem) : elem(elem), root(NULL)
+		{}
+	};
+
+	class XMLVars : public Vars
+	{
+    public:
+		SPADAS_VARS_DEF(XML, Vars)
+
+		ArrayX<XMLCell> cells; // 首个为根节点
+		Map<StringSpan, String> textTable;
+
+		XMLVars() : cells(XML_CELL_ARRAY_SEGMENT_SIZE), textTable(XML_TEXT_TABLE_SIZE_SMALL)
+		{
+			cells.append(XMLElement(rootTag, 0, String()));
+		}
+		XMLVars(XMLNode rootNode) : cells(XML_CELL_ARRAY_SEGMENT_SIZE), textTable(XML_TEXT_TABLE_SIZE_SMALL)
+		{
+			XMLCell& rootCell = cells.append(rootNode.value());
+			cloneXMLNode(rootNode, rootCell);
+		}
+		void checkTableSize()
+		{
+			UInt curSize = textTable.size();
+			if (curSize == XML_TEXT_TABLE_SIZE_SMALL)
+			{
+				Map<StringSpan, String> newTable(XML_TEXT_TABLE_SIZE_MIDDLE);
+				for (auto pair = textTable.keyValues().firstElem(); pair.valid(); ++pair)
+				{
+					newTable[pair->key] = pair->value;
+				}
+				textTable = newTable;
+			}
+			else if (curSize == XML_TEXT_TABLE_SIZE_MIDDLE)
+			{
+				Map<StringSpan, String> newTable(XML_TEXT_TABLE_SIZE_LARGE);
+				for (auto pair = textTable.keyValues().firstElem(); pair.valid(); ++pair)
+				{
+					newTable[pair->key] = pair->value;
+				}
+				textTable = newTable;
+			}
+		}
+		String touchText(StringSpan& key)
+		{
+			String output;
+			if (textTable.tryGet(key, output)) return output;
+			else
+			{
+				checkTableSize();
+				String valString = key.clone();
+				textTable[key] = valString;
+				return valString;
+			}
+		}
+		String touchText(StringSpan& key, String& val)
+		{
+			String output;
+			if (textTable.tryGet(key, output)) return output;
+			else
+			{
+				checkTableSize();
+				textTable[key] = val;
+				return val;
+			}
+		}
+		void cloneXMLNode(XMLNode& node, XMLCell& cell)
+		{
+			for (auto e = node.leaves().firstElem(); e.valid(); ++e)
+			{
+				XMLCell& newCell = cells.append(e->value());
+				newCell.root = &cell;
+				cell.leaves.addToTail(&newCell);
+				cloneXMLNode(e.value(), newCell);
+			}
+		}
+	};
+}
+
 namespace xml_internal
 {
 	using namespace spadas;
 	using namespace spadas::console;
+
+	const UInt STRING_STREAM_BUFFER_SIZE = 256;
+
+	String quot = "\"";
+	String space = " ";
+	Binary emptyXmlStringBinary = String("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root/>\n").toBinary();
 
 	enum class BracketType
 	{
@@ -13,122 +116,297 @@ namespace xml_internal
 		End = 2,
 		Atom = 3,
 	};
-	
-	String debug_stringBracketType(BracketType type)
-	{
-		switch (type)
-		{
-		case BracketType::Dummy:
-				return "Dummy";
-			case BracketType::Start:
-				return "Start";
-			case BracketType::End:
-				return "End";
-			case BracketType::Atom:
-				return "Atom";
-		}
-		return "Dummy";
-	}
 
-	Bool okForTagOrAttributeName(String text)
+	class XmlCharsValidator
 	{
-		UInt textLength = text.length();
-		const Byte *textData = text.bytes();
-		for (UInt i = 0; i < textLength; i++)
+	public:
+		XmlCharsValidator()
 		{
-			if ((textData[i] >= '0' && textData[i] <= '9') ||
-				(textData[i] >= 'A' && textData[i] <= 'Z') ||
-				(textData[i] >= 'a' && textData[i] <= 'z') ||
-				(textData[i] == '_') ||
-				(textData[i] == '.') ||
-				(textData[i] == '-') ||
-				(textData[i] == ':')) continue;
-			return FALSE;
+			for (UInt i = 0; i < 256; i++)
+			{
+				Char c = (Char)(Byte)i;
+				flags[i] = (c >= '0' && c <= '9') ||
+					(c >= 'A' && c <= 'Z') ||
+					(c >= 'a' && c <= 'z') ||
+					(c == '_') ||
+					(c == '.') ||
+					(c == '-') ||
+					(c == ':');
+			}
 		}
-		return TRUE;
+		Bool validate(String& text)
+		{
+			UInt textLength = text.length();
+			if (textLength == 0) return FALSE;
+			const Byte *textData = text.bytes();
+			for (UInt i = 0; i < textLength; i++)
+			{
+				if (!flags[textData[i]]) return FALSE;
+			}
+			return TRUE;
+		}
+		Bool validate(Byte c)
+		{
+			return flags[c];
+		}
+	private:
+		Bool flags[256];
 	}
-	
-	// escape sequence
-	String encodeES(String text, Bool includeQuotation)
+	xmlCharsValidator;
+
+	struct StringStreamElem
+	{
+		UInt size;
+		Byte buffer[STRING_STREAM_BUFFER_SIZE];
+		const Byte *extBuffer;
+		StringStreamElem() : size(0)
+		{}
+		StringStreamElem(const Byte* extData, UInt size) : size(size), extBuffer(extData)
+		{}
+	};
+
+	class StringStream
+	{
+	public:
+		StringStream()
+		{
+			lastBuffer = &bufferList.addToTail(StringStreamElem());
+		}
+		void enqueue(const Byte* data, UInt size)
+		{
+			if (lastBuffer->size + size > STRING_STREAM_BUFFER_SIZE)
+			{
+				if (size > STRING_STREAM_BUFFER_SIZE)
+				{
+					lastBuffer = &bufferList.addToTail(StringStreamElem(data, size));
+					return;
+				}
+				lastBuffer = &bufferList.addToTail(StringStreamElem());
+			}
+			utility::memoryCopy(data, &lastBuffer->buffer[lastBuffer->size], size);
+			lastBuffer->size += size;
+		}
+		void enqueue(Binary& bin)
+		{
+			if (bin.size() > STRING_STREAM_BUFFER_SIZE)
+			{
+				largeBinaries.append(bin);
+				lastBuffer = &bufferList.addToTail(StringStreamElem(bin.data(), bin.size()));
+			}
+			else
+			{
+				enqueue(bin.data(), bin.size());
+			}
+		}
+		Binary dequeue()
+		{
+			UInt totalSize = 0;
+			for (auto e = bufferList.head(); e.valid(); ++e)
+			{
+				totalSize += e->size;
+			}
+
+			Binary output(totalSize);
+			Byte *outputData = output.data();
+			UInt index = 0;
+			for (auto e = bufferList.head(); e.valid(); ++e)
+			{
+				utility::memoryCopy(e->size > STRING_STREAM_BUFFER_SIZE ? e->extBuffer : e->buffer, &outputData[index], e->size);
+				index += e->size;
+			}
+
+			bufferList.clear();
+			lastBuffer = &bufferList.addToTail(StringStreamElem());
+			largeBinaries = ArrayX<Binary>();
+
+			return output;
+		}
+	private:
+		List<StringStreamElem> bufferList;
+		ArrayX<Binary> largeBinaries;
+		StringStreamElem *lastBuffer;
+	};
+
+	void encodeES(String& text, Bool includeQuotation, Binary& esBuffer, StringStream& stream) // escape sequence
 	{
 		UInt textLength = text.length();
 		const Byte *textData = text.bytes();
-		UInt countAmp = 0, countLt = 0, countGt = 0, countQuot = 0;
+		UInt outLength = textLength;
 		for (UInt i = 0; i < textLength; i++)
 		{
-			if (textData[i] == '&') countAmp++;
-			else if (textData[i] == '<') countLt++;
-			else if (textData[i] == '>') countGt++;
-			else if (includeQuotation && textData[i] == '\"') countQuot++;
+			switch (textData[i])
+			{
+			case (Byte)'&':
+				outLength += 4;
+				break;
+			case (Byte)'<':
+			case (Byte)'>':
+				outLength += 3;
+				break;
+			case (Byte)'\"':
+				outLength += includeQuotation ? 5 : 0;
+				break;
+			}
 		}
+
+		if (outLength == 0) return;
 		
-		Binary buffer(textLength + countAmp * 4 + countQuot * 5 + countLt * 3 + countGt * 3);
-		if (buffer.isEmpty()) return String();
-
+		Binary buffer = outLength > STRING_STREAM_BUFFER_SIZE ? Binary(outLength) : esBuffer;
 		Byte* outData = buffer.data();
 		
 		UInt k = 0;
 		for (UInt i = 0; i < textLength; i++)
 		{
-			Byte character = textData[i];
-			if (character == '&')
+			switch (textData[i])
 			{
+			case (Byte)'&':
 				outData[k++] = '&';
 				outData[k++] = 'a';
 				outData[k++] = 'm';
 				outData[k++] = 'p';
 				outData[k++] = ';';
-			}
-			else if (character == '<')
-			{
+				break;
+			case (Byte)'<':
 				outData[k++] = '&';
 				outData[k++] = 'l';
 				outData[k++] = 't';
 				outData[k++] = ';';
-			}
-			else if (character == '>')
-			{
+				break;
+			case (Byte)'>':
 				outData[k++] = '&';
 				outData[k++] = 'g';
 				outData[k++] = 't';
 				outData[k++] = ';';
+				break;
+			case (Byte)'\"':
+				if (includeQuotation)
+				{
+					outData[k++] = '&';
+					outData[k++] = 'q';
+					outData[k++] = 'u';
+					outData[k++] = 'o';
+					outData[k++] = 't';
+					outData[k++] = ';';
+				}
+				else outData[k++] = textData[i];
+				break;
+			default:
+				outData[k++] = textData[i];
+				break;
 			}
-			else if (includeQuotation && character == '\"')
-			{
-				outData[k++] = '&';
-				outData[k++] = 'q';
-				outData[k++] = 'u';
-				outData[k++] = 'o';
-				outData[k++] = 't';
-				outData[k++] = ';';
-			}
-			else outData[k++] = character;
 		}
-		if (k == 0) return String();
+		SPADAS_ERROR_RETURN(k != outLength);
 
-		buffer.trim(k);
-		return buffer;
+		if (outLength > STRING_STREAM_BUFFER_SIZE)
+		{
+			buffer.trim(outLength);
+			stream.enqueue(buffer);
+		}
+		else
+		{
+			stream.enqueue(outData, outLength);
+		}
+	}
+
+	Bool writeTagWithoutRightBracket(XMLElement& element, Binary& esBuffer, StringStream& stream)
+	{
+		SPADAS_ERROR_RETURNVAL(!xmlCharsValidator.validate(element.tag), FALSE);
+
+		stream.enqueue((const Byte*)"<", 1);
+		stream.enqueue(element.tag.bytes(), element.tag.length());
+
+		if (!element.attributes.isEmpty())
+		{
+			stream.enqueue((const Byte*)" ", 1);
+
+			UInt lastIndex = element.attributes.size() - 1;
+			for (auto e = element.attributes.firstElem(); e.valid(); ++e)
+			{
+				SPADAS_ERROR_RETURNVAL(!xmlCharsValidator.validate(e->name), FALSE);
+				stream.enqueue(e->name.bytes(), e->name.length());
+				stream.enqueue((const Byte*)"=\"", 2);
+				encodeES(e->value, TRUE, esBuffer, stream);
+				stream.enqueue((const Byte*)"\"", 1);
+				if (e.index() != lastIndex) stream.enqueue((const Byte*)" ", 1);
+			}
+		}
+
+		return TRUE;
+	}
+
+	Bool writeXMLNodeToStream(XMLNode& node, UInt depth, Binary& esBuffer, StringStream& stream)
+	{
+		if (depth == 0)
+		{
+			stream.enqueue((const Byte*)"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n", 39);
+		}
+		else
+		{
+			for (UInt i = 0; i < depth; i++)
+			{
+				stream.enqueue((const Byte*)"\t", 1);
+			}
+		}
+
+		XMLElement& element = node.value();
+		SPADAS_ERROR_RETURNVAL(element.tag.isEmpty(), FALSE);
+		if (!writeTagWithoutRightBracket(element, esBuffer, stream)) return FALSE;
+
+		if (node.nLeaves() == 0)
+		{
+			if (element.content.isEmpty())
+			{
+				stream.enqueue((const Byte*)"/>\n", 3);
+			}
+			else
+			{
+				stream.enqueue((const Byte*)">", 1);
+				encodeES(element.content, FALSE, esBuffer, stream);
+				stream.enqueue((const Byte*)"</", 2);
+				stream.enqueue(element.tag.bytes(), element.tag.length());
+				stream.enqueue((const Byte*)">\n", 2);
+			}
+		}
+		else
+		{
+			stream.enqueue((const Byte*)">\n", 2);
+			for (auto e = node.leaves().firstElem(); e.valid(); ++e)
+			{
+				if (!writeXMLNodeToStream(e.value(), depth + 1, esBuffer, stream)) return FALSE;
+			}
+			for (UInt i = 0; i < depth; i++)
+			{
+				stream.enqueue((const Byte*)"\t", 1);
+			}
+			stream.enqueue((const Byte*)"</", 2);
+			stream.enqueue(element.tag.bytes(), element.tag.length());
+			stream.enqueue((const Byte*)">\n", 2);
+		}
+		
+		return TRUE;
 	}
 	
-	String decodeES(String text)
+	String decodeES(StringSpan text, Binary& esBuffer) // escape sequence
 	{
 		UInt textLength = text.length();
+		if (textLength == 0) return String();
+
 		const Byte *textData = text.bytes();
-		UInt countAmp = 0, countLt = 0, countGt = 0, countQuot = 0;
+		UInt decCount = 0;
 		for (UInt i = 0; i < textLength; i++)
 		{
 			if (textData[i] == '&')
 			{
-				if (i + 4 < textLength && textData[i+1] == 'a' && textData[i+2] == 'm' && textData[i+3] == 'p' && textData[i+4] == ';') { countAmp++; i += 4; }
-				else if (i + 3 < textLength && textData[i+1] == 'l' && textData[i+2] == 't' && textData[i+3] == ';') { countLt++; i += 3; }
-				else if (i + 3 < textLength && textData[i+1] == 'g' && textData[i+2] == 't' && textData[i+3] == ';') { countGt++; i += 3; }
-				else if (i + 5 < textLength && textData[i+1] == 'q' && textData[i+2] == 'u' && textData[i+3] == 'o' && textData[i+4] == 't' && textData[i+5] == ';') { countQuot++; i += 5; }
+				if (i + 4 < textLength && textData[i+1] == 'a' && textData[i+2] == 'm' && textData[i+3] == 'p' && textData[i+4] == ';') { decCount += 4; i += 4; }
+				else if (i + 3 < textLength && textData[i+1] == 'l' && textData[i+2] == 't' && textData[i+3] == ';') { decCount += 3; i += 3; }
+				else if (i + 3 < textLength && textData[i+1] == 'g' && textData[i+2] == 't' && textData[i+3] == ';') { decCount += 3; i += 3; }
+				else if (i + 5 < textLength && textData[i+1] == 'q' && textData[i+2] == 'u' && textData[i+3] == 'o' && textData[i+4] == 't' && textData[i+5] == ';') { decCount += 5; i += 5; }
 			}
 		}
+		if (decCount == 0) return text.clone();
 		
-		Binary buffer(textLength - countAmp * 4 - countQuot * 5 - countLt * 3 - countGt * 3);
-		if (buffer.isEmpty()) return String();
-
+		UInt bufferSize = textLength - decCount;
+		Binary buffer = bufferSize > STRING_STREAM_BUFFER_SIZE ? Binary(bufferSize) : esBuffer;
 		Byte* outData = buffer.data();
 		
 		UInt k = 0;
@@ -144,66 +422,67 @@ namespace xml_internal
 			}
 			else outData[k++] = textData[i];
 		}
-		if (k == 0) return String();
+		SPADAS_ERROR_RETURNVAL(k != bufferSize, String());
 
-		buffer.trim(k);
-		return buffer;
+		return BinarySpan(buffer, 0, bufferSize);
 	}
 	
-	Bool extractTag(String bracketContent, String& tag, String& attributesString)
+	Bool extractTag(StringSpan bracketContent, XMLVars *xmlVars, String& tag, StringSpan& attributesString)
 	{
-		Array<UInt> spaceLocations = bracketContent.search(' ');
-		if (spaceLocations.size() == 0) tag = bracketContent.clone();
+		Array<UInt> spaceLocations = bracketContent.search(space);
+		if (spaceLocations.size() == 0)
+		{
+			SPADAS_ERROR_RETURNVAL(bracketContent.isEmpty(), FALSE);
+			tag = xmlVars->touchText(bracketContent);
+			attributesString = StringSpan();
+		}
 		else
 		{
-			tag = bracketContent.subString(0, spaceLocations[0]);
-			attributesString = bracketContent.subString(spaceLocations[0]+1);
+			SPADAS_ERROR_RETURNVAL(spaceLocations[0] == 0, FALSE);
+			StringSpan span = bracketContent.sub(0, spaceLocations[0]);
+			tag = xmlVars->touchText(span);
+			if (spaceLocations[0] + 1 < bracketContent.length()) attributesString = bracketContent.sub(spaceLocations[0] + 1);
+			else attributesString = StringSpan();
 		}
-		
-		if (tag.isEmpty()) return FALSE;
-		else return TRUE;
+		return TRUE;
 	}
 
-	Array<XMLAttribute> unpackAttributes(String attributesString)
+	Array<XMLAttribute> unpackAttributes(StringSpan& attributesString, Binary& esBuffer, XMLVars *xmlVars)
 	{
-		Array<StringSpan> subStrings = attributesString.split("\"");
+		Array<StringSpan> subStrings = attributesString.split(quot);
 		if (subStrings.size() < 2) return Array<XMLAttribute>();
 
 		UInt outSize = subStrings.size() / 2;
 		Array<XMLAttribute> out(outSize);
+		XMLAttribute *outData = out.data();
+		StringSpan *subStringsData = subStrings.data();
 		UInt nAttribs = 0;
 		for (UInt i = 0; i < outSize; i++)
 		{
-			String nameString = subStrings[2 * i];
-			String valueString = subStrings[2 * i + 1];
+			StringSpan& nameSpan = subStringsData[2 * i];
+			StringSpan& valueSpan = subStringsData[2 * i + 1];
 
-			if (nameString.isEmpty()) continue;
+			const Byte *nameStringData = nameSpan.bytes();
+			UInt nameStringLength = nameSpan.length();
 
-			Binary buffer(nameString.length());
-			Byte *attributeNameData = buffer.data();
-
-			UInt k = 0;
-			const Byte *nameStringData = nameString.bytes();
-			UInt nameStringLength = nameString.length();
-			for (UInt n = 0; n < nameStringLength; n++)
+			UInt spaceCount = 0;
+			for (; spaceCount < nameStringLength; spaceCount++)
 			{
-				if (nameStringData[n] == '=') break;
-				
-				if ((nameStringData[n] >= '0' && nameStringData[n] <= '9') ||
-					(nameStringData[n] >= 'A' && nameStringData[n] <= 'Z') ||
-					(nameStringData[n] >= 'a' && nameStringData[n] <= 'z') ||
-					nameStringData[n] == '_' || nameStringData[n] == '.')
-				{
-					attributeNameData[k++] = nameStringData[n];
-				}
+				if (nameStringData[spaceCount] != (Byte)' ') break;
 			}
-			if (k == 0) continue;
 
-			buffer.trim(k);
+			UInt validLength = 0;
+			for (UInt charIndex = spaceCount; charIndex < nameStringLength; charIndex++, validLength++)
+			{
+				if (nameStringData[charIndex] == (Byte)'=') break;
+				if (!xmlCharsValidator.validate(nameStringData[charIndex])) break;
+			}
+			if (validLength == 0) continue;
 
-			XMLAttribute& attribute = out[nAttribs++];
-			attribute.name = buffer;
-			attribute.value = decodeES(valueString);
+			XMLAttribute& attribute = outData[nAttribs++];
+			StringSpan validNameSpan = nameSpan.sub(spaceCount, validLength);
+			attribute.name = xmlVars->touchText(validNameSpan);
+			attribute.value = decodeES(valueSpan, esBuffer);
 		}
 		if (nAttribs == 0) return Array<XMLAttribute>();
 
@@ -211,25 +490,8 @@ namespace xml_internal
 		return out;
 	}
 
-	String packAttributes(Array<XMLAttribute> attributes)
+	Bool readXMLBinary(String rawString, Binary& esBuffer, XML& xml)
 	{
-		String out;
-		UInt size = attributes.size();
-		for (UInt i = 0; i < size; i++)
-		{
-			out += attributes[i].name;
-			out += "=\"";
-			out += encodeES(attributes[i].value, TRUE);
-			out += "\"";
-			if (i != size - 1) out += " ";
-		}
-		return out;
-	}
-	
-	Bool readXMLBinary(Binary xmlBinary, XMLNode& out)
-	{
-		String rawString(xmlBinary);
-		
 		/* split with the angle brackets */
 		Array<UInt> leftRaw = rawString.search('<');
 		Array<UInt> rightRaw = rawString.search('>');
@@ -253,7 +515,7 @@ namespace xml_internal
 		}
 
 		Array<BracketType> bracketTypes(nBrackets);
-		Array<String> bracketContents(nBrackets);
+		Array<StringSpan> bracketContents(nBrackets);
 		Array<String> externalContents(nBrackets);
 		
 		UInt startBracketNum = 0;
@@ -293,15 +555,15 @@ namespace xml_internal
 			switch (bracketTypes[i])
 			{
 				case BracketType::Start:
-					bracketContents[i] = rawString.subString(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-1);
+					bracketContents[i] = rawString.sub(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-1);
 					break;
 					
 				case BracketType::End:
-					bracketContents[i] = rawString.subString(leftAngleLocations[i]+2, rightAngleLocations[i]-leftAngleLocations[i]-2);
+					bracketContents[i] = rawString.sub(leftAngleLocations[i]+2, rightAngleLocations[i]-leftAngleLocations[i]-2);
 					break;
 					
 				case BracketType::Atom:
-					bracketContents[i] = rawString.subString(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-2);
+					bracketContents[i] = rawString.sub(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-2);
 					break;
 					
 				default:
@@ -311,14 +573,19 @@ namespace xml_internal
 			/* get external content */
 			if (i != nBrackets - 1)
 			{
-				externalContents[i] = decodeES(rawString.subString(rightAngleLocations[i]+1, leftAngleLocations[i+1]-rightAngleLocations[i]-1));
+				externalContents[i] = decodeES(rawString.sub(rightAngleLocations[i]+1, leftAngleLocations[i+1]-rightAngleLocations[i]-1), esBuffer);
 			}
 		}
 		
 		SPADAS_ERROR_RETURNVAL(startBracketNum != endBracketNum, FALSE);
-		
+
 		/* generate an XML tree */
-		XMLNode root, current = root;
+		XMLVars *xmlVars = xml.getVars();
+		XMLNode root = xml.globalRoot();
+		XMLNode current;
+		UInt rootCount = 0;
+		String tag;
+		StringSpan attributesString;
 
 		for (UInt i = 0; i < nBrackets; i++)
 		{
@@ -326,131 +593,58 @@ namespace xml_internal
 			
 			if (bracketTypes[i] == BracketType::Start)
 			{
-				String tag, attributesString;
-				SPADAS_ERROR_RETURNVAL(!extractTag(bracketContents[i], tag, attributesString), FALSE);
+				SPADAS_ERROR_RETURNVAL(!extractTag(bracketContents[i], xmlVars, tag, attributesString), FALSE);
 
-				current = current.addLeaf(XMLElement(tag, unpackAttributes(attributesString), externalContents[i]));
+				if (current.valid())
+				{
+					current = current.addLeaf(XMLElement(tag, unpackAttributes(attributesString, esBuffer, xmlVars), externalContents[i]));
+				}
+				else
+				{
+					rootCount++;
+					SPADAS_ERROR_RETURNVAL(rootCount > 1, FALSE);
+					current = root;
+					current->tag = tag;
+					current->attributes = unpackAttributes(attributesString, esBuffer, xmlVars);
+					current->content = externalContents[i];
+				}
 			}
 
 			if (bracketTypes[i] == BracketType::End)
 			{
-				SPADAS_ERROR_RETURNVAL(bracketContents[i] != current.value().tag, FALSE);
-				
-				XMLNode upNode = current.root();
-				SPADAS_ERROR_RETURNVAL(upNode == current, FALSE);
-
-				current = upNode;
+				SPADAS_ERROR_RETURNVAL(bracketContents[i] != current->tag, FALSE);
+				SPADAS_ERROR_RETURNVAL(!current.valid(), FALSE);
+				current = current.root();
 			}
 			
 			if (bracketTypes[i] == BracketType::Atom)
 			{
-				String tag, attributesString;
-				SPADAS_ERROR_RETURNVAL(!extractTag(bracketContents[i], tag, attributesString), FALSE);
+				SPADAS_ERROR_RETURNVAL(!extractTag(bracketContents[i], xmlVars, tag, attributesString), FALSE);
 
-				current.addLeaf(XMLElement(tag, unpackAttributes(attributesString), String()));
+				if (current.valid())
+				{
+					current.addLeaf(XMLElement(tag, unpackAttributes(attributesString, esBuffer, xmlVars), String()));
+				}
+				else
+				{
+					rootCount++;
+					SPADAS_ERROR_RETURNVAL(rootCount > 1, FALSE);
+					root->tag = tag;
+					root->attributes = unpackAttributes(attributesString, esBuffer, xmlVars);
+					root->content = String();
+				}
 			}
 		}
-		
-		SPADAS_ERROR_RETURNVAL(root.nLeaves() != 1, FALSE);
 
-		out = root.leafAt(0);
-		out.cutRoot();
 		return TRUE;
 	}
-	
-	Binary writeXMLNodeBinary(XMLNode node, UInt depth)
-	{
-		XMLElement element = node.value();
-		
-		// validate
-		SPADAS_ERROR_RETURNVAL(!okForTagOrAttributeName(element.tag), Binary());
-
-		for (UInt i = 0; i < element.attributes.size(); i++)
-		{
-			SPADAS_ERROR_RETURNVAL(!okForTagOrAttributeName(element.attributes[i].name), Binary());
-		}
-		
-		String startBracketContent;
-		if (element.attributes.isEmpty()) startBracketContent = element.tag.clone();
-		else startBracketContent = element.tag + " " + packAttributes(element.attributes);
-		
-		String tabText;
-		for (UInt i = 0; i < depth; i++) tabText += "	";
-
-		String lineEnding = "\n";
-		
-		Binary out;
-		if (node.nLeaves() == 0)
-		{
-			String outString;
-			if (element.content.isEmpty())
-			{
-				outString = tabText + "<" + startBracketContent + "/>" + lineEnding;
-			}
-			else
-			{
-				outString = tabText + "<" + startBracketContent + ">" +
-				encodeES(element.content, FALSE) +
-				"</" + element.tag + ">" + lineEnding;
-			}
-			
-			out = outString.toBinary();
-		}
-		else
-		{
-			UInt size = 0, index = 0;
-			
-			Binary startBinary = String(tabText + "<" + startBracketContent + ">" + lineEnding).toBinary();
-			size += startBinary.size();
-			
-			Array<XMLNode> leaves = node.leaves();
-			Array<Binary> leavesBinaries(node.nLeaves());
-			for (UInt i = 0; i < node.nLeaves(); i++)
-			{
-				leavesBinaries[i] = writeXMLNodeBinary(leaves[i], depth + 1);
-				size += leavesBinaries[i].size();
-			}
-			
-			Binary endBinary = String(tabText + "</" + element.tag + ">" + lineEnding).toBinary();
-			size += endBinary.size();
-			
-			out = Binary(size);
-			
-			utility::memoryCopy(startBinary.data(), &out[index], startBinary.size());
-			index += startBinary.size();
-			
-			for (UInt i = 0; i < node.nLeaves(); i++)
-			{
-				utility::memoryCopy(leavesBinaries[i].data(), &out[index], leavesBinaries[i].size());
-				index += leavesBinaries[i].size();
-			}
-			
-			utility::memoryCopy(endBinary.data(), &out[index], endBinary.size());
-		}
-		
-		return out;
-	}
 }
 
-namespace spadas
-{
-	class XMLVars : public Vars
-	{
-    public:
-		SPADAS_VARS_DEF(XML, Vars)
-
-		XMLNode globalRoot;
-        ~XMLVars()
-        {
-            globalRoot.collapse();
-        }
-	};
-}
-
-using namespace spadas;
 using namespace xml_internal;
 
 const String spadas::XML::TypeName = "spadas.XML";
+
+// XMLAttribute ///////////////////////////////////////////////////////////////////////////
 
 XMLAttribute::XMLAttribute()
 {
@@ -460,24 +654,147 @@ XMLAttribute::XMLAttribute(String name0, String value0) : name(name0), value(val
 {
 }
 
-XMLElement::XMLElement() : tag("unknown")
+// XMLElement ///////////////////////////////////////////////////////////////////////////
+
+XMLElement::XMLElement() : tag(unknownTag)
 {
 }
-XMLElement::XMLElement(String tag0) : tag(tag0.isEmpty() ? "unknown" : tag0)
+XMLElement::XMLElement(String tag0) : tag(tag0.isEmpty() ? unknownTag : tag0)
 {
 }
-XMLElement::XMLElement(String tag0, Array<XMLAttribute> attributes0, String content0) : tag(tag0.isEmpty() ? "unknown" : tag0), attributes(attributes0), content(content0)
+XMLElement::XMLElement(String tag0, Array<XMLAttribute> attributes0, String content0) : tag(tag0.isEmpty() ? unknownTag : tag0), attributes(attributes0), content(content0)
 {
 }
+
+// XMLNode ///////////////////////////////////////////////////////////////////////////
+
+XMLNode::XMLNode() : cell(NULL)
+{}
+
+XMLNode::XMLNode(XML xml, Pointer cell) : xml(xml), cell(cell)
+{}
+
+Bool XMLNode::valid()
+{
+	return cell != NULL;
+}
+
+XMLElement& XMLNode::value()
+{
+	SPADAS_ERROR_RETURNVAL(!cell, *(new XMLElement()));
+	return ((XMLCell*)cell)->elem;
+}
+
+XMLElement* XMLNode::operator ->()
+{
+	SPADAS_ERROR_RETURNVAL(!cell, new XMLElement());
+	return &((XMLCell*)cell)->elem;
+}
+
+XMLNode XMLNode::root()
+{
+	SPADAS_ERROR_RETURNVAL(!cell, XMLNode());
+	return XMLNode(xml, ((XMLCell*)cell)->root);
+}
+
+UInt XMLNode::nLeaves()
+{
+	SPADAS_ERROR_RETURNVAL(!cell, 0);
+	return ((XMLCell*)cell)->leaves.size();
+}
+
+Array<XMLNode> XMLNode::leaves()
+{
+	SPADAS_ERROR_RETURNVAL(!cell, Array<XMLNode>());
+
+	UInt leafCount = ((XMLCell*)cell)->leaves.size();
+	if (leafCount == 0) return Array<XMLNode>();
+
+	Array<XMLNode> output = Array<XMLNode>::createUninitialized(leafCount);
+	for (auto e = ((XMLCell*)cell)->leaves.head(); e.valid(); ++e)
+	{
+		output.initialize(e.index(), XMLNode(xml, e.value()));
+	}
+	return output;
+}
+
+Array<XMLNode> XMLNode::leavesWithTagName(String tagName)
+{
+	SPADAS_ERROR_RETURNVAL(!cell, Array<XMLNode>());
+	SPADAS_ERROR_RETURNVAL(tagName.isEmpty(), Array<XMLNode>());
+
+	ArrayX<XMLNode> output;
+	for (auto e = ((XMLCell*)cell)->leaves.head(); e.valid(); ++e)
+	{
+		if (e.value()->elem.tag == tagName) output.append(XMLNode(xml, e.value()));
+	}
+	return output.toArray();
+}
+
+Bool XMLNode::firstLeafWithTagName(String tagName, XMLNode& output)
+{
+	SPADAS_ERROR_RETURNVAL(!cell, FALSE);
+	SPADAS_ERROR_RETURNVAL(tagName.isEmpty(), FALSE);
+
+	for (auto e = ((XMLCell*)cell)->leaves.head(); e.valid(); ++e)
+	{
+		if (e.value()->elem.tag == tagName)
+		{
+			output = XMLNode(xml, e.value());
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+Dictionary<String> XMLNode::attributesToDictionary()
+{
+	SPADAS_ERROR_RETURNVAL(!cell, Dictionary<String>());
+
+	Dictionary<String> out;
+	for (auto e = ((XMLCell*)cell)->elem.attributes.firstElem(); e.valid(); ++e)
+	{
+		out[e->name] = e->value;
+	}
+	return out;
+}
+
+void XMLNode::dictionaryToAttributes(Dictionary<String> dict)
+{
+	SPADAS_ERROR_RETURN(!cell);
+
+	ArrayX<XMLAttribute> buf;
+	if (!dict.isEmpty())
+	{
+		for (auto pair = dict.keyValues().firstElem(); pair.valid(); ++pair)
+		{
+			if (pair->key.isEmpty()) continue;
+			StringSpan keySpan(pair->key, 0, pair->key.length());
+			String key = xml.getVars()->touchText(keySpan, pair->key);
+			buf.append(XMLAttribute(key, pair->value));
+		}
+	}
+	((XMLCell*)cell)->elem.attributes = buf.toArray();
+}
+
+XMLNode XMLNode::addLeaf(XMLElement val)
+{
+	SPADAS_ERROR_RETURNVAL(!cell, XMLNode());
+
+	XMLCell *newCell = &xml.getVars()->cells.append(XMLCell(val));
+	newCell->root = (XMLCell*)cell;
+	((XMLCell*)cell)->leaves.addToTail(newCell);
+	return XMLNode(xml, newCell);
+}
+
+// XML ///////////////////////////////////////////////////////////////////////////
 
 XML::XML()
 {
 }
 
-XML::XML(XMLNode xmlRoot) : Object<class XMLVars>(new XMLVars(), TRUE)
+XML::XML(XMLNode xmlRoot) : Object<class XMLVars>(new XMLVars(xmlRoot), TRUE)
 {
-	vars->globalRoot = xmlRoot.cloneTree();
-	if (vars->globalRoot.value().tag.isEmpty()) vars->globalRoot.value().tag = "root";
 }
 
 Optional<XML> XML::createFromFile(Path xmlFilePath)
@@ -495,48 +812,43 @@ Optional<XML> XML::createFromFile(Path xmlFilePath)
 	SPADAS_ERROR_RETURNVAL((binary[0] == 0xFE && binary[1] == 0xFF) || (binary[0] == 0xFF && binary[1] == 0xFE), Optional<XML>());
 	SPADAS_ERROR_RETURNVAL((binary[0] == 0 && binary[1] == 0 && binary[2] == 0xFE && binary[3] == 0xFF) || (binary[0] == 0xFF && binary[1] == 0xFE && binary[2] == 0 && binary[3] == 0), Optional<XML>());
 
+	BinarySpan span;
     if (binary[0] == 0xEF && binary[1] == 0xBB && binary[2] == 0xBF)
     {
-        Binary tmp(binary.size()-3);
-        utility::memoryCopy(&binary[3], tmp.data(), binary.size()-3);
-        binary = tmp;
+		span = binary.sub(3);
     }
 	else
 	{
 		SPADAS_WARNING_MSG("No BOM");
+		span = binary.sub(0);
 	}
 
-	return createFromBinary(binary);
+	XML xml;
+	xml.setVars(new XMLVars(), TRUE);
+	Binary esBuffer(STRING_STREAM_BUFFER_SIZE);
+	if (readXMLBinary(span, esBuffer, xml)) return xml;
+	else return Optional<XML>();
 }
 
 Optional<XML> XML::createFromBinary(Binary xmlBinary)
 {
-	XMLNode globalRoot;
-	Bool ret = readXMLBinary(xmlBinary, globalRoot);
-	if (!ret) return Optional<XML>();
-	
-	if (globalRoot.value().tag.isEmpty()) globalRoot.value().tag = "root";
-	
 	XML xml;
 	xml.setVars(new XMLVars(), TRUE);
-	xml.vars->globalRoot = globalRoot;
-	return xml;
+	Binary esBuffer(STRING_STREAM_BUFFER_SIZE);
+	if (readXMLBinary(xmlBinary, esBuffer, xml)) return xml;
+	else return Optional<XML>();
 }
 
 XML XML::clone()
 {
 	if (!vars) return XML();
-    else return XML(vars->globalRoot);
+    else return XML(globalRoot());
 }
 
 XMLNode XML::globalRoot()
 {
-	if (!vars)
-	{
-		setVars(new XMLVars(), TRUE);
-		vars->globalRoot->tag = "root";
-	}
-	return vars->globalRoot;
+	if (!vars) setVars(new XMLVars(), TRUE);
+	return XMLNode(*this, &vars->cells[0]);
 }
 
 void XML::save(Path xmlFilePath)
@@ -554,16 +866,15 @@ void XML::save(Path xmlFilePath)
 
 	if (!vars)
 	{
-		String xmlString = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root/>\n";
-		file.output(xmlString.toBinary());
+		file.output(emptyXmlStringBinary);
 	}
 	else
 	{
-		String header = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
-		file.output(header.toBinary());
-
-		Binary xmlBinary = writeXMLNodeBinary(vars->globalRoot, 0);
-		file.output(xmlBinary);
+		StringStream stream;
+		Binary esBuffer(STRING_STREAM_BUFFER_SIZE);
+		XMLNode rootNode = globalRoot();
+		if (writeXMLNodeToStream(rootNode, 0, esBuffer, stream)) file.output(stream.dequeue());
+		else file.output(emptyXmlStringBinary);
 	}
 }
 
@@ -571,77 +882,14 @@ Binary XML::toBinary()
 {
 	if (!vars)
 	{
-		String xmlString = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root/>\n";
-		return xmlString.toBinary();
+		return emptyXmlStringBinary.clone();
 	}
 	else
 	{
-		String header = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
-		return header.toBinary() + writeXMLNodeBinary(vars->globalRoot, 0);
+		StringStream stream;
+		Binary esBuffer(STRING_STREAM_BUFFER_SIZE);
+		XMLNode rootNode = globalRoot();
+		if (writeXMLNodeToStream(rootNode, 0, esBuffer, stream)) return stream.dequeue();
+		else return emptyXmlStringBinary.clone();
 	}
-}
-
-Array<XMLNode> XML::nodeLeavesWithTagName(XMLNode node, String tagName)
-{
-	SPADAS_ERROR_RETURNVAL(tagName.isEmpty(), Array<XMLNode>());
-
-	UInt nLeaves = node.nLeaves();
-	Array<XMLNode> leaves = node.leaves();
-	Array<UInt> okIndices(nLeaves);
-	UInt okNum = 0;
-	for (UInt i = 0; i < leaves.size(); i++)
-	{
-		if (leaves[i].value().tag == tagName) okIndices[okNum++] = i;
-	}
-	Array<XMLNode> out = Array<XMLNode>::createUninitialized(okNum);
-	for (UInt i = 0; i < okNum; i++)
-	{
-		out.initialize(i, leaves[okIndices[i]]);
-	}
-	return out;
-}
-
-Bool XML::firstNodeLeafWithTagName(XMLNode node, String tagName, XMLNode& output)
-{
-	SPADAS_ERROR_RETURNVAL(tagName.isEmpty(), FALSE);
-
-	UInt nLeaves = node.nLeaves();
-	if (nLeaves == 0) return FALSE;
-
-	Array<XMLNode> leaves = node.leaves();
-	for (UInt i = 0; i < nLeaves; i++)
-	{
-		if (leaves[i].value().tag != tagName) continue;
-
-		output = leaves[i];
-		return TRUE;
-	}
-
-	return FALSE;
-}
-
-Dictionary<String> XML::attributesToDictionary(Array<XMLAttribute> attributes)
-{
-	UInt nAttribs = attributes.size();
-	Dictionary<String> out;
-
-	XMLAttribute *attribsData = attributes.data();
-	for (UInt i = 0; i < nAttribs; i++)
-	{
-		out[attribsData[i].name] = attribsData[i].value;
-	}
-	return out;
-}
-
-Array<XMLAttribute> XML::dictionaryToAttributes(Dictionary<String> dict)
-{
-	Array<String> keys = dict.keys();
-	ArrayX<XMLAttribute> buf;
-
-	UInt nKeys = keys.size();
-	for (UInt i = 0; i < nKeys; i++)
-	{
-		if (!keys[i].isEmpty()) buf[buf.size()] = XMLAttribute(keys[i], dict[keys[i]]);
-	}
-	return buf.toArray(Region(0, buf.size()));
 }

@@ -95,8 +95,20 @@ namespace spadas
 	// 数组
 	template <typename Type> class Array;
 
+	// 数组片段
+	template <typename Type> class ArraySpan;
+
 	// 链表节点
 	template <typename Type> class ListNode;
+
+	// 二进制数据
+	class Binary;
+
+	// 二进制数据片段
+	class BinarySpan;
+
+	// XML元素节点
+	class XMLNode;
 
 	// 图像对
 	struct ImagePair;
@@ -488,7 +500,7 @@ namespace spadas
 		Object(VarsType *newVars, Bool isNew);
 		
 		/// 析构函数，变量数据的引用减1
-		virtual ~Object();
+		~Object();
 		
 		/// 创建引用对象，直接指向另一个对象的变量数据（作为基类被隐式调用）
 		Object(const Object<VarsType>& obj);
@@ -710,6 +722,7 @@ namespace spadas
 		Type *data;
 		UInt size;
 		UInt idx;
+		ArrayElem<Type>& operator =(const ArrayElem<Type>& elem) { return *this; }
 	};
 
 	/// spadas::Array 模板类的变量数据
@@ -736,11 +749,17 @@ namespace spadas
 		/// @param size 源数据数组大小
 		Array(const Type arr[], UInt size);
 
+		/// [非安全] 取得数组的头指针
+		Type *data();
+
 		/// 取得数组大小
 		UInt size();
 
-		/// [非安全] 取得数组的头指针
-		Type *data();
+		/// 是否为空数组
+		Bool isEmpty();
+
+		/// 克隆出一个新对象 (所有元素调用=号拷贝)
+		Array<Type> clone();
 
 		/// 取得数组中某个元素的引用
 		Type& operator [](UInt index);
@@ -751,33 +770,17 @@ namespace spadas
 		/// 取得数组中最后一个元素的引用
 		Type& last();
 
-		/// 取得从第一个元素的遍历器，可修改元素
-		ArrayElem<Type> firstElem();
-
-		/// 取得从最后一个元素开始的遍历器，可修改元素
-		ArrayElem<Type> lastElem();
-
-		/// 取得子数组，其数据绑定至本数组的数据
-		Array<Type> subArray(UInt index, UInt size = UINF);
-
-		/// 是否为空数组
-		Bool isEmpty();
+		/// @brief 在本数组后方拼接另一个数组
+		/// @param arr 将拼接的另一个数组
+		/// @returns 拼接后的数组
+		Array<Type> operator +(Array<Type> arr);
 
 		/// 缩减数组大小
 		void trim(UInt size);
 		
-		/// 克隆出一个新对象 (所有元素调用=号拷贝)
-		Array<Type> clone();
-
 		/// 对所有元素赋同一个值
 		void set(Type value);
-		
-		/// @brief 从另一个数组的某个子区域拷贝数据到本数组的某个位置
-		/// @param src 源数据数组
-		/// @param srcRegion 从源数组拷贝的区域
-		/// @param thisOffset 拷贝至本数组的起始位置
-		void copy(Array<Type> src, Region srcRegion, UInt thisOffset);
-		
+
 		/// 数组中是否包含某个值
 		Bool contain(Type val);
 
@@ -790,6 +793,12 @@ namespace spadas
 		/// 返回数组中所有指定函数返回TRUE的元素序号
 		Array<UInt> searchAs(Func<Bool(Type&)> func);
 
+		/// 按从小到大排序，需要Type支持>重载符
+		void sort();
+
+		/// 根据指定函数(判断是否大于)，按从小到大排序
+		void sortAs(Func<Bool(Type&, Type&)> func);
+
 		/// 按指定函数转换为其他类型数组
 		template <typename TargetType>
 		Array<TargetType> convert(Func<TargetType(Type&)> func);
@@ -797,12 +806,30 @@ namespace spadas
 		/// @brief 根据指定的大小分割为多个数组
 		/// @param sizes 将分割成的每个数组的大小
 		/// @returns 分割后的多个数组
-		Array<Array<Type> > split(Array<UInt> sizes);
+		Array<ArraySpan<Type> > split(Array<UInt> sizes);
 
-		/// @brief 在本数组后方拼接另一个数组
-		/// @param arr 将拼接的另一个数组
-		/// @returns 拼接后的数组
-		Array<Type> operator +(Array<Type> arr);
+		/// 转换为基类或派生类对象的数组（具体行为参考 spadas::Object::as ）
+		template <typename TargetType>
+		Array<TargetType> asArray();
+
+		/// 转换为基类或派生类对象的数组，并输出每个元素是否转换成功的数组（具体行为参考 spadas::Object::as ）
+		template <typename TargetType>
+		Array<TargetType> asArray(Array<Bool>& ok);
+
+		/// 取得子数组，其数据绑定至本数组的数据
+		ArraySpan<Type> sub(UInt index, UInt size = UINF);
+
+		/// 取得从第一个元素的遍历器，可修改元素
+		ArrayElem<Type> firstElem();
+
+		/// 取得从最后一个元素开始的遍历器，可修改元素
+		ArrayElem<Type> lastElem();
+
+		/// @brief 从另一个数组的某个子区域拷贝数据到本数组的某个位置
+		/// @param src 源数据数组
+		/// @param srcRegion 从源数组拷贝的区域
+		/// @param thisOffset 拷贝至本数组的起始位置
+		void copy(Array<Type> src, Region srcRegion, UInt thisOffset);
 
 		/// 创建一个标量数组（只含有一个元素）
 		static Array<Type> scalar(Type element);
@@ -827,6 +854,85 @@ namespace spadas
 		/// @returns 合并后的数组
 		static Array<Type> merge(Array<Array<Type> > arrs);
 
+		/// @brief 合并多个数组片段
+		/// @param spans 将合并的多个数组片段
+		/// @returns 合并后的数组
+		static Array<Type> merge(Array<ArraySpan<Type> > spans);
+
+	private:
+		Bool isNull() { return FALSE; }
+		Bool isValid() { return FALSE; }
+	};
+
+	/// 定长数组片段，数据绑定至原定长数组的数据
+	template <typename Type> class ArraySpan
+	{
+	public:
+		/// 创建空片段
+		ArraySpan();
+
+		/// [非安全] 绑定至原定长数组
+		ArraySpan(Array<Type>& sourceArray, UInt index, UInt size);
+
+		/// [非安全] 取得数组片段的头指针
+		Type *data();
+
+		/// 取得数组片段大小
+		UInt size();
+
+		/// 是否为空数组片段
+		Bool isEmpty();
+
+		/// 克隆出一个新对象 (所有元素调用=号拷贝)
+		Array<Type> clone();
+
+		/// 取得数组片段中某个元素的引用
+		Type& operator [](UInt index);
+
+		/// 取得数组片段中第一个元素的引用
+		Type& first();
+
+		/// 取得数组片段中最后一个元素的引用
+		Type& last();
+
+		/// @brief 在本数组片段后方拼接另一个数组
+		/// @param arr 将拼接的另一个数组
+		/// @returns 拼接后的数组
+		Array<Type> operator +(Array<Type> arr);
+
+		/// 缩减数组片段大小
+		void trim(UInt size);
+		
+		/// 对所有元素赋同一个值
+		void set(Type value);
+		
+		/// 数组中是否包含某个值
+		Bool contain(Type val);
+
+		/// 数组中是否包含指定函数返回TRUE的某个值
+		Bool containAs(Func<Bool(Type&)> func);
+
+		/// 返回数组中所有等于某个值的元素序号
+		Array<UInt> search(Type val);
+
+		/// 返回数组中所有指定函数返回TRUE的元素序号
+		Array<UInt> searchAs(Func<Bool(Type&)> func);
+
+		/// 按从小到大排序，需要Type支持>重载符
+		void sort();
+
+		/// 根据指定函数(判断是否大于)，按从小到大排序
+		void sortAs(Func<Bool(Type&, Type&)> func);
+
+		/// 按指定函数转换为其他类型数组
+		template <typename TargetType>
+		Array<TargetType> convert(Func<TargetType(Type&)> func);
+		
+		/// @brief 根据指定的大小分割为多个数组
+		/// @param sizes 将分割成的每个数组的大小
+		/// @returns 分割后的多个数组
+		Array<ArraySpan<Type> > split(Array<UInt> sizes);
+
 		/// 转换为基类或派生类对象的数组（具体行为参考 spadas::Object::as ）
 		template <typename TargetType>
 		Array<TargetType> asArray();
@@ -835,15 +941,13 @@ namespace spadas
 		template <typename TargetType>
 		Array<TargetType> asArray(Array<Bool>& ok);
 
-		/// 按从小到大排序，需要Type支持>重载符
-		void sort();
-
-		/// 根据指定函数(判断是否大于)，按从小到大排序
-		void sortAs(Func<Bool(Type&, Type&)> func);
+		/// 取得子数组，其数据绑定至原数组的数据
+		ArraySpan<Type> sub(UInt index, UInt size = UINF);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Array<Type> source;
+		UInt idx;
+		UInt siz;
 	};
 
 	/// spadas::ListNode 模板类的变量数据
@@ -1085,8 +1189,8 @@ namespace spadas
 		/// 扩展大小至指定值
 		void setSize(UInt size);
 
-		/// 在数组末尾扩展1个元素
-		void append(Type val);
+		/// 在数组末尾扩展1个元素，并返回数组中该元素的引用
+		Type& append(Type val);
 
 		/// 在数组末尾扩展多个元素
 		void append(Array<Type> vals);
@@ -1116,7 +1220,13 @@ namespace spadas
 	{
 	public:
 		/// 构造函数，由 List::head 和 List::tail 调用生成
-		ListElem(ListNode<Type> node, Bool valid, UInt index, ListNode<Type> prevNode, Bool prevValid, ListNode<Type> nextNode, Bool nextValid, List<Type> list);
+		ListElem(List<Type> list, Pointer cell, UInt index);
+
+		/// 拷贝构造函数
+		ListElem(const ListElem<Type>& elem);
+
+		/// 析构函数
+		~ListElem();
 
 		/// 当前元素是否在链表中
 		Bool valid();
@@ -1151,26 +1261,24 @@ namespace spadas
 		/// 移动至下个元素
 		void operator ++();
 
-		/// 在当前元素前插入值
-		void insertPrevious(Type val);
+		/// 在当前元素前插入新元素，并返回链表总该元素的引用
+		Type& insertPrevious(Type val);
 
-		/// 在当前元素后插入值
-		void insertNext(Type val);
+		/// 在当前元素后插入新元素，并返回链表总该元素的引用
+		Type& insertNext(Type val);
 
 		/// 移除当前元素
 		void remove();
 	
 	private:
-		ListNode<Type> node;
-		Bool vld;
-		UInt idx;
-		ListNode<Type> prevNode;
-		Bool prevValid;
-		UInt prevIndex;
-		ListNode<Type> nextNode;
-		Bool nextValid;
-		UInt nextIndex;
 		List<Type> list;
+		Pointer cell;
+		Pointer prevCell;
+		Pointer nextCell;
+		UInt idx;
+		UInt prevIndex;
+		UInt nextIndex;
+		ListElem<Type>& operator =(const ListElem<Type>& elem) { return *this; }
 	};
 
 	/// 链表
@@ -1198,20 +1306,23 @@ namespace spadas
 		/// 取得从末尾元素开始的遍历器（使用该对象时，不可调用链表的add/remove/clear等方法，或再创建其他ListElem）
 		ListElem<Type> tail();
 
-		/// 添加至首
-		void addToHead(Type val);
+		/// 添加为首个元素，并返回链表中该元素的引用
+		Type& addToHead(Type val);
 
-		/// 添加至尾
-		void addToTail(Type val);
+		/// 添加为末尾元素，并返回链表中该元素的引用
+		Type& addToTail(Type val);
 
-		/// 移除首
+		/// 移除首个元素
 		void removeHead();
 
-		/// 移除尾
+		/// 移除末尾元素
 		void removeTail();
 
 		/// 移除等于某个值的所有元素
 		void remove(Type val);
+
+		/// 移除满足条件(指定函数返回TRUE)的所有元素
+		void removeAs(Func<Bool(Type&)> func);
 
 		/// 清空链表
 		void clear();
@@ -1237,26 +1348,17 @@ namespace spadas
 		/// 创建指定容量的数据流，并指定其元素是否可丢弃
 		Stream(UInt capacity, Bool discardable = TRUE);
 
-		/// 更新数据流的容量，并舍弃多余的元素
-		void setCapacity(UInt capacity);
-
 		/// 取得数据流的容量
 		UInt capacity();
-		
-		/// 获得本数据流已推入的元素数目
-		UInt nEnqueued();
-		
-		/// 获得本数据流已取出的元素数目
-		UInt nDequeued();
-		
-		/// 获得本数据流已丢弃的元素数目
-		UInt nDiscarded();
-		
-		/// 取得本数据流中缓存的元素数目，该值应为nEnqueued() - nDequeued() - nDiscarded()
+
+		/// 取得本数据流中缓存的元素数目
 		UInt nElements();
 
 		/// 本数据流未缓存任何元素
 		Bool isEmpty();
+
+		/// 获得本数据流已丢弃的元素数目
+		UInt nDiscarded();
 
 		/// 获取首个(最早推入)元素
 		Type first();
@@ -1279,20 +1381,19 @@ namespace spadas
 		/// 尝试取出指定数量的元素，实际取出数量以返回对象为准 (返回的数组中序号0的元素为最早)
 		Array<Type> dequeue(UInt amount = UINF);
 
-		/// 尝试取出小于指定值的连续元素 (返回的数组中序号0的元素为最早)
-		template <typename TargetType>
-		Array<Type> dequeueLessThan(TargetType target);
+		/// 尝试取出所有满足条件(指定函数返回TRUE)的连续元素 (返回的数组中序号0的元素为最早)
+		Array<Type> dequeueAs(Func<Bool(Type&)> func);
 
 		/// 等待所有元素取出 (若检测到interrupt则返回FALSE)
 		Bool waitAllDequeued(Flag interrupt, Bool spin);
 
-		/// 终止数据流，使其变为“已终止状态”。终止后将无法推入任何元素，但可取出
+		/// 终止数据流，使其变为"已终止状态"。终止后将无法推入任何元素，但可取出
 		void terminate();
 
-		/// 本数据流是否为“已终止状态”
+		/// 本数据流是否为"已终止状态"
 		Bool isTerminated();
 
-		/// 重置数据流：将清空所有缓存中的元素，移除“已终止状态”，并清除nEnqueued等统计数据。但不会改变数据流容量和“元素可丢弃属性”
+		/// 重置数据流：将清空所有缓存中的元素，移除"已终止状态"，并清除nEnqueued等统计数据。但不会改变数据流容量和"元素可丢弃属性"
 		void reset();
 
 	private:
@@ -1532,51 +1633,37 @@ namespace spadas
 		/// @returns 解码后的数据块，若失败则返回无效对象
 		static Optional<Binary> createFromDES(Binary encrypted, String key);
 
-		/// 取得数据块大小
-		UInt size();
-
 		/// [非安全] 取得数据块的头指针
 		Byte *data();
 
-		/// 取得某个字节的引用
-		Byte& operator [](UInt index);
+		/// 取得数据块大小
+		UInt size();
 
-		/// 取得子数据块，其数据绑定至本数据块的数据
-		Binary subBinary(UInt index, UInt size = UINF);
-
-		/// 本对象是否无效（大小为0）
+		/// 数据是否为空
 		Bool isEmpty();
-		
-		/// 缩减数据块大小
-		void trim(UInt size);
 
 		/// 克隆出一个新对象
 		Binary clone();
-		
-		/// 对所有字节赋同一个值
-		void set(Byte val);
 
-		/// @brief 从另一个数据块的某个子区域拷贝数据到本数据块的某个位置
-		/// @param src 源数据数组
-		/// @param srcRegion 从源数组拷贝的区域
-		/// @param dstOffset 拷贝至本数据块的起始位置
-		void copy(Binary src, Region srcRegion, UInt dstOffset);
-		
-		/// @brief 根据指定的大小分割为多个数据块
-		/// @param sizes 将分割成的每个数据块的大小（字节单位）
-		/// @returns 分割后的多个数据块
-		Array<Binary> split(Array<UInt> sizes);
-
-		/// @brief 合并多个数据块
-		/// @param binaries 将合并的多个数据块
-		/// @returns 合并后的数据块
-		static Binary merge(Array<Binary> binaries);
+		/// 取得某个字节的引用
+		Byte& operator [](UInt index);
 
 		/// @brief 在本数据块后拼接另一个数据块
 		/// @param bin 将拼接的另一个数据块
 		/// @returns 拼接后的数据块
 		Binary operator +(Binary bin);
 
+		/// 缩减数据块大小
+		void trim(UInt size);
+
+		/// 对所有字节赋同一个值
+		void set(Byte val);
+
+		/// @brief 根据指定的大小分割为多个数据块
+		/// @param sizes 将分割成的每个数据块的大小（字节单位）
+		/// @returns 分割后的多个数据块
+		Array<BinarySpan> split(Array<UInt> sizes);
+		
 		/// 生成逆序数据块
 		Binary reverse();
 
@@ -1591,104 +1678,93 @@ namespace spadas
 		/// @returns DES加密后的数据块
 		Binary toDES(String key);
 
+		/// 取得子数据块，其数据绑定至本数据块的数据
+		BinarySpan sub(UInt index, UInt size = UINF);
+
+		/// @brief 从另一个数据块的某个子区域拷贝数据到本数据块的某个位置
+		/// @param src 源数据数组
+		/// @param srcRegion 从源数组拷贝的区域
+		/// @param dstOffset 拷贝至本数据块的起始位置
+		void copy(Binary src, Region srcRegion, UInt dstOffset);
+
+		/// @brief 合并多个数据块
+		/// @param binaries 将合并的多个数据块
+		/// @returns 合并后的数据块
+		static Binary merge(Array<Binary> binaries);
+
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
 	};
 
-	// 字符串 //////////////////////////////////////////////////////////////
-
-	/// 字符串通用处理
-	class SPADAS_API StringCommon
+	/// 二进制数据片段，绑定至原二进制数据
+	class SPADAS_API BinarySpan
 	{
 	public:
-		/// [非安全] 取得字符串UTF-8数据的头指针 (只读且不以0结尾)
-		virtual const Byte *bytes() = 0;
+		/// 创建空片段
+		BinarySpan();
 
-		/// 取得字符串长度 (UTF-8字节数)
-		virtual UInt length() = 0;
+		/// [非安全] 绑定至原二进制数据
+		BinarySpan(Binary& sourceBinary, UInt index, UInt size);
 
-		/// 克隆出一个新对象
-		String clone();
+		/// [非安全] 取得数据片段的头指针
+		Byte *data();
 
-		/// 转换为Char数组，以0结尾（因此有效长度为数组长度-1）
-		Array<Char> chars();
+		/// 取得数据片段大小
+		UInt size();
 
-		/// 转换为WChar数组，以0结尾（因此有效长度为数组长度-1）
-		Array<WChar> wchars();
-
-		/// 是否为空字符串
+		/// 数据片段是否为空
 		Bool isEmpty();
 
-		/// @brief 在本字符串后拼接另一个字符串（不会更改本对象数据，且可多个字符串连加）
-		/// @param string 将拼接的另一个字符串
-		/// @returns 字符串拼接器
-		StringAppender operator +(String string);
+		/// 克隆出一个新对象
+		Binary clone();
 
-		/// 转换并返回 spadas::Int 数字
-		Optional<Int> toInt();
+		/// 取得某个字节的引用
+		Byte& operator [](UInt index);
 
-		/// 转换并返回 spadas::Long 数字
-		Optional<Long> toLong();
+		/// @brief 在本数据片段后拼接另一个数据块
+		/// @param bin 将拼接的另一个数据块
+		/// @returns 拼接后的数据块
+		Binary operator +(Binary bin);
 
-		/// 转换并返回 spadas::Float 数值
-		Optional<Float> toFloat();
+		/// 缩减数据片段大小
+		void trim(UInt size);
 
-		/// 转换并返回 spadas::Double 数值
-		Optional<Double> toDouble();
+		/// 对所有字节赋同一个值
+		void set(Byte val);
 
-		/// 转换并输出 spadas::Int 数字，返回是否转换成功
-		Bool toNumber(Int& number);
-
-		/// 转换并输出 spadas::Long 数字，返回是否转换成功
-		Bool toNumber(Long& number);
-
-		/// 转换并输出 spadas::Float 数字，返回是否转换成功
-		Bool toNumber(Float& number);
-
-		/// 转换并输出 spadas::Double 数字，返回是否转换成功
-		Bool toNumber(Double& number);
+		/// @brief 根据指定的大小分割为多个数据片段
+		/// @param sizes 将分割成的每个数据片段的大小（字节单位）
+		/// @returns 分割后的多个数据片段
+		Array<BinarySpan> split(Array<UInt> sizes);
 		
-		/// 转换为UTF-8二进制数据块（不以0结尾）
-		Binary toBinary();
+		/// 生成逆序数据块
+		Binary reverse();
 
-		/// 转换为全大写字符串
-		String toUpper();
+		/// 加密为Base64字符串
+		String toBase64();
 
-		/// 转换为全小写字符串
-		String toLower();
+		/// SHA1加密
+		Binary toSHA1();
 
-		/// 是否以指定字符串开头
-		Bool startsWith(String target);
+		/// @brief DES加密(本数据块长度建议为8的倍数，若不满足则以0填满)
+		/// @param key DES密钥
+		/// @returns DES加密后的数据块
+		Binary toDES(String key);
 
-		/// 是否以指定字符串结尾
-		Bool endsWith(String target);
+		/// 取得子数据片段，其数据绑定至原数据块的数据
+		BinarySpan sub(UInt index, UInt size = UINF);
 
-		/// 搜索目标字符串，返回所有发现目标的首字符位置。如"bananana"搜"nana"，返回{2, 4}
-		Array<UInt> search(String target);
-		
-		/// 用指定字符串对本字符串进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串不含target时，若本字符串为空则返回空数组，非空则返回标量数组
-		Array<StringSpan> split(String target);
-
-		/// 将本字符串中oldString部分替换为newString，并返回替换后的字符串
-		String replace(String oldString, String newString);
-
-		/// @brief 取得子字符串，其数据绑定至本字符串的数据，或片段的原字符串数据
-		/// @param index 子字符串在本字符串或字符串片段的起始位置
-		/// @param length 字符串长度
-		/// @param trimStart 是否裁剪掉开始处的空格
-		/// @param trimEnd 是否裁剪掉结尾处的空格
-		/// @return 子字符串
-		StringSpan subString(UInt index, UInt length = UINF, Bool trimStart = FALSE, Bool trimEnd = FALSE);
-
-	protected:
-		Word getHashCode();
-		virtual ~StringCommon();
-		virtual StringSpan genStringSpan(UInt index, UInt length) = 0;
+	private:
+		Binary source;
+		UInt idx;
+		UInt siz;
 	};
 
+	// 字符串 //////////////////////////////////////////////////////////////
+
 	/// 字符串
-	class SPADAS_API String : public Object<class StringVars>, public StringCommon
+	class SPADAS_API String : public Object<class StringVars>
 	{
 	public:
 		/// 类名称
@@ -1793,6 +1869,10 @@ namespace spadas
 		/// @param binary UTF-8二进制数据（不要求以0结尾）
 		String(Binary binary);
 
+		/// @brief 从UTF-8二进制数据片段创建字符串对象
+		/// @param span UTF-8二进制数据片段（不要求以0结尾）
+		String(BinarySpan span);
+
 		/// @brief 由任意具有toString方法的结构体或对象创建字符串对象
 		template <typename Type>
 		String(Type obj);
@@ -1809,14 +1889,87 @@ namespace spadas
 		/// 是否小于，按照系统默认字符串排序顺序
 		Bool operator <(String string);
 
+		/// [非安全] 取得字符串UTF-8数据的头指针 (只读且不以0结尾)
+		const Byte *bytes();
+
+		/// 取得字符串长度 (UTF-8字节数)
+		UInt length();
+
+		/// 是否为空字符串
+		Bool isEmpty();
+
 		/// 获取哈希值
 		Word getHash();
 
-		/// [非安全] 取得字符串UTF-8数据的头指针 (只读且不以0结尾)
-		const Byte *bytes() override;
+		/// 克隆出一个新对象
+		String clone();
 
-		/// 取得字符串长度 (UTF-8字节数)
-		UInt length() override;
+		/// 转换为Char数组，以0结尾（因此有效长度为数组长度-1）
+		Array<Char> chars();
+
+		/// 转换为WChar数组，以0结尾（因此有效长度为数组长度-1）
+		Array<WChar> wchars();
+
+		/// @brief 在本字符串后拼接另一个字符串（不会更改本对象数据，且可多个字符串连加）
+		/// @param string 将拼接的另一个字符串
+		/// @returns 字符串拼接器
+		StringAppender operator +(String string);
+
+		/// 转换并返回 spadas::Int 数字
+		Optional<Int> toInt();
+
+		/// 转换并返回 spadas::Long 数字
+		Optional<Long> toLong();
+
+		/// 转换并返回 spadas::Float 数值
+		Optional<Float> toFloat();
+
+		/// 转换并返回 spadas::Double 数值
+		Optional<Double> toDouble();
+
+		/// 转换并输出 spadas::Int 数字，返回是否转换成功
+		Bool toNumber(Int& number);
+
+		/// 转换并输出 spadas::Long 数字，返回是否转换成功
+		Bool toNumber(Long& number);
+
+		/// 转换并输出 spadas::Float 数字，返回是否转换成功
+		Bool toNumber(Float& number);
+
+		/// 转换并输出 spadas::Double 数字，返回是否转换成功
+		Bool toNumber(Double& number);
+		
+		/// 转换为UTF-8二进制数据块（不以0结尾）
+		Binary toBinary();
+
+		/// 转换为全大写字符串
+		String toUpper();
+
+		/// 转换为全小写字符串
+		String toLower();
+
+		/// 是否以指定字符串开头
+		Bool startsWith(String target);
+
+		/// 是否以指定字符串结尾
+		Bool endsWith(String target);
+
+		/// 搜索目标字符串，返回所有发现目标的首字符位置。如"bananana"搜"nana"，返回{2, 4}
+		Array<UInt> search(String target);
+		
+		/// 用指定字符串对本字符串进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串不含target时，若本字符串为空则返回空数组，非空则返回标量数组
+		Array<StringSpan> split(String target);
+
+		/// 将本字符串中oldString部分替换为newString，并返回替换后的字符串
+		String replace(String oldString, String newString);
+
+		/// @brief 取得子字符串，其数据绑定至本字符串的数据
+		/// @param index 子字符串在本字符串的起始位置
+		/// @param length 字符串长度
+		/// @param trimStart 是否裁剪掉开始处的空格
+		/// @param trimEnd 是否裁剪掉结尾处的空格
+		/// @return 子字符串
+		StringSpan sub(UInt index, UInt length = UINF, Bool trimStart = FALSE, Bool trimEnd = FALSE);
 
 		/// @brief 在本字符串后拼接另一个字符串(将更改本对象数据)
 		/// @param string 拼接的另一个字符串
@@ -1902,6 +2055,10 @@ namespace spadas
 		/// @param binary 拼接的UTF-8二进制数据（不要求以0结尾）
 		void operator +=(Binary binary);
 
+		/// @brief 在本字符串后拼接UTF-8二进制数据片段 (将更改本对象数据)
+		/// @param span 拼接的UTF-8二进制数据片段（不要求以0结尾）
+		void operator +=(BinarySpan span);
+
 		/// 创建数据块大小（字节单位）为指定值的空字符串
 		static String createWithSize(UInt size);
 		
@@ -1934,43 +2091,37 @@ namespace spadas
 		/// @param nBytesPerRow 每行打印的字节数
 		/// @returns 二进制数据块的表述字符串
 		static String createHexString(Binary bin, UInt nBytesPerRow = 8);
-		
-		/// @brief 拼接多个字符串，字符串间以指定分割符分割
-		/// @param strs 输入的多个字符串
-		/// @param separator 分隔符
-		/// @returns 按指定分隔符拼接的字符串
-		static String mergeStrings(Array<String> strs, String separator = "\n");
 
 		/// @brief 拼接多个字符串片段，片段间以指定分割符分割
 		/// @param strs 输入的多个字符串片段
 		/// @param separator 分隔符
 		/// @returns 按指定分隔符拼接的字符串
-		static String mergeStrings(Array<StringSpan> spans, String separator = "\n");
+		static String merge(Array<StringSpan> spans, String separator = ", ");
 
 		/// @brief 以String构造函数拼接数组，字符串间以指定分割符分割
 		/// @param strs 输入数组
 		/// @param separator 分隔符
 		/// @returns 按指定分隔符拼接的字符串
 		template <typename Type>
-		static String merge(Array<Type> arr, String separator = "\n");
+		static String merge(Array<Type> arr, String separator = ", ");
 
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
-		StringSpan genStringSpan(UInt index, UInt length) override;
 		void initBuffer(UInt dataSize);
 		void ensureBuffer(UInt appendSize);
+		static String mergeStrings(Array<String> strs, String separator);
 	};
 
 	/// 字符串片段，数据绑定至原字符串的数据
-	class SPADAS_API StringSpan : public StringCommon
+	class SPADAS_API StringSpan
 	{
 	public:
 		/// 创建空片段
 		StringSpan();
 
-		/// 绑定至原字符串
-		StringSpan(String& sourceString, UInt index, UInt length = UINF);
+		/// [非安全] 绑定至原字符串
+		StringSpan(String& sourceString, UInt index, UInt length);
 
 		/// 是否等于
 		Bool operator ==(StringSpan span);
@@ -1990,24 +2141,92 @@ namespace spadas
 		/// 是否小于，按照系统默认字符串排序顺序
 		Bool operator <(StringSpan span);
 
+		/// [非安全] 取得字符串片段UTF-8数据的头指针 (只读且不以0结尾)
+		const Byte *bytes();
+
+		/// 取得字符串片段长度 (UTF-8字节数)
+		UInt length();
+
+		/// 是否为空字符串片段
+		Bool isEmpty();
+
 		/// 获取哈希值
 		Word getHash();
 
-		/// [非安全] 取得字符串UTF-8数据的头指针 (只读且不以0结尾)
-		const Byte *bytes() override;
+		/// 克隆出一个新字符串对象
+		String clone();
 
-		/// 取得字符串片段长度 (UTF-8字节数)
-		UInt length() override;
+		/// 转换为Char数组，以0结尾（因此有效长度为数组长度-1）
+		Array<Char> chars();
 
-		/// 转字符串
-		String toString();
+		/// 转换为WChar数组，以0结尾（因此有效长度为数组长度-1）
+		Array<WChar> wchars();
+
+		/// @brief 在本字符串片段后拼接另一个字符串（不会更改本对象数据，且可多个字符串连加）
+		/// @param string 将拼接的另一个字符串
+		/// @returns 字符串拼接器
+		StringAppender operator +(String string);
+
+		/// 转换并返回 spadas::Int 数字
+		Optional<Int> toInt();
+
+		/// 转换并返回 spadas::Long 数字
+		Optional<Long> toLong();
+
+		/// 转换并返回 spadas::Float 数值
+		Optional<Float> toFloat();
+
+		/// 转换并返回 spadas::Double 数值
+		Optional<Double> toDouble();
+
+		/// 转换并输出 spadas::Int 数字，返回是否转换成功
+		Bool toNumber(Int& number);
+
+		/// 转换并输出 spadas::Long 数字，返回是否转换成功
+		Bool toNumber(Long& number);
+
+		/// 转换并输出 spadas::Float 数字，返回是否转换成功
+		Bool toNumber(Float& number);
+
+		/// 转换并输出 spadas::Double 数字，返回是否转换成功
+		Bool toNumber(Double& number);
+		
+		/// 转换为UTF-8二进制数据块（不以0结尾）
+		Binary toBinary();
+
+		/// 转换为全大写字符串
+		String toUpper();
+
+		/// 转换为全小写字符串
+		String toLower();
+
+		/// 是否以指定字符串开头
+		Bool startsWith(String target);
+
+		/// 是否以指定字符串结尾
+		Bool endsWith(String target);
+
+		/// 搜索目标字符串，返回所有发现目标的首字符位置。如"bananana"搜"nana"，返回{2, 4}
+		Array<UInt> search(String target);
+		
+		/// 用指定字符串对本字符串片段进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串片段不含target时，若本字符串片段为空则返回空数组，非空则返回标量数组
+		Array<StringSpan> split(String target);
+
+		/// 将本字符串片段中oldString部分替换为newString，并返回替换后的字符串
+		String replace(String oldString, String newString);
+
+		/// @brief 取得子字符串，其数据绑定至本字符串片段的原字符串数据
+		/// @param index 子字符串在本字符串片段的起始位置
+		/// @param length 字符串长度
+		/// @param trimStart 是否裁剪掉开始处的空格
+		/// @param trimEnd 是否裁剪掉结尾处的空格
+		/// @return 子字符串
+		StringSpan sub(UInt index, UInt length = UINF, Bool trimStart = FALSE, Bool trimEnd = FALSE);
 
 	private:
 		String source;
 		UInt idx;
 		UInt len;
-		UInt toStringCount;
-		StringSpan genStringSpan(UInt index, UInt length) override;
 	};
 
 	/// 字符串拼接器，用于加速+运算符
@@ -2318,8 +2537,8 @@ namespace spadas
 
 		/// @brief 基于一个绝对路径或相对路径的字符串初始化
 		/// @param pathString 绝对路径或相对路径字符串，相对路径将基于当前工作目录 \n
-		/// - 若为文件夹，需显式的以路径分隔符/或\结尾 \n
-		/// - 若为空字符串或"."都表示"./"，即当前工作目录
+		/// - 若为文件夹，需显式的以路径分隔符"/"或"\"结尾 \n
+		/// - 可加入"../"或"..\"表示上层文件夹
 		Path(String pathString);
 
 		/// 取得文件或文件夹名称（不包含后缀）
@@ -2331,7 +2550,7 @@ namespace spadas
 		/// 取得文件或文件夹全名 (名称加后缀)
 		String fullName();
 
-		/// 取得文件或文件夹的绝对路径字符串 (文件夹以路径分隔符/或\结尾)
+		/// 取得文件或文件夹的绝对路径字符串 (文件夹以路径分隔符"/"或"\"结尾)
 		String fullPath();
 
 		/// 比较两个路径是否一致
@@ -2391,7 +2610,7 @@ namespace spadas
 		/// (仅限文件夹) 生成子文件夹路径（无需在末尾加路径分隔符）
 		Path childFolder(String childFullName);
 
-		/// (仅限文件夹) 输入当前文件夹内的相对路径，生成文件或文件夹路径 (文件夹以路径分隔符/或\结尾)
+		/// (仅限文件夹) 输入当前文件夹内的相对路径，生成文件或文件夹路径 (文件夹以路径分隔符"/"或"\"结尾)
 		Path childPath(String pathString);
 
 		/// (仅限文件夹) 检查目标路径是否包含在当前文件夹内
@@ -2418,11 +2637,14 @@ namespace spadas
 		/// 获得SpadasFiles目录
 		static Path spadasFilesPath();
 
-		/// 设置工作目录 (注意应以路径分隔符/或\结尾)
+		/// 设置工作目录 (注意应以路径分隔符"/"或"\"结尾)
 		static void setWorkPath(String pathString);
 
-		/// 设置可执行程序所在目录 (注意应以路径分隔符/或\结尾)
+		/// 设置可执行程序所在目录 (注意应以路径分隔符"/"或"\"结尾)
 		static void setExecutableFolderPath(String pathString);
+
+	private:
+		static void addFolderContents(ArrayX<Path>& contents, String folderPathString, Array<StringSpan>& folderComponents);
 	};
 
 	/// 文件数据I/O
@@ -2446,6 +2668,12 @@ namespace spadas
 
 		/// 以文本输出模式创建或重新创建文件（UTF-8编码，带BOM头，回车符\n）
 		static File createText(Path filePath);
+
+		/// 以二进制输出模式打开文件（若不存在则创建）并在尾部追加内容
+		static File appendBinary(Path filePath);
+
+		/// 以文本输出模式打开文件（若不存在则创建）并在尾部追加内容（将检测UTF-8 BOM头）
+		static File appendText(Path filePath);
 
 		/// 关闭文件I/O（在输出模式下，关闭前将缓冲区中所有数据写入磁盘）
 		void close();
@@ -2537,9 +2765,6 @@ namespace spadas
 		SPADAS_API XMLElement(String tag, Array<XMLAttribute> attributes, String content);
 	};
 
-	/// XML元素节点
-	typedef TreeNode<XMLElement> XMLNode;
-
 	/// XML文档对象
 	class SPADAS_API XML : public Object<class XMLVars>
 	{
@@ -2571,21 +2796,57 @@ namespace spadas
 		/// 由UTF-8编码的二进制数据创建XML文档
 		static Optional<XML> createFromBinary(Binary xmlBinary);
 
-		/// 获得输入节点的所有具有指定标签名字的子节点
-		static Array<XMLNode> nodeLeavesWithTagName(XMLNode node, String tagName);
-
-		/// 获得输入节点的首个具有指定标签名字的子节点，若不存在返回FALSE
-		static Bool firstNodeLeafWithTagName(XMLNode node, String tagName, XMLNode& output);
-
-		/// XML属性数组转换为字符串型字典（可指定输出字典的容量，但以实际输出为准）
-		static Dictionary<String> attributesToDictionary(Array<XMLAttribute> attributes);
-
-		/// 字符串型字典转换为XML属性数组
-		static Array<XMLAttribute> dictionaryToAttributes(Dictionary<String> dict);
-
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
+	};
+
+	/// XML元素节点
+	class SPADAS_API XMLNode
+	{
+	public:
+		/// 创建无效节点
+		XMLNode();
+
+		/// 构造函数，输入cell为空也为无效节点
+		XMLNode(XML xml, Pointer cell);
+
+		/// 是否为有效节点
+		Bool valid();
+
+		/// 取得XML元素数据的引用
+		XMLElement& value();
+
+		/// 使用XML元素数据的字段或方法
+		XMLElement* operator ->();
+
+		/// 取得根方向节点 (若不存在则返回无效节点)
+		XMLNode root();
+
+		/// 取得子节点个数
+		UInt nLeaves();
+
+		/// 取得所有子节点
+		Array<XMLNode> leaves();
+
+		/// 获得所有具有指定标签名字的子节点
+		Array<XMLNode> leavesWithTagName(String tagName);
+
+		/// 获得首个具有指定标签名字的子节点，若不存在返回FALSE
+		Bool firstLeafWithTagName(String tagName, XMLNode& output);
+
+		/// XML属性数组转换为字符串型字典
+		Dictionary<String> attributesToDictionary();
+
+		/// 按字符串型字典设置XML属性数组 (将替换原有的属性数组)
+		void dictionaryToAttributes(Dictionary<String> dict);
+
+		/// 按指定XML元素数据添加子节点，并返回该节点
+		XMLNode addLeaf(XMLElement val);
+
+	private:
+		XML xml;
+		Pointer cell;
 	};
 
 	// 图像 //////////////////////////////////////////////////////////////
@@ -3073,7 +3334,7 @@ namespace spadas
 		void drawLayer(Image layer, CoordInt2D dstOffset);
 
 		/// 取得子图像，其数据绑定至本图像的数据
-		Image subImage(Region2D region);
+		Image sub(Region2D region);
 
 		/// 取得图像指针，仅ByteGray和ByteBGR支持
 		Optional<ImagePointer> imagePointer();

@@ -7,11 +7,12 @@ namespace spadas
 	
 	enum class FileMode
 	{
-		OpenBinary,
-		OpenTextNormal,
-		OpenTextUtf8,
-		CreateBinary,
-		CreateText,
+		InputBinary,
+		InputTextDefault,
+		InputTextUtf8,
+		OutputBinary,
+		OutputTextDefault,
+		OutputTextUtf8,
 	};
 
 	class FileVars : public Vars
@@ -39,11 +40,15 @@ namespace spadas
         }
 		Bool isOutputMode()
 		{
-			return mode == FileMode::CreateBinary || mode == FileMode::CreateText;
+			return mode == FileMode::OutputBinary || mode == FileMode::OutputTextDefault || mode == FileMode::OutputTextUtf8;
 		}
 		Bool isInputTextMode()
 		{
-			return mode == FileMode::OpenTextNormal || mode == FileMode::OpenTextUtf8;
+			return mode == FileMode::InputTextDefault || mode == FileMode::InputTextUtf8;
+		}
+		Bool isOutputTextMode()
+		{
+			return mode == FileMode::OutputTextDefault || mode == FileMode::OutputTextUtf8;
 		}
 	};
 }
@@ -60,28 +65,32 @@ File::File()
 File File::openBinary(Path filePath)
 {
 	SPADAS_ERROR_RETURNVAL(filePath.isNull(), File());
-	SPADAS_ERROR_RETURNVAL_MSG(filePath.isFolder(), filePath.fullPath(), File());
-	SPADAS_ERROR_RETURNVAL_MSG(!filePath.exist(), filePath.fullPath(), File());
 
-	Pointer filePtr = fileOpen(filePath.fullPath(), FALSE);
-	SPADAS_ERROR_RETURNVAL_MSG(!filePtr, filePath.fullPath(), File());
+	String filePathString = filePath.fullPath();
+	SPADAS_ERROR_RETURNVAL_MSG(filePath.isFolder(), filePathString, File());
+	SPADAS_ERROR_RETURNVAL_MSG(!filePath.exist(), filePathString, File());
+
+	Pointer filePtr = fileOpen(filePathString, FALSE, FALSE);
+	SPADAS_ERROR_RETURNVAL_MSG(!filePtr, filePathString, File());
 
 	ULong fileSize = fileGetSize(filePtr);
 	fileSeek(filePtr, 0);
 
 	File file;
-	file.setVars(new FileVars(filePath, filePtr, FileMode::OpenBinary, fileSize, 0), TRUE);
+	file.setVars(new FileVars(filePath, filePtr, FileMode::InputBinary, fileSize, 0), TRUE);
 	return file;
 }
 
 File File::openText(Path filePath)
 {
 	SPADAS_ERROR_RETURNVAL(filePath.isNull(), File());
-	SPADAS_ERROR_RETURNVAL_MSG(filePath.isFolder(), filePath.fullPath(), File());
-	SPADAS_ERROR_RETURNVAL_MSG(!filePath.exist(), filePath.fullPath(), File());
 
-	Pointer filePtr = fileOpen(filePath.fullPath(), FALSE);
-	SPADAS_ERROR_RETURNVAL_MSG(!filePtr, filePath.fullPath(), File());
+	String filePathString = filePath.fullPath();
+	SPADAS_ERROR_RETURNVAL_MSG(filePath.isFolder(), filePathString, File());
+	SPADAS_ERROR_RETURNVAL_MSG(!filePath.exist(), filePathString, File());
+
+	Pointer filePtr = fileOpen(filePathString, FALSE, FALSE);
+	SPADAS_ERROR_RETURNVAL_MSG(!filePtr, filePathString, File());
 
 	ULong fileSize = fileGetSize(filePtr);
 	fileSeek(filePtr, 0);
@@ -100,53 +109,105 @@ File File::openText(Path filePath)
 	}
 
 	File file;
-	file.setVars(new FileVars(filePath, filePtr, isUtf8 ? FileMode::OpenTextUtf8 : FileMode::OpenTextNormal, fileSize, pos), TRUE);
+	file.setVars(new FileVars(filePath, filePtr, isUtf8 ? FileMode::InputTextUtf8 : FileMode::InputTextDefault, fileSize, pos), TRUE);
 	return file;
 }
 
 File File::createBinary(Path filePath)
 {
 	SPADAS_ERROR_RETURNVAL(filePath.isNull(), File());
-	SPADAS_ERROR_RETURNVAL_MSG(filePath.isFolder(), filePath.fullPath(), File());
 
-	String fileFullPath = filePath.fullPath();
-	if (filePath.exist())
-	{
-		fileRemove(fileFullPath);
-	}
+	String filePathString = filePath.fullPath();
+	SPADAS_ERROR_RETURNVAL_MSG(filePath.isFolder(), filePathString, File());
+
+	if (filePath.exist()) fileRemove(filePathString);
 
 	Path parent = filePath.parentFolder();
 	if (!parent.exist()) parent.folderMake();
 
-	Pointer filePtr = fileOpen(fileFullPath, TRUE);
-	SPADAS_ERROR_RETURNVAL_MSG(!filePtr, filePath.fullPath(), File());
+	Pointer filePtr = fileOpen(filePathString, TRUE, FALSE);
+	SPADAS_ERROR_RETURNVAL_MSG(!filePtr, filePathString, File());
 
 	File file;
-	file.setVars(new FileVars(filePath, filePtr, FileMode::CreateBinary, 0, 0), TRUE);
+	file.setVars(new FileVars(filePath, filePtr, FileMode::OutputBinary, 0, 0), TRUE);
 	return file;
 }
 
 File File::createText(Path filePath)
 {
 	SPADAS_ERROR_RETURNVAL(filePath.isNull(), File());
-	SPADAS_ERROR_RETURNVAL_MSG(filePath.isFolder(), filePath.fullPath(), File());
 
-	String fileFullPath = filePath.fullPath();
-	if (filePath.exist())
-	{
-		fileRemove(fileFullPath);
-	}
+	String filePathString = filePath.fullPath();
+	SPADAS_ERROR_RETURNVAL_MSG(filePath.isFolder(), filePathString, File());
+
+	if (filePath.exist()) fileRemove(filePathString);
 
 	Path parent = filePath.parentFolder();
 	if (!parent.exist()) parent.folderMake();
 
-	Pointer filePtr = fileOpen(fileFullPath, TRUE);
-	SPADAS_ERROR_RETURNVAL_MSG(!filePtr, filePath.fullPath(), File());
+	Pointer filePtr = fileOpen(filePathString, TRUE, FALSE);
+	SPADAS_ERROR_RETURNVAL_MSG(!filePtr, filePathString, File());
 
 	fileOutput(filePtr, Binary::create(3, 0xEF, 0xBB, 0xBF));
 
 	File file;
-	file.setVars(new FileVars(filePath, filePtr, FileMode::CreateText, 3, 3), TRUE);
+	file.setVars(new FileVars(filePath, filePtr, FileMode::OutputTextUtf8, 3, 3), TRUE);
+	return file;
+}
+
+File File::appendBinary(Path filePath)
+{
+	SPADAS_ERROR_RETURNVAL(filePath.isNull(), File());
+
+	String filePathString = filePath.fullPath();
+	SPADAS_ERROR_RETURNVAL_MSG(filePath.isFolder(), filePathString, File());
+
+	if (!filePath.exist()) return createBinary(filePath);
+
+	Pointer filePtr = fileOpen(filePathString, TRUE, TRUE);
+	SPADAS_ERROR_RETURNVAL_MSG(!filePtr, filePathString, File());
+
+	ULong fileSize = fileGetSize(filePtr);
+
+	File file;
+	file.setVars(new FileVars(filePath, filePtr, FileMode::OutputBinary, fileSize, fileSize), TRUE);
+	return file;
+}
+
+File File::appendText(Path filePath)
+{
+	SPADAS_ERROR_RETURNVAL(filePath.isNull(), File());
+
+	String filePathString = filePath.fullPath();
+	SPADAS_ERROR_RETURNVAL_MSG(filePath.isFolder(), filePathString, File());
+
+	if (!filePath.exist()) return createText(filePath);
+
+	Pointer filePtr = fileOpen(filePathString, FALSE, FALSE);
+	SPADAS_ERROR_RETURNVAL_MSG(!filePtr, filePathString, File());
+
+	ULong fileSize = fileGetSize(filePtr);
+	fileSeek(filePtr, 0);
+
+	Bool isUtf8 = FALSE;
+	if (fileSize >= 3)
+	{
+		Binary maybeBom = fileInput(filePtr, 3, fileSize, 0);
+		if (maybeBom.size() == 3 && maybeBom[0] == 0xEF && maybeBom[1] == 0xBB && maybeBom[2] == 0xBF)
+		{
+			isUtf8 = TRUE;
+		}
+	}
+
+	fileClose(filePtr);
+
+	filePtr = fileOpen(filePathString, TRUE, TRUE);
+	SPADAS_ERROR_RETURNVAL_MSG(!filePtr, filePathString, File());
+
+	fileSize = fileGetSize(filePtr);
+
+	File file;
+	file.setVars(new FileVars(filePath, filePtr, isUtf8 ? FileMode::OutputTextUtf8 : FileMode::OutputTextDefault, fileSize, fileSize), TRUE);
 	return file;
 }
 
@@ -184,9 +245,9 @@ Path File::path()
 	
 void File::print(String text)
 {
-	SPADAS_ERROR_RETURN(isClosed() || vars->mode != FileMode::CreateText);
+	SPADAS_ERROR_RETURN(isClosed() || !vars->isOutputTextMode());
 
-	filePrint(vars->file, text);
+	filePrint(vars->file, text, vars->mode == FileMode::OutputTextUtf8);
 	
 	ULong curPos = filePos(vars->file);
 	vars->pos = vars->size = curPos;
@@ -201,6 +262,7 @@ void File::print(String text)
 void File::output(Binary data)
 {
 	SPADAS_ERROR_RETURN(isClosed() || !vars->isOutputMode());
+	if (data.isEmpty()) return;
 
 	fileOutput(vars->file, data);
 
@@ -227,7 +289,7 @@ String File::scan()
 
 	if (vars->scanBuffer.isEmpty()) vars->scanBuffer = Array<Char>(SCAN_SIZE);
 
-	String output = fileScan(vars->file, vars->scanBuffer.data(), vars->mode == FileMode::OpenTextUtf8);
+	String output = fileScan(vars->file, vars->scanBuffer.data(), vars->mode == FileMode::InputTextUtf8);
 	vars->pos = filePos(vars->file);
 	return output;
 }
@@ -247,7 +309,7 @@ ULong File::seek(ULong pos)
 {
 	SPADAS_ERROR_RETURNVAL(isClosed() || vars->isOutputMode(), ULINF);
 
-	if (vars->mode == FileMode::OpenTextUtf8) pos = math::max(3ull, pos);
+	if (vars->mode == FileMode::InputTextUtf8) pos = math::max(3ull, pos);
 
 	vars->pos = fileSeek(vars->file, pos);
 	return vars->pos;

@@ -174,7 +174,7 @@ String ShortTimestamp::toString()
 	Array<String> comps(2);
 	comps[0] = session.toString();
 	comps[1] = String(offset, 6);
-	return String::mergeStrings(comps, "-");
+	return String::merge(comps, "-");
 }
 
 Bool FullTimestamp::operator ==(FullTimestamp timestamp)
@@ -204,7 +204,7 @@ String FullTimestamp::toString()
 	Array<String> comps(2);
 	comps[0] = session.toString();
 	comps[1] = String(offset, 6);
-	return String::mergeStrings(comps, "-");
+	return String::merge(comps, "-");
 }
 
 ShortTimestamp FullTimestamp::toShort()

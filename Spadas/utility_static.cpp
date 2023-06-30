@@ -232,7 +232,7 @@ void spadas::system::addEnvironmentPath(Path path)
 	SPADAS_ERROR_RETURN(path.isNull() || !path.isFolder());
 
 	String targetFolder = path.fullPath();
-	targetFolder = targetFolder.subString(0, targetFolder.length() - 1);
+	targetFolder = targetFolder.sub(0, targetFolder.length() - 1).clone();
 
 	auto k = [targetFolder](StringSpan comp){ return comp == targetFolder; };
 
@@ -259,7 +259,7 @@ void spadas::system::addEnvironmentPath(Path path)
 	SPADAS_ERROR_RETURN(path.isNull() || !path.isFolder());
 
 	String targetFolder = path.fullPath();
-	targetFolder = targetFolder.subString(0, targetFolder.length() - 1);
+	targetFolder = targetFolder.sub(0, targetFolder.length() - 1).clone();
 
 	String env = getenv("PATH");
 	Array<StringSpan> envComps = env.split(":");

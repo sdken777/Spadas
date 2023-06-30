@@ -25,9 +25,9 @@ void exampleForElement()
 	auto list = List<UInt>(arr);
 	for (auto e = list.head(); e.valid(); ++e)
 	{
-		console::print(e.value());
+		console::print(SS e.index() + ": " + e.value());
 		if (e.value() == 123) e.remove();
 	}
 
-	console::print(SS"Result: " + String::merge(list.toArray(), ", "));
+	console::print(SS"Result: " + String::merge(list.toArray()));
 }

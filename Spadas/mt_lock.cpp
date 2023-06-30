@@ -92,34 +92,25 @@ Bool Lock::isSpin()
 
 void Lock::enter()
 {
-	if (vars->isSpin)
-	{
-		vars->spinEnter();
-	}
-	else
-	{
-		UInt threadID = Threads::getCurrentThreadID();
-		SPADAS_ERROR_RETURN(threadID == 0);
-		SPADAS_ERROR_RETURN(vars->threadID == threadID);
-		enterLock(&vars->context);
-		vars->threadID = threadID;
-	}
+	UInt threadID = Threads::getCurrentThreadID();
+	SPADAS_ERROR_RETURN(threadID == 0);
+	SPADAS_ERROR_RETURN(vars->threadID == threadID);
+
+	if (vars->isSpin) vars->spinEnter();
+	else enterLock(&vars->context);
+
+	vars->threadID = threadID;
 }
 
 void Lock::leave()
 {
-	if (vars->isSpin)
-	{
-		vars->spinLeave();
-	}
-	else
-	{
-		UInt threadID = Threads::getCurrentThreadID();
-		SPADAS_ERROR_RETURN(threadID == 0);
-		SPADAS_ERROR_RETURN(vars->threadID != threadID);
-		vars->threadID = 0;
-		leaveLock(&vars->context);
-	}
+	UInt threadID = Threads::getCurrentThreadID();
+	SPADAS_ERROR_RETURN(threadID == 0);
+	SPADAS_ERROR_RETURN(vars->threadID != threadID);
+	vars->threadID = 0;
+
+	if (vars->isSpin) vars->spinLeave();
+	else leaveLock(&vars->context);
 }
 
 LockProxy::LockProxy(Lock& lock0) : lock(lock0), released(FALSE)

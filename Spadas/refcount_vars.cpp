@@ -31,17 +31,11 @@ UInt Vars::getRefCount()
 
 void Vars::spinEnter()
 {
-	Int curThreadID = (Int)Threads::getCurrentThreadID();
-	SPADAS_ERROR_RETURN(curThreadID == 0);
-	SPADAS_ERROR_RETURN(curThreadID == varSpinLock.get());
-	while (!varSpinLock.cas(0, curThreadID)) {}
+	while (!varSpinLock.cas(0, 1)) {}
 }
 
 void Vars::spinLeave()
 {
-	Int curThreadID = (Int)Threads::getCurrentThreadID();
-	SPADAS_ERROR_RETURN(curThreadID == 0);
-	SPADAS_ERROR_RETURN(curThreadID != varSpinLock.get());
 	varSpinLock.set(0);
 }
 

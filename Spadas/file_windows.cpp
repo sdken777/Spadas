@@ -27,7 +27,7 @@ namespace file_internal
 		Array<UInt> slashLocations = bufferString.search('\\');
 		
 		if (slashLocations.isEmpty()) return String();
-		else return bufferString.subString(0, slashLocations.last() + 1);
+		else return bufferString.sub(0, slashLocations.last() + 1).clone();
 	}
 	String getWorkPathString()
 	{
@@ -57,11 +57,40 @@ namespace file_internal
 		return '\\';
 	}
 
+	Bool isPathStringValid(String pathString, UInt& rootLength, Bool& isAbsolute)
+	{
+		UInt len = pathString.length();
+		const Byte* bytes = pathString.bytes();
+
+		if (len >= 1 && (bytes[0] == (Byte)'/' || bytes[0] == (Byte)'\\')) return FALSE; // unix style
+
+		if (len >= 3 && bytes[1] == (Byte)':' && (bytes[2] == '/' || bytes[2] == '\\'))
+		{
+			Byte drive = bytes[0];
+			Bool validDrive = FALSE;
+			if (drive >= (Byte)'A' && drive <= (Byte)'Z') validDrive = TRUE;
+			else if (drive >= (Byte)'a' && drive <= (Byte)'z') validDrive = TRUE;
+			if (validDrive)
+			{
+				rootLength = 2;
+				isAbsolute = TRUE;
+				return TRUE;
+			}
+			else return FALSE;
+		}
+		else
+		{
+			rootLength = 0;
+			isAbsolute = FALSE;
+			return TRUE;
+		}
+	}
+
 	// file I/O operations
-	Pointer fileOpen(String fileName, Bool outputMode)
+	Pointer fileOpen(String fileName, Bool outputMode, Bool appendMode)
 	{
 		FILE *file;
-		_wfopen_s(&file, fileName.wchars().data(), outputMode ? L"wb+" : L"rb");
+		_wfopen_s(&file, fileName.wchars().data(), outputMode ? (appendMode ? L"ab+" : L"wb+") : L"rb");
 		return (Pointer)file;
 	}
 
@@ -70,12 +99,30 @@ namespace file_internal
 		if (file) fclose((FILE*)file);
 	}
 
-	void filePrint(Pointer file, String text)
+	void filePrint(Pointer file, String text, Bool isUtf8)
 	{
-		fwrite(text.bytes(), sizeof(Byte), text.length(), (FILE*)file);
+		if (isUtf8)
+		{
+			if (!text.isEmpty()) fwrite(text.bytes(), sizeof(Byte), text.length(), (FILE*)file);
 
-		const Byte enter = '\n';
-		fwrite(&enter, sizeof(Byte), 1, (FILE*)file);
+			const Byte enter = '\n';
+			fwrite(&enter, sizeof(Byte), 1, (FILE*)file);
+		}
+		else
+		{
+			if (!text.isEmpty())
+			{
+				Array<WChar> wchars = text.wchars();
+				Array<Char> chars(wchars.size() * 3);
+				UInt charsLength = wCharToAnsi(wchars.data(), wchars.size() - 1, (Byte*)chars.data(), chars.size());
+				chars[charsLength] = 0;
+
+				fwrite(chars.data(), sizeof(Char), charsLength, (FILE*)file);
+			}
+
+			const Byte enter[2] = { '\r', '\n' };
+			fwrite(enter, sizeof(Byte) * 2, 1, (FILE*)file);
+		}
 	}
 
 	String fileScan(Pointer file, Char buffer[SCAN_SIZE], Bool isUtf8)
@@ -205,7 +252,7 @@ namespace file_internal
 			if (!file || !fileExist) break;
 
 			String fileName = fileInfo.cFileName;
-			if (fileName == "." || fileName == "..") continue;
+			if (fileName.isEmpty() || fileName == "." || fileName == "..") continue;
 
 			if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) out[out.size()] = fileName + separator;
 			else out[out.size()] = fileName;

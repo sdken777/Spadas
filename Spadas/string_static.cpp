@@ -199,7 +199,7 @@ String String::mergeStrings(Array<String> strs, String separator)
 	return out;
 }
 
-String String::mergeStrings(Array<StringSpan> spans, String separator)
+String String::merge(Array<StringSpan> spans, String separator)
 {
 	if (spans.isEmpty()) return String();
 	

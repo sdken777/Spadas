@@ -183,15 +183,10 @@ private:
 	UINT_32 __reserved2[3];
 };
 
-Binary Binary::toSHA1()
+bool binary_internal::calc_sha1(const unsigned char *data, unsigned int len, unsigned char *pbDest20)
 {
-	if (!vars) return Binary();
-
 	CSHA1 sha1;
-	sha1.Update(vars->data, vars->size);
+	sha1.Update(data, len);
 	sha1.Final();
-
-	Binary encoded(20);
-	sha1.GetHash(encoded.data());
-	return encoded;
+	return sha1.GetHash(pbDest20);
 }

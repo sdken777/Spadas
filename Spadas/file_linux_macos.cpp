@@ -40,7 +40,7 @@ namespace file_internal
 		Array<UInt> slashLocations = executablePathString.search('/');
 		if (slashLocations.isEmpty()) return String();
 
-		return executablePathString.subString(0, slashLocations.last() + 1);
+		return executablePathString.sub(0, slashLocations.last() + 1).clone();
 	}
 
 	String getWorkPathString()
@@ -78,7 +78,7 @@ namespace file_internal
 		Array<UInt> slashLocations = executablePathString.search('/');
 		if (slashLocations.isEmpty()) return String();
 
-		return executablePathString.subString(0, slashLocations.last() + 1);
+		return executablePathString.sub(0, slashLocations.last() + 1).clone();
 	}
 
 	String getWorkPathString()
@@ -101,7 +101,7 @@ namespace file_internal
 			Array<UInt> slashLocations = bundlePathString.search('/');
 			if (slashLocations.isEmpty()) return String();
 
-			return bundlePathString.subString(0, slashLocations.last() + 1);
+			return bundlePathString.sub(0, slashLocations.last() + 1).clone();
 		}
 		else
 		{
@@ -122,9 +122,30 @@ namespace file_internal
 		else return homePath + "SpadasFiles/";
 	}
 
-	Pointer fileOpen(String file, Bool outputMode)
+	Bool isPathStringValid(String pathString, UInt& rootLength, Bool& isAbsolute)
 	{
-		return (Pointer)fopen(file.chars().data(), outputMode ? "w+" : "r");
+		UInt len = pathString.length();
+		const Byte* bytes = pathString.bytes();
+
+		if (len >= 2 && bytes[1] == (Byte)':') return FALSE; // windows style
+
+		if (len >= 1 && (bytes[0] == '/' || bytes[0] == '\\'))
+		{
+			rootLength = 0;
+			isAbsolute = TRUE;
+			return TRUE;
+		}
+		else
+		{
+			rootLength = 0;
+			isAbsolute = FALSE;
+			return TRUE;
+		}
+	}
+
+	Pointer fileOpen(String file, Bool outputMode, Bool appendMode)
+	{
+		return (Pointer)fopen(file.chars().data(), outputMode ? (appendMode ? "a+" : "w+") : "r");
 	}
 
 	void fileClose(Pointer file)
@@ -132,9 +153,9 @@ namespace file_internal
 		fclose((FILE*)file);
 	}
 
-	void filePrint(Pointer file, String text)
+	void filePrint(Pointer file, String text, Bool isUtf8)
 	{
-		fwrite(text.bytes(), 1, text.length(), (FILE*)file);
+		if (!text.isEmpty()) fwrite(text.bytes(), 1, text.length(), (FILE*)file);
 
 		const unsigned char enter = '\n';
 		fwrite(&enter, 1, 1, (FILE*)file);
@@ -266,7 +287,7 @@ namespace file_internal
 		while ((content = readdir(folder)) != NULL)
 		{
 			String fileName = content->d_name;
-			if (fileName == "." || fileName == "..") continue;
+			if (fileName.isEmpty() || fileName == "." || fileName == "..") continue;
 
 			Bool isFolder = FALSE;
 			if ((Int)content->d_type == (Int)DT_UNKNOWN)
