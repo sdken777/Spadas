@@ -374,6 +374,10 @@ namespace xml_internal
 			{
 				if (!writeXMLNodeToStream(e.value(), depth + 1, esBuffer, stream)) return FALSE;
 			}
+			for (UInt i = 0; i < depth; i++)
+			{
+				stream.enqueue((const Byte*)"\t", 1);
+			}
 			stream.enqueue((const Byte*)"</", 2);
 			stream.enqueue(element.tag.bytes(), element.tag.length());
 			stream.enqueue((const Byte*)">\n", 2);
@@ -430,13 +434,15 @@ namespace xml_internal
 		{
 			SPADAS_ERROR_RETURNVAL(bracketContent.isEmpty(), FALSE);
 			tag = xmlVars->touchText(bracketContent);
+			attributesString = StringSpan();
 		}
 		else
 		{
 			SPADAS_ERROR_RETURNVAL(spaceLocations[0] == 0, FALSE);
 			StringSpan span = bracketContent.sub(0, spaceLocations[0]);
 			tag = xmlVars->touchText(span);
-			attributesString = bracketContent.sub(spaceLocations[0] + 1);
+			if (spaceLocations[0] + 1 < bracketContent.length()) attributesString = bracketContent.sub(spaceLocations[0] + 1);
+			else attributesString = StringSpan();
 		}
 		return TRUE;
 	}
