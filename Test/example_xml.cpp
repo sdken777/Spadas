@@ -48,4 +48,10 @@ void exampleXML()
 	}
 	console::print(SS"Attribute count: " + attribCount);
 	console::print(SS"Binary size: " + xmlBinary.size() + "=" + parsedXML.toBinary().size());
+
+	// XML析构效率测试
+	timer.start();
+	parsedXML = XML();
+	rootNode = XMLNode();
+	console::print(SS"Release: " + timer.check());
 }

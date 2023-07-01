@@ -74,9 +74,11 @@ namespace string_internal
 		static String toUpper(const Byte* bytes, UInt len);
 		static String toLower(const Byte* bytes, UInt len);
 		static Bool startsWith(const Byte* srcData, UInt srcLength, String& target);
-		static Bool endsWith(const Byte* srcData, UInt srcLength, String target);
+		static Bool endsWith(const Byte* srcData, UInt srcLength, String& target);
 		static Binary toBinary(const Byte* bytes, UInt len);
-		static Array<UInt> search(const Byte* srcData, UInt srcLength, String string);
+		static Array<UInt> search(const Byte* srcData, UInt srcLength, String& string);
+		static UInt searchFirst(const Byte* srcData, UInt srcLength, String& string);
+		static UInt searchLast(const Byte* srcData, UInt srcLength, String& string);
 		static Array<StringSpan> split(String& source, UInt spanIndex, UInt spanLength, String& splitter);
 		static String replace(const Byte* srcStringData, UInt srcStringLength, String& oldString, String& newString);
 		static StringSpan sub(String& source, UInt spanIndex, UInt spanLength, UInt subIndex, UInt subLength, Bool trimStart, Bool trimEnd);

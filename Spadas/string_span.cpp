@@ -211,7 +211,20 @@ Bool StringSpan::endsWith(String target)
 
 Array<UInt> StringSpan::search(String target)
 {
-	return StringCommon::search(bytes(), len, target);
+	if (len) return StringCommon::search(source.bytes() + idx, len, target);
+	else return Array<UInt>();
+}
+
+UInt StringSpan::searchFirst(String target)
+{
+	if (len) return StringCommon::searchFirst(source.bytes() + idx, len, target);
+	else return UINF;
+}
+
+UInt StringSpan::searchLast(String target)
+{
+	if (len) return StringCommon::searchLast(source.bytes() + idx, len, target);
+	else return UINF;
 }
 
 Array<StringSpan> StringSpan::split(String target)

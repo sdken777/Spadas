@@ -1449,7 +1449,20 @@ Bool String::endsWith(String target)
 
 Array<UInt> String::search(String target)
 {
-	return StringCommon::search(bytes(), length(), target);
+	if (vars) return StringCommon::search(vars->data, vars->length, target);
+	else return Array<UInt>();
+}
+
+UInt String::searchFirst(String target)
+{
+	if (vars) return StringCommon::searchFirst(vars->data, vars->length, target);
+	else return UINF;
+}
+
+UInt String::searchLast(String target)
+{
+	if (vars) return StringCommon::searchLast(vars->data, vars->length, target);
+	else return UINF;
 }
 
 Array<StringSpan> String::split(String target)

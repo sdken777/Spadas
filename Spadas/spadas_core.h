@@ -1956,6 +1956,12 @@ namespace spadas
 
 		/// 搜索目标字符串，返回所有发现目标的首字符位置。如"bananana"搜"nana"，返回{2, 4}
 		Array<UInt> search(String target);
+
+		/// 从前往后搜索目标字符串，返回首个发现目标的首字符位置
+		UInt searchFirst(String target);
+
+		/// 从后往前搜索目标字符串，返回首个发现目标的首字符位置
+		UInt searchLast(String target);
 		
 		/// 用指定字符串对本字符串进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串不含target时，若本字符串为空则返回空数组，非空则返回标量数组
 		Array<StringSpan> split(String target);
@@ -2209,6 +2215,12 @@ namespace spadas
 		/// 搜索目标字符串，返回所有发现目标的首字符位置。如"bananana"搜"nana"，返回{2, 4}
 		Array<UInt> search(String target);
 		
+		/// 从前往后搜索目标字符串，返回首个发现目标的首字符位置
+		UInt searchFirst(String target);
+
+		/// 从后往前搜索目标字符串，返回首个发现目标的首字符位置
+		UInt searchLast(String target);
+
 		/// 用指定字符串对本字符串片段进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串片段不含target时，若本字符串片段为空则返回空数组，非空则返回标量数组
 		Array<StringSpan> split(String target);
 

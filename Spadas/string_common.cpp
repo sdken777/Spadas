@@ -265,7 +265,7 @@ Bool StringCommon::startsWith(const Byte* srcData, UInt srcLength, String& targe
 	return TRUE;
 }
 
-Bool StringCommon::endsWith(const Byte* srcData, UInt srcLength, String target)
+Bool StringCommon::endsWith(const Byte* srcData, UInt srcLength, String& target)
 {
 	UInt targetLength = target.length();
 	if (srcLength == 0 || targetLength == 0) return FALSE;
@@ -286,7 +286,7 @@ Binary StringCommon::toBinary(const Byte* bytes, UInt len)
 	else return Binary(bytes, len);
 }
 
-Array<UInt> StringCommon::search(const Byte* srcData, UInt srcLength, String string)
+Array<UInt> StringCommon::search(const Byte* srcData, UInt srcLength, String& string)
 {
 	if (srcLength == 0) return Array<UInt>();
 
@@ -295,30 +295,94 @@ Array<UInt> StringCommon::search(const Byte* srcData, UInt srcLength, String str
 	if (subLength > srcLength) return Array<UInt>();
 
 	Byte *subData = string.getVars()->data;
+	const UInt forCount = srcLength - subLength;
 
 	if (srcLength >= 64)
 	{
 		ArrayX<UInt> bufIndices(srcLength >= 8192 ? (srcLength >= 1048576 ? 256 : 64) : 16);
-		for (UInt i = 0; i <= srcLength - subLength; i++)
+		if (subLength == 1)
 		{
-			Bool match = TRUE;
-			for (UInt n = 0, j = i; n < subLength; n++, j++)
+			Byte targetByte = subData[0];
+			for (UInt i = 0; i <= forCount; i++)
 			{
-				if (srcData[j] != subData[n])
-				{
-					match = FALSE;
-					break;
-				}
+				if (srcData[i] == targetByte) bufIndices.append(i);
 			}
-			if (match) bufIndices.append(i);
+		}
+		else
+		{
+			for (UInt i = 0; i <= forCount; i++)
+			{
+				Bool match = TRUE;
+				for (UInt n = 0, j = i; n < subLength; n++, j++)
+				{
+					if (srcData[j] != subData[n])
+					{
+						match = FALSE;
+						break;
+					}
+				}
+				if (match) bufIndices.append(i);
+			}
 		}
 		return bufIndices.toArray();
 	}
 	else
 	{
 		Array<UInt> bufIndices(srcLength);
+		UInt *bufIndicesData = bufIndices.data();
 		UInt nBufIndices = 0;
-		for (UInt i = 0; i <= srcLength - subLength; i++)
+		if (subLength == 1)
+		{
+			Byte targetByte = subData[0];
+			for (UInt i = 0; i <= forCount; i++)
+			{
+				if (srcData[i] == targetByte) bufIndicesData[nBufIndices++] = i;
+			}
+		}
+		else
+		{
+			for (UInt i = 0; i <= forCount; i++)
+			{
+				Bool match = TRUE;
+				for (UInt n = 0, j = i; n < subLength; n++, j++)
+				{
+					if (srcData[j] != subData[n])
+					{
+						match = FALSE;
+						break;
+					}
+				}
+				if (match) bufIndicesData[nBufIndices++] = i;
+			}
+		}
+		if (nBufIndices == 0) return Array<UInt>();
+		bufIndices.trim(nBufIndices);
+		return bufIndices;
+	}
+}
+
+UInt StringCommon::searchFirst(const Byte* srcData, UInt srcLength, String& string)
+{
+	if (srcLength == 0) return UINF;
+
+	UInt subLength = string.length();
+	SPADAS_ERROR_RETURNVAL(subLength == 0, UINF);
+	if (subLength > srcLength) return UINF;
+
+	Byte *subData = string.getVars()->data;
+	const UInt forCount = srcLength - subLength;
+
+	if (subLength == 1)
+	{
+		Byte targetByte = subData[0];
+		for (UInt i = 0; i <= forCount; i++)
+		{
+			if (srcData[i] == targetByte) return i;
+		}
+	}
+	else
+	{
+		for (UInt i = 0; i <= forCount; i++)
 		{
 			Bool match = TRUE;
 			for (UInt n = 0, j = i; n < subLength; n++, j++)
@@ -329,12 +393,46 @@ Array<UInt> StringCommon::search(const Byte* srcData, UInt srcLength, String str
 					break;
 				}
 			}
-			if (match) bufIndices[nBufIndices++] = i;
+			if (match) return i;
 		}
-		if (nBufIndices == 0) return Array<UInt>();
-		bufIndices.trim(nBufIndices);
-		return bufIndices;
 	}
+	return UINF;
+}
+
+UInt StringCommon::searchLast(const Byte* srcData, UInt srcLength, String& string)
+{
+	if (srcLength == 0) return UINF;
+
+	UInt subLength = string.length();
+	SPADAS_ERROR_RETURNVAL(subLength == 0, UINF);
+	if (subLength > srcLength) return UINF;
+
+	Byte *subData = string.getVars()->data;
+	if (subLength == 1)
+	{
+		Byte targetByte = subData[0];
+		for (Int i = (Int)(srcLength - subLength); i >= 0; i--)
+		{
+			if (srcData[i] == targetByte) return i;
+		}
+	}
+	else
+	{
+		for (Int i = (Int)(srcLength - subLength); i >= 0; i--)
+		{
+			Bool match = TRUE;
+			for (UInt n = 0, j = i; n < subLength; n++, j++)
+			{
+				if (srcData[j] != subData[n])
+				{
+					match = FALSE;
+					break;
+				}
+			}
+			if (match) return i;
+		}
+	}
+	return UINF;
 }
 
 Array<StringSpan> StringCommon::split(String& source, UInt spanIndex, UInt spanLength, String& splitter)

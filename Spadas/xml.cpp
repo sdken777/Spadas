@@ -70,7 +70,7 @@ namespace spadas
 			{
 				checkTableSize();
 				String valString = key.clone();
-				textTable[key] = valString;
+				textTable[valString.sub(0)] = valString;
 				return valString;
 			}
 		}
@@ -81,7 +81,7 @@ namespace spadas
 			else
 			{
 				checkTableSize();
-				textTable[key] = val;
+				textTable[key.clone().sub(0)] = val;
 				return val;
 			}
 		}
@@ -429,8 +429,8 @@ namespace xml_internal
 	
 	Bool extractTag(StringSpan bracketContent, XMLVars *xmlVars, String& tag, StringSpan& attributesString)
 	{
-		Array<UInt> spaceLocations = bracketContent.search(space);
-		if (spaceLocations.size() == 0)
+		UInt spaceLocation = bracketContent.searchFirst(space);
+		if (spaceLocation == UINF)
 		{
 			SPADAS_ERROR_RETURNVAL(bracketContent.isEmpty(), FALSE);
 			tag = xmlVars->touchText(bracketContent);
@@ -438,10 +438,10 @@ namespace xml_internal
 		}
 		else
 		{
-			SPADAS_ERROR_RETURNVAL(spaceLocations[0] == 0, FALSE);
-			StringSpan span = bracketContent.sub(0, spaceLocations[0]);
+			SPADAS_ERROR_RETURNVAL(spaceLocation == 0, FALSE);
+			StringSpan span = bracketContent.sub(0, spaceLocation);
 			tag = xmlVars->touchText(span);
-			if (spaceLocations[0] + 1 < bracketContent.length()) attributesString = bracketContent.sub(spaceLocations[0] + 1);
+			if (spaceLocation + 1 < bracketContent.length()) attributesString = bracketContent.sub(spaceLocation + 1);
 			else attributesString = StringSpan();
 		}
 		return TRUE;
