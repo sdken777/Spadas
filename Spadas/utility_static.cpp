@@ -1,11 +1,8 @@
 ﻿
 #include "oscillator.h"
-#include <memory.h>
 #include <time.h>
 #include <stdlib.h>
 #include <sys/timeb.h>
-
-#define MEMOP_THRESH 16
 
 #if !defined(SPADAS_ENV_NILRT)
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -45,14 +42,14 @@ void spadas::system::exit()
 // memorySet
 void spadas::utility::memorySet(Byte value, Pointer dst, UInt setSize)
 {
-	if (setSize < MEMOP_THRESH)
+	SPADAS_ERROR_RETURN(!dst);
+
+	Long k = setSize;
+	Byte *dstBytes = (Byte*)dst;
+
+	while (--k >= 0)
 	{
-		Byte* dstBytes = (Byte*)dst;
-		for (UInt i = 0; i < setSize; i++) dstBytes[i] = value;
-	}
-	else
-	{
-		memset(dst, (int)value, (size_t)setSize);
+		*dstBytes++ = value;
 	}
 }
 
@@ -81,19 +78,15 @@ void spadas::system::command(String cmd)
 // memoryCopy
 void spadas::utility::memoryCopy(ConstPointer src, Pointer dst, UInt copySize)
 {
-	if (copySize < MEMOP_THRESH)
+	SPADAS_ERROR_RETURN(!src || !dst);
+
+	Long k = copySize;
+	const Byte *srcBytes = (const Byte*)src;
+	Byte *dstBytes = (Byte*)dst;
+
+	while (--k >= 0)
 	{
-		const Byte* srcBytes = (const Byte*)src;
-		Byte* dstBytes = (Byte*)dst;
-		for (UInt i = 0; i < copySize; i++) dstBytes[i] = srcBytes[i];
-	}
-	else
-	{
-#if defined(SPADAS_ENV_WINDOWS)
-		memcpy_s(dst, (rsize_t)copySize, src, (rsize_t)copySize);
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
-		memcpy(dst, src, (size_t)copySize);
-#endif
+		*dstBytes++ = *srcBytes++;
 	}
 }
 
