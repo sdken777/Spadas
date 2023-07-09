@@ -109,14 +109,6 @@ namespace xml_internal
 	String space = " ";
 	Binary emptyXmlStringBinary = String("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root/>\n").toBinary();
 
-	enum class BracketType
-	{
-		Dummy = 0,
-		Start = 1,
-		End = 2,
-		Atom = 3,
-	};
-
 	class XmlCharsValidator
 	{
 	public:
@@ -426,26 +418,6 @@ namespace xml_internal
 
 		return BinarySpan(buffer, 0, bufferSize);
 	}
-	
-	Bool extractTag(StringSpan bracketContent, XMLVars *xmlVars, String& tag, StringSpan& attributesString)
-	{
-		UInt spaceLocation = bracketContent.searchFirst(space);
-		if (spaceLocation == UINF)
-		{
-			SPADAS_ERROR_RETURNVAL(bracketContent.isEmpty(), FALSE);
-			tag = xmlVars->touchText(bracketContent);
-			attributesString = StringSpan();
-		}
-		else
-		{
-			SPADAS_ERROR_RETURNVAL(spaceLocation == 0, FALSE);
-			StringSpan span = bracketContent.sub(0, spaceLocation);
-			tag = xmlVars->touchText(span);
-			if (spaceLocation + 1 < bracketContent.length()) attributesString = bracketContent.sub(spaceLocation + 1);
-			else attributesString = StringSpan();
-		}
-		return TRUE;
-	}
 
 	Array<XMLAttribute> unpackAttributes(StringSpan& attributesString, Binary& esBuffer, XMLVars *xmlVars)
 	{
@@ -492,112 +464,106 @@ namespace xml_internal
 
 	Bool readXMLBinary(String rawString, Binary& esBuffer, XML& xml)
 	{
-		/* split with the angle brackets */
-		Array<UInt> leftRaw = rawString.search('<');
-		Array<UInt> rightRaw = rawString.search('>');
-		Array<UInt> leftAngleLocations(leftRaw.size());
-		Array<UInt> rightAngleLocations(rightRaw.size());
-
-		UInt *leftRawData = leftRaw.data(), *rightRawData = rightRaw.data();
-		UInt *leftFineData = leftAngleLocations.data(), *rightFineData = rightAngleLocations.data();
-		UInt leftRawSize = leftRaw.size(), rightRawSize = rightRaw.size();
-		UInt nBrackets = 0, leftIndex = 0, rightIndex = 0;
-		while (leftIndex < leftRawSize && rightIndex < rightRawSize)
-		{
-			while (leftIndex + 1 < leftRawSize && leftRawData[leftIndex + 1] < rightRawData[rightIndex]) leftIndex++;
-			while (rightRawData[rightIndex] < leftRawData[leftIndex])
-			{
-				if (rightIndex + 1 >= rightRawSize) break;
-				rightIndex++;
-			}
-			leftFineData[nBrackets] = leftRawData[leftIndex++];
-			rightFineData[nBrackets++] = rightRawData[rightIndex++];
-		}
-
-		Array<BracketType> bracketTypes(nBrackets);
-		Array<StringSpan> bracketContents(nBrackets);
-		Array<String> externalContents(nBrackets);
-		
-		UInt startBracketNum = 0;
-		UInt endBracketNum = 0;
-		
-		const Byte* rawStringData = rawString.bytes();
-		for (UInt i = 0; i < nBrackets; i++)
-		{
-			SPADAS_ERROR_RETURNVAL((i != 0 && leftAngleLocations[i] < rightAngleLocations[i - 1]) || leftAngleLocations[i] > rightAngleLocations[i], FALSE);
-
-			/* get bracket type */
-			Byte leftAngleSymbol = rawStringData[leftAngleLocations[i]+1];
-			Byte rightAngleSymbol = rawStringData[rightAngleLocations[i]-1];
-			
-			if (leftAngleSymbol == '?' || leftAngleSymbol == '!' ||
-				rightAngleSymbol == '?' || rightAngleSymbol == '!' ||
-				(leftAngleSymbol == '/' && rightAngleSymbol == '/'))
-			{
-				bracketTypes[i] = BracketType::Dummy;
-			}
-			else if (leftAngleSymbol == '/' && rightAngleSymbol != '/')
-			{
-				endBracketNum++;
-				bracketTypes[i] = BracketType::End;
-			}
-			else if (leftAngleSymbol != '/' && rightAngleSymbol == '/')
-			{
-				bracketTypes[i] = BracketType::Atom;
-			}
-			else
-			{
-				startBracketNum++;
-				bracketTypes[i] = BracketType::Start;
-			}
-			
-			/* get bracket content */
-			switch (bracketTypes[i])
-			{
-				case BracketType::Start:
-					bracketContents[i] = rawString.sub(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-1);
-					break;
-					
-				case BracketType::End:
-					bracketContents[i] = rawString.sub(leftAngleLocations[i]+2, rightAngleLocations[i]-leftAngleLocations[i]-2);
-					break;
-					
-				case BracketType::Atom:
-					bracketContents[i] = rawString.sub(leftAngleLocations[i]+1, rightAngleLocations[i]-leftAngleLocations[i]-2);
-					break;
-					
-				default:
-					break;
-			}
-			
-			/* get external content */
-			if (i != nBrackets - 1)
-			{
-				externalContents[i] = decodeES(rawString.sub(rightAngleLocations[i]+1, leftAngleLocations[i+1]-rightAngleLocations[i]-1), esBuffer);
-			}
-		}
-		
-		SPADAS_ERROR_RETURNVAL(startBracketNum != endBracketNum, FALSE);
-
-		/* generate an XML tree */
 		XMLVars *xmlVars = xml.getVars();
 		XMLNode root = xml.globalRoot();
 		XMLNode current;
 		UInt rootCount = 0;
-		String tag;
-		StringSpan attributesString;
+		const Byte *chars = rawString.bytes();
+		UInt totalLength = rawString.length();
+		UInt curIndex = 0;
+		UInt contentIndex = UINF;
 
-		for (UInt i = 0; i < nBrackets; i++)
+		while (TRUE)
 		{
-			if (bracketTypes[i] == BracketType::Dummy) continue;
-			
-			if (bracketTypes[i] == BracketType::Start)
+			// Find '<'
+			while (curIndex < totalLength && chars[curIndex] != (Byte)'<')
 			{
-				SPADAS_ERROR_RETURNVAL(!extractTag(bracketContents[i], xmlVars, tag, attributesString), FALSE);
+				curIndex++;
+				continue;
+			}
+
+			curIndex++;
+			if (curIndex >= totalLength) break;
+
+			if (chars[curIndex] == (Byte)'?' || chars[curIndex] == (Byte)'!')
+			{
+				curIndex++;
+				continue;
+			}
+
+			// Ender
+			if (chars[curIndex] == (Byte)'/')
+			{
+				SPADAS_ERROR_RETURNVAL(!current.valid(), FALSE);
+
+				UInt enderTagIndex = ++curIndex;
+				UInt enderTagLength = 0;
+				while (curIndex < totalLength)
+				{
+					if (chars[curIndex] == (Byte)'>') break;
+					if (xmlCharsValidator.validate(chars[curIndex])) enderTagLength++;
+					curIndex++;
+				}
+				SPADAS_ERROR_RETURNVAL(enderTagLength == 0, FALSE);
+
+				StringSpan enderTagSpan(rawString, enderTagIndex, enderTagLength);
+				SPADAS_ERROR_RETURNVAL(enderTagSpan != current->tag, FALSE);
+
+				if (current.nLeaves() == 0)
+				{
+					Int contentLength = (Int)enderTagLength - (Int)contentIndex - 2;
+					if (contentLength > 0)
+					{
+						StringSpan contentSpan(rawString, contentIndex, contentLength);
+						current->content = decodeES(contentSpan, esBuffer);
+					}
+				}
+
+				current = current.root();
+				continue;
+			}
+
+			// Starter or atom
+			UInt tagIndex = curIndex;
+			UInt tagLength = 0;
+			while (curIndex < totalLength)
+			{
+				if (chars[curIndex] == (Byte)' ' || chars[curIndex] == (Byte)'>' || chars[curIndex] == (Byte)'/') break;
+				if (xmlCharsValidator.validate(chars[curIndex])) tagLength++;
+				curIndex++;
+			}
+			SPADAS_ERROR_RETURNVAL(tagLength == 0, FALSE);
+
+			StringSpan tagSpan(rawString, tagIndex, tagLength);
+			String tag = xmlVars->touchText(tagSpan);
+
+			// Atom (no attributes)
+			if (chars[curIndex] == (Byte)'/')
+			{
+				UInt rightBracketIndex = ++curIndex;
+				SPADAS_ERROR_RETURNVAL(rightBracketIndex >= totalLength || chars[rightBracketIndex] != '>', FALSE);
 
 				if (current.valid())
 				{
-					current = current.addLeaf(XMLElement(tag, unpackAttributes(attributesString, esBuffer, xmlVars), externalContents[i]));
+					current.addLeaf(XMLElement(tag, 0, String()));
+				}
+				else
+				{
+					rootCount++;
+					SPADAS_ERROR_RETURNVAL(rootCount > 1, FALSE);
+					root->tag = tag;
+				}
+
+				curIndex++;
+				continue;
+			}
+
+			// Starter (no attributes)
+			if (chars[curIndex] == (Byte)'>')
+			{
+				if (current.valid())
+				{
+					current = current.addLeaf(XMLElement(tag, 0, String()/* fill later */));
 				}
 				else
 				{
@@ -605,35 +571,66 @@ namespace xml_internal
 					SPADAS_ERROR_RETURNVAL(rootCount > 1, FALSE);
 					current = root;
 					current->tag = tag;
-					current->attributes = unpackAttributes(attributesString, esBuffer, xmlVars);
-					current->content = externalContents[i];
 				}
+
+				contentIndex = ++curIndex;
+				continue;
 			}
 
-			if (bracketTypes[i] == BracketType::End)
+			// Attributes
+			UInt attributesIndex = ++curIndex;
+			UInt attributesLength = 0;
+			while (curIndex < totalLength)
 			{
-				SPADAS_ERROR_RETURNVAL(bracketContents[i] != current->tag, FALSE);
-				SPADAS_ERROR_RETURNVAL(!current.valid(), FALSE);
-				current = current.root();
+				if (chars[curIndex] == (Byte)'>' || chars[curIndex] == (Byte)'/') break;
+				attributesLength++;
+				curIndex++;
 			}
-			
-			if (bracketTypes[i] == BracketType::Atom)
+
+			Array<XMLAttribute> attributes;
+			if (attributesLength >= 5)
 			{
-				SPADAS_ERROR_RETURNVAL(!extractTag(bracketContents[i], xmlVars, tag, attributesString), FALSE);
+				StringSpan attributesSpan(rawString, attributesIndex, attributesLength);
+				attributes = unpackAttributes(attributesSpan, esBuffer, xmlVars);
+			}
+
+			// Atom (maybe with attributes)
+			if (chars[curIndex] == (Byte)'/')
+			{
+				UInt rightBracketIndex = ++curIndex;
+				SPADAS_ERROR_RETURNVAL(rightBracketIndex >= totalLength || chars[rightBracketIndex] != (Byte)'>', FALSE);
 
 				if (current.valid())
 				{
-					current.addLeaf(XMLElement(tag, unpackAttributes(attributesString, esBuffer, xmlVars), String()));
+					current.addLeaf(XMLElement(tag, attributes, String()));
 				}
 				else
 				{
 					rootCount++;
 					SPADAS_ERROR_RETURNVAL(rootCount > 1, FALSE);
 					root->tag = tag;
-					root->attributes = unpackAttributes(attributesString, esBuffer, xmlVars);
-					root->content = String();
+					root->attributes = attributes;
 				}
+
+				curIndex++;
+				continue;
 			}
+
+			// Starter (maybe with attributes)
+			if (current.valid())
+			{
+				current = current.addLeaf(XMLElement(tag, attributes, String()/* fill later */));
+			}
+			else
+			{
+				rootCount++;
+				SPADAS_ERROR_RETURNVAL(rootCount > 1, FALSE);
+				current = root;
+				current->tag = tag;
+				current->attributes = attributes;
+			}
+
+			contentIndex = ++curIndex;
 		}
 
 		return TRUE;
