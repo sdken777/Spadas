@@ -419,42 +419,64 @@ namespace xml_internal
 		return BinarySpan(buffer, 0, bufferSize);
 	}
 
-	Array<XMLAttribute> unpackAttributes(StringSpan& attributesString, Binary& esBuffer, XMLVars *xmlVars)
+	Array<XMLAttribute> unpackAttributes(StringSpan& attributesString, UInt quotCount, Binary& esBuffer, XMLVars *xmlVars)
 	{
-		Array<StringSpan> subStrings = attributesString.split(quot);
-		if (subStrings.size() < 2) return Array<XMLAttribute>();
-
-		UInt outSize = subStrings.size() / 2;
+		UInt outSize = quotCount / 2;
 		Array<XMLAttribute> out(outSize);
 		XMLAttribute *outData = out.data();
-		StringSpan *subStringsData = subStrings.data();
+		const Byte *chars = attributesString.bytes();
+		UInt totalLength = attributesString.length();
 		UInt nAttribs = 0;
-		for (UInt i = 0; i < outSize; i++)
+		UInt curIndex = 0;
+
+		while (TRUE)
 		{
-			StringSpan& nameSpan = subStringsData[2 * i];
-			StringSpan& valueSpan = subStringsData[2 * i + 1];
-
-			const Byte *nameStringData = nameSpan.bytes();
-			UInt nameStringLength = nameSpan.length();
-
-			UInt spaceCount = 0;
-			for (; spaceCount < nameStringLength; spaceCount++)
+			// Find valid character
+			while (curIndex < totalLength && !xmlCharsValidator.validate(chars[curIndex]))
 			{
-				if (nameStringData[spaceCount] != (Byte)' ') break;
+				curIndex++;
+				continue;
+			}
+			if (curIndex >= totalLength) break;
+
+			// Key
+			UInt keyIndex = curIndex++;
+			UInt keyLength = 1;
+			while (curIndex < totalLength)
+			{
+				if (chars[curIndex] == (Byte)'=') break;
+				if (xmlCharsValidator.validate(chars[curIndex])) keyLength++;
+				curIndex++;
 			}
 
-			UInt validLength = 0;
-			for (UInt charIndex = spaceCount; charIndex < nameStringLength; charIndex++, validLength++)
-			{
-				if (nameStringData[charIndex] == (Byte)'=') break;
-				if (!xmlCharsValidator.validate(nameStringData[charIndex])) break;
-			}
-			if (validLength == 0) continue;
+			StringSpan keySpan = attributesString.sub(keyIndex, keyLength);
+			String key = xmlVars->touchText(keySpan);
 
-			XMLAttribute& attribute = outData[nAttribs++];
-			StringSpan validNameSpan = nameSpan.sub(spaceCount, validLength);
-			attribute.name = xmlVars->touchText(validNameSpan);
-			attribute.value = decodeES(valueSpan, esBuffer);
+			// Quot
+			UInt leftQuotIndex = ++curIndex;
+			SPADAS_ERROR_RETURNVAL(leftQuotIndex >= totalLength || chars[leftQuotIndex] != '\"', Array<XMLAttribute>());
+
+			// Value
+			UInt valueIndex = ++curIndex;
+			UInt valueLength = 0;
+			while (curIndex < totalLength)
+			{
+				if (chars[curIndex] == (Byte)'\"') break;
+				valueLength++;
+				curIndex++;
+			}
+
+			String value;
+			if (valueLength > 0)
+			{
+				StringSpan valueSpan = attributesString.sub(valueIndex, valueLength);
+				value = decodeES(valueSpan, esBuffer);
+			}
+
+			// Append
+			outData[nAttribs].name = key;
+			outData[nAttribs++].value = value;
+			curIndex++;
 		}
 		if (nAttribs == 0) return Array<XMLAttribute>();
 
@@ -580,18 +602,20 @@ namespace xml_internal
 			// Attributes
 			UInt attributesIndex = ++curIndex;
 			UInt attributesLength = 0;
+			UInt quotCount = 0;
 			while (curIndex < totalLength)
 			{
 				if (chars[curIndex] == (Byte)'>' || chars[curIndex] == (Byte)'/') break;
+				if (chars[curIndex] == (Byte)'\"') quotCount++;
 				attributesLength++;
 				curIndex++;
 			}
 
 			Array<XMLAttribute> attributes;
-			if (attributesLength >= 5)
+			if (quotCount >= 2)
 			{
 				StringSpan attributesSpan(rawString, attributesIndex, attributesLength);
-				attributes = unpackAttributes(attributesSpan, esBuffer, xmlVars);
+				attributes = unpackAttributes(attributesSpan, quotCount, esBuffer, xmlVars);
 			}
 
 			// Atom (maybe with attributes)
