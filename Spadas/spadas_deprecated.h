@@ -289,6 +289,17 @@ namespace spadas
 		virtual OptionalBool transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
 	};
 
+	struct VideoDeviceInfoX
+	{
+		VideoDeviceID id;
+		String description;
+		Array<VideoInputMode> inputModes;
+		Array<VideoOutputMode> outputModes;
+		Bool supportTransmitScheduled;
+		VideoDeviceInfoX() : supportTransmitScheduled(FALSE)
+		{}
+	};
+
 	// 插件相关实用功能（旧） //////////////////////////////////////////////////////////////
 	enum class SampleState
 	{
@@ -609,6 +620,23 @@ namespace spadas
 		virtual void useVideoTransmitter(Interface<IVideoFrameTransmitter> videoTransmitter);
 	};
 	typedef Interface<IProcessorPluginV602>(*GetProcessorPluginV602)();
+
+	class SPADAS_API IVideoPluginV402
+	{
+	public:
+		virtual ~IVideoPluginV402() {};
+		virtual Array<VideoDeviceInfoX> getVideoDeviceList();
+		virtual Bool openVideoDevice(Array<VideoDeviceConfigX> configs);
+		virtual void closeVideoDevice();
+		virtual Bool queryVideoFrame(VideoDeviceData& frame);
+		virtual Bool transmitVideoFrame(UInt channel, VideoDataCodec codec, Size2D size, Binary data);
+		virtual Bool transmitVideoFrameScheduled(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
+		virtual void setVideoExtraConfig(String extra);
+		virtual Array<GeneralDeviceData> getVideoDeviceNewData();
+		virtual void useVideoPreviewExpress(Interface<IVideoPreviewExpressX> previewExpress);
+		virtual Array<String> getExclusiveKeywords();
+	};
+	typedef Interface<IVideoPluginV402>(*GetVideoPluginV402)();
 
 	// sort函数的实现 ///////////////////////////////////////////////////////
 	template<typename Type>

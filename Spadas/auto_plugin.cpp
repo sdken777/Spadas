@@ -19,7 +19,7 @@ SPADAS_DEFAULT_API void get_bus_plugin_api_version(UInt& major, UInt& minor)
 SPADAS_DEFAULT_API void get_video_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 4;
-	minor = 2;
+	minor = 3;
 }
 
 SPADAS_DEFAULT_API void get_dev_plugin_api_version(UInt& major, UInt& minor)
@@ -716,6 +716,51 @@ void IVideoPluginV402::useVideoPreviewExpress(Interface<IVideoPreviewExpressX> p
 {}
 
 Array<String> IVideoPluginV402::getExclusiveKeywords()
+{
+	return Array<String>();
+}
+
+// 视频设备插件接口 4.3
+Array<VideoDeviceInfoX2> IVideoPluginV403::getVideoDeviceList()
+{
+	return Array<VideoDeviceInfoX2>();
+}
+
+Bool IVideoPluginV403::openVideoDevice(Array<VideoDeviceConfigX> configs)
+{
+	return FALSE;
+}
+
+void IVideoPluginV403::closeVideoDevice()
+{}
+
+Bool IVideoPluginV403::queryVideoFrame(VideoDeviceData& frame)
+{
+	return FALSE;
+}
+
+Bool IVideoPluginV403::transmitVideoFrame(UInt channel, VideoDataCodec codec, Size2D size, Binary data)
+{
+	return FALSE;
+}
+
+Bool IVideoPluginV403::transmitVideoFrameScheduled(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance)
+{
+	return FALSE;
+}
+
+void IVideoPluginV403::setVideoExtraConfig(String extra)
+{}
+
+Array<GeneralDeviceData> IVideoPluginV403::getVideoDeviceNewData()
+{
+	return Array<GeneralDeviceData>();
+}
+
+void IVideoPluginV403::useVideoPreviewExpress(Interface<IVideoPreviewExpressX> previewExpress)
+{}
+
+Array<String> IVideoPluginV403::getExclusiveKeywords()
 {
 	return Array<String>();
 }

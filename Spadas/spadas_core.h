@@ -5187,8 +5187,21 @@ namespace spadas
 		String localID;
 	};
 
+	/// 预览图像支持能力
+	enum class VideoPreviewCapability
+	{
+		/// 无预览图像
+		NoPreview = 0,
+
+		/// 支持预览图像随原始数据一起输出
+		WithPreview = 1,
+
+		/// 在WithPreview的基础上，还支持通过快速输出接口直接输出
+		PreviewExpress = 2,
+	};
+
 	/// 视频设备信息
-	struct VideoDeviceInfoX
+	struct VideoDeviceInfoX2
 	{
 		/// 视频设备ID
 		VideoDeviceID id;
@@ -5199,6 +5212,9 @@ namespace spadas
 		/// 该视频设备通道支持的视频数据流输入模式
 		Array<VideoInputMode> inputModes;
 
+		/// 输入视频数据流的预览图像支持能力
+		VideoPreviewCapability previewCapability;
+
 		/// 该视频设备通道支持的视频数据流回注模式
 		Array<VideoOutputMode> outputModes;
 
@@ -5206,7 +5222,7 @@ namespace spadas
 		Bool supportTransmitScheduled;
 
 		/// 默认构造函数
-		VideoDeviceInfoX() : supportTransmitScheduled(FALSE)
+		VideoDeviceInfoX2() : previewCapability(VideoPreviewCapability::NoPreview), supportTransmitScheduled(FALSE)
 		{}
 	};
 
@@ -6012,15 +6028,15 @@ namespace spadas
 	/// 获取总线设备插件接口的全局函数定义，函数名应为get_bus_plugin_v201
 	typedef Interface<IBusPluginV201>(*GetBusPluginV201)();
 
-	/// 视频设备插件接口 4.2
-	class SPADAS_API IVideoPluginV402
+	/// 视频设备插件接口 4.3
+	class SPADAS_API IVideoPluginV403
 	{
 	public:
-		virtual ~IVideoPluginV402() {};
+		virtual ~IVideoPluginV403() {};
 
 		/// @brief 获取视频设备列表
 		/// @returns 视频设备列表
-		virtual Array<VideoDeviceInfoX> getVideoDeviceList();
+		virtual Array<VideoDeviceInfoX2> getVideoDeviceList();
 
 		/// @brief 打开视频设备（在开始Session时被调用）
 		/// @param configs 希望打开的视频设备通道列表及相关配置
@@ -6069,8 +6085,8 @@ namespace spadas
 		virtual Array<String> getExclusiveKeywords();
 	};
 
-	/// 获取视频设备插件接口的全局函数定义，函数名应为get_video_plugin_v402
-	typedef Interface<IVideoPluginV402>(*GetVideoPluginV402)();
+	/// 获取视频设备插件接口的全局函数定义，函数名应为get_video_plugin_v403
+	typedef Interface<IVideoPluginV403>(*GetVideoPluginV403)();
 
 	/// 原生数据处理插件接口 6.3
 	class SPADAS_API IProcessorPluginV603
