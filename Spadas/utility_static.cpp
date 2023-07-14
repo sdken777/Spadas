@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <sys/timeb.h>
 
+#if defined(SPADAS_ENV_WINDOWS)
+#include <windows.h>
+#endif
+
 #define MEMOP_THRESH 16
 
 namespace spadas_internal
@@ -65,10 +69,25 @@ Enum<Environment> spadas::system::getEnv()
 }
 
 // command
+#if defined(SPADAS_ENV_WINDOWS)
+void spadas::system::command(String cmd)
+{
+    STARTUPINFOW si;
+    utility::memorySet(0, &si, sizeof(STARTUPINFOW));
+    si.cb = sizeof(STARTUPINFOW);
+
+    PROCESS_INFORMATION pi;
+    utility::memorySet(0, &pi, sizeof(PROCESS_INFORMATION));
+
+    BOOL ret = CreateProcessW(NULL, cmd.wchars().data(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    if (ret) WaitForSingleObject(pi.hProcess, UINF);
+}
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 void spadas::system::command(String cmd)
 {
 	if (::system(cmd.chars().data())) {};
 }
+#endif
 
 // memoryCopy
 void spadas::utility::memoryCopy(const Pointer src, Pointer dst, UInt copySize)
