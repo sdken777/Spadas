@@ -7,6 +7,7 @@ namespace spadas
 	const UInt XML_TEXT_TABLE_SIZE_SMALL = 64;
 	const UInt XML_TEXT_TABLE_SIZE_MIDDLE = 2048;
 	const UInt XML_TEXT_TABLE_SIZE_LARGE = 65536;
+	const UInt XML_MAX_VALUE_LENGTH_USE_TEXT_TABLE = 3;
 
 	const String unknownTag = "unknown";
 	const String rootTag = "root";
@@ -378,7 +379,7 @@ namespace xml_internal
 		return TRUE;
 	}
 	
-	String decodeES(StringSpan text, Binary& esBuffer) // escape sequence
+	String decodeES(StringSpan text, Binary& esBuffer, XMLVars *xmlVars) // escape sequence
 	{
 		UInt textLength = text.length();
 		if (textLength == 0) return String();
@@ -395,7 +396,11 @@ namespace xml_internal
 				else if (i + 5 < textLength && textData[i+1] == 'q' && textData[i+2] == 'u' && textData[i+3] == 'o' && textData[i+4] == 't' && textData[i+5] == ';') { decCount += 5; i += 5; }
 			}
 		}
-		if (decCount == 0) return text.clone();
+		if (decCount == 0)
+		{
+			if (textLength <= XML_MAX_VALUE_LENGTH_USE_TEXT_TABLE) return xmlVars->touchText(text);
+			else return text.clone();
+		}
 		
 		UInt bufferSize = textLength - decCount;
 		Binary buffer = bufferSize > STRING_STREAM_BUFFER_SIZE ? Binary(bufferSize) : esBuffer;
@@ -459,8 +464,9 @@ namespace xml_internal
 			// Value
 			UInt valueIndex = ++curIndex;
 			UInt valueLength = 0;
-			while (curIndex < totalLength)
+			while (TRUE)
 			{
+				SPADAS_ERROR_RETURNVAL(curIndex >= totalLength, FALSE);
 				if (chars[curIndex] == (Byte)'\"') break;
 				valueLength++;
 				curIndex++;
@@ -470,7 +476,7 @@ namespace xml_internal
 			if (valueLength > 0)
 			{
 				StringSpan valueSpan = attributesString.sub(valueIndex, valueLength);
-				value = decodeES(valueSpan, esBuffer);
+				value = decodeES(valueSpan, esBuffer, xmlVars);
 			}
 
 			// Append
@@ -520,8 +526,9 @@ namespace xml_internal
 
 				UInt enderTagIndex = ++curIndex;
 				UInt enderTagLength = 0;
-				while (curIndex < totalLength)
+				while (TRUE)
 				{
+					SPADAS_ERROR_RETURNVAL(curIndex >= totalLength, FALSE);
 					if (chars[curIndex] == (Byte)'>') break;
 					if (xmlCharsValidator.validate(chars[curIndex])) enderTagLength++;
 					curIndex++;
@@ -533,11 +540,11 @@ namespace xml_internal
 
 				if (current.nLeaves() == 0)
 				{
-					Int contentLength = (Int)enderTagLength - (Int)contentIndex - 2;
+					Int contentLength = (Int)enderTagIndex - (Int)contentIndex - 2;
 					if (contentLength > 0)
 					{
 						StringSpan contentSpan(rawString, contentIndex, contentLength);
-						current->content = decodeES(contentSpan, esBuffer);
+						current->content = decodeES(contentSpan, esBuffer, xmlVars);
 					}
 				}
 
@@ -548,9 +555,10 @@ namespace xml_internal
 			// Starter or atom
 			UInt tagIndex = curIndex;
 			UInt tagLength = 0;
-			while (curIndex < totalLength)
+			while (TRUE)
 			{
-				if (chars[curIndex] == (Byte)' ' || chars[curIndex] == (Byte)'>' || chars[curIndex] == (Byte)'/') break;
+				SPADAS_ERROR_RETURNVAL(curIndex >= totalLength, FALSE);
+				if (chars[curIndex] == (Byte)' ' || chars[curIndex] == (Byte)'>') break;
 				if (xmlCharsValidator.validate(chars[curIndex])) tagLength++;
 				curIndex++;
 			}
@@ -559,30 +567,27 @@ namespace xml_internal
 			StringSpan tagSpan(rawString, tagIndex, tagLength);
 			String tag = xmlVars->touchText(tagSpan);
 
-			// Atom (no attributes)
-			if (chars[curIndex] == (Byte)'/')
-			{
-				UInt rightBracketIndex = ++curIndex;
-				SPADAS_ERROR_RETURNVAL(rightBracketIndex >= totalLength || chars[rightBracketIndex] != '>', FALSE);
-
-				if (current.valid())
-				{
-					current.addLeaf(XMLElement(tag, 0, String()));
-				}
-				else
-				{
-					rootCount++;
-					SPADAS_ERROR_RETURNVAL(rootCount > 1, FALSE);
-					root->tag = tag;
-				}
-
-				curIndex++;
-				continue;
-			}
-
-			// Starter (no attributes)
 			if (chars[curIndex] == (Byte)'>')
 			{
+				// Atom (no attributes)
+				if (chars[curIndex - 1] == (Byte)'/')
+				{
+					if (current.valid())
+					{
+						current.addLeaf(XMLElement(tag, 0, String()));
+					}
+					else
+					{
+						rootCount++;
+						SPADAS_ERROR_RETURNVAL(rootCount > 1, FALSE);
+						root->tag = tag;
+					}
+
+					curIndex++;
+					continue;
+				}
+
+				// Starter (no attributes)
 				if (current.valid())
 				{
 					current = current.addLeaf(XMLElement(tag, 0, String()/* fill later */));
@@ -603,9 +608,10 @@ namespace xml_internal
 			UInt attributesIndex = ++curIndex;
 			UInt attributesLength = 0;
 			UInt quotCount = 0;
-			while (curIndex < totalLength)
+			while (TRUE)
 			{
-				if (chars[curIndex] == (Byte)'>' || chars[curIndex] == (Byte)'/') break;
+				SPADAS_ERROR_RETURNVAL(curIndex >= totalLength, FALSE);
+				if (chars[curIndex] == (Byte)'>') break;
 				if (chars[curIndex] == (Byte)'\"') quotCount++;
 				attributesLength++;
 				curIndex++;
@@ -619,11 +625,8 @@ namespace xml_internal
 			}
 
 			// Atom (maybe with attributes)
-			if (chars[curIndex] == (Byte)'/')
+			if (chars[curIndex - 1] == (Byte)'/')
 			{
-				UInt rightBracketIndex = ++curIndex;
-				SPADAS_ERROR_RETURNVAL(rightBracketIndex >= totalLength || chars[rightBracketIndex] != (Byte)'>', FALSE);
-
 				if (current.valid())
 				{
 					current.addLeaf(XMLElement(tag, attributes, String()));
