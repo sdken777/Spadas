@@ -4,10 +4,6 @@
 namespace spadas
 {
 	const UInt XML_CELL_ARRAY_SEGMENT_SIZE = 256;
-	const UInt XML_TEXT_TABLE_SIZE_SMALL = 64;
-	const UInt XML_TEXT_TABLE_SIZE_MIDDLE = 2048;
-	const UInt XML_TEXT_TABLE_SIZE_LARGE = 65536;
-	const UInt XML_MAX_VALUE_LENGTH_USE_TEXT_TABLE = 3;
 
 	const String unknownTag = "unknown";
 	const String rootTag = "root";
@@ -30,61 +26,15 @@ namespace spadas
 		SPADAS_VARS_DEF(XML, Vars)
 
 		ArrayX<XMLCell> cells; // 首个为根节点
-		Map<StringSpan, String> textTable;
 
-		XMLVars() : cells(XML_CELL_ARRAY_SEGMENT_SIZE), textTable(XML_TEXT_TABLE_SIZE_SMALL)
+		XMLVars() : cells(XML_CELL_ARRAY_SEGMENT_SIZE)
 		{
 			cells.append(XMLElement(rootTag, 0, String()));
 		}
-		XMLVars(XMLNode rootNode) : cells(XML_CELL_ARRAY_SEGMENT_SIZE), textTable(XML_TEXT_TABLE_SIZE_SMALL)
+		XMLVars(XMLNode rootNode) : cells(XML_CELL_ARRAY_SEGMENT_SIZE)
 		{
 			XMLCell& rootCell = cells.append(rootNode.value());
 			cloneXMLNode(rootNode, rootCell);
-		}
-		void checkTableSize()
-		{
-			UInt curSize = textTable.size();
-			if (curSize == XML_TEXT_TABLE_SIZE_SMALL)
-			{
-				Map<StringSpan, String> newTable(XML_TEXT_TABLE_SIZE_MIDDLE);
-				for (auto pair = textTable.keyValues().firstElem(); pair.valid(); ++pair)
-				{
-					newTable[pair->key] = pair->value;
-				}
-				textTable = newTable;
-			}
-			else if (curSize == XML_TEXT_TABLE_SIZE_MIDDLE)
-			{
-				Map<StringSpan, String> newTable(XML_TEXT_TABLE_SIZE_LARGE);
-				for (auto pair = textTable.keyValues().firstElem(); pair.valid(); ++pair)
-				{
-					newTable[pair->key] = pair->value;
-				}
-				textTable = newTable;
-			}
-		}
-		String touchText(StringSpan& key)
-		{
-			String output;
-			if (textTable.tryGet(key, output)) return output;
-			else
-			{
-				checkTableSize();
-				String valString = key.clone();
-				textTable[valString.sub(0)] = valString;
-				return valString;
-			}
-		}
-		String touchText(StringSpan& key, String& val)
-		{
-			String output;
-			if (textTable.tryGet(key, output)) return output;
-			else
-			{
-				checkTableSize();
-				textTable[key.clone().sub(0)] = val;
-				return val;
-			}
 		}
 		void cloneXMLNode(XMLNode& node, XMLCell& cell)
 		{
@@ -406,7 +356,7 @@ namespace xml_internal
 		return TRUE;
 	}
 	
-	String decodeES(StringSpan text, Binary& esBuffer, XMLVars *xmlVars) // escape sequence
+	String decodeES(StringSpan& text, Binary& esBuffer) // escape sequence
 	{
 		UInt textLength = text.length();
 		if (textLength == 0) return String();
@@ -423,11 +373,7 @@ namespace xml_internal
 				else if (i + 5 < textLength && textData[i+1] == 'q' && textData[i+2] == 'u' && textData[i+3] == 'o' && textData[i+4] == 't' && textData[i+5] == ';') { decCount += 5; i += 5; }
 			}
 		}
-		if (decCount == 0)
-		{
-			if (textLength <= XML_MAX_VALUE_LENGTH_USE_TEXT_TABLE) return xmlVars->touchText(text);
-			else return text.clone();
-		}
+		if (decCount == 0) return text.clone();
 		
 		UInt bufferSize = textLength - decCount;
 		Binary buffer = bufferSize > STRING_STREAM_BUFFER_SIZE ? Binary(bufferSize) : esBuffer;
@@ -451,7 +397,7 @@ namespace xml_internal
 		return BinarySpan(buffer, 0, bufferSize);
 	}
 
-	Array<XMLAttribute> unpackAttributes(StringSpan& attributesString, UInt quotCount, Binary& esBuffer, XMLVars *xmlVars)
+	Array<XMLAttribute> unpackAttributes(StringSpan& attributesString, UInt quotCount, Binary& esBuffer)
 	{
 		UInt outSize = quotCount / 2;
 		Array<XMLAttribute> out(outSize);
@@ -480,9 +426,7 @@ namespace xml_internal
 				if (xmlCharsValidator.validate(chars[curIndex])) keyLength++;
 				curIndex++;
 			}
-
-			StringSpan keySpan = attributesString.sub(keyIndex, keyLength);
-			String key = xmlVars->touchText(keySpan);
+			String key = attributesString.sub(keyIndex, keyLength).clone();
 
 			// Quot
 			UInt leftQuotIndex = ++curIndex;
@@ -503,7 +447,7 @@ namespace xml_internal
 			if (valueLength > 0)
 			{
 				StringSpan valueSpan = attributesString.sub(valueIndex, valueLength);
-				value = decodeES(valueSpan, esBuffer, xmlVars);
+				value = decodeES(valueSpan, esBuffer);
 			}
 
 			// Append
@@ -519,7 +463,6 @@ namespace xml_internal
 
 	Bool readXMLBinary(String rawString, Binary& esBuffer, XML& xml)
 	{
-		XMLVars *xmlVars = xml.getVars();
 		XMLNode root = xml.globalRoot();
 		XMLNode current;
 		UInt rootCount = 0;
@@ -571,7 +514,7 @@ namespace xml_internal
 					if (contentLength > 0)
 					{
 						StringSpan contentSpan(rawString, contentIndex, contentLength);
-						current->content = decodeES(contentSpan, esBuffer, xmlVars);
+						current->content = decodeES(contentSpan, esBuffer);
 					}
 				}
 
@@ -590,9 +533,7 @@ namespace xml_internal
 				curIndex++;
 			}
 			SPADAS_ERROR_RETURNVAL(tagLength == 0, FALSE);
-
-			StringSpan tagSpan(rawString, tagIndex, tagLength);
-			String tag = xmlVars->touchText(tagSpan);
+			String tag = StringSpan(rawString, tagIndex, tagLength).clone();
 
 			if (chars[curIndex] == (Byte)'>')
 			{
@@ -648,7 +589,7 @@ namespace xml_internal
 			if (quotCount >= 2)
 			{
 				StringSpan attributesSpan(rawString, attributesIndex, attributesLength);
-				attributes = unpackAttributes(attributesSpan, quotCount, esBuffer, xmlVars);
+				attributes = unpackAttributes(attributesSpan, quotCount, esBuffer);
 			}
 
 			// Atom (maybe with attributes)
@@ -820,9 +761,7 @@ void XMLNode::dictionaryToAttributes(Dictionary<String> dict)
 		for (auto pair = dict.keyValues().firstElem(); pair.valid(); ++pair)
 		{
 			if (pair->key.isEmpty()) continue;
-			StringSpan keySpan(pair->key, 0, pair->key.length());
-			String key = xml.getVars()->touchText(keySpan, pair->key);
-			buf.append(XMLAttribute(key, pair->value));
+			buf.append(XMLAttribute(pair->key, pair->value));
 		}
 	}
 	((XMLCell*)cell)->elem.attributes = buf.toArray();
