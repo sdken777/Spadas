@@ -165,6 +165,27 @@ namespace xml_internal
 		{
 			lastBuffer = &bufferList.addToTail(StringStreamElem());
 		}
+		void enqueueChar(Char c)
+		{
+			if (lastBuffer->size >= STRING_STREAM_BUFFER_SIZE)
+			{
+				lastBuffer = &bufferList.addToTail(StringStreamElem());
+			}
+			lastBuffer->buffer[lastBuffer->size++] = (Byte)c;
+		}
+		void enqueueSmall(const Byte* data, UInt size)
+		{
+			if (lastBuffer->size + size > STRING_STREAM_BUFFER_SIZE)
+			{
+				lastBuffer = &bufferList.addToTail(StringStreamElem());
+			}
+			Byte* target = &lastBuffer->buffer[lastBuffer->size];
+			for (UInt i = 0; i < size; i++)
+			{
+				*target++ = *data++;
+			}
+			lastBuffer->size += size;
+		}
 		void enqueue(const Byte* data, UInt size)
 		{
 			if (lastBuffer->size + size > STRING_STREAM_BUFFER_SIZE)
@@ -223,6 +244,8 @@ namespace xml_internal
 	void encodeES(String& text, Bool includeQuotation, Binary& esBuffer, StringStream& stream) // escape sequence
 	{
 		UInt textLength = text.length();
+		if (textLength == 0) return;
+
 		const Byte *textData = text.bytes();
 		UInt outLength = textLength;
 		for (UInt i = 0; i < textLength; i++)
@@ -242,7 +265,11 @@ namespace xml_internal
 			}
 		}
 
-		if (outLength == 0) return;
+		if (outLength == textLength)
+		{
+			stream.enqueue(textData, textLength);
+			return;
+		}
 		
 		Binary buffer = outLength > STRING_STREAM_BUFFER_SIZE ? Binary(outLength) : esBuffer;
 		Byte* outData = buffer.data();
@@ -305,22 +332,22 @@ namespace xml_internal
 	{
 		SPADAS_ERROR_RETURNVAL(!xmlCharsValidator.validate(element.tag), FALSE);
 
-		stream.enqueue((const Byte*)"<", 1);
+		stream.enqueueChar('<');
 		stream.enqueue(element.tag.bytes(), element.tag.length());
 
 		if (!element.attributes.isEmpty())
 		{
-			stream.enqueue((const Byte*)" ", 1);
+			stream.enqueueChar(' ');
 
 			UInt lastIndex = element.attributes.size() - 1;
 			for (auto e = element.attributes.firstElem(); e.valid(); ++e)
 			{
 				SPADAS_ERROR_RETURNVAL(!xmlCharsValidator.validate(e->name), FALSE);
 				stream.enqueue(e->name.bytes(), e->name.length());
-				stream.enqueue((const Byte*)"=\"", 2);
+				stream.enqueueSmall((const Byte*)"=\"", 2);
 				encodeES(e->value, TRUE, esBuffer, stream);
-				stream.enqueue((const Byte*)"\"", 1);
-				if (e.index() != lastIndex) stream.enqueue((const Byte*)" ", 1);
+				stream.enqueueChar('\"');
+				if (e.index() != lastIndex) stream.enqueueChar(' ');
 			}
 		}
 
@@ -331,13 +358,13 @@ namespace xml_internal
 	{
 		if (depth == 0)
 		{
-			stream.enqueue((const Byte*)"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n", 39);
+			stream.enqueueSmall((const Byte*)"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n", 39);
 		}
 		else
 		{
 			for (UInt i = 0; i < depth; i++)
 			{
-				stream.enqueue((const Byte*)"\t", 1);
+				stream.enqueueChar('\t');
 			}
 		}
 
@@ -349,31 +376,31 @@ namespace xml_internal
 		{
 			if (element.content.isEmpty())
 			{
-				stream.enqueue((const Byte*)"/>\n", 3);
+				stream.enqueueSmall((const Byte*)"/>\n", 3);
 			}
 			else
 			{
-				stream.enqueue((const Byte*)">", 1);
+				stream.enqueueChar('>');
 				encodeES(element.content, FALSE, esBuffer, stream);
-				stream.enqueue((const Byte*)"</", 2);
+				stream.enqueueSmall((const Byte*)"</", 2);
 				stream.enqueue(element.tag.bytes(), element.tag.length());
-				stream.enqueue((const Byte*)">\n", 2);
+				stream.enqueueSmall((const Byte*)">\n", 2);
 			}
 		}
 		else
 		{
-			stream.enqueue((const Byte*)">\n", 2);
+			stream.enqueueSmall((const Byte*)">\n", 2);
 			for (auto e = node.leaves().firstElem(); e.valid(); ++e)
 			{
 				if (!writeXMLNodeToStream(e.value(), depth + 1, esBuffer, stream)) return FALSE;
 			}
 			for (UInt i = 0; i < depth; i++)
 			{
-				stream.enqueue((const Byte*)"\t", 1);
+				stream.enqueueChar('\t');
 			}
-			stream.enqueue((const Byte*)"</", 2);
+			stream.enqueueSmall((const Byte*)"</", 2);
 			stream.enqueue(element.tag.bytes(), element.tag.length());
-			stream.enqueue((const Byte*)">\n", 2);
+			stream.enqueueSmall((const Byte*)">\n", 2);
 		}
 		
 		return TRUE;
