@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // XML反序列化修正bug，优化内存占用
+// 版本定义 // 优化NumericKey::getHash。优化字符串==/!=
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 21
+#define SPADAS_VERSION_BUILD 22
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：9.0.21\n
+* 本文档对应Spadas版本：9.0.22\n
 *
 * \n
 * \section top1 基本功能概述

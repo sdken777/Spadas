@@ -47,6 +47,7 @@ namespace string_internal
 	UInt printToString(Char dst[], UInt dstSize, const Char format[], ...);
 
 	// 比较字符串
+	Bool isSameString(const Byte *data1, const Byte *data2, UInt length);
 	Int compareString(const Byte *data1, UInt length1, const Byte *data2, UInt length2);
 
 	// Windows下的ANSI与WChar字符串互转

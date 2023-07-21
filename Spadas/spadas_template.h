@@ -3241,8 +3241,16 @@ namespace spadas
 		Byte *bytes = (Byte*)&val;
 		Word *words = (Word*)&val;
 		Word hash = 0;
-		for (UInt i = 0; i < typeSizeWord; i++) hash ^= words[i];
-		if (typeSize & 0x01) hash ^= bytes[typeSize - 1];
+		for (UInt i = 0; i < typeSizeWord; i++)
+		{
+			hash += words[i];
+			hash *= 3;
+		}
+		if (typeSize & 0x01)
+		{
+			hash += (Word)bytes[typeSize - 1];
+			hash *= 3;
+		}
 		return hash;
 	}
 

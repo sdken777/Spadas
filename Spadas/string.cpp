@@ -42,6 +42,15 @@ namespace string_internal
 		return length;
 	}
 
+	Bool isSameString(const Byte *data1, const Byte *data2, UInt length)
+	{
+		for (UInt i = 0; i < length; i++)
+		{
+			if (data1[i] != data2[i]) return FALSE;
+		}
+		return TRUE;
+	}
+
 	Int compareString(const Byte *data1, UInt length1, const Byte *data2, UInt length2)
 	{
 		UInt overlapLength = math::min(length1, length2);
@@ -1277,28 +1286,20 @@ String::String(BinarySpan span)
 
 Bool String::operator ==(String string)
 {
-	if (length() == 0)
-	{
-		return string.length() == 0;
-	}
-	else
-	{
-		if (string.length() == 0) return FALSE;
-		else return compareString(vars->data, vars->length, string.vars->data, string.vars->length) == 0;
-	}
+	UInt thisLength = length();
+	UInt targetLength = string.length();
+	if (thisLength != targetLength) return FALSE;
+	else if (thisLength == 0) return TRUE;
+	else return isSameString(vars->data, string.vars->data, thisLength);
 }
 
 Bool String::operator !=(String string)
 {
-	if (length() == 0)
-	{
-		return string.length() != 0;
-	}
-	else
-	{
-		if (string.length() == 0) return TRUE;
-		else return compareString(vars->data, vars->length, string.vars->data, string.vars->length) != 0;
-	}
+	UInt thisLength = length();
+	UInt targetLength = string.length();
+	if (thisLength != targetLength) return TRUE;
+	else if (thisLength == 0) return FALSE;
+	else return !isSameString(vars->data, string.vars->data, thisLength);
 }
 
 Bool String::operator >(String string)

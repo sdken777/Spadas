@@ -11,56 +11,32 @@ StringSpan::StringSpan(String& sourceString, UInt index, UInt length) : source(s
 
 Bool StringSpan::operator ==(StringSpan span)
 {
-	if (len == 0)
-	{
-		return span.len == 0;
-	}
-	else
-	{
-		if (span.len == 0) return FALSE;
-		else return compareString(source.bytes() + idx, len, span.source.bytes() + span.idx, span.len) == 0;
-	}
+	if (len != span.len) return FALSE;
+	else if (len == 0) return TRUE;
+	else return isSameString(source.bytes() + idx, span.source.bytes() + span.idx, len);
 }
 
 Bool StringSpan::operator !=(StringSpan span)
 {
-	if (len == 0)
-	{
-		return span.len != 0;
-	}
-	else
-	{
-		if (span.len == 0) return TRUE;
-		else return compareString(source.bytes() + idx, len, span.source.bytes() + span.idx, span.len) != 0;
-	}
+	if (len != span.len) return TRUE;
+	else if (len == 0) return FALSE;
+	else return !isSameString(source.bytes() + idx, span.source.bytes() + span.idx, len);
 }
 
 Bool StringSpan::operator ==(String string)
 {
 	UInt targetLength = string.length();
-	if (len == 0)
-	{
-		return targetLength == 0;
-	}
-	else
-	{
-		if (targetLength == 0) return FALSE;
-		else return compareString(source.bytes() + idx, len, string.bytes(), targetLength) == 0;
-	}
+	if (len != targetLength) return FALSE;
+	else if (len == 0) return TRUE;
+	else return isSameString(source.bytes() + idx, string.bytes(), len);
 }
 
 Bool StringSpan::operator !=(String string)
 {
 	UInt targetLength = string.length();
-	if (len == 0)
-	{
-		return targetLength != 0;
-	}
-	else
-	{
-		if (targetLength == 0) return TRUE;
-		else return compareString(source.bytes() + idx, len, string.bytes(), targetLength) != 0;
-	}
+	if (len != targetLength) return TRUE;
+	else if (len == 0) return FALSE;
+	else return !isSameString(source.bytes() + idx, string.bytes(), len);
 }
 
 Bool StringSpan::operator >(StringSpan span)
