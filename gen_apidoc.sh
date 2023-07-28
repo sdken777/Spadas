@@ -1,12 +1,10 @@
 CUR_DIR=$(dirname "$0")
 
 cd "$CUR_DIR"/doc
-doxygen Doxyfile-Spadas
-cp -vf ./index.html ~/Desktop/D02006_SpadasDoc/
-
-cd ~/Desktop
-zip -r D02006_SpadasDoc.zip ./D02006_SpadasDoc/
-rm -r ./D02006_SpadasDoc/
+DOCUMENT_LANGUAGE=Chinese doxygen Doxyfile-Spadas
+cp -vf ./index.html ~/Desktop/D02006_SpadasDoc_Chinese/
+DOCUMENT_LANGUAGE=English doxygen Doxyfile-Spadas
+cp -vf ./index.html ~/Desktop/D02006_SpadasDoc_English/
 
 echo "Done. (Spadas/gen_apidoc.sh)"
 sleep 1
