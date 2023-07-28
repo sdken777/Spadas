@@ -4,14 +4,14 @@
 
 namespace spadas
 {
-	// 数学（旧） //////////////////////////////////////////////////////////////
+	// Math (deprecated) / 数学（旧） //////////////////////////////////////////////////////////////
 	namespace math
 	{
 		template <typename Type>
 		void sort(Array<Type> arr);
 	}
 
-	// 插件相关类型定义（旧） //////////////////////////////////////////////////////////////
+	// Plugin related type definition (deprecated) / 插件相关类型定义（旧） //////////////////////////////////////////////////////////////
 	typedef Time SessionID;
 	
 	struct GlobalTimestamp
@@ -300,7 +300,7 @@ namespace spadas
 		{}
 	};
 
-	// 插件相关实用功能（旧） //////////////////////////////////////////////////////////////
+	// Plugin related utility functions (deprecated) / 插件相关实用功能（旧） //////////////////////////////////////////////////////////////
 	enum class SampleState
 	{
 		None, 
@@ -350,7 +350,7 @@ namespace spadas
 		Bool isValid() { return FALSE; }
 	};
 
-	// 插件API（旧） /////////////////////////////////////////////////////////
+	// Plugin API (deprecated) / 插件API（旧） /////////////////////////////////////////////////////////
 	class SPADAS_API IPlugin
 	{
 	public:
@@ -638,14 +638,14 @@ namespace spadas
 	};
 	typedef Interface<IVideoPluginV402>(*GetVideoPluginV402)();
 
-	// sort函数的实现 ///////////////////////////////////////////////////////
+	// Implementation of sort / sort函数的实现 ///////////////////////////////////////////////////////
 	template<typename Type>
 	void spadas::math::sort(Array<Type> arr)
 	{
 		arr.sort();
 	}
 
-	// SampleBuffer函数的实现 /////////////////////////////////////////////////////////
+	// Implementation of SampleBuffer functions / SampleBuffer函数的实现 /////////////////////////////////////////////////////////
 	template<typename Type>
 	SampleInterpolationResult SampleBuffer::interpolate(GlobalTimestamp time, Type& interpolatedSample, UInt earlyThresh)
 	{
