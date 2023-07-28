@@ -5,6 +5,7 @@
             "compilerPath": "C:\\x-tools\\x86-windows\\bin\\x86_64-w64-mingw32-g++.exe",
             "includePath": [
                 ".\\",
+                ".\\3party",
                 "..\\include",
                 // "..\\include64",
                 "C:\\x-tools-headers\\x86-windows\\lib\\gcc\\x86_64-w64-mingw32\\8.3.0\\include",
@@ -24,6 +25,7 @@
             "compilerPath": "C:\\x-tools\\x86-ubuntu1804\\bin\\x86_64-ubuntu18.04-linux-gnu-g++.exe",
             "includePath": [
                 ".\\",
+                ".\\3party",
                 "..\\include",
                 // "..\\includex",
                 "C:\\x-tools-headers\\x86-ubuntu1804\\lib\\gcc\\x86_64-ubuntu18.04-linux-gnu\\8.3.0\\include",
@@ -43,6 +45,7 @@
             "compilerPath": "C:\\x-tools\\arm-ubuntu1604\\bin\\aarch64-ubuntu16.04-linux-gnu-g++.exe",
             "includePath": [
                 ".\\",
+                ".\\3party",
                 "..\\include",
                 // "..\\includexa",
                 "C:\\x-tools-headers\\arm-ubuntu1604\\lib\\gcc\\aarch64-ubuntu16.04-linux-gnu\\8.3.0\\include",
@@ -63,6 +66,7 @@
             "compilerArgs": [ "-foc-compiler-path=C:\\x-tools\\x86-macos1010\\llvm-8\\bin" ],
             "includePath": [
                 ".\\",
+                ".\\3party",
                 "..\\include",
                 // "..\\includem",
                 "C:\\x-tools-headers\\x86-macos1010\\llvm-8\\lib\\clang\\8.0.0\\include",
@@ -81,6 +85,7 @@
             "compilerPath": "/opt/x-tools/x86-windows/bin/x86_64-w64-mingw32-g++",
             "includePath": [
                 "./",
+                "./3party",
                 "../include",
                 // "../include64",
                 "/opt/x-tools/x86-windows/lib/gcc/x86_64-w64-mingw32/8.3.0/include",
@@ -100,6 +105,7 @@
             "compilerPath": "/opt/x-tools/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-g++",
             "includePath": [
                 "./",
+                "./3party",
                 "../include",
                 // "../includex",
                 "/opt/x-tools/x86-ubuntu1804/lib/gcc/x86_64-ubuntu18.04-linux-gnu/8.3.0/include",
@@ -119,6 +125,7 @@
             "compilerPath": "/opt/x-tools/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-g++",
             "includePath": [
                 "./",
+                "./3party",
                 "../include",
                 // "../includexa",
                 "/opt/x-tools/arm-ubuntu1604/lib/gcc/aarch64-ubuntu16.04-linux-gnu/8.3.0/include",
@@ -139,6 +146,7 @@
             "compilerArgs": [ "-foc-compiler-path=/opt/x-tools/x86-macos1010/llvm-8/bin" ],
             "includePath": [
                 "./",
+                "./3party",
                 "../include",
                 // "../includem",
                 "/opt/x-tools/x86-macos1010/llvm-8/lib/clang/8.0.0/include",
@@ -157,6 +165,7 @@
             "compilerPath": "/Volumes/x-tools/x86-windows/bin/x86_64-w64-mingw32-g++",
             "includePath": [
                 "./",
+                "./3party",
                 "../include",
                 // "../include64",
                 "/Volumes/x-tools/x86-windows/lib/gcc/x86_64-w64-mingw32/8.3.0/include",
@@ -176,6 +185,7 @@
             "compilerPath": "/Volumes/x-tools/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-g++",
             "includePath": [
                 "./",
+                "./3party",
                 "../include",
                 // "../includex",
                 "/Volumes/x-tools/x86-ubuntu1804/lib/gcc/x86_64-ubuntu18.04-linux-gnu/8.3.0/include",
@@ -195,6 +205,7 @@
             "compilerPath": "/Volumes/x-tools/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-g++",
             "includePath": [
                 "./",
+                "./3party",
                 "../include",
                 // "../includexa",
                 "/Volumes/x-tools/arm-ubuntu1604/lib/gcc/aarch64-ubuntu16.04-linux-gnu/8.3.0/include",
@@ -215,6 +226,7 @@
             "compilerArgs": [ "-foc-compiler-path=/Volumes/x-tools/x86-macos1010/llvm-8/bin" ],
             "includePath": [
                 "./",
+                "./3party",
                 "../include",
                 // "../includem",
                 "/Volumes/x-tools/x86-macos1010/llvm-8/lib/clang/8.0.0/include",

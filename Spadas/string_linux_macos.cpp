@@ -6,7 +6,7 @@
 #include "spadas.h"
 
 #include "string_bz.h"
-#include "string_encoding.h"
+#include "3party/ConvertUTF.h"
 
 #if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
@@ -16,7 +16,6 @@
 
 using namespace spadas;
 using namespace spadas::math;
-using namespace string_internal;
 
 UInt spadas_internal::lengthChar(const Char str[])
 {
@@ -51,12 +50,52 @@ UInt spadas_internal::utf8ToChar(const Char src[], UInt srcLength, Char dst[], U
 
 UInt spadas_internal::utf8ToWChar(const Char src[], UInt srcLength, WChar dst[], UInt dstSize)
 {
-	return cvtUTF8toUTF32(src, srcLength, dst, dstSize);
+	Bool srcCopied = FALSE;
+    if (src[srcLength] != 0)
+    {
+    	Char *src2 = new Char[srcLength+1];
+    	for (UInt i = 0; i < srcLength; i++) src2[i] = src[i];
+    	src2[srcLength] = 0;
+    	src = src2;
+    	srcCopied = TRUE;
+    }
+    
+    const UTF8* a = (const UTF8*)&src[0];
+    const UTF8* b = (const UTF8*)&src[srcLength+1];
+    UTF32* c = (UTF32*)&dst[0];
+    UTF32* d = (UTF32*)&dst[dstSize];
+    
+    ConvertUTF8toUTF32(&a, b, &c, d, strictConversion);
+    dst[dstSize-1] = 0;
+    
+    if (srcCopied) delete[] src;
+
+    return (Int)((ULong)c - (ULong)dst) / 4 - 1;
 }
 
 UInt spadas_internal::wCharToUTF8(const WChar src[], UInt srcLength, Char dst[], UInt dstSize)
 {
-	return cvtUTF32toUTF8(src, srcLength, dst, dstSize);
+	Bool srcCopied = FALSE;
+    if (src[srcLength] != 0)
+    {
+    	WChar *src2 = new WChar[srcLength+1];
+    	for (UInt i = 0; i < srcLength; i++) src2[i] = src[i];
+    	src2[srcLength] = 0;
+    	src = src2;
+    	srcCopied = TRUE;
+    }
+    
+    const UTF32* a = (const UTF32*)&src[0];
+    const UTF32* b= (const UTF32*)&src[srcLength+1];
+    UTF8* c = (UTF8*)&dst[0];
+    UTF8* d = (UTF8*)&dst[dstSize];
+    
+    ConvertUTF32toUTF8(&a, b, &c, d, strictConversion);
+    dst[dstSize-1] = 0;
+    
+    if (srcCopied) delete[] src;
+
+    return (Int)((ULong)c - (ULong)dst) - 1;
 }
 
 UInt spadas_internal::printToString(Char dst[], UInt dstSize, const Char format[], ...)

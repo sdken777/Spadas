@@ -2,7 +2,6 @@
 #include "spadas.h"
 
 #include "console.h"
-#include "string_encoding.h"
 
 #if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
@@ -193,7 +192,6 @@ namespace console_internal
 using namespace spadas;
 using namespace spadas_internal;
 using namespace console_internal;
-using namespace string_internal;
 
 #if defined(SPADAS_ENV_LINUX)
 void console::popup(String text)

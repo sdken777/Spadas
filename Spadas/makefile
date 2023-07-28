@@ -192,9 +192,9 @@ ifeq ($(COMPILE), cross)
 		COMPILER_CPP_EXE=$(XTOOLS_PATH)/x86-macos1010/target/bin/x86_64-apple-darwin14-clang++
 		STRIP_EXE=$(XTOOLS_PATH)/x86-macos1010/target/bin/x86_64-apple-darwin14-strip
 		ifeq ($(IS_CYGWIN), yes)
-			SYSROOT_OPTION=-isysroot $(CYGWIN_XTOOLS_PATH)/x86-macos1010/target/SDK/MacOSX10.10.sdk -cxx-isystem $(CYGWIN_XTOOLS_PATH)/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/v1
+			SYSROOT_OPTION=-isysroot $(CYGWIN_XTOOLS_PATH)/x86-macos1010/target/SDK/MacOSX10.10.sdk -I$(CYGWIN_XTOOLS_PATH)/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/v1
 		else
-			SYSROOT_OPTION=-isysroot $(XTOOLS_PATH)/x86-macos1010/target/SDK/MacOSX10.10.sdk -cxx-isystem $(XTOOLS_PATH)/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/v1
+			SYSROOT_OPTION=-isysroot $(XTOOLS_PATH)/x86-macos1010/target/SDK/MacOSX10.10.sdk -I$(XTOOLS_PATH)/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/v1
 		endif
 	endif
 endif

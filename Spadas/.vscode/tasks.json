@@ -10,6 +10,7 @@
             "DEPENDS_ARM_LINUX": "pthread dl",
             "DEPENDS_X86_MACOS": "pthread dl",
             "FRAMEWORKS_X86_MACOS": "CoreServices",
+            "SEARCH_INCLUDE": "./3party",
         }
     },
     "inputs": [
