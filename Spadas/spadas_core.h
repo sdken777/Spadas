@@ -5424,9 +5424,15 @@ namespace spadas
 	/// \~Chinese @brief 系统功能函数命名空间
 	namespace system
 	{
-		/// \~English @brief Get the current Spadas version
+		/// \~English @brief Get the current spadas version
 		/// \~Chinese @brief 取得当前Spadas版本
 		SPADAS_API String getSpadasVersion();
+
+		/// \~English @brief Get copyright notices of the third party softwares spadas uses
+		/// \~Chinese @brief 取得Spadas使用的第三方软件的版权声明
+		/// \~English @returns Key is title, value is copyright notice
+		/// \~Chinese @returns 键为标题，值为版权声明
+		SPADAS_API Dictionary<String> getSpadasThirdPartyNotices();
 
 		/// \~English @brief Get the current running operating system
 		/// \~Chinese @brief 取得当前运行环境

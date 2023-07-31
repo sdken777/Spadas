@@ -84,6 +84,9 @@
             "label": "调试构建",
             "group": "build",
             "command": "make",
+            "dependsOn": [
+                "(子任务)生成资源代码",
+            ],
             "problemMatcher":"$gcc",
             "windows": {
                 "args": [
@@ -128,6 +131,7 @@
             ],
             "dependsOrder": "sequence",
             "dependsOn": [
+                "(子任务)生成资源代码",
                 "(子任务)发布构建(X86-Windows目标)",
                 "(子任务)发布构建(X86-Ubuntu1804目标)",
                 "(子任务)发布构建(Arm-Ubuntu1604目标)",
@@ -149,6 +153,16 @@
 
         // 以下为子任务
 
+        {
+            "type": "process",
+            "label": "(子任务)生成资源代码",
+            "hide": true,
+            "command": "dotnet",
+            "args": [
+                "../bin/VSCodeHelper.dll",
+                "gen_resource_code",
+            ],
+        },
         {
             "type": "process",
             "label": "(子任务)发布构建(X86-Windows目标)",
