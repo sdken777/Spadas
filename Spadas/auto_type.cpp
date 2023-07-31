@@ -433,37 +433,37 @@ void IGeneralDeviceDataOutput::outputGeneralDeviceData(GeneralDeviceData data)
 {
 }
 
-GeneralTransmitResult IGeneralDataTransmitterX::transmitNow(String protocol, Array<Double> vector, Binary binary)
+TransmitResult IGeneralDataTransmitterX::transmitNow(String protocol, Array<Double> vector, Binary binary)
 {
-	return GeneralTransmitResult::Unknown;
+	return TransmitResult::Unknown;
 }
 
-GeneralTransmitResult IGeneralDataTransmitterX::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance, String guestSyncID)
+TransmitResult IGeneralDataTransmitterX::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance, String guestSyncID)
 {
-	return GeneralTransmitResult::Unknown;
+	return TransmitResult::Unknown;
 }
 
-BusTransmitResult IBusMessageTransmitterX::transmitNow(UInt channel, UInt id, Binary binary)
+TransmitResult IBusMessageTransmitterX::transmitNow(UInt channel, UInt id, Binary binary)
 {
-	return BusTransmitResult::Unknown;
+	return TransmitResult::Unknown;
 }
 
-BusTransmitResult IBusMessageTransmitterX::transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval)
+TransmitResult IBusMessageTransmitterX::transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval)
 {
-	return BusTransmitResult::Unknown;
+	return TransmitResult::Unknown;
 }
 
-BusTransmitResult IBusMessageTransmitterX::transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance)
+TransmitResult IBusMessageTransmitterX::transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance)
 {
-	return BusTransmitResult::Unknown;
+	return TransmitResult::Unknown;
 }
 
-VideoTransmitResult IVideoFrameTransmitterX::transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data)
+TransmitResult IVideoFrameTransmitterX::transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data)
 {
-	return VideoTransmitResult::Unknown;
+	return TransmitResult::Unknown;
 }
 
-VideoTransmitResult IVideoFrameTransmitterX::transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance)
+TransmitResult IVideoFrameTransmitterX::transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance)
 {
-	return VideoTransmitResult::Unknown;
+	return TransmitResult::Unknown;
 }

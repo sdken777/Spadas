@@ -7,7 +7,7 @@ using namespace spadas;
 SPADAS_DEFAULT_API void get_native_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 1;
-	minor = 5;
+	minor = 6;
 }
 
 SPADAS_DEFAULT_API void get_bus_plugin_api_version(UInt& major, UInt& minor)
@@ -50,6 +50,7 @@ public:
 	Interface<IPluginV103> i103;
 	Interface<IPluginV104> i104;
 	Interface<IPluginV105> i105;
+	Interface<IPluginV106> i106;
 };
 
 class CompatiblePlugin : public Object<CompatiblePluginVars>, public IPlugin
@@ -82,6 +83,11 @@ public:
 		vars->version = 105;
 		vars->i105 = i;
 	}
+	CompatiblePlugin(Interface<IPluginV106> i) : Object<CompatiblePluginVars>(new CompatiblePluginVars, TRUE)
+	{
+		vars->version = 106;
+		vars->i106 = i;
+	}
 	String getPluginType() override
 	{
 		switch (vars->version)
@@ -96,6 +102,8 @@ public:
 			return vars->i104->getPluginType();
 		case 105:
 			return vars->i105->getPluginType();
+		case 106:
+			return vars->i106->getPluginType();
 		default:
 			return String();
 		}
@@ -114,6 +122,8 @@ public:
 			return vars->i104->getPluginVersion();
 		case 105:
 			return vars->i105->getPluginVersion();
+		case 106:
+			return vars->i106->getPluginVersion();
 		default:
 			return String();
 		}
@@ -136,6 +146,9 @@ public:
 			break;
 		case 105:
 			vars->i105->closePlugin();
+			break;
+		case 106:
+			vars->i106->closePlugin();
 			break;
 		default:
 			break;
@@ -184,6 +197,13 @@ SPADAS_DEFAULT_API Interface<IPlugin> get_compatible_plugin(Pointer func, UInt m
 	case 5:
 	{
 		GetPluginV105 getPlugin = (GetPluginV105)func;
+		auto i = getPlugin();
+		if (i.isValid()) return CompatiblePlugin(i);
+		else return Interface<IPlugin>();
+	}
+	case 6:
+	{
+		GetPluginV106 getPlugin = (GetPluginV106)func;
 		auto i = getPlugin();
 		if (i.isValid()) return CompatiblePlugin(i);
 		else return Interface<IPlugin>();
@@ -422,6 +442,67 @@ void IPluginV105::runStandaloneTask(String taskName, String config, Flag shouldE
 {}
 
 Array<String> IPluginV105::getGuestSyncChannelNames()
+{
+	return Array<String>();
+}
+
+// 通用功能插件接口 1.6
+String IPluginV106::getPluginType()
+{
+	return String();
+}
+
+String IPluginV106::getPluginVersion()
+{
+	return String();
+}
+
+void IPluginV106::closePlugin()
+{}
+
+Dictionary<String> IPluginV106::getThirdPartyNotices()
+{
+	return Dictionary<String>();
+}
+
+void IPluginV106::initLocaleInfo(String languageCode, Bool preferPRCWeb)
+{}
+
+void IPluginV106::useLogger(Interface<ILogger> logger)
+{}
+
+void IPluginV106::setAppFilesPath(Path path)
+{}
+
+void IPluginV106::onCrossData(String id, Binary data)
+{}
+
+void IPluginV106::useCrossTransmitter(Interface<ICrossTransmitter> transmitter)
+{}
+
+Bool IPluginV106::onCrossCall(String id, BaseObject context)
+{
+	return FALSE;
+}
+
+void IPluginV106::useCrossCaller(Interface<ICrossCaller> caller)
+{}
+
+void IPluginV106::onStartOnlineSession(SessionIdentifier session, ULong startCPUTick)
+{}
+
+void IPluginV106::onStopOnlineSession()
+{}
+
+Array<String> IPluginV106::getStandaloneTaskNames()
+{
+	return Array<String>();
+}
+
+void IPluginV106::runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
+{}
+
+Array<String> IPluginV106::getGuestSyncChannelNames()
 {
 	return Array<String>();
 }

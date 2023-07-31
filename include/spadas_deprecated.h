@@ -638,6 +638,28 @@ namespace spadas
 	};
 	typedef Interface<IVideoPluginV402>(*GetVideoPluginV402)();
 
+	class SPADAS_API IPluginV105
+	{
+	public:
+		virtual ~IPluginV105() {};
+		virtual String getPluginType();
+		virtual String getPluginVersion();
+		virtual void closePlugin();
+		virtual void initLanguage(String languageCode);
+		virtual void useLogger(Interface<ILogger> logger);
+		virtual void setAppFilesPath(Path path);
+		virtual void onCrossData(String id, Binary data);
+		virtual void useCrossTransmitter(Interface<ICrossTransmitter> transmitter);
+		virtual Bool onCrossCall(String id, BaseObject context);
+		virtual void useCrossCaller(Interface<ICrossCaller> caller);
+		virtual void onStartOnlineSession(SessionIdentifier session, ULong startCPUTick);
+		virtual void onStopOnlineSession();
+		virtual Array<String> getStandaloneTaskNames();
+		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
+		virtual Array<String> getGuestSyncChannelNames();
+	};
+	typedef Interface<IPluginV105>(*GetPluginV105)();
+
 	// Implementation of sort / sort函数的实现 ///////////////////////////////////////////////////////
 	template<typename Type>
 	void spadas::math::sort(Array<Type> arr)

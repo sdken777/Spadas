@@ -6023,41 +6023,61 @@ namespace spadas
 	/// \~Chinese @brief 通用原始数据表，key为原始数据协议ID，一般格式为"xxx-v?"，xxx表示数据来源，v?表示版本
 	typedef Dictionary<Array<SessionGeneralRawData> > SessionGeneralRawDataTable;
 
-	/// \~English @brief General raw data transmit result
-	/// \~Chinese @brief 通用原始数据发送结果
-	enum class GeneralTransmitResult
+	/// \~English @brief Raw data transmit result
+	/// \~Chinese @brief 原始数据发送结果
+	enum class TransmitResult
 	{
 		/// \~English @brief Unknown
 		/// \~Chinese @brief 未知
 		Unknown = 0,
 
-		/// \~English @brief Successfully transmitted, or successfully scheduled to transmit
-		/// \~Chinese @brief 成功发送，或成功预约发送
-		OK = 1,
+		/// \~English @brief Successfully transmitted
+		/// \~Chinese @brief 成功发送
+		Transmitted = 1,
+
+		/// \~English @brief Successfully added to the transmitting queue (The actual transmitting may still fail)
+		/// \~Chinese @brief 成功添加至发送队列（实际发送时仍有可能失败）
+		Added = 2,
+
+		/// \~English @brief Successfully scheduled to transmit (The actual transmitting may still fail)
+		/// \~Chinese @brief 成功预约发送（实际发送时仍有可能失败）
+		Scheduled = 3,
 
 		/// \~English @brief Not running online mode
 		/// \~Chinese @brief 未运行在线模式
-		NotRunning = 2,
+		NotRunning = 4,
 
-		/// \~English @brief The protocol of data is supported by no plugin
-		/// \~Chinese @brief 无插件支持该协议数据发送
-		PluginNotFound = 3,
+		/// \~English @brief The protocol of data is supported by no plugin, or no plugin devices are mapped to this channel
+		/// \~Chinese @brief 无插件支持该协议数据发送，或无插件设备映射至该通道
+		PluginNotFound = 5,
 
 		/// \~English @brief Failed to transmit, or failed to schedule to transmit
 		/// \~Chinese @brief 发送失败，或预约发送失败
-		Failed = 4,
+		Failed = 6,
 
 		/// \~English @brief The guest device or host is not synchronized to the time server
 		/// \~Chinese @brief 客机或主机未同步至授时服务器
-		NotSync = 5,
+		NotSync = 7,
 
 		/// \~English @brief Scheduled transmitting is unsupported
 		/// \~Chinese @brief 不支持预约发送
-		ScheduleUnsupported = 6,
+		ScheduleUnsupported = 8,
 
 		/// \~English @brief Timestamp out of order
 		/// \~Chinese @brief 时间戳乱序
-		TimeDisorder = 7,
+		TimeDisorder = 9,
+
+		/// \~English @brief Invalid channel (should be 1~16 for bus, 0~23 for video)
+		/// \~Chinese @brief 无效的通道（总线应为1~16，视频应为0~23）
+		InvalidChannel = 10,
+
+		/// \~English @brief Inconsistent with the configured re-injection codec format
+		/// \~Chinese @brief 与配置的回注编码格式不一致
+		WrongCodec = 11,
+
+		/// \~English @brief Inconsistent with the configured re-injection image size
+		/// \~Chinese @brief 与配置的回注视频图像尺寸不一致
+		WrongSize = 12,
 	};
 
 	/// \~English @brief General raw data transmit interface
@@ -6077,7 +6097,7 @@ namespace spadas
 		/// \~Chinese @param binary 二进制数据
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual GeneralTransmitResult transmitNow(String protocol, Array<Double> vector, Binary binary);
+		virtual TransmitResult transmitNow(String protocol, Array<Double> vector, Binary binary);
 
 		/// \~English @brief Schedule to transmit data according to server posix time (must be greater than the timestamp of the last frame to transmit with the same protocol)
 		/// \~Chinese @brief 指定按服务器Posix时间预约发送视频帧 (必须大于该协议的上一帧预约发送数据的时间戳)
@@ -6095,7 +6115,7 @@ namespace spadas
 		/// \~Chinese @param guestSyncID 客机同步ID，将据此确定客机是否已与授时服务器同步（格式为"xxx.yyy"，xxx为插件类型ID，yyy为客机同步通道名称）
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual GeneralTransmitResult transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance, String guestSyncID);
+		virtual TransmitResult transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance, String guestSyncID);
 	};
 
 	/// \~English @brief Generic sample element
@@ -6560,43 +6580,6 @@ namespace spadas
 	/// \~Chinese @brief 总线原始数据表（长度16, 分别表示总线通道1~16）
 	typedef Array<Array<SessionBusRawData> > SessionBusRawDataTable;
 
-	/// \~English @brief Bus raw data transmit result
-	/// \~Chinese @brief 总线报文发送结果
-	enum class BusTransmitResult
-	{
-		/// \~English @brief Unknown
-		/// \~Chinese @brief 未知
-		Unknown = 0,
-
-		/// \~English @brief Successfully added to the transmitting queue (The actual transmitting may still fail)
-		/// \~Chinese @brief 成功添加至发送队列（实际发送时仍有可能失败）
-		Added = 1,
-
-		/// \~English @brief Not running online mode
-		/// \~Chinese @brief 未运行在线模式
-		NotRunning = 2,
-
-		/// \~English @brief Invalid channel (should be 1~16)
-		/// \~Chinese @brief 无效的通道（应为1~16）
-		InvalidChannel = 3,
-		
-		/// \~English @brief No plugin devices are mapped to this channel
-		/// \~Chinese @brief 无插件设备映射至该通道
-		PluginNotFound = 4,
-
-		/// \~English @brief The bus receiver or host is not synchronized to the time server
-		/// \~Chinese @brief 总线设备或主机未同步至授时服务器
-		NotSync = 5,
-
-		/// \~English @brief Scheduled transmitting is unsupported
-		/// \~Chinese @brief 不支持预约发送
-		ScheduleUnsupported = 6,
-
-		/// \~English @brief Timestamp out of order
-		/// \~Chinese @brief 时间戳乱序
-		TimeDisorder = 7,
-	};
-
 	/// \~English @brief Bus raw data transmit interface
 	/// \~Chinese @brief 总线报文发送接口
 	class SPADAS_API IBusMessageTransmitterX
@@ -6614,7 +6597,7 @@ namespace spadas
 		/// \~Chinese @param binary 报文数据
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual BusTransmitResult transmitNow(UInt channel, UInt id, Binary binary);
+		virtual TransmitResult transmitNow(UInt channel, UInt id, Binary binary);
 
 		/// \~English @brief Set to transmit message repeatedly
 		/// \~Chinese @brief 设定重复发送报文
@@ -6628,7 +6611,7 @@ namespace spadas
 		/// \~Chinese @param interval 发送周期[ms]，有效范围10~1000ms
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual BusTransmitResult transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval);
+		virtual TransmitResult transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval);
 
 		/// \~English @brief Schedule to transmit data according to server posix time (must be greater than the timestamp of the last frame to transmit on the same channel)
 		/// \~Chinese @brief 指定按授时服务器Posix时间预约发送报文 (必须大于该通道上一帧预约发送报文的时间)
@@ -6644,7 +6627,7 @@ namespace spadas
 		/// \~Chinese @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual BusTransmitResult transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance);
+		virtual TransmitResult transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance);
 	};
 
 	/// \~English @brief Bus device ID
@@ -7115,51 +7098,6 @@ namespace spadas
 		virtual void outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0);
 	};
 
-	/// \~English @brief Video raw data transmit result
-	/// \~Chinese @brief 视频帧回注结果
-	enum class VideoTransmitResult
-	{
-		/// \~English @brief Unknown
-		/// \~Chinese @brief 未知
-		Unknown = 0,
-
-		/// \~English @brief Successfully added to the transmitting queue (The actual transmitting may still fail)
-		/// \~Chinese @brief 成功添加至发送队列（实际发送时仍有可能失败）
-		Added = 1,
-
-		/// \~English @brief Not running online mode
-		/// \~Chinese @brief 未运行在线模式
-		NotRunning = 2,
-
-		/// \~English @brief Invalid channel (should be 0~23)
-		/// \~Chinese @brief 无效的通道（应为0~23）
-		InvalidChannel = 3,
-
-		/// \~English @brief No plugin devices are mapped to this channel
-		/// \~Chinese @brief 无插件设备映射至该通道
-		PluginNotFound = 4,
-
-		/// \~English @brief Inconsistent with the configured re-injection codec format
-		/// \~Chinese @brief 与配置的回注编码格式不一致
-		WrongCodec = 5,
-
-		/// \~English @brief Inconsistent with the configured re-injection image size
-		/// \~Chinese @brief 与配置的回注视频图像尺寸不一致
-		WrongSize = 6,
-
-		/// \~English @brief The video camera or host is not synchronized to the time server
-		/// \~Chinese @brief 摄像头或主机未同步至授时服务器
-		NotSync = 5,
-
-		/// \~English @brief Scheduled transmitting is unsupported
-		/// \~Chinese @brief 不支持预约发送
-		ScheduleUnsupported = 6,
-
-		/// \~English @brief Timestamp out of order
-		/// \~Chinese @brief 时间戳乱序
-		TimeDisorder = 7,
-	};
-
 	/// \~English @brief Video raw data transmit interface
 	/// \~Chinese @brief 视频帧回注接口
 	class SPADAS_API IVideoFrameTransmitterX
@@ -7179,7 +7117,7 @@ namespace spadas
 		/// \~Chinese @param data 视频帧数据
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual VideoTransmitResult transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data);
+		virtual TransmitResult transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data);
 
 		/// \~English @brief Schedule to transmit data according to server posix time (must be greater than the timestamp of the last frame to transmit on the same channel)
 		/// \~Chinese @brief 指定按服务器Posix时间预约发送视频帧 (必须大于该通道上一帧预约发送报文的时间)
@@ -7197,7 +7135,7 @@ namespace spadas
 		/// \~Chinese @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual VideoTransmitResult transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
+		virtual TransmitResult transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
 	};
 
 	/// \~English @brief All input data tables
@@ -7867,12 +7805,12 @@ namespace spadas
 
 	// Plugin API / 插件API //////////////////////////////////////////////////////////////
 
-	/// \~English @brief General function plugin interface 1.5
-	/// \~Chinese @brief 通用功能插件接口 1.5
-	class SPADAS_API IPluginV105
+	/// \~English @brief General function plugin interface 1.6
+	/// \~Chinese @brief 通用功能插件接口 1.6
+	class SPADAS_API IPluginV106
 	{
 	public:
-		virtual ~IPluginV105() {};
+		virtual ~IPluginV106() {};
 
 		/// \~English @brief Get the plugin type ID
 		/// \~Chinese @brief 获取插件类型ID
@@ -7890,11 +7828,19 @@ namespace spadas
 		/// \~Chinese @brief [可选] 在程序结束前被调用，用于停止背景线程等
 		virtual void closePlugin();
 
-		/// \~English @brief [Optional] Called when the language is initialized
-		/// \~Chinese @brief [可选] 在初始化语言时被调用
+		/// \~English @brief [Optional] Get copyright notices of the third party softwares the plugin uses
+		/// \~Chinese @brief [可选] 取得插件使用的第三方软件的版权声明
+		/// \~English @returns Key is title, value is copyright notice
+		/// \~Chinese @returns 键为标题，值为版权声明
+		virtual Dictionary<String> getThirdPartyNotices();
+
+		/// \~English @brief [Optional] Called when the locale config is being initialized
+		/// \~Chinese @brief [可选] 在初始化本土化配置时被调用
 		/// \~English @param languageCode Language code, "en" means English, "ch" means Chinese
 		/// \~Chinese @param languageCode 语言代号，"en"表示英文，"ch"表示中文
-		virtual void initLanguage(String languageCode);
+		/// \~English @param preferPRCWeb Prefer to use web service in the People's Republic of China
+		/// \~Chinese @param preferPRCWeb 使用国内的网络服务
+		virtual void initLocaleInfo(String languageCode, Bool preferPRCWeb);
 
 		/// \~English @brief [Optional] Set to use the specified interface to log debugging information (mainly used to call spadas::console::useThreadLogger in child threads)
 		/// \~Chinese @brief [可选] 设置使用指定的接口记录调试信息（主要用于在子线程中调用 spadas::console::useThreadLogger ）
@@ -7975,9 +7921,9 @@ namespace spadas
 		virtual Array<String> getGuestSyncChannelNames();
 	};
 
-	/// \~English @brief Function definition of getting the general function plugin interface, the function name should be get_plugin_v105
-	/// \~Chinese @brief 获取通用功能插件接口的全局函数定义，函数名应为get_plugin_v105
-	typedef Interface<IPluginV105>(*GetPluginV105)();
+	/// \~English @brief Function definition of getting the general function plugin interface, the function name should be get_plugin_v106
+	/// \~Chinese @brief 获取通用功能插件接口的全局函数定义，函数名应为get_plugin_v106
+	typedef Interface<IPluginV106>(*GetPluginV106)();
 
 	/// \~English @brief General device plugin interface 2.2
 	/// \~Chinese @brief 一般设备插件接口 2.2

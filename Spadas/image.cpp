@@ -106,8 +106,15 @@ Image::Image(Image src, Region2D srcRegion)
 	}
 }
 
-Image::Image(ImagePointer pointer) : Object<class ImageVars>(new ImageVars(pointer.data), TRUE)
+Image::Image(ImagePointer pointer)
 {
+    SPADAS_ERROR_RETURN(pointer.width == 0);
+    SPADAS_ERROR_RETURN(pointer.height == 0);
+    SPADAS_ERROR_RETURN(pointer.rowBytes < pointer.width * (pointer.isColor ? 3 : 1));
+    SPADAS_ERROR_RETURN(pointer.data.size() * sizeof(ULong) != pointer.height * pointer.rowBytes);
+
+    setVars(new ImageVars(pointer.data), TRUE);
+
 	vars->width = pointer.width;
 	vars->height = pointer.height;
 	vars->format = pointer.isColor ? PixelFormat::ByteBGR : PixelFormat::ByteGray;
