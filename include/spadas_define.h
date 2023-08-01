@@ -162,7 +162,8 @@
 * \~English Optional implementation of the following interface functions:
 * \~Chinese 以下接口函数可选实现：
 *   \~ - spadas::IPluginVxxx::closePlugin
-*   \~ - spadas::IPluginVxxx::initLanguage
+*   \~ - spadas::IPluginVxxx::getThirdPartyNotices
+*   \~ - spadas::IPluginVxxx::initLocaleInfo
 *   \~ - spadas::IPluginVxxx::useLogger
 *   \~ - spadas::IPluginVxxx::setAppFilesPath
 *   \~ - spadas::IPluginVxxx::onCrossData
