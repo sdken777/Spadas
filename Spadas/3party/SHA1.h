@@ -209,6 +209,12 @@
 #endif // _MSC_VER
 #endif // UINT_64
 
+// Spadas modification: Disable warnings
+#if defined(SPADAS_ENV_MACOS)
+#pragma clang diagnostic ignored "-Wunused-private-field"
+#endif
+// Spadas modification end
+
 ///////////////////////////////////////////////////////////////////////////
 // Declare SHA-1 workspace
 
