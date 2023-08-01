@@ -20,14 +20,18 @@ const char * RandomNumberGenerator::UnknownAlgorithm = "Unknown Random Generatio
 
 IRandomNumberGenerator RandomNumberGenerator::CreateRNG()
 {
+	// Spadas modification: For compatibility
 	// return make_shared<PCGRandomNumberGenerator>();
 	return IRandomNumberGenerator(new PCGRandomNumberGenerator());
+	// Spadas modification end
 }
 
 IRandomNumberGenerator RandomNumberGenerator::CreateRNG(const string rngName)
 {
+	// Spadas modification: For compatibility
 	// if (rngName == "PCGRandomNumberGenerator") return make_shared<PCGRandomNumberGenerator>();
 	if (rngName == "PCGRandomNumberGenerator") return IRandomNumberGenerator(new PCGRandomNumberGenerator());
+	// Spadas modification end
 
 	throw invalid_argument(UnknownAlgorithm);
 }
