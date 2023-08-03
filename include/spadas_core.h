@@ -1030,6 +1030,10 @@ namespace spadas
 	template <typename Type> class Interface : public Object<InterfaceVars<Type> >
 	{
 	public:
+		/// \~English @brief Class name
+		/// \~Chinese @brief 类名称
+		static const String TypeName;
+
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
 		Interface();
@@ -1069,6 +1073,10 @@ namespace spadas
 	template <typename Type> class Optional : public Object<OptionalVars<Type> >
 	{
 	public:
+		/// \~English @brief Class name
+		/// \~Chinese @brief 类名称
+		static const String TypeName;
+
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
 		Optional();
@@ -1150,6 +1158,10 @@ namespace spadas
 	template <typename Type> class Array : public Object<ArrayVars<Type> >
 	{
 	public:
+		/// \~English @brief Class name
+		/// \~Chinese @brief 类名称
+		static const String TypeName;
+
 		/// \~English @brief Default constructor, create an empty array
 		/// \~Chinese @brief 默认构造函数，创建一个空数组
 		Array();
@@ -1734,6 +1746,10 @@ namespace spadas
 	template <typename Type> class ArrayX : public Object<ArrayXVars<Type> >
 	{
 	public:
+		/// \~English @brief Class name
+		/// \~Chinese @brief 类名称
+		static const String TypeName;
+
 		/// \~English @brief Create an empty array, each segment size is 16
 		/// \~Chinese @brief 创建一个空数组，每段大小为16
 		ArrayX();
@@ -1882,6 +1898,10 @@ namespace spadas
 	template <typename Type> class List : public Object<ListVars<Type> >
 	{
 	public:
+		/// \~English @brief Class name
+		/// \~Chinese @brief 类名称
+		static const String TypeName;
+
 		/// \~English @brief Create an empty linked list
 		/// \~Chinese @brief 创建一个空链表
 		List();
@@ -1956,6 +1976,10 @@ namespace spadas
 	template <typename Type> class Stream : public Object<StreamVars<Type> >
 	{
 	public:
+		/// \~English @brief Class name
+		/// \~Chinese @brief 类名称
+		static const String TypeName;
+
 		/// \~English @brief Create a data stream with a capacity of 1, and its elements can be discarded
 		/// \~Chinese @brief 创建容量为1的数据流，且其元素可丢弃
 		Stream();
@@ -2116,6 +2140,10 @@ namespace spadas
 	template <typename KeyType, typename ValueType> class Map : public Object<MapVars<KeyType, ValueType> >
 	{
 	public:
+		/// \~English @brief Class name
+		/// \~Chinese @brief 类名称
+		static const String TypeName;
+
 		/// \~English @brief Create an empty mapping table, the default number of buckets is 256
 		/// \~Chinese @brief 创建空的映射表，默认bucket个数为256
 		Map();
@@ -4550,6 +4578,10 @@ namespace spadas
 	template <typename Type> class Matrix : public Object<class MatrixVars<Type> >
 	{
 	public:
+		/// \~English @brief Class name
+		/// \~Chinese @brief 类名称
+		static const String TypeName;
+
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
 		Matrix();

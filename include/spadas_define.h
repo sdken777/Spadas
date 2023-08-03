@@ -2,18 +2,18 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 移除MagicNumber。移除system::isBigEndian。移除ImagePair, InterlaceMode, FrameRate, AspectRatio, MergeMode, TimeCode及相关方法。新增ImageResolution::Value::HD2K/HD4K
+// Update log / 更新记录: as/is支持模板类
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 26
+#define SPADAS_VERSION_BUILD 27
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.0.26 \n
-* \~Chinese 本文档对应Spadas版本：9.0.26 \n
+* \~English This document corresponds to Spadas version: 9.0.27 \n
+* \~Chinese 本文档对应Spadas版本：9.0.27 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -302,6 +302,9 @@
 #if defined(check)
 #undef check
 #endif
+
+// For comma in macro / 在宏定义中使用逗号
+#define COMMA ,
 
 // Spadas symbol I/O / Spadas类库I/O
 #if defined(SPADAS_ENV_WINDOWS) && !defined(SPADAS_EXPORTS)

@@ -208,9 +208,13 @@ namespace spadas
 		return &this->obj;
 	}
 
+	template <typename Type>
+	const String Interface<Type>::TypeName = SS"spadas.Interface<" + typeid(Type).name() + ">";
+
 	template <typename Type> class InterfaceVars : public Vars
 	{
 	public:
+		SPADAS_VARS_DEF(Interface<Type>, Vars)
 		Type *implement;
 		Vars *implementVars;
 		InterfaceVars(Type *implement0, Vars *implementVars0) : implement(implement0), implementVars(implementVars0)
@@ -273,9 +277,13 @@ namespace spadas
 		return obj;
 	}
 
+	template <typename Type>
+	const String Optional<Type>::TypeName = SS"spadas.Optional<" + typeid(Type).name() + ">";
+
 	template <typename Type> class OptionalVars : public Vars
 	{
 	public:
+		SPADAS_VARS_DEF(Optional<Type>, Vars)
 		Type val;
 		OptionalVars(Type& v) : val(v)
 		{}
@@ -479,9 +487,13 @@ namespace spadas
 		}
 	}
 
+	template <typename Type>
+	const String Array<Type>::TypeName = SS"spadas.Array<" + typeid(Type).name() + ">";
+
 	template<typename Type> class ArrayVars : public Vars
 	{
 	public:
+		SPADAS_VARS_DEF(Array<Type>, Vars)
 		UInt size;
 		UInt reserveSize;
 		Type *data;
@@ -1959,9 +1971,13 @@ namespace spadas
 		};
 	}
 
+	template <typename Type>
+	const String ArrayX<Type>::TypeName = SS"spadas.ArrayX<" + typeid(Type).name() + ">";
+
 	template<typename Type> class ArrayXVars : public Vars
 	{
 	public:
+		SPADAS_VARS_DEF(ArrayX<Type>, Vars)
 		UInt size;
 		UInt segmentSize;
 		Bool withDefault;
@@ -2298,9 +2314,13 @@ namespace spadas
 		};
 	}
 
+	template <typename Type>
+	const String List<Type>::TypeName = SS"spadas.List<" + typeid(Type).name() + ">";
+
 	template<typename Type> class ListVars : public Vars
 	{
 	public:
+		SPADAS_VARS_DEF(List<Type>, Vars)
 		UInt size;
 		volatile Int elemRefs;
 		internal::ListSegment<Type> *firstSeg;
@@ -2800,9 +2820,13 @@ namespace spadas
 	}
 
 	// Implementation of data stream / 数据流实现 ///////////////////////////////////////////////////////
+	template <typename Type>
+	const String Stream<Type>::TypeName = SS"spadas.Stream<" + typeid(Type).name() + ">";
+
 	template<typename Type> class StreamVars : public Vars
 	{
 	public:
+		SPADAS_VARS_DEF(Stream<Type>, Vars)
 		UInt capacity;
 		volatile UInt nElements;
 		UInt nDiscarded;
@@ -3254,9 +3278,13 @@ namespace spadas
 		return hash;
 	}
 
+	template <typename KeyType, typename ValueType>
+	const String Map<KeyType, ValueType>::TypeName = SS"spadas.Map<" + typeid(KeyType).name() + "," + typeid(ValueType).name() + ">";
+
 	template <typename KeyType, typename ValueType> class MapVars : public Vars
 	{
 	public:
+		SPADAS_VARS_DEF(Map<KeyType COMMA ValueType>, Vars)
 		Word mask;
 		UInt size;
 		Array<ListNode<KeyValue<KeyType, ValueType> >* > table;
@@ -3756,9 +3784,13 @@ namespace spadas
 	}
 
 	// Implementation of matrix class / 矩阵类实现 ///////////////////////////////////////////////////////
+	template <typename Type>
+	const String Matrix<Type>::TypeName = SS"spadas.Matrix<" + typeid(Type).name() + ">";
+
 	template<typename Type> class MatrixVars : public Vars
 	{
 	public:
+		SPADAS_VARS_DEF(Matrix<Type>, Vars)
 		Array<UInt> dims;
 		UInt nElems;
 		Array<Type> data0;
