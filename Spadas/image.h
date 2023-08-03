@@ -219,17 +219,7 @@ void rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWidth, UInt srcHeight
 	IRowCvt *createRowCvt(RowIOType srcType, RowIOType dstType);
 	IRowCvt *createRowFlip(RowIOType type);
 	IRowRsz* createRowRsz(RowIOType type);
-	
-	/* merge3d */
-	void mergeStereoByte(Image src[2], Image& dst, Enum<MergeMode> targetMergeMode, UInt nChannels);
-	void mergeStereoWord(Image src[2], Image& dst, Enum<MergeMode> targetMergeMode, UInt nChannels);
-	void splitStereoByte(Image src, Image dst[2], Enum<MergeMode> srcMergeMode, UInt nChannels);
-	void splitStereoWord(Image src, Image dst[2], Enum<MergeMode> srcMergeMode, UInt nChannels);
-	void mergeFieldGeneric(Image src[2], Image& dst);
-	void splitFieldByte(Image src, Image dst[2], UInt nChannels);
-	void splitFieldWord(Image src, Image dst[2], UInt nChannels);
-	void splitFieldFloat(Image src, Image dst[2], UInt nChannels);
-	
+
 	/* resize (area, scale) */
 	void areaResizeColorByte(Image src, Image& dst, Float widthRatio, Float heightRatio, UInt nChannels);
 	void areaResizeColorWord(Image src, Image& dst, Float widthRatio, Float heightRatio);

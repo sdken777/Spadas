@@ -29,14 +29,6 @@ using namespace spadas;
 using namespace oscillator_internal;
 using namespace utility_internal;
 
-// isBigEndian
-Bool spadas::system::isBigEndian()
-{
-	Word a = 255;
-	Byte *aPtr = (Byte*)&a;
-	return *aPtr != 255;
-}
-
 // exit
 void spadas::system::exit()
 {

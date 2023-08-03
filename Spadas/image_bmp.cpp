@@ -16,8 +16,8 @@ namespace image_internal
 	struct InfoHeader
 	{
 		UInt infoHeaderSize;		// inout: 40
-		UInt width;					//	inout: using
-		UInt height;				//	inout: using
+		UInt width;					// inout: using
+		UInt height;				// inout: using
 		Word nPlanes;				// inout: 1
 		Word nBitsPerPixel;			// 8(Palette), 24(BGR), 32(BGRA)
 		UInt compressType;			// inout: 0

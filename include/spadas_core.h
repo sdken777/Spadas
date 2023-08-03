@@ -137,9 +137,6 @@ namespace spadas
 	// XML element node / XML元素节点
 	class XMLNode;
 
-	// Image pair / 图像对
-	struct ImagePair;
-
 	// Flag bit / 标志位
 	class Flag;
 
@@ -4015,157 +4012,6 @@ namespace spadas
 		Array<ULong> data;
 	};
 
-	/// \~English @brief Pixel aspect ratio
-	/// \~Chinese @brief 像素aspect ratio
-	class SPADAS_API AspectRatio
-	{
-	public:
-		enum class Value
-		{
-			Default = 1,
-			_1_1 = 1,
-			_4_3 = 2,
-			_10_11 = 3,
-			_12_11 = 4,
-			_16_11 = 5,
-			_40_33 = 6,
-		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(_1_1);
-				ES(_4_3);
-				ES(_10_11);
-				ES(_12_11);
-				ES(_16_11);
-				ES(_40_33);
-				default: return 0;
-			}
-		}
-	};
-
-	/// \~English @brief Frame rate
-	/// \~Chinese @brief 帧率 
-	class SPADAS_API FrameRate
-	{
-	public:
-		enum class Value
-		{
-			Default = 0,
-			Unknown = 0,
-			_23_98 = 1, // 24/1001
-			_24 = 2,
-			_25 = 3,
-			_29_97 = 4, // 30/1001
-			_30 = 5,
-			_50 = 6,
-			_59_94 = 7, // 60/1001
-			_60 = 8,
-		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(Unknown);
-				ES(_23_98);
-				ES(_24);
-				ES(_25);
-				ES(_29_97);
-				ES(_30);
-				ES(_50);
-				ES(_59_94);
-				ES(_60);
-				default: return 0;
-			}
-		}
-		static Float rate(Enum<FrameRate> frameRate); // [fps]
-		static Float period(Enum<FrameRate> frameRate); // [ms]
-	};
-
-	/// \~English @brief Image scanning method
-	/// \~Chinese @brief 图像扫描方式
-	class SPADAS_API InterlaceMode
-	{
-	public:
-		enum class Value
-		{
-			Default = 1,
-
-			/// \~English @brief Progressive scan
-			/// \~Chinese @brief 逐行扫描
-			Progressive = 1,
-
-			/// \~English @brief Interlaced scanning, rows 024... are the field scanned earlier
-			/// \~Chinese @brief 隔行扫描，024行...为较早扫描的场
-			UpperFirst = 2,
-
-			/// \~English @brief Interlaced scanning, rows 135... are the field scanned earlier
-			/// \~Chinese @brief 隔行扫描，135行...为较早扫描的场
-			LowerFirst = 3,
-		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(Progressive);
-				ES(UpperFirst);
-				ES(LowerFirst);
-				default: return 0;
-			}
-		}
-		static Bool isInterlaced(Enum<InterlaceMode> mode);
-	};
-
-	/// \~English @brief 3D merge method
-	/// \~Chinese @brief 3D合并方式
-	class SPADAS_API MergeMode
-	{
-	public:
-		enum class Value
-		{
-			Default = 1,
-			Normal = 1, // Not 3D / 非3D
-			LeftEye = 2,
-			RightEye = 3,
-			HalfSideBySide = 4,
-			FullSideBySide = 5,
-			LineByLineLR = 6, // Rows 024... as left image, 135... as right image / 024...行为左机图像, 135...行为右机图像
-			LineByLineRL = 7, // Rows 135... as left image, 024... as right image / 024...行为右机图像, 135...行为左机图像
-		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(Normal);
-				ES(LeftEye);
-				ES(RightEye);
-				ES(HalfSideBySide);
-				ES(FullSideBySide);
-				ES(LineByLineLR);
-				ES(LineByLineRL);
-				default: return 0;
-			}
-		}
-		static Bool is3DMerged(Enum<MergeMode> mode);
-	};
-
-	/// \~English @brief Time code
-	/// \~Chinese @brief 时间编码
-	struct TimeCode
-	{
-		UInt hour;
-		UInt minute;
-		UInt second;
-		UInt frame;
-
-		SPADAS_API TimeCode();
-		SPADAS_API TimeCode(UInt hour, UInt minute, UInt second, UInt frame);
-		SPADAS_API Bool operator ==(TimeCode time);
-		SPADAS_API Bool operator !=(TimeCode time);
-		SPADAS_API String toString();
-	};
-
 	/// \~English @brief The color represented by RGB
 	/// \~Chinese @brief 由RGB表述的颜色
 	struct ColorRGB
@@ -4228,6 +4074,12 @@ namespace spadas
 
 			/// \~ @brief 1920 x 1080 (16:9)
 			HD1080 = 13,
+
+			/// \~ @brief 2560 x 1440 (16:9)
+			HD2K = 14,
+
+			/// \~ @brief 3840 x 2160 (16:9)
+			HD4K = 15,
 		};
 		static const Char* toString(Value val)
 		{
@@ -4246,6 +4098,8 @@ namespace spadas
 				ES(WSXGAPlus);
 				ES(HD720);
 				ES(HD1080);
+				ES(HD2K);
+				ES(HD4K);
 				default: return 0;
 			}
 		}
@@ -4570,22 +4424,6 @@ namespace spadas
 		/// \~Chinese @brief 旋转图像 (支持除ByteUYVY以外的所有像素格式)
 		Image rotate(Enum<ImageRotation> rotation);
 
-		/// \~English @brief Image field segmentation (image1: rows 024..., image2: rows 135...)
-		/// \~Chinese @brief 图像场分割 (image1: 024...行, image2: 135...行)
-		ImagePair splitFields();
-
-		/// \~English @brief Merge two fields into one interlaced image (image1: rows 024..., image2: rows 135...)
-		/// \~Chinese @brief 合并两场为一幅图像 (image1: 024...行, image2: 135...行)
-		static Image mergeFields(ImagePair fields);
-
-		/// \~English @brief Split the 3D image into image pairs (image1: left camera image, image2: right camera image)
-		/// \~Chinese @brief 分割3D图像至图像对 (image1: 左机图像, image2: 右机图像)
-		ImagePair splitStereo(Enum<MergeMode> srcMergeMode);
-
-		/// \~English @brief Merge into a 3D image (image1: left camera image, image2: right camera image)
-		/// \~Chinese @brief 合并为3D图像 (image1: 左机图像, image2: 右机图像)
-		static Image mergeStereo(ImagePair src, Enum<MergeMode> dstMergeMode);
-
 		/*
 			For splitChannels and merChannels, pixel format will be converted as following:
 			对于splitChannels和mergeChannels方法，像素格式将按以下方式转化：
@@ -4621,17 +4459,6 @@ namespace spadas
 		/// \~English @brief Use text to describe information such as image size, pixel format, etc.
 		/// \~Chinese @brief 用文本表述图像大小、像素格式等信息
 		String getInfoText();
-	};
-
-	/// \~English @brief Image pair
-	/// \~Chinese @brief 图像对
-	struct ImagePair
-	{
-		Image image1;
-		Image image2;
-
-		SPADAS_API ImagePair();
-		SPADAS_API ImagePair(Image image1, Image image2);
 	};
 
 	// Math / 数学 //////////////////////////////////////////////////////////////
@@ -5860,48 +5687,6 @@ namespace spadas
 		Bool isValid() { return FALSE; }
 	};
 
-	/// \~English @brief Magic: The four-character identifier forms a 32-bit integer number
-	/// \~Chinese @brief Magic：四字符标识构成一个32位整型数字
-	class SPADAS_API MagicNumber : public Object<class MagicNumberVars>
-	{
-	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
-
-		/// \~English @brief Create an invalid number (0)
-		/// \~Chinese @brief 创建一个无效数字 (0)
-		MagicNumber();
-
-		/// \~English @brief Create a magic number (all characters should be between 0~9, A~Z and a~z, a~z will be converted to uppercase)
-		/// \~Chinese @brief 创建一个Magic数字 (所有字符应位于0~9, A~Z和a~z之间，a~z将被转换为大写)
-		MagicNumber(Char c0, Char c1, Char c2, Char c3);
-
-		/// \~English @brief Is it the same as another magic number
-		/// \~Chinese @brief 与另一个Magic数字是否相同
-		Bool operator ==(MagicNumber magic);
-
-		/// \~English @brief Is it different from another magic number
-		/// \~Chinese @brief 与另一个Magic数字是否不同
-		Bool operator !=(MagicNumber magic);
-
-		/// \~English @brief Get four characters
-		/// \~Chinese @brief 取得四个字符
-		Array<Char> getChars();
-
-		/// \~English @brief Get the magic number
-		/// \~Chinese @brief 取得Magic数字
-		UInt getNumber();
-
-		/// \~English @brief Get the hash value
-		/// \~Chinese @brief 获取哈希值
-		Word getHash();
-
-	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
-	};
-
 	/// \~English @brief Dynamic library loader
 	/// \~Chinese @brief 动态库加载器
 	class SPADAS_API LibraryLoader : public Object<class LibraryLoaderVars>
@@ -5961,10 +5746,6 @@ namespace spadas
 		/// \~English @brief Get the current running operating system
 		/// \~Chinese @brief 取得当前运行环境
 		SPADAS_API Enum<Environment> getEnv();
-
-		/// \~English @brief Whether the byte order is Big-Endian
-		/// \~Chinese @brief 检查字节序是否Big-Endian
-		SPADAS_API Bool isBigEndian();
 
 		/// \~English @brief Get the current host time (local time zone)
 		/// \~Chinese @brief 获得当前主机时间（本地时区）
