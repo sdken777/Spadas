@@ -4,14 +4,14 @@
 
 namespace spadas
 {
-	// 相关常数 ///////////////////////////////////////////////////////////
-	const UInt ARRAY_SIZE_LIMIT = 1000000000;		// 十亿
-	const UInt ARRAYX_SIZE_LIMIT = 134217728;		// 一亿多(2^27)
+	// XXX / 相关常数 ///////////////////////////////////////////////////////////
+	const UInt ARRAY_SIZE_LIMIT = 1000000000;		// Billion / 十亿
+	const UInt ARRAYX_SIZE_LIMIT = 134217728;		// More than 100 millions / 一亿多 (2^27)
 	const UInt ARRAYX_SEGMENT_LIMIT = 65536;
 	const UInt MAP_INDEX_LIMIT = 65536;
-	const ULong MATRIX_MAX_NELEMS = 100000000;		// 一亿
+	const ULong MATRIX_MAX_NELEMS = 100000000;		// 100 millions / 一亿
 
-	// 引用计数实现 ///////////////////////////////////////////////////////////
+	// Implementation of reference count / 引用计数实现 ///////////////////////////////////////////////////////////
 	template <typename VarsType>
 	Object<VarsType>::Object() : vars(0)
 	{}
@@ -317,7 +317,7 @@ namespace spadas
 		return &this->vars->val;
 	}
 
-	// 数组实现 ///////////////////////////////////////////////////////
+	// Implementation of array / 数组实现 ///////////////////////////////////////////////////////
 	namespace internal
 	{
 		template <typename Type>
@@ -1055,7 +1055,7 @@ namespace spadas
 		this->idx++;
 	}
 
-	// 链表节点实现 ///////////////////////////////////////////////////////
+	// Implementation of linked list node / 链表节点实现 ///////////////////////////////////////////////////////
 	template <typename Type> class ListNodeVars : public Vars
 	{
 	public:
@@ -1415,7 +1415,7 @@ namespace spadas
 		}
 	}
 
-	// 树节点实现 ///////////////////////////////////////////////////////
+	// Implementation of tree node / 树节点实现 ///////////////////////////////////////////////////////
 	template <typename Type> class TreeNodeVars : public Vars
 	{
 	public:
@@ -1701,7 +1701,7 @@ namespace spadas
 		}
 	}
 	
-	// 图节点实现 ///////////////////////////////////////////////////////
+	// Implementation of graph node / 图节点实现 ///////////////////////////////////////////////////////
 	namespace internal
 	{
 		template<typename NType, typename LType> struct GraphLink
@@ -1930,7 +1930,7 @@ namespace spadas
 		delete[] linkedNodes;
 	}
 
-	// 自动变长数组实现 ///////////////////////////////////////////////////////
+	// Implementation of expandable array / 自动变长数组实现 ///////////////////////////////////////////////////////
 	namespace internal
 	{
 		template<typename Type> struct ArrayXNode
@@ -2269,7 +2269,7 @@ namespace spadas
 		return toArray(Region(0, size()));
 	}
 
-	// 链表实现 ///////////////////////////////////////////////////////
+	// Implementation of linked list / 链表实现 ///////////////////////////////////////////////////////
 	namespace internal
 	{
 		const UInt LIST_SEGMENT_SIZE = 16;
@@ -2799,7 +2799,7 @@ namespace spadas
 		if (this->nextCell) this->nextIndex--;
 	}
 
-	// 数据流实现 ///////////////////////////////////////////////////////
+	// Implementation of data stream / 数据流实现 ///////////////////////////////////////////////////////
 	template<typename Type> class StreamVars : public Vars
 	{
 	public:
@@ -3165,7 +3165,7 @@ namespace spadas
 		this->vars->spinLeave();
 	}
 
-	// 映射与字典实现 ///////////////////////////////////////////////////////
+	// Implementation of mapping and dictionary / 映射与字典实现 ///////////////////////////////////////////////////////
 	namespace internal
 	{
 		template<typename Type> struct MapKey
@@ -3668,7 +3668,7 @@ namespace spadas
 		return map;
 	}
 
-	// 字符串模板函数实现 ///////////////////////////////////////////////////////
+	// Implementation of String template functions / 字符串模板函数实现 ///////////////////////////////////////////////////////
 	template <typename Type>
 	String::String(Type obj)
 	{
@@ -3686,14 +3686,7 @@ namespace spadas
 		return mergeStrings(strs, separator);
 	}
 
-	template <typename Type>
-	StringAppender StringAppender::operator +(Type target)
-	{
-		this->str += target;
-		return *this;
-	}
-
-	// 枚举类实现 ///////////////////////////////////////////////////////
+	// Implementation of enumeration class / 枚举类实现 ///////////////////////////////////////////////////////
 	template <typename Type>
 	Enum<Type>::Enum()
 	{
@@ -3755,7 +3748,7 @@ namespace spadas
 		return this->str;
 	}
 
-	// 矩阵类实现 ///////////////////////////////////////////////////////
+	// XXX / 矩阵类实现 ///////////////////////////////////////////////////////
 	template<typename Type> class MatrixVars : public Vars
 	{
 	public:
@@ -4239,7 +4232,7 @@ namespace spadas
 		}
 	}
 
-	// 数学相关函数的实现 ///////////////////////////////////////////////////////
+	// Implementation of math template functions / 数学相关函数的实现 ///////////////////////////////////////////////////////
 	template<typename Type>
 	Type spadas::math::min(Type a, Type b)
 	{
@@ -4287,7 +4280,7 @@ namespace spadas
 		return min(upper, max(lower, number));
 	}
 
-	// 实用工具相关函数的实现 ///////////////////////////////////////////////////////
+	// Implementation of utility template functions / 实用工具相关函数的实现 ///////////////////////////////////////////////////////
 	template<typename SrcType, typename DstType>
 	DstType spadas::utility::valueCast(SrcType val)
 	{
@@ -4323,7 +4316,7 @@ namespace spadas
 		return out;
 	}
 
-	// FlexVars函数的实现 ///////////////////////////////////////////////////////
+	// Implementation of FlexVars functions / FlexVars函数的实现 ///////////////////////////////////////////////////////
 	namespace internal
 	{
 		template <typename Type> class FlexHandler : public EmptyObject, public IFlexHandler
@@ -4389,7 +4382,7 @@ namespace spadas
 		return *(Type*)data.data();
 	}
 
-	// SampleBuffer函数的实现 /////////////////////////////////////////////////////////
+	// Implementation of SampleBuffer functions / SampleBuffer函数的实现 /////////////////////////////////////////////////////////
 	template<typename Type>
 	Enum<SampleInterpolationResult> SessionSampleBuffer::interpolate(Double offset, Type& interpolatedSample, UInt earlyThresh)
 	{

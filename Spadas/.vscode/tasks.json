@@ -92,6 +92,9 @@
                 "FRAMEWORKS=${input:helper_platform_env_var_frameworks}",
                 "MACRO_DEFINE=SPADAS_EXPORTS",
             ],
+            "dependsOn": [
+                "(子任务)生成资源代码",
+            ],
             "problemMatcher":"$gcc",
         },
         {
@@ -110,6 +113,7 @@
             ],
             "dependsOrder": "sequence",
             "dependsOn": [
+                "(子任务)生成资源代码",
                 "(子任务)执行发布构建(X86-Windows10目标)",
                 "(子任务)执行发布构建(X86-Ubuntu2204目标)",
                 "(子任务)执行发布构建(Arm-Ubuntu2204目标)",
@@ -132,6 +136,16 @@
 
         // 以下为子任务
 
+        {
+            "type": "process",
+            "label": "(子任务)生成资源代码",
+            "hide": true,
+            "command": "dotnet",
+            "args": [
+                "../bin/VSCodeHelper.dll",
+                "gen_resource_code",
+            ],
+        },
         {
             "type": "process",
             "label": "(子任务)执行发布构建(X86-Windows10目标)",

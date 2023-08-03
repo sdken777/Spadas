@@ -408,3 +408,38 @@ OptionalBool IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, Enum<Vi
 void IGeneralDeviceDataOutput::outputGeneralDeviceData(GeneralDeviceData data)
 {
 }
+
+TransmitResult IGeneralDataTransmitterX::transmitNow(String protocol, Array<Double> vector, Binary binary)
+{
+	return TransmitResult::Unknown;
+}
+
+TransmitResult IGeneralDataTransmitterX::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance, String guestSyncID)
+{
+	return TransmitResult::Unknown;
+}
+
+TransmitResult IBusMessageTransmitterX::transmitNow(UInt channel, UInt id, Binary binary)
+{
+	return TransmitResult::Unknown;
+}
+
+TransmitResult IBusMessageTransmitterX::transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval)
+{
+	return TransmitResult::Unknown;
+}
+
+TransmitResult IBusMessageTransmitterX::transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance)
+{
+	return TransmitResult::Unknown;
+}
+
+TransmitResult IVideoFrameTransmitterX::transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data)
+{
+	return TransmitResult::Unknown;
+}
+
+TransmitResult IVideoFrameTransmitterX::transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance)
+{
+	return TransmitResult::Unknown;
+}

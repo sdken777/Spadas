@@ -77,8 +77,15 @@ Image::Image(Enum<ImageResolution> resolution, Enum<PixelFormat> format, Pointer
     operator =(Image(ImageResolution::size(resolution), format, raw, rawRowBytes));
 }
 
-Image::Image(ImagePointer pointer) : Object<class ImageVars>(new ImageVars(pointer.getData()), TRUE)
+Image::Image(ImagePointer pointer)
 {
+    SPADAS_ERROR_RETURN(pointer.width == 0);
+    SPADAS_ERROR_RETURN(pointer.height == 0);
+    SPADAS_ERROR_RETURN(pointer.rowBytes < pointer.width * (pointer.isColor ? 3 : 1));
+    SPADAS_ERROR_RETURN(pointer.data.size() * sizeof(ULong) != pointer.height * pointer.rowBytes);
+
+    setVars(new ImageVars(pointer.data), TRUE);
+
 	vars->width = pointer.getWidth();
 	vars->height = pointer.getHeight();
 	vars->format = pointer.isColor() ? PixelFormat::Value::ByteBGR : PixelFormat::Value::ByteGray;
