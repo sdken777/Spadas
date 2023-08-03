@@ -7,14 +7,14 @@
 #include "binary.h"
 #include "3party/SHA1.h"
 
-using namespace spadas;
+using namespace binary_internal;
 
-Binary Binary::toSHA1()
+Binary BinaryCommon::toSHA1(const Byte* bytes, UInt size)
 {
-	if (!vars) return Binary();
+	if (size == 0) return Binary();
 
 	CSHA1 sha1;
-	sha1.Update(vars->data, vars->size);
+	sha1.Update(bytes, size);
 	sha1.Final();
 
 	Binary encoded(20);

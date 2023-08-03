@@ -4,7 +4,7 @@
 
 namespace spadas
 {
-	// XXX / 相关常数 ///////////////////////////////////////////////////////////
+	// Constant / 相关常数 ///////////////////////////////////////////////////////////
 	const UInt ARRAY_SIZE_LIMIT = 1000000000;		// Billion / 十亿
 	const UInt ARRAYX_SIZE_LIMIT = 134217728;		// More than 100 millions / 一亿多 (2^27)
 	const UInt ARRAYX_SEGMENT_LIMIT = 65536;
@@ -3686,6 +3686,13 @@ namespace spadas
 		return mergeStrings(strs, separator);
 	}
 
+	template <typename Type>
+	StringAppender StringAppender::operator +(Type target)
+	{
+		this->str += target;
+		return *this;
+	}
+
 	// Implementation of enumeration class / 枚举类实现 ///////////////////////////////////////////////////////
 	template <typename Type>
 	Enum<Type>::Enum()
@@ -3748,7 +3755,7 @@ namespace spadas
 		return this->str;
 	}
 
-	// XXX / 矩阵类实现 ///////////////////////////////////////////////////////
+	// Implementation of matrix class / 矩阵类实现 ///////////////////////////////////////////////////////
 	template<typename Type> class MatrixVars : public Vars
 	{
 	public:

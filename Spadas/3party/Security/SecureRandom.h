@@ -23,7 +23,7 @@
 #include "../Interfaces/IRandomNumberGenerator.h"
 #include "Random.h"
 // Spadas modification: Disable warnings
-#if defined(SPADAS_ENV_MACOS)
+#if !defined(SPADAS_ENV_NILRT)
 #pragma clang diagnostic ignored "-Wunused-private-field"
 #endif
 // Spadas modification end

@@ -3,6 +3,7 @@
 
 #include "string_spadas.h"
 #include "3party/ConvertUTF.h"
+#include <stdio.h>
 
 using namespace spadas;
 using namespace spadas::math;

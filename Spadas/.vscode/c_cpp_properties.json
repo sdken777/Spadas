@@ -9,8 +9,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}\\..\\include",
                 // "${workspaceFolder}\\..\\include64",
+                "${workspaceFolder}\\..\\include"
             ],
             "defines": [
                 "SPADAS_ENV_WINDOWS",
@@ -28,8 +28,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}\\..\\include",
                 // "${workspaceFolder}\\..\\includex",
+                "${workspaceFolder}\\..\\include"
             ],
             "defines": [
                 "SPADAS_ENV_LINUX",
@@ -47,8 +47,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}\\..\\include",
                 // "${workspaceFolder}\\..\\includexa",
+                "${workspaceFolder}\\..\\include"
             ],
             "defines": [
                 "SPADAS_ENV_LINUX",
@@ -66,8 +66,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}\\..\\include",
                 // "${workspaceFolder}\\..\\includema",
+                "${workspaceFolder}\\..\\include"
             ],
             "defines": [
                 "SPADAS_ENV_MACOS",
@@ -85,8 +85,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}\\..\\include",
                 // "${workspaceFolder}\\..\\includeni",
+                "${workspaceFolder}\\..\\include"
             ],
             "defines": [
                 "SPADAS_ENV_NILRT",
@@ -104,8 +104,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}/../include",
                 // "${workspaceFolder}/../include64",
+                "${workspaceFolder}/../include"
             ],
             "defines": [
                 "SPADAS_ENV_WINDOWS",
@@ -123,8 +123,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}/../include",
                 // "${workspaceFolder}/../includex",
+                "${workspaceFolder}/../include"
             ],
             "defines": [
                 "SPADAS_ENV_LINUX",
@@ -142,8 +142,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}/../include",
                 // "${workspaceFolder}/../includexa",
+                "${workspaceFolder}/../include"
             ],
             "defines": [
                 "SPADAS_ENV_LINUX",
@@ -161,8 +161,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}/../include",
                 // "${workspaceFolder}/../includema",
+                "${workspaceFolder}/../include"
             ],
             "defines": [
                 "SPADAS_ENV_MACOS",
@@ -180,8 +180,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}/../include",
                 // "${workspaceFolder}/../includeni",
+                "${workspaceFolder}/../include"
             ],
             "defines": [
                 "SPADAS_ENV_NILRT",
@@ -189,7 +189,7 @@
             ],
             "intelliSenseMode": "gcc-x64",
             "cppStandard": "c++11"
-        },
+        }
     ],
     "version": 4
 }

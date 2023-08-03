@@ -79,12 +79,12 @@ Image::Image(Enum<ImageResolution> resolution, Enum<PixelFormat> format, Pointer
 
 Image::Image(ImagePointer pointer)
 {
-    SPADAS_ERROR_RETURN(pointer.width == 0);
-    SPADAS_ERROR_RETURN(pointer.height == 0);
-    SPADAS_ERROR_RETURN(pointer.rowBytes < pointer.width * (pointer.isColor ? 3 : 1));
-    SPADAS_ERROR_RETURN(pointer.data.size() * sizeof(ULong) != pointer.height * pointer.rowBytes);
+    SPADAS_ERROR_RETURN(pointer.getWidth() == 0);
+    SPADAS_ERROR_RETURN(pointer.getHeight() == 0);
+    SPADAS_ERROR_RETURN(pointer.getRowBytes() < pointer.getWidth() * (pointer.isColor() ? 3 : 1));
+    SPADAS_ERROR_RETURN(pointer.getData().size() * sizeof(ULong) != pointer.getHeight() * pointer.getRowBytes());
 
-    setVars(new ImageVars(pointer.data), TRUE);
+    setVars(new ImageVars(pointer.getData()), TRUE);
 
 	vars->width = pointer.getWidth();
 	vars->height = pointer.getHeight();

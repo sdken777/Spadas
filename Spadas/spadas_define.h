@@ -2,18 +2,18 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: XML不使用text table机制
+// Update log / 更新记录: 合规化。增加英文注释
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 24
+#define SPADAS_VERSION_BUILD 25
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.0.24 \n
-* \~Chinese 本文档对应Spadas版本：9.0.24 \n
+* \~English This document corresponds to Spadas version: 9.0.25 \n
+* \~Chinese 本文档对应Spadas版本：9.0.25 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -26,10 +26,10 @@
 * \~Chinese 实现一个引用计数类需要先声明一个 spadas::Vars 的子类用于定义私有成员变量，所有变量都定义在public域内。 \n
 * \~English Then declare a derived class of spadas::Object that uses the derived class of Vars as the template type to define the methods. \n
 * \~Chinese 然后声明一个以该Vars子类作为模板类型的 spadas::Object 子类，用于定义功能函数。 \n
-* \~English XXX \n
-* \~Chinese 该Object子类即可实现引用计数，且该对象的拷贝构造函数、析构函数都为多线程安全操作。\n
-* \~English XXX \n
-* \~Chinese 如需要重定向操作的多线程安全(包括等于号赋值操作， spadas::Object::setVars 等)，应使用 spadas::Safe 。\n
+* \~English This derived class of Object is a reference counting class, and the copy constructor and destructor of this object are all multithread safe operations. \n
+* \~Chinese 该Object子类即可实现引用计数，且该对象的拷贝构造函数、析构函数都为多线程安全操作。 \n
+* \~English If you need multithread safety for redirection operations (including equal operator, spadas::Object::setVars ), you should use spadas::Safe. \n
+* \~Chinese 如需要重定向操作的多线程安全(包括等于号赋值操作， spadas::Object::setVars )，应使用 spadas::Safe 。 \n
 * \~English Inside the methods, private member variables can be accessed through "vars->". \n
 * \~Chinese 功能函数内部可通过vars->的方式访问私有成员变量。 \n
 *
@@ -88,16 +88,16 @@
 *
 * \~English \subsection f8 8. Multithreading
 * \~Chinese \subsection f8 8. 多线程
-* \~English XXX \n
-* \~Chinese 多线程可实现以下两类场景：\n
-* \~English XXX \n
+* \~English You can realize the following two types of multithread scenarios: \n
+* \~Chinese 多线程可实现以下两类场景： \n
+* \~English - For starting multiple sub-threads or using loop-based sub-thread, you can implement spadas::IWorkflow, start with spadas::Threads::start, and call spadas::Threads::stop when it needs to end
 * \~Chinese - 启动多个子线程或以循环为主的场景，可实现 spadas::IWorkflow ，通过 spadas::Threads::start 开始，需要结束时调用 spadas::Threads::stop
-* \~English XXX \n
+* \~English - For using a single sub-thread to execute a task, you can implement spadas::ITask, start with spadas::TaskManager::start, and call spadas::TaskManager::stop when it needs to be interrupted
 * \~Chinese - 启动单个子线程执行任务的场景，可实现 spadas::ITask ，通过 spadas::TaskManager::start 开始，需要中断时调用 spadas::TaskManager::stop
-* \~English XXX \n
-* \~Chinese 多线程中需要经常使用 spadas::Lock 或 spadas::SpinLocked 确保线程间操作和数据访问的安全。
-* \~English XXX \n
-* \~Chinese 另外，线程间同步可通过 spadas::Flag 或 spadas::Barrier 实现。\n
+* \~English In multithread programming, it is often necessary to use spadas::Lock or spadas::SpinLocked to ensure the safety of inter-thread operations and data access. \n
+* \~Chinese 多线程中需要经常使用 spadas::Lock 或 spadas::SpinLocked 确保线程间操作和数据访问的安全。 \n
+* \~English In addition, inter-thread synchronization can be achieved through spadas::Flag or spadas::Barrier.
+* \~Chinese 另外，线程间同步可通过 spadas::Flag 或 spadas::Barrier 实现。
 *
 * \~English \subsection f9 9. Other functions
 * \~Chinese \subsection f9 9. 其他功能
@@ -111,20 +111,20 @@
 * \~Chinese - spadas::Tick : 振荡器
 * \~English - spadas::MemoryMapStream : Memory-map-based data stream
 * \~Chinese - spadas::MemoryMapStream : 基于内存映射的数据流
-* \~English - XXX
+* \~English - spadas::LibraryLoader : Dynamically load library files
 * \~Chinese - spadas::LibraryLoader : 动态加载库文件
-* \~English XXX
+* \~English Also see functions under the spadas::system and spadas::utility namespaces.
 * \~Chinese 以及 spadas::system 和 spadas::utility 命名空间下的功能。
 *
-* \~English \subsection f10 10. XXX
+* \~English \subsection f10 10. Annotation tag
 * \~Chinese \subsection f10 10. 注释标签
-* \~English XXX
+* \~English There may be the following types of tags before the comments of classes and functions, which are represented by square brackets:
 * \~Chinese 在类和函数等的注释前可能有以下几类标签，以方括号表示：
-* \~English - XXX
+* \~English - Unsafe: Involving pointers or references. Improper operation may cause the program to crash
 * \~Chinese - 非安全: 涉及到指针或引用等，如操作不当可能导致程序崩溃
-* \~English - XXX
+* \~English - Multithread safe: Besides redirection, all methods of this object are multithread safe. In case of redirection, spadas::Safe is still required. Also spadas::Vars::isSpinLockManaged for this class should return TRUE
 * \~Chinese - 多线程安全: 在不进行重定向操作的前提下，该对象的所有方法都为多线程安全操作。如有重定向，仍需使用 spadas::Safe 。另外该类的 spadas::Vars::isSpinLockManaged 应返回TRUE
-* \~English - XXX
+* \~English - Optional: methods that are not required to be implemented in the interface
 * \~Chinese - 可选: 接口中非必须实现的方法
 *
 * \n
@@ -171,14 +171,14 @@
 *
 * \~English \subsection p4 4. General function plugin interface
 * \~Chinese \subsection p4 4. 实现通用功能插件接口
-* \~English XXX
+* \~English Methods that must be implemented in spadas::IPluginV200 include:
 * \~Chinese spadas::IPluginV200 中必须实现的方法包括：
 *   \~ - getPluginType
 *   \~ - getPluginVersion
 *
 * \~English \subsection p5 5. Native data processing plugin interface
 * \~Chinese \subsection p5 5. 实现原生数据处理插件接口
-* \~English XXX
+* \~English Methods that must be implemented in spadas::IProcessorPluginV700 include:
 * \~Chinese spadas::IProcessorPluginV700 中必须实现的方法包括：
 *   \~ - setProcessorConfig
 *   \~ - disableProcessor
@@ -186,7 +186,7 @@
 *
 * \~English \subsection p6 6. General device plugin interface
 * \~Chinese \subsection p6 6. 实现一般设备插件接口
-* \~English XXX
+* \~English Methods that must be implemented in spadas::IDevicePluginV300 include:
 * \~Chinese spadas::IDevicePluginV300 中必须实现的方法包括：
 *   \~ - setDeviceConnection
 *   \~ - disconnectDevice
@@ -194,7 +194,7 @@
 *
 * \~English \subsection p7 7. Bus device plugin interface
 * \~Chinese \subsection p7 7. 实现总线设备插件接口
-* \~English XXX
+* \~English Methods that must be implemented in spadas::IBusPluginV300 include:
 * \~Chinese spadas::IBusPluginV300 中必须实现的方法包括：
 *   \~ - getBusDeviceList
 *   \~ - openBusDevice
@@ -202,7 +202,7 @@
 *
 * \~English \subsection p8 8. Video device plugin interface
 * \~Chinese \subsection p8 8. 实现视频设备插件接口
-* \~English XXX
+* \~English Methods that must be implemented in spadas::IVideoPluginV500 include:
 * \~Chinese spadas::IVideoPluginV500 中必须实现的方法包括：
 *   \~ - getVideoDeviceList
 *   \~ - openVideoDevice
@@ -210,23 +210,23 @@
 *
 * \~English \subsection p9 9. File R/W plugin interface
 * \~Chinese \subsection p9 9. 实现文件读写插件接口
-* \~English XXX
-* \~Chinese spadas::IFilePluginV200 可实现文件读取、文件写入、以及文件截取。\n\n
+* \~English spadas::IFilePluginV200 can realize file reading, file writing, and data picking. \n\n
+* \~Chinese spadas::IFilePluginV200 可实现文件读取、文件写入、以及文件截取。 \n\n
 *
-* \~English XXX
+* \~English The methods that need to be implemented for file reading include:
 * \~Chinese 文件读取需要实现的方法包括：
 *   \~ - getFilesDuration
 *   \~ - openReadFiles
 *   \~ - readFilesData
 *   \~ - closeReadFiles
 *
-* \~English XXX
+* \~English The methods that need to be implemented for file writing include:
 * \~Chinese 文件写入需要实现的方法包括：
 *   \~ - openWriteFiles
 *   \~ - writeFilesData
 *   \~ - closeWriteFiles
 *
-* \~English XXX
+* \~English The methods that need to be implemented for data picking include:
 * \~Chinese 文件截取需要实现的方法包括：
 *   \~ - hasDataFiles
 *   \~ - pickSession
@@ -316,7 +316,7 @@
 // Use replacement new / 支持指定位置构造函数
 #include <new>
 
-// XXX / 支持lambda表达式变量
+// Support for lambda expression variables / 支持lambda表达式变量
 #include <functional>
 #define Func typename std::function
 
@@ -328,10 +328,10 @@
 // Convenience for string conversion / 方便字符串转换
 #define SS (spadas::String)
 
-// XXX / 方便实现枚举值转字符串
+// Convenience for converting enumeration value to string / 方便实现枚举值转字符串
 #define ES(val) case Value::val: return #val
 
-// XXX / 方便调试
+// Convenience for debugging / 方便调试
 #define PV(var) spadas::console::print((spadas::String) #var + " = " + var)
 #define PV2(var1, var2) spadas::console::print((spadas::String) #var1 + " = " + var1 + ", " + #var2 + " = " + var2)
 #define PV3(var1, var2, var3) spadas::console::print((spadas::String) #var1 + " = " + var1 + ", " + #var2 + " = " + var2 + ", " + #var3 + " = " + var3)

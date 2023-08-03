@@ -24,6 +24,7 @@
 #include "../Rng/RandomNumberGenerator.h"
 // Spadas modification: Function declarations
 #include <memory.h>
+#include <stdexcept>
 // Spadas modification end
 
 class CryptoApiRandomGenerator: public virtual IICryptoApiRandomGenerator, public virtual IIRandomGenerator

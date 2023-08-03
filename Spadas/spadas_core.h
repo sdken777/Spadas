@@ -60,7 +60,8 @@ namespace spadas
 	/// \~Chinese @brief 读写数据指针
 	typedef void *Pointer;
 
-	/// 只读数据指针
+	/// \~English @brief Read-only pointer for reading and writing
+	/// \~Chinese @brief 只读数据指针
 	typedef const void *ConstPointer;
 	
 	/// \~English @brief Integer type compatible with pointers
@@ -127,16 +128,16 @@ namespace spadas
 	// Linked list / 链表
 	template <typename Type> class List;
 	
-	// XXX / 二进制数据
+	// Binary data / 二进制数据
 	class Binary;
 
-	// XXX / 二进制数据片段
+	// Binary data span / 二进制数据片段
 	class BinarySpan;
 
-	// XXX / XML元素节点
+	// XML element node / XML元素节点
 	class XMLNode;
 
-	// XXX / 图像对
+	// Image pair / 图像对
 	struct ImagePair;
 
 	// Flag bit / 标志位
@@ -798,11 +799,11 @@ namespace spadas
 		/// \~Chinese @brief 取得当前引用计数
 		UInt getRefCount();
 
-		/// \~English @brief XXX
+		/// \~English @brief Spin lock
 		/// \~Chinese @brief 加自旋锁
 		void spinEnter();
 
-		/// \~English @brief XXX
+		/// \~English @brief Spin unlock
 		/// \~Chinese @brief 解自旋锁
 		void spinLeave();
 
@@ -810,11 +811,11 @@ namespace spadas
 		/// \~Chinese @brief 获取类名称
 		virtual String getTypeName();
 
-		/// \~English @brief XXX
+		/// \~English @brief Whether it is the type (by class type ID)
 		/// \~Chinese @brief 按类ID判断是否为该类型
 		virtual Bool isType(ULong typeID);
 
-		/// \~English @brief XXX
+		/// \~English @brief Whether it is the type (by class type name)
 		/// \~Chinese @brief 按类名称判断是否为该类型
 		virtual Bool isType(String typeName);
 
@@ -822,7 +823,7 @@ namespace spadas
 		/// \~Chinese @brief 获取字符串描述
 		virtual String toString();
 
-		/// \~English @brief XXX
+		/// \~English @brief Whether the spin lock is managed, if so, spadas::SpinLocked will not lock
 		/// \~Chinese @brief 自旋锁是否已被管理，若是则 spadas::SpinLocked 将不加锁
 		virtual Bool isSpinLockManaged();
 
@@ -886,7 +887,7 @@ namespace spadas
 		/// \~Chinese @brief 获取哈希值
 		Word getHash();
 
-		/// \~English @brief XXX
+		/// \~English @brief As a non-null static object, the unique ID during the program life cycle can be obtained
 		/// \~Chinese @brief 作为非空静态对象时可获取程序运行周期间的唯一ID
 		ULong getID() const;
 
@@ -903,13 +904,13 @@ namespace spadas
 		template <typename TargetType>
 		Bool is();
 
-		/// \~English @brief Convert to object of base class or derived class, if the pointer to variables is empty or the type does not match, return to the default construction object
+		/// \~English @brief Convert to object of base class or derived class, if the pointer to variables is empty or the type does not match, return the default construction object
 		/// \~Chinese @brief 转换为基类或派生类对象，若变量数据指针为空或类型不符合则返回默认构造对象
 		template <typename TargetType>
 		TargetType as();
 
-		/// \~English @brief XXX
-		/// \~Chinese @brief 转换为基类或派生类对象，若变量数据指针为空或类型不符合则返回默认构造对象，并仅当类型不符合时输出FALSE
+		/// \~English @brief Convert to object of base class or derived class, if the pointer to variables is empty or the type does not match, output the default construction object. Return FALSE while the type does not match
+		/// \~Chinese @brief 转换为基类或派生类对象，若变量数据指针为空或类型不符合则输出默认构造对象，并仅当类型不符合时输出FALSE
 		template <typename TargetType>
 		TargetType as(Bool& ok);
 
@@ -917,7 +918,7 @@ namespace spadas
 		/// \~Chinese @brief [非安全] 获得变量数据的指针
 		VarsType *getVars();
 
-		/// \~English @brief @brief [Unsafe] XXX
+		/// \~English @brief @brief [Unsafe] Redirection, set pointer to variables
 		/// \~Chinese @brief @brief [非安全] 重定向，设置变量数据指针
 		/// \~English @param newVars Pointer to variables
 		/// \~Chinese @param newVars 变量数据的指针
@@ -967,29 +968,29 @@ namespace spadas
 		BaseObject();
 	};
 
-	/// \~English @brief XXX
+	/// \~English @brief Container to realize the multithread safety for redirection operation
 	/// \~Chinese @brief 实现Type类重定向操作的多线程安全
 	template <typename Type> class Safe
 	{
 	public:
-		/// \~English @brief XXX
+		/// \~English @brief Create an object of Type
 		/// \~Chinese @brief 创建Type对象
 		Safe();
 		
-		/// \~English @brief XXX
+		/// \~English @brief Redirection by equal operator
 		/// \~Chinese @brief 等于号重定向
 		void operator =(Type target);
 
-		/// \~English @brief [Unsafe] XXX
+		/// \~English @brief [Unsafe] Redirection, set pointer to variables
 		/// \~Chinese @brief [非安全] 重定向，设置变量数据指针
-		/// \~English @param newVars 
+		/// \~English @param newVars Pointer to variables
 		/// \~Chinese @param newVars 变量数据的指针
-		/// \~English @param isNew 
+		/// \~English @param isNew Should be TRUE for the new pointer, otherwise FALSE (obtained by Object::getVars, etc.)
 		/// \~Chinese @param isNew 对于new出来的指针isNew应为TRUE，否则为FALSE（由 Object::getVars 等获得的情况）
 		template <typename VarsType>
 		void setVars(VarsType* newVars, Bool isNew);
 
-		/// \~English @brief XXX
+		/// \~English @brief Get object
 		/// \~Chinese @brief 获取对象
 		Type get();
 
@@ -1000,20 +1001,20 @@ namespace spadas
 		Safe<Type>& operator =(const Safe<Type>& obj) { return *this; }
 	};
 
-	/// \~English @brief XXX
+	/// \~English @brief A container for multithread safe operations
 	/// \~Chinese @brief 对Type对象进行多线程安全操作的容器
 	template <typename Type> class SpinLocked
 	{
 	public:
-		/// \~English @brief XXX
+		/// \~English @brief Constructor, input the object that needs to be multithread-safely operated, then automatically lock it
 		/// \~Chinese @brief 构造函数，输入需要进行多线程安全操作的对象，自动加锁
 		SpinLocked(Safe<Type>& safeObj);
 
-		/// \~English @brief XXX
-		// \~Chinese @brief 析构，自动解锁
+		/// \~English @brief Destructor, automatic unlock
+		/// \~Chinese @brief 析构，自动解锁
 		~SpinLocked();
 
-		/// \~English @brief XXX
+		/// \~English @brief Use the object in the container
 		/// \~Chinese @brief 使用容器中的对象
 		Type *operator ->();
 
@@ -1264,8 +1265,8 @@ namespace spadas
 		template <typename TargetType>
 		Array<TargetType> asArray();
 
-		/// \~English @brief XXX
-		/// ~Chinese @brief 转换为基类或派生类对象的数组，并输出每个元素是否转换成功的数组（具体行为参考 spadas::Object::as ）
+		/// \~English @brief Convert to an array of base class or derived class objects, and output an array of whether each element is converted successfully (See spadas::Object::as )
+		/// \~Chinese @brief 转换为基类或派生类对象的数组，并输出每个元素是否转换成功的数组（具体行为参考 spadas::Object::as ）
 		template <typename TargetType>
 		Array<TargetType> asArray(Array<Bool>& ok);
 
@@ -1339,16 +1340,16 @@ namespace spadas
 		Bool isValid() { return FALSE; }
 	};
 
-	/// \~English @brief XXX
+	/// \~English @brief Fixed-length array span, whose data bound to the data of the original array
 	/// \~Chinese @brief 定长数组片段，数据绑定至原定长数组的数据
 	template <typename Type> class ArraySpan
 	{
 	public:
-		/// \~English @brief XXX
+		/// \~English @brief Create an empty span
 		/// \~Chinese @brief 创建空片段
 		ArraySpan();
 
-		/// \~English @brief [Unsafe] XXX
+		/// \~English @brief [Unsafe] Bind to the original array
 		/// \~Chinese @brief [非安全] 绑定至原定长数组
 		ArraySpan(Array<Type>& sourceArray, UInt index, UInt size);
 
@@ -1438,8 +1439,8 @@ namespace spadas
 		template <typename TargetType>
 		Array<TargetType> asArray();
 
-		/// \~English @brief XXX
-		/// ~Chinese @brief 转换为基类或派生类对象的数组，并输出每个元素是否转换成功的数组（具体行为参考 spadas::Object::as ）
+		/// \~English @brief Convert to an array of base class or derived class objects, and output an array of whether each element is converted successfully (See spadas::Object::as )
+		/// \~Chinese @brief 转换为基类或派生类对象的数组，并输出每个元素是否转换成功的数组（具体行为参考 spadas::Object::as ）
 		template <typename TargetType>
 		Array<TargetType> asArray(Array<Bool>& ok);
 
@@ -1932,7 +1933,7 @@ namespace spadas
 		/// \~Chinese @brief 移除等于某个值的所有元素
 		void remove(Type val);
 
-		/// \~English @brief XXX
+		/// \~English @brief Remove all elements that satisfy the condition (the specified function returns TRUE)
 		/// \~Chinese @brief 移除满足条件(指定函数返回TRUE)的所有元素
 		void removeAs(Func<Bool(Type&)> func);
 
@@ -2010,7 +2011,7 @@ namespace spadas
 		/// \~Chinese @brief 尝试取出指定数量的元素，实际取出数量以返回对象为准 (返回的数组中序号0的元素为最早)
 		Array<Type> dequeue(UInt amount = UINF);
 
-		/// \~English @brief XXX
+		/// \~English @brief Try to dequeue all consecutive elements that satisfy the condition (the element with index 0 in the returned array is the earliest)
 		/// \~Chinese @brief 尝试取出所有满足条件(指定函数返回TRUE)的连续元素 (返回的数组中序号0的元素为最早)
 		Array<Type> dequeueAs(Func<Bool(Type&)> func);
 
@@ -2414,7 +2415,7 @@ namespace spadas
 		/// \~Chinese @returns DES加密后的数据块
 		Binary toDES(String key);
 
-		/// \~English @brief XXX
+		/// \~English @brief Obtain a sub-data block whose data is bound to the data of this data block
 		/// \~Chinese @brief 取得子数据块，其数据绑定至本数据块的数据
 		BinarySpan sub(UInt index, UInt size = UINF);
 
@@ -2441,16 +2442,16 @@ namespace spadas
 		Bool isValid() { return FALSE; }
 	};
 
-	/// \~English @brief XXX
+	/// \~English @brief Span of binary data, bound to the original binary data
 	/// \~Chinese @brief 二进制数据片段，绑定至原二进制数据
 	class SPADAS_API BinarySpan
 	{
 	public:
-		/// \~English @brief XXX
+		/// \~English @brief Create empty span
 		/// \~Chinese @brief 创建空片段
 		BinarySpan();
 
-		/// \~English @brief [Unsafe] XXX
+		/// \~English @brief [Unsafe] Bind to original binary data
 		/// \~Chinese @brief [非安全] 绑定至原二进制数据
 		BinarySpan(Binary& sourceBinary, UInt index, UInt size);
 
@@ -2518,7 +2519,7 @@ namespace spadas
 		/// \~Chinese @returns DES加密后的数据块
 		Binary toDES(String key);
 
-		/// \~English @brief XXX
+		/// \~English @brief Get the sub-data span whose data is bound to the data of the original data block
 		/// \~Chinese @brief 取得子数据片段，其数据绑定至原数据块的数据
 		BinarySpan sub(UInt index, UInt size = UINF);
 
@@ -2768,19 +2769,19 @@ namespace spadas
 		/// \~Chinese @brief 转换并返回 spadas::Double 数值
 		Optional<Double> toDouble();
 
-		/// \~English @brief XXX
+		/// \~English @brief Convert and output spadas::Int number, return whether the conversion is successful
 		/// \~Chinese @brief 转换并输出 spadas::Int 数字，返回是否转换成功
 		Bool toNumber(Int& number);
 
-		/// \~English @brief XXX
+		/// \~English @brief Convert and output spadas::Long number, return whether the conversion is successful
 		/// \~Chinese @brief 转换并输出 spadas::Long 数字，返回是否转换成功
 		Bool toNumber(Long& number);
 
-		/// \~English @brief XXX
+		/// \~English @brief Convert and output spadas::Float number, return whether the conversion is successful
 		/// \~Chinese @brief 转换并输出 spadas::Float 数值，返回是否转换成功
 		Bool toNumber(Float& number);
 
-		/// \~English @brief XXX
+		/// \~English @brief Convert and output spadas::Double number, return whether the conversion is successful
 		/// \~Chinese @brief 转换并输出 spadas::Double 数值，返回是否转换成功
 		Bool toNumber(Double& number);
 		
@@ -2808,11 +2809,11 @@ namespace spadas
 		/// \~Chinese @brief 搜索目标字符串，返回所有发现目标的首字符位置。如"bananana"搜"nana"，返回{2, 4}
 		Array<UInt> search(String target);
 
-		/// \~English @brief XXX
+		/// \~English @brief Search the target string from the first character, and return the index of the first character of the first found target
 		/// \~Chinese @brief 从前往后搜索目标字符串，返回首个发现目标的首字符位置
 		UInt searchFirst(String target);
 
-		/// \~English @brief XXX
+		/// \~English @brief Search the target string from the last character, and return the index of the first character of the first found target
 		/// \~Chinese @brief 从后往前搜索目标字符串，返回首个发现目标的首字符位置
 		UInt searchLast(String target);
 		
@@ -2824,17 +2825,17 @@ namespace spadas
 		/// \~Chinese @brief 将本字符串中oldString部分替换为newString，并返回替换后的字符串
 		String replace(String oldString, String newString);
 
-		/// \~English @brief XXX
+		/// \~English @brief Get a substring whose data is bound to the data of this string
 		/// \~Chinese @brief 取得子字符串，其数据绑定至本字符串的数据
-		/// \~English @param index XXX
+		/// \~English @param index The starting position of the substring in this string
 		/// \~Chinese @param index 子字符串在本字符串的起始位置
-		/// \~English @param length XXX
-		/// \~Chinese @param length 字符串长度
-		/// \~English @param trimStart XXX
+		/// \~English @param length Substring length
+		/// \~Chinese @param length 子字符串长度
+		/// \~English @param trimStart Whether to trim the space at the beginning
 		/// \~Chinese @param trimStart 是否裁剪掉开始处的空格
-		/// \~English @param trimEnd XXX
+		/// \~English @param trimEnd Whether to trim off the space at the end
 		/// \~Chinese @param trimEnd 是否裁剪掉结尾处的空格
-		/// \~English @returns XXX
+		/// \~English @returns Substring
 		/// \~Chinese @returns 子字符串
 		StringSpan sub(UInt index, UInt length = UINF, Bool trimStart = FALSE, Bool trimEnd = FALSE);
 
@@ -3045,16 +3046,16 @@ namespace spadas
 		static String mergeStrings(Array<String> strs, String separator);
 	};
 
-	/// \~English @brief XXX
+	/// \~English @brief String span, whose data bound to the data of the original string
 	/// \~Chinese @brief 字符串片段，数据绑定至原字符串的数据
 	class SPADAS_API StringSpan
 	{
 	public:
-		/// \~English @brief XXX
+		/// \~English @brief Create empty span
 		/// \~Chinese @brief 创建空片段
 		StringSpan();
 
-		/// \~English @brief [Unsafe] XXX
+		/// \~English @brief [Unsafe] Bind to original string
 		/// \~Chinese @brief [非安全] 绑定至原字符串
 		StringSpan(String& sourceString, UInt index, UInt length);
 
@@ -3134,19 +3135,19 @@ namespace spadas
 		/// \~Chinese @brief 转换并返回 spadas::Double 数值
 		Optional<Double> toDouble();
 
-		/// \~English @brief XXX
+		/// \~English @brief Convert and output spadas::Int number, return whether the conversion is successful
 		/// \~Chinese @brief 转换并输出 spadas::Int 数字，返回是否转换成功
 		Bool toNumber(Int& number);
 
-		/// \~English @brief XXX
+		/// \~English @brief Convert and output spadas::Long number, return whether the conversion is successful
 		/// \~Chinese @brief 转换并输出 spadas::Long 数字，返回是否转换成功
 		Bool toNumber(Long& number);
 
-		/// \~English @brief XXX
+		/// \~English @brief Convert and output spadas::Float number, return whether the conversion is successful
 		/// \~Chinese @brief 转换并输出 spadas::Float 数值，返回是否转换成功
 		Bool toNumber(Float& number);
 
-		/// \~English @brief XXX
+		/// \~English @brief Convert and output spadas::Double number, return whether the conversion is successful
 		/// \~Chinese @brief 转换并输出 spadas::Double 数值，返回是否转换成功
 		Bool toNumber(Double& number);
 		
@@ -3174,11 +3175,11 @@ namespace spadas
 		/// \~Chinese @brief 搜索目标字符串，返回所有发现目标的首字符位置。如"bananana"搜"nana"，返回{2, 4}
 		Array<UInt> search(String target);
 		
-		/// \~English @brief XXX
+		/// \~English @brief Search the target string from the first character, and return the index of the first character of the first found target
 		/// \~Chinese @brief 从前往后搜索目标字符串，返回首个发现目标的首字符位置
 		UInt searchFirst(String target);
 
-		/// \~English @brief XXX
+		/// \~English @brief Search the target string from the last character, and return the index of the first character of the first found target
 		/// \~Chinese @brief 从后往前搜索目标字符串，返回首个发现目标的首字符位置
 		UInt searchLast(String target);
 		
@@ -3190,17 +3191,17 @@ namespace spadas
 		/// \~Chinese @brief 将本字符串片段中oldString部分替换为newString，并返回替换后的字符串
 		String replace(String oldString, String newString);
 
-		/// \~English @brief XXX
+		/// \~English @brief Get a substring whose data is bound to the data of this span's original string
 		/// \~Chinese @brief 取得子字符串，其数据绑定至本字符串片段的原字符串数据
-		/// \~English @param index XXX
+		/// \~English @param index The starting position of the substring in this string span
 		/// \~Chinese @param index 子字符串在本字符串片段的起始位置
-		/// \~English @param length XXX
-		/// \~Chinese @param length 字符串长度
-		/// \~English @param trimStart XXX
+		/// \~English @param length Substring length
+		/// \~Chinese @param length 子字符串长度
+		/// \~English @param trimStart Whether to trim the space at the beginning
 		/// \~Chinese @param trimStart 是否裁剪掉开始处的空格
-		/// \~English @param trimEnd XXX
+		/// \~English @param trimEnd Whether to trim off the space at the end
 		/// \~Chinese @param trimEnd 是否裁剪掉结尾处的空格
-		/// \~English @returns XXX
+		/// \~English @returns Substring
 		/// \~Chinese @returns 子字符串
 		StringSpan sub(UInt index, UInt length = UINF, Bool trimStart = FALSE, Bool trimEnd = FALSE);
 
@@ -3210,21 +3211,21 @@ namespace spadas
 		UInt len;
 	};
 
-	/// \~English @brief XXX
+	/// \~English @brief string appender, used to speed up the "+" operator
 	/// \~Chinese @brief 字符串拼接器，用于加速+运算符
 	class SPADAS_API StringAppender
 	{
 	public:
-		/// \~English @brief XXX
+		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
 		StringAppender(String origin);
 
-		/// \~English @brief XXX
+		/// \~English @brief Concatenate string
 		/// \~Chinese @brief 拼接字符串
 		template <typename Type>
 		StringAppender operator +(Type target);
 
-		/// \~English @brief XXX
+		/// \~English @brief Convert to string object
 		/// \~Chinese @brief 转字符串
 		String toString();
 
@@ -3739,11 +3740,11 @@ namespace spadas
 		/// \~Chinese @brief 以文本输出模式创建或重新创建文件（UTF-8编码，带BOM头，回车符\n）
 		static File createText(Path filePath);
 
-		/// \~English @brief XXX
+		/// \~English @brief Open the file in binary output mode (create it if it does not exist) and append the content at the end
 		/// \~Chinese @brief 以二进制输出模式打开文件（若不存在则创建）并在尾部追加内容
 		static File appendBinary(Path filePath);
 
-		/// \~English @brief XXX
+		/// \~English @brief Open the file in text output mode (create it if it does not exist) and append content at the end (UTF-8 BOM header will be detected)
 		/// \~Chinese @brief 以文本输出模式打开文件（若不存在则创建）并在尾部追加内容（将检测UTF-8 BOM头）
 		static File appendText(Path filePath);
 
@@ -3907,40 +3908,40 @@ namespace spadas
 		Bool isValid() { return FALSE; }
 	};
 
-	/// \~English @brief XXX
+	/// \~English @brief XML element node
 	/// \~Chinese @brief XML元素节点
 	class SPADAS_API XMLNode
 	{
 	public:
-		/// \~English @brief XXX
+		/// \~English @brief Create invalid node
 		/// \~Chinese @brief 创建无效节点
 		XMLNode();
 
-		/// \~English @brief XXX
+		/// \~English @brief Constructor, if the input cell is empty, it is also an invalid node
 		/// \~Chinese @brief 构造函数，输入cell为空也为无效节点
 		XMLNode(XML xml, Pointer cell);
 
-		/// \~English @brief XXX
+		/// \~English @brief Whether is is a valid node
 		/// \~Chinese @brief 是否为有效节点
 		Bool valid();
 
-		/// \~English @brief XXX
+		/// \~English @brief Get the reference of XML element data
 		/// \~Chinese @brief 取得XML元素数据的引用
 		XMLElement& value();
 
-		/// \~English @brief XXX
+		/// \~English @brief Use field or method of the XML element
 		/// \~Chinese @brief 使用XML元素数据的字段或方法
 		XMLElement* operator ->();
 
-		/// \~English @brief XXX
+		/// \~English @brief Get the node in root direction (if it does not exist, return an invalid node)
 		/// \~Chinese @brief 取得根方向节点 (若不存在则返回无效节点)
 		XMLNode root();
 
-		/// \~English @brief XXX
+		/// \~English @brief Get the number of child nodes
 		/// \~Chinese @brief 取得子节点个数
 		UInt nLeaves();
 
-		/// \~English @brief XXX
+		/// \~English @brief Get all child nodes
 		/// \~Chinese @brief 取得所有子节点
 		Array<XMLNode> leaves();
 
@@ -3960,7 +3961,7 @@ namespace spadas
 		/// \~Chinese @brief 按字符串型字典设置XML属性数组 (将替换原有的属性数组)
 		void dictionaryToAttributes(Dictionary<String> dict);
 
-		/// \~English @brief XXX
+		/// \~English @brief Add child node with the specified XML element data, and return the node
 		/// \~Chinese @brief 按指定XML元素数据添加子节点，并返回该节点
 		XMLNode addLeaf(XMLElement val);
 
@@ -3984,7 +3985,7 @@ namespace spadas
 		/// \~Chinese @brief 基于图像大小和是否为彩色图像进行初始化
 		ImagePointer(Size2D size, Bool isColor);
 
-		/// \~English @brief XXX
+		/// \~English @brief Initialize based on existing data
 		/// \~Chinese @brief 基于已有数据初始化
 		ImagePointer(Size2D size, Bool isColor, UInt rowBytes, Array<ULong> data);
 
@@ -4713,7 +4714,7 @@ namespace spadas
 		Bool isValid() { return FALSE; }
 	};
 
-	/// \~English @brief XXX
+	/// \~English @brief Variables of spadas::Matrix template class
 	/// \~Chinese @brief spadas::Matrix 模板类的变量数据
 	template <typename Type> class MatrixVars;
 
@@ -4803,20 +4804,20 @@ namespace spadas
 		/// \~Chinese @brief [非安全] 取得数据指针
 		Type *data();
 
-		/// \~English @brief [Modifiable] Obtain the i-th sub-matrix, the dimension of the sub-matrix is reduced by 1, the data is bound to this matrix (index starts from 0)
-		/// \~Chinese @brief [可修改] 取得第i个子矩阵，该子矩阵维数减1，数据绑定至本矩阵，序号从0开始
+		/// \~English @brief Obtain the i-th sub-matrix, the dimension of the sub-matrix is reduced by 1, the data is bound to this matrix (index starts from 0)
+		/// \~Chinese @brief 取得第i个子矩阵，该子矩阵维数减1，数据绑定至本矩阵，序号从0开始
 		Matrix<Type> operator [](UInt i);
 
-		/// \~English @brief [Modifiable] Obtain a reference to an element of a 1D matrix (scalar) through parentheses
-		/// \~Chinese @brief [可修改] 通过圆括号获得某个元素的引用，面向1维矩阵 (标量)
+		/// \~English @brief Obtain a reference to an element of a 1D matrix (scalar) through parentheses
+		/// \~Chinese @brief 通过圆括号获得某个元素的引用，面向1维矩阵 (标量)
 		Type& operator ()(UInt i);
 
-		/// \~English @brief [Modifiable] Obtain a reference to an element of a 2D matrix (scalar) through parentheses
-		/// \~Chinese @brief [可修改] 通过圆括号获得某个元素的引用，面向2维矩阵 (标量)
+		/// \~English @brief Obtain a reference to an element of a 2D matrix (scalar) through parentheses
+		/// \~Chinese @brief 通过圆括号获得某个元素的引用，面向2维矩阵 (标量)
 		Type& operator ()(UInt i, UInt j);
 
-		/// \~English @brief [Modifiable] Obtain a reference to an element of a 3D matrix (scalar) through parentheses
-		/// \~Chinese @brief [可修改] 通过圆括号获得某个元素的引用，面向3维矩阵 (标量)
+		/// \~English @brief Obtain a reference to an element of a 3D matrix (scalar) through parentheses
+		/// \~Chinese @brief 通过圆括号获得某个元素的引用，面向3维矩阵 (标量)
 		Type& operator ()(UInt i, UInt j, UInt k);
 
 		/// \~English @brief Matrix addition: output = this + matrix
@@ -4848,15 +4849,15 @@ namespace spadas
 		void save(Path filePath);
 	};
 
-	/// \~English @brief XXX
+	/// \~English @brief Supported matrix types: Int matrix
 	/// \~Chinese @brief 支持的矩阵类型: Int型矩阵
 	typedef Matrix<Int> IntMat;
 
-	/// \~English @brief XXX
+	/// \~English @brief Supported matrix types: Float matrix
 	/// \~Chinese @brief 支持的矩阵类型: Float型矩阵
 	typedef Matrix<Float> FloatMat;
 
-	/// \~English @brief XXX
+	/// \~English @brief Supported matrix types: Double matrix
 	/// \~Chinese @brief 支持的矩阵类型: Double型矩阵
 	typedef Matrix<Double> DoubleMat;
 
@@ -5329,8 +5330,8 @@ namespace spadas
 		/// \~Chinese @brief [可选] 给出序号为threadIndex的线程在线程开始处运行的代码 (若失败则返回FALSE)
 		virtual Bool onThreadBegin(UInt threadIndex);
 		
-		/// \~English @brief The function called by the thread whose index is threadIndex in each loop. You'd better not use functions with waiting functions here
-		/// \~Chinese @brief 给出序号为threadIndex的线程在每次循环时调用的代码，其中应尽量不使用具有等待功能的函数
+		/// \~English @brief [Optional] The function called by the thread whose index is threadIndex in each loop. You'd better not use functions with waiting functions here
+		/// \~Chinese @brief [可选] 给出序号为threadIndex的线程在每次循环时调用的代码，其中应尽量不使用具有等待功能的函数
 		virtual void onThreadLoop(UInt threadIndex, Flag shouldEnd);
 		
 		/// \~English @brief [Optional] The function that the thread whose index is threadIndex runs when the thread ends
@@ -6582,59 +6583,85 @@ namespace spadas
 
 	/// \~English @brief Raw data transmit result
 	/// \~Chinese @brief 原始数据发送结果
-	enum class TransmitResult TODO
+	class SPADAS_API TransmitResult
 	{
-		/// \~English @brief Unknown
-		/// \~Chinese @brief 未知
-		Unknown = 0,
+	public:
+		enum class Value
+		{
+			Default = 0,
 
-		/// \~English @brief Successfully transmitted
-		/// \~Chinese @brief 成功发送
-		Transmitted = 1,
+			/// \~English @brief Unknown
+			/// \~Chinese @brief 未知
+			Unknown = 0,
 
-		/// \~English @brief Successfully added to the transmitting queue (The actual transmitting may still fail)
-		/// \~Chinese @brief 成功添加至发送队列（实际发送时仍有可能失败）
-		Added = 2,
+			/// \~English @brief Successfully transmitted
+			/// \~Chinese @brief 成功发送
+			Transmitted = 1,
 
-		/// \~English @brief Successfully scheduled to transmit (The actual transmitting may still fail)
-		/// \~Chinese @brief 成功预约发送（实际发送时仍有可能失败）
-		Scheduled = 3,
+			/// \~English @brief Successfully added to the transmitting queue (The actual transmitting may still fail)
+			/// \~Chinese @brief 成功添加至发送队列（实际发送时仍有可能失败）
+			Added = 2,
 
-		/// \~English @brief Not running online mode
-		/// \~Chinese @brief 未运行在线模式
-		NotRunning = 4,
+			/// \~English @brief Successfully scheduled to transmit (The actual transmitting may still fail)
+			/// \~Chinese @brief 成功预约发送（实际发送时仍有可能失败）
+			Scheduled = 3,
 
-		/// \~English @brief The protocol of data is supported by no plugin, or no plugin devices are mapped to this channel
-		/// \~Chinese @brief 无插件支持该协议数据发送，或无插件设备映射至该通道
-		PluginNotFound = 5,
+			/// \~English @brief Not running online mode
+			/// \~Chinese @brief 未运行在线模式
+			NotRunning = 4,
 
-		/// \~English @brief Failed to transmit, or failed to schedule to transmit
-		/// \~Chinese @brief 发送失败，或预约发送失败
-		Failed = 6,
+			/// \~English @brief The protocol of data is supported by no plugin, or no plugin devices are mapped to this channel
+			/// \~Chinese @brief 无插件支持该协议数据发送，或无插件设备映射至该通道
+			PluginNotFound = 5,
 
-		/// \~English @brief The guest device or host is not synchronized to the time server
-		/// \~Chinese @brief 客机或主机未同步至授时服务器
-		NotSync = 7,
+			/// \~English @brief Failed to transmit, or failed to schedule to transmit
+			/// \~Chinese @brief 发送失败，或预约发送失败
+			Failed = 6,
 
-		/// \~English @brief Scheduled transmitting is unsupported
-		/// \~Chinese @brief 不支持预约发送
-		ScheduleUnsupported = 8,
+			/// \~English @brief The guest device or host is not synchronized to the time server
+			/// \~Chinese @brief 客机或主机未同步至授时服务器
+			NotSync = 7,
 
-		/// \~English @brief Timestamp out of order
-		/// \~Chinese @brief 时间戳乱序
-		TimeDisorder = 9,
+			/// \~English @brief Scheduled transmitting is unsupported
+			/// \~Chinese @brief 不支持预约发送
+			ScheduleUnsupported = 8,
 
-		/// \~English @brief Invalid channel (should be 1~16 for bus, 0~23 for video)
-		/// \~Chinese @brief 无效的通道（总线应为1~16，视频应为0~23）
-		InvalidChannel = 10,
+			/// \~English @brief Timestamp out of order
+			/// \~Chinese @brief 时间戳乱序
+			TimeDisorder = 9,
 
-		/// \~English @brief Inconsistent with the configured re-injection codec format
-		/// \~Chinese @brief 与配置的回注编码格式不一致
-		WrongCodec = 11,
+			/// \~English @brief Invalid channel (should be 1~16 for bus, 0~23 for video)
+			/// \~Chinese @brief 无效的通道（总线应为1~16，视频应为0~23）
+			InvalidChannel = 10,
 
-		/// \~English @brief Inconsistent with the configured re-injection image size
-		/// \~Chinese @brief 与配置的回注视频图像尺寸不一致
-		WrongSize = 12,
+			/// \~English @brief Inconsistent with the configured re-injection codec format
+			/// \~Chinese @brief 与配置的回注编码格式不一致
+			WrongCodec = 11,
+
+			/// \~English @brief Inconsistent with the configured re-injection image size
+			/// \~Chinese @brief 与配置的回注视频图像尺寸不一致
+			WrongSize = 12,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(Unknown);
+				ES(Transmitted);
+				ES(Added);
+				ES(Scheduled);
+				ES(NotRunning);
+				ES(PluginNotFound);
+				ES(Failed);
+				ES(NotSync);
+				ES(ScheduleUnsupported);
+				ES(TimeDisorder);
+				ES(InvalidChannel);
+				ES(WrongCodec);
+				ES(WrongSize);
+				default: return 0;
+			}
+		}
 	};
 
 	/// \~English @brief General raw data transmit interface
@@ -6654,7 +6681,7 @@ namespace spadas
 		/// \~Chinese @param binary 二进制数据
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual TransmitResult transmitNow(String protocol, Array<Double> vector, Binary binary);
+		virtual TransmitResult::Value transmitNow(String protocol, Array<Double> vector, Binary binary);
 
 		/// \~English @brief Schedule to transmit data according to server posix time (must be greater than the timestamp of the last frame to transmit with the same protocol)
 		/// \~Chinese @brief 指定按服务器Posix时间预约发送视频帧 (必须大于该协议的上一帧预约发送数据的时间戳)
@@ -6672,7 +6699,7 @@ namespace spadas
 		/// \~Chinese @param guestSyncID 客机同步ID，将据此确定客机是否已与授时服务器同步（格式为"xxx.yyy"，xxx为插件类型ID，yyy为客机同步通道名称）
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual TransmitResult transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance, String guestSyncID);
+		virtual TransmitResult::Value transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance, String guestSyncID);
 	};
 
 	/// \~English @brief Generic sample element
@@ -7257,7 +7284,7 @@ namespace spadas
 		/// \~Chinese @param binary 报文数据
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual TransmitResult transmitNow(UInt channel, UInt id, Binary binary);
+		virtual TransmitResult::Value transmitNow(UInt channel, UInt id, Binary binary);
 
 		/// \~English @brief Set to transmit message repeatedly
 		/// \~Chinese @brief 设定重复发送报文
@@ -7271,7 +7298,7 @@ namespace spadas
 		/// \~Chinese @param interval 发送周期[ms]，有效范围10~1000ms
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual TransmitResult transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval);
+		virtual TransmitResult::Value transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval);
 
 		/// \~English @brief Schedule to transmit data according to server posix time (must be greater than the timestamp of the last frame to transmit on the same channel)
 		/// \~Chinese @brief 指定按授时服务器Posix时间预约发送报文 (必须大于该通道上一帧预约发送报文的时间)
@@ -7287,7 +7314,7 @@ namespace spadas
 		/// \~Chinese @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual TransmitResult transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance);
+		virtual TransmitResult::Value transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance);
 	};
 
 	/// \~English @brief Bus device ID
@@ -7630,19 +7657,35 @@ namespace spadas
 
 	/// \~English @brief Preview image support capability
 	/// \~Chinese @brief 预览图像支持能力
-	enum class VideoPreviewCapability TODO
+	class SPADAS_API VideoPreviewCapability
 	{
-		/// \~English @brief No preview image
-		/// \~Chinese @brief 无预览图像
-		NoPreview = 0,
+	public:
+		enum class Value
+		{
+			Default = 0,
 
-		/// \~English @brief Preview image can be output together with the spadas::VideoDeviceData
-		/// \~Chinese @brief 支持预览图像随 spadas::VideoDeviceData 一起输出
-		WithPreview = 1,
+			/// \~English @brief No preview image
+			/// \~Chinese @brief 无预览图像
+			NoPreview = 0,
 
-		/// \~English @brief Besides the capability of WithPreview, preview image can also be output directly through spadas::IVideoPreviewExpressX
-		/// \~Chinese @brief 在WithPreview的基础上，还支持通过 spadas::IVideoPreviewExpressX 直接输出
-		PreviewExpress = 2,
+			/// \~English @brief Preview image can be output together with the spadas::VideoDeviceData
+			/// \~Chinese @brief 支持预览图像随 spadas::VideoDeviceData 一起输出
+			WithPreview = 1,
+
+			/// \~English @brief Besides the capability of WithPreview, preview image can also be output directly through spadas::IVideoPreviewExpressX
+			/// \~Chinese @brief 在WithPreview的基础上，还支持通过 spadas::IVideoPreviewExpressX 直接输出
+			PreviewExpress = 2,
+		};
+		static const Char* toString(Value val)
+		{
+			switch (val)
+			{
+				ES(NoPreview);
+				ES(WithPreview);
+				ES(PreviewExpress);
+				default: return 0;
+			}
+		}
 	};
 
 	/// \~English @brief Video device information
@@ -7784,7 +7827,7 @@ namespace spadas
 		/// \~Chinese @param data 视频帧数据
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual TransmitResult transmitNow(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data);
+		virtual TransmitResult::Value transmitNow(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data);
 
 		/// \~English @brief Schedule to transmit data according to server posix time (must be greater than the timestamp of the last frame to transmit on the same channel)
 		/// \~Chinese @brief 指定按服务器Posix时间预约发送视频帧 (必须大于该通道上一帧预约发送报文的时间)
@@ -7802,7 +7845,7 @@ namespace spadas
 		/// \~Chinese @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual TransmitResult transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
+		virtual TransmitResult::Value transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
 	};
 
 	/// \~English @brief All input data tables
@@ -7973,7 +8016,6 @@ namespace spadas
 		Path dstGenerationRoot;
 	};
 
-<<<<<<< HEAD
 	/// \~English @brief File writing mode
 	/// \~Chinese @brief 文件写入模式
 	class SPADAS_API FileWriteMode
@@ -8343,7 +8385,7 @@ namespace spadas
 	// Plugin related utility functions / 插件相关实用功能 //////////////////////////////////////////////////////////////
 
 	/// \~English @brief Bus protocol ID (like xxx.dbc)
-	/// \~Chinese @brief 总线协议ID (形如XXX.dbc)
+	/// \~Chinese @brief 总线协议ID (形如xxx.dbc)
 	typedef String BusProtocolID;
 
 	/// \~English @brief Bus message ID
@@ -9197,8 +9239,8 @@ namespace spadas
 		/// \~Chinese @param timeServer 时间相关服务接口（仅限当前源Session和目标Session）
 		virtual void pickSession(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback, Interface<ITimeServer> timeServer);
 
-		/// \~English @brief [Optional] Additional settings for file R/W (called before each openXXXFiles function)
-		/// \~Chinese @brief [可选] 对文件读写进行额外设置（在各openXXXFiles函数前被调用）
+		/// \~English @brief [Optional] Additional settings for file R/W (called before each openRead/WriteFiles function)
+		/// \~Chinese @brief [可选] 对文件读写进行额外设置（在各openRead/WriteFiles函数前被调用）
 		/// \~English @param extra Extra configuration information
 		/// \~Chinese @param extra 配置信息
 		virtual void setFileExtraConfig(String extra);

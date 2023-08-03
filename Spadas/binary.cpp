@@ -1,10 +1,6 @@
 ﻿
 #include "binary.h"
 
-#if defined(SPADAS_ENV_MACOS)
-#pragma clang diagnostic ignored "-Wvarargs"
-#endif
-
 using namespace spadas;
 using namespace binary_internal;
 
@@ -61,26 +57,6 @@ Binary Binary::create(UInt size, UInt firstByte, ...)
 	}
 	va_end(list);
 	return out;
-}
-
-Optional<Binary> Binary::createFromBase64(String base64)
-{
-	if (base64.isEmpty()) return Binary();
-
-	UInt base64DecodedLen;
-	Byte *base64DecodedBytes = base64Decode(base64.chars().data(), base64DecodedLen, true);
-	if (base64DecodedBytes == NULL) return Optional<Binary>();
-
-	Binary base64Decoded(base64DecodedBytes, base64DecodedLen);
-	delete[] base64DecodedBytes;
-	return base64Decoded;
-}
-
-Optional<Binary> Binary::createFromDES(Binary encrypted, String key)
-{
-	if (key.isEmpty()) key = "spadas";
-	Binary sha1 = key.toBinary().toSHA1();
-	return desDecode(encrypted, sha1);
 }
 
 Byte *Binary::data()

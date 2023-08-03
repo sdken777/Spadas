@@ -10,7 +10,7 @@
 std::bitset<64> encrypt(std::bitset<64>& plain, std::bitset<48> subKey[16]);
 std::bitset<64> decrypt(std::bitset<64>& cipher, std::bitset<48> subKey[16]);
 
-using namespace spadas;
+using namespace binary_internal;
 
 void byteToBitset(Byte input, std::bitset<48>& bits, int offset)
 {
@@ -59,9 +59,9 @@ void genSubKey(Binary sha1, int offset, std::bitset<48>& bits)
 	byteToBitset(sha1[offset + 5], bits, 40);
 }
 
-Binary Binary::toDES(String key)
+Binary BinaryCommon::toDES(const Byte* bytes, UInt rawSize, String& key)
 {
-	if (!vars) return Binary();
+	if (rawSize == 0) return Binary();
 	if (key.isEmpty()) key = "spadas";
 
 	Binary sha1 = key.toBinary().toSHA1();
@@ -86,14 +86,12 @@ Binary Binary::toDES(String key)
 	genSubKey(sha1ex, 5, subKey[14]);
 	genSubKey(sha1ex, 11, subKey[15]);
 
-	UInt rawsize = vars->size;
-	UInt size = (rawsize % 8 == 0) ? rawsize : ((rawsize / 8 + 1) * 8);
-	Byte *data = vars->data;
+	UInt size = (rawSize % 8 == 0) ? rawSize : ((rawSize / 8 + 1) * 8);
 
 	Array<std::bitset<64> > input(size / 8);
-	for (UInt i = 0; i < rawsize; i++)
+	for (UInt i = 0; i < rawSize; i++)
 	{
-		byteToBitset(data[i], input[i / 8], (i % 8) * 8);
+		byteToBitset(bytes[i], input[i / 8], (i % 8) * 8);
 	}
 
 	Array<std::bitset<64> > output(size / 8);

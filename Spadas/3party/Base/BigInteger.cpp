@@ -23,9 +23,11 @@
 // Spadas modification: Function declarations and disable warnings
 #include <algorithm>
 #include <memory.h>
+#if defined(SPADAS_ENV_NILRT)
 #pragma GCC diagnostic ignored "-Wsign-compare"
-#pragma GCC diagnostic ignored "-Wshift-negative-value"
-#if !defined(SPADAS_ENV_MACOS)
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#else
+#pragma clang diagnostic ignored "-Wshift-negative-value"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #endif
 // Spadas modification end

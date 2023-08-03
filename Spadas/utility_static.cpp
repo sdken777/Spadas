@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <sys/timeb.h>
 
-#if !defined(SPADAS_ENV_NILRT)
+#if defined(SPADAS_ENV_LINUX)
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
 

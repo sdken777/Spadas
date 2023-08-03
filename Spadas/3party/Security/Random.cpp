@@ -16,6 +16,7 @@
 #include "Random.h"
 // Spadas modification: Function declarations
 #include <math.h>
+#include <stdexcept>
 // Spadas modification end
 
 vector<int32_t> Random::SeedArray = vector<int32_t>();

@@ -15,6 +15,9 @@
 
 #include "RandomNumberGenerator.h"
 #include "PCGRandomNumberGenerator.h"
+// Spadas modification: Function declarations
+#include <stdexcept>
+// Spadas modification end
 
 const char * RandomNumberGenerator::UnknownAlgorithm = "Unknown Random Generation Algorithm Requested";
 

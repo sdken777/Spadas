@@ -351,95 +351,45 @@ Time SessionIdentifier::toTime()
 	return Time(year, month, day, hour, minute, second);
 }
 
-OptionalBool IGeneralDataTransmitter::transmitNow(String protocol, Array<Double> vector, Binary binary)
-{
-	return OptionalBool();
-}
-
-OptionalBool IGeneralDataTransmitter::transmitAtTimeOffset(String protocol, Array<Double> vector, Binary binary, Double offset, UInt tolerance)
-{
-	return OptionalBool();
-}
-
-OptionalBool IGeneralDataTransmitter::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance)
-{
-	return OptionalBool();
-}
-
-OptionalBool IBusMessageTransmitter::transmitNow(UInt channel, UInt id, Binary binary)
-{
-	return OptionalBool();
-}
-
-OptionalBool IBusMessageTransmitter::transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval)
-{
-	return OptionalBool();
-}
-
-OptionalBool IBusMessageTransmitter::transmitAtTimeOffset(UInt channel, UInt id, Binary binary, Double offset, UInt tolerance)
-{
-	return OptionalBool();
-}
-
-OptionalBool IBusMessageTransmitter::transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance)
-{
-	return OptionalBool();
-}
-
 void IVideoPreviewExpress::outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix, NanoPosix gnssPosix)
 {
-}
-
-OptionalBool IVideoFrameTransmitter::transmitNow(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data)
-{
-	return OptionalBool();
-}
-
-OptionalBool IVideoFrameTransmitter::transmitAtTimeOffset(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, Double offset, UInt tolerance)
-{
-	return OptionalBool();
-}
-
-OptionalBool IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance)
-{
-	return OptionalBool();
 }
 
 void IGeneralDeviceDataOutput::outputGeneralDeviceData(GeneralDeviceData data)
 {
 }
 
-TransmitResult IGeneralDataTransmitterX::transmitNow(String protocol, Array<Double> vector, Binary binary)
+TransmitResult::Value IGeneralDataTransmitter::transmitNow(String protocol, Array<Double> vector, Binary binary)
 {
-	return TransmitResult::Unknown;
+	return TransmitResult::Value::Unknown;
 }
 
-TransmitResult IGeneralDataTransmitterX::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance, String guestSyncID)
+TransmitResult::Value IGeneralDataTransmitter::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance, String guestSyncID)
 {
-	return TransmitResult::Unknown;
+	return TransmitResult::Value::Unknown;
 }
 
-TransmitResult IBusMessageTransmitterX::transmitNow(UInt channel, UInt id, Binary binary)
+TransmitResult::Value IBusMessageTransmitter::transmitNow(UInt channel, UInt id, Binary binary)
 {
-	return TransmitResult::Unknown;
+	return TransmitResult::Value::Unknown;
 }
 
-TransmitResult IBusMessageTransmitterX::transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval)
+TransmitResult::Value IBusMessageTransmitter::transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval)
 {
-	return TransmitResult::Unknown;
+	return TransmitResult::Value::Unknown;
 }
 
-TransmitResult IBusMessageTransmitterX::transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance)
+TransmitResult::Value IBusMessageTransmitter::transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance)
 {
-	return TransmitResult::Unknown;
+	return TransmitResult::Value::Unknown;
 }
 
-TransmitResult IVideoFrameTransmitterX::transmitNow(UInt channel, VideoDataCodec codec, Size2D size, Binary data)
+TransmitResult::Value IVideoFrameTransmitter::transmitNow(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data)
 {
-	return TransmitResult::Unknown;
+	return TransmitResult::Value::Unknown;
 }
 
-TransmitResult IVideoFrameTransmitterX::transmitAtServerPosix(UInt channel, VideoDataCodec codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance)
+TransmitResult::Value IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance)
 {
-	return TransmitResult::Unknown;
+	return TransmitResult::Value::Unknown;
 }

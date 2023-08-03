@@ -2,7 +2,7 @@
 #include "binary.h"
 #include "3party/base64.h"
 
-using namespace spadas;
+using namespace binary_internal;
 
 Optional<Binary> Binary::createFromBase64(String base64)
 {
@@ -17,16 +17,16 @@ Optional<Binary> Binary::createFromBase64(String base64)
 	return Binary(startPtr, size);
 }
 
-String Binary::toBase64()
+String BinaryCommon::toBase64(const Byte* bytes, UInt size)
 {
-	if (!vars) return String();
+	if (size == 0) return String();
 
-	UInt numOrig24BitValues = vars->size / 3;
-	Bool havePadding = vars->size > numOrig24BitValues * 3;
+	UInt numOrig24BitValues = size / 3;
+	Bool havePadding = size > numOrig24BitValues * 3;
 	UInt numResultBytes = 4 * (numOrig24BitValues + havePadding) + 1;
 	
 	Array<Char> chars(numResultBytes, 0);
-	Char *endPtr = bintob64(chars.data(), vars->data, vars->size);
+	Char *endPtr = bintob64(chars.data(), bytes, size);
 	if (!endPtr) return String();
 
 	*endPtr = 0;

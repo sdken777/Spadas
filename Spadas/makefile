@@ -167,8 +167,9 @@ XTOOLS_PATH=/opt/xtools-uni
 CLANG_PATH=/opt/clang-15
 
 # 编译工具链相关
+COMPILE_OPTION_CPP=
 ifeq ($(USE_CLANG), yes)
-	COMPILE_OPTION:=$(COMPILE_OPTION) -std=c++17
+	COMPILE_OPTION_CPP:=$(COMPILE_OPTION_CPP) -std=c++17
 	COMPILER_C_EXE=$(CLANG_PATH)/bin/clang
 	COMPILER_CPP_EXE=$(CLANG_PATH)/bin/clang++
 	COMPILER_OBJC_EXE=$(CLANG_PATH)/bin/clang++
@@ -194,7 +195,7 @@ ifeq ($(USE_CLANG), yes)
 endif
 ifeq ($(COMPILE), cross)
 	ifeq ($(PLATFORM), nilrt)
-		COMPILE_OPTION:=$(COMPILE_OPTION) -std=c++11
+		COMPILE_OPTION_CPP:=$(COMPILE_OPTION_CPP) -std=c++11
 		SYSROOT_OPTION=--sysroot=/opt/xtools-uni/x86-nilrt17/sysroots/core2-64-nilrt-linux
 		ifeq ($(HOST), windows)
 			COMPILER_C_EXE=/opt/xtools-uni/x86-nilrt17/sysroots/i686-nilrtsdk-mingw32/usr/bin/x86_64-nilrt-linux/x86_64-nilrt-linux-gcc -m64 -march=core2 -mtune=core2 -msse3 -mfpmath=sse
@@ -305,15 +306,15 @@ $(OBJ_PATH)/%.o:%.c $(HEADERS_H) $(HEADERS_HPP)
 
 $(OBJ_PATH)/%.o:%.cpp $(HEADERS_H) $(HEADERS_HPP)
 	mkdir -p `dirname $@`
-	$(COMPILER_CPP_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
+	$(COMPILER_CPP_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) $(COMPILE_OPTION_CPP) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 
 $(OBJ_PATH)/%.o:%.cc $(HEADERS_H) $(HEADERS_HPP)
 	mkdir -p `dirname $@`
-	$(COMPILER_CPP_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
+	$(COMPILER_CPP_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) $(COMPILE_OPTION_CPP) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 
 $(OBJ_PATH)/%.o:%.mm $(HEADERS_H) $(HEADERS_HPP)
 	mkdir -p `dirname $@`
-	$(COMPILER_OBJC_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
+	$(COMPILER_OBJC_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) $(COMPILE_OPTION_CPP) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 
 pre:
 	$(PREBUILD_COMMAND)

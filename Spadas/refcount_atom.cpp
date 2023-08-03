@@ -1,7 +1,7 @@
 ﻿
 #include "spadas.h"
 
-#if !defined(SPADAS_ENV_NILRT)
+#if defined(SPADAS_ENV_MACOS)
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
 

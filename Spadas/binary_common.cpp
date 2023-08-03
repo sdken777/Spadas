@@ -53,30 +53,6 @@ Binary BinaryCommon::reverse(const Byte* bytes, UInt size)
 	return out;
 }
 
-String BinaryCommon::toBase64(const Byte* bytes, UInt size)
-{
-	Char *base64EncodedChars = base64Encode((Char*)bytes, size);
-	if (base64EncodedChars == NULL) return String();
-
-	String result = base64EncodedChars;
-	delete[] base64EncodedChars;
-	return result;
-}
-
-Binary BinaryCommon::toSHA1(const Byte* bytes, UInt size)
-{
-	Binary encoded(20);
-	calc_sha1(bytes, size, encoded.data());
-	return encoded;
-}
-
-Binary BinaryCommon::toDES(const Byte* bytes, UInt size, String& key)
-{
-	if (key.isEmpty()) key = "spadas";
-	Binary sha1 = key.toBinary().toSHA1();
-	return desEncode(sha1, bytes, size);
-}
-
 BinarySpan BinaryCommon::sub(Binary& source, UInt spanIndex, UInt spanSize, UInt subIndex, UInt subSize)
 {
     SPADAS_ERROR_RETURNVAL(subIndex >= spanSize, BinarySpan());

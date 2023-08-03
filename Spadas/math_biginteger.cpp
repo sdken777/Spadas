@@ -91,11 +91,6 @@ Binary BigInteger::getData()
 	return output;
 }
 
-String BigInteger::toString()
-{
-	return vars->toString();
-}
-
 Word BigInteger::getHash()
 {
 	return vars->toString().getHash();

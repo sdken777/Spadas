@@ -19,12 +19,6 @@ namespace binary_internal
 {
 	using namespace spadas;
 
-	extern unsigned char* base64Decode(char* in, unsigned int& resultSize, bool trimTrailingZeros);
-	extern char* base64Encode(char const* origSigned, unsigned origLength);
-	extern bool calc_sha1(const unsigned char *data, unsigned int len, unsigned char *pbDest20);
-	extern Optional<Binary> desDecode(Binary encrypted, Binary sha1);
-	extern Binary desEncode(Binary sha1, const Byte* data, UInt rawsize);
-
 	class BinaryCommon
 	{
 	public:
