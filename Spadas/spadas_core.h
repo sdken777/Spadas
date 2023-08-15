@@ -4066,17 +4066,25 @@ namespace spadas
 	class SPADAS_API ImagePointer
 	{
 	public:
-		/// \~English @brief The default constructor, which will create a 16x16 grayscale image
-		/// \~Chinese @brief 默认构造函数，创建16x16灰度图像
+		/// \~English @brief Create invalid object
+		/// \~Chinese @brief 创建无效对象
 		ImagePointer();
 
-		/// \~English @brief Initialize based on the image size and whether it is a color image
-		/// \~Chinese @brief 基于图像大小和是否为彩色图像进行初始化
-		ImagePointer(Size2D size, Bool isColor);
+		/// \~English @brief Initialize based on the image size and whether it is a color image. If setPixels is TRUE, assign zero to all pixel values
+		/// \~Chinese @brief 基于图像大小和是否为彩色图像进行初始化，若setPixels为TRUE则所有像素赋值为0
+		ImagePointer(Size2D size, Bool isColor, Bool setPixels = FALSE);
 
-		/// \~English @brief Initialize based on existing data
-		/// \~Chinese @brief 基于已有数据初始化
-		ImagePointer(Size2D size, Bool isColor, UInt rowBytes, Array<ULong> data);
+		/// \~English @brief Initialize based on external data
+		/// \~Chinese @brief 基于外部数据初始化
+		ImagePointer(Size2D size, Bool isColor, UInt rowBytes, BinarySpan data);
+
+		/// \~English @brief Whether the data is valid
+		/// \~Chinese @brief 数据是否有效
+		Bool isValid();
+
+		/// \~English @brief Whether the source of data is a reference counting object
+		/// \~Chinese @brief 数据源是否为一个引用计数对象
+		Bool isRefCounting();
 
 		/// \~English @brief Image width
 		/// \~Chinese @brief 图像宽度
@@ -4094,14 +4102,14 @@ namespace spadas
 		/// \~Chinese @brief 每行图像的字节数，为8的倍数
 		UInt getRowBytes();
 
-		/// \~English @brief Image data, the number of data bytes is a multiple of 8
-		/// \~Chinese @brief 图像数据，数据字节数为8的倍数
-		Array<ULong> getData();
+		/// \~English @brief Image data
+		/// \~Chinese @brief 图像数据
+		BinarySpan getData();
 
 	private:
-		UInt width, height, rowBytes;
+		UInt width, height, step;
 		Bool color;
-		Array<ULong> data;
+		BinarySpan span;
 	};
 
 	/// \~English @brief The color represented by RGB
@@ -4416,21 +4424,13 @@ namespace spadas
 		/// \~Chinese @brief 无效对象
 		Image();
 
-		/// \~English @brief Specify the size and format to create an image, if setPixels is TRUE, assign zero to all pixel values
+		/// \~English @brief Specify the size and format to create an image. If setPixels is TRUE, assign zero to all pixel values
 		/// \~Chinese @brief 指定大小和格式创建图像，若setPixels为TRUE则所有像素赋值为0
 		Image(Size2D size, Enum<PixelFormat> format, Bool setPixels = TRUE);
 
-		/// \~English @brief Specify the size and format to create an image, if setPixels is TRUE, assign zero to all pixel values
+		/// \~English @brief Specify the size and format to create an image. If setPixels is TRUE, assign zero to all pixel values
 		/// \~Chinese @brief 指定大小和格式创建图像，若setPixels为TRUE则所有像素赋值为0
 		Image(Enum<ImageResolution> resolution, Enum<PixelFormat> format, Bool setPixels = TRUE);
-
-		/// \~English @brief Specify the size and format to create an image, and copy data from the data block pointed to by the pointer
-		/// \~Chinese @brief 指定大小和格式创建图像，并从指针指向的数据块拷贝数据
-		Image(Size2D size, Enum<PixelFormat> format, Pointer raw, UInt rawRowBytes);
-
-		/// \~English @brief Specify the size and format to create an image, and copy data from the data block pointed to by the pointer
-		/// \~Chinese @brief 指定大小和格式创建图像，并从指针指向的数据块拷贝数据
-		Image(Enum<ImageResolution> resolution, Enum<PixelFormat> format, Pointer raw, UInt rawRowBytes);
 
 		/// \~English @brief Create image from image pointer (without copying data)
 		/// \~Chinese @brief 从图像指针创建图像（不拷贝数据）
@@ -4439,6 +4439,10 @@ namespace spadas
 		/// \~English @brief Read the image from the .bmp file, the format may be ByteBGR, ByteBGRA or ByteGray depending on the content of the file
 		/// \~Chinese @brief 从.bmp文件读取图像，根据文件内容不同其格式可能为ByteBGR，ByteBGRA或ByteGray
 		Image(Path bmpFilePath);
+
+		/// \~English @brief Whether the source of data is a reference counting object
+		/// \~Chinese @brief 数据源是否为一个引用计数对象
+		Bool isRefCounting();
 
 		/// \~English @brief Clone a new object
 		/// \~Chinese @brief 克隆出一个新对象
@@ -4456,9 +4460,9 @@ namespace spadas
 		/// \~Chinese @brief 取得子图像，其数据绑定至本图像的数据
 		Image sub(Region2D region);
 
-		/// \~English @brief Get the image pointer, only supported by ByteGray and ByteBGR
-		/// \~Chinese @brief 取得图像指针，仅ByteGray和ByteBGR支持
-		Optional<ImagePointer> imagePointer();
+		/// \~English @brief Get the image pointer (without copying data), only supported by ByteGray and ByteBGR
+		/// \~Chinese @brief 取得图像指针（不拷贝数据），仅ByteGray和ByteBGR支持
+		ImagePointer imagePointer();
 
 		/// \~English @brief Get image size
 		/// \~Chinese @brief 取得图像大小

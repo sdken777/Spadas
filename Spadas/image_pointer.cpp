@@ -3,45 +3,73 @@
 
 using namespace image_internal;
 
-ImagePointer::ImagePointer() : width(DEFAULT_SIZE), height(DEFAULT_SIZE), color(FALSE), data(calcImageDataSize(Size2D::wh(DEFAULT_SIZE, DEFAULT_SIZE), PixelFormat::Value::ByteGray))
+ImagePointer::ImagePointer() : width(0), height(0), step(0), color(FALSE)
 {
-	rowBytes = data.size() * 8 / height;
 }
-ImagePointer::ImagePointer(Size2D size, Bool isColor) : width(math::clamp(size.width, 1u, MAX_WIDTH)), height(math::clamp(size.height, 1u, MAX_HEIGHT)), color(isColor), \
-	data(calcImageDataSize(Size2D::wh(math::clamp(size.width, 1u, MAX_WIDTH), math::clamp(size.height, 1u, MAX_HEIGHT)), isColor ? PixelFormat::Value::ByteBGR : PixelFormat::Value::ByteGray))
+ImagePointer::ImagePointer(Size2D size, Bool isColor, Bool setPixels) : width(0), height(0), step(0), color(FALSE)
 {
-	rowBytes = data.size() * 8 / height;
+	SPADAS_ERROR_RETURN(size.width == 0 || size.width > MAX_WIDTH);
+	SPADAS_ERROR_RETURN(size.height == 0 || size.height > MAX_HEIGHT);
+
+	width = size.width;
+	height = size.height;
+	color = isColor;
+	span = Binary(calcImageByteSize(size, isColor ? PixelFormat::Value::ByteBGR : PixelFormat::Value::ByteGray)).span();
+	step = span.size() / height;
+	if (setPixels) span.set(0);
 }
 
-ImagePointer::ImagePointer(Size2D size, Bool isColor, UInt rowBytes, Array<ULong> data) : width(size.width), height(size.height), rowBytes(rowBytes), color(isColor), data(data)
+ImagePointer::ImagePointer(Size2D size, Bool isColor, UInt rowBytes, BinarySpan data) : width(0), height(0), step(0), color(FALSE)
 {
-	SPADAS_ERROR_RETURN(width == 0 || width > MAX_WIDTH);
-	SPADAS_ERROR_RETURN(height == 0 || height > MAX_HEIGHT);
-	SPADAS_ERROR_RETURN(rowBytes < width * (isColor ? 3 : 1));
-	SPADAS_ERROR_RETURN(data.size() * sizeof(ULong) < height * rowBytes);
+	SPADAS_ERROR_RETURN(size.width == 0 || size.width > MAX_WIDTH);
+	SPADAS_ERROR_RETURN(size.height == 0 || size.height > MAX_HEIGHT);
+	SPADAS_ERROR_RETURN(rowBytes < size.width * (isColor ? 3 : 1));
+	SPADAS_ERROR_RETURN(data.size() < (size.height - 1) * rowBytes + size.width * (isColor ? 3 : 1));
+
+	width = size.width;
+	height = size.height;
+	color = isColor;
+	step = rowBytes;
+	span = data;
+}
+
+Bool ImagePointer::isValid()
+{
+	return !span.isEmpty();
+}
+
+Bool ImagePointer::isRefCounting()
+{
+	SPADAS_ERROR_RETURNVAL(span.isEmpty(), FALSE);
+	return span.isRefCounting();
 }
 
 UInt ImagePointer::getWidth()
 {
+	SPADAS_ERROR_PASS(width == 0);
 	return width;
 }
 
 UInt ImagePointer::getHeight()
 {
+	SPADAS_ERROR_PASS(height == 0);
 	return height;
 }
 
 Bool ImagePointer::isColor()
 {
+	SPADAS_ERROR_PASS(span.isEmpty());
 	return color;
 }
 
 UInt ImagePointer::getRowBytes()
 {
-	return rowBytes;
+	SPADAS_ERROR_PASS(step == 0);
+	return step;
 }
 
-Array<ULong> ImagePointer::getData()
+BinarySpan ImagePointer::getData()
 {
-	return data;
+	SPADAS_ERROR_PASS(span.isEmpty());
+	return span;
 }
