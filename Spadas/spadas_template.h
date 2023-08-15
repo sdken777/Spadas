@@ -435,13 +435,20 @@ namespace spadas
 		}
 
 		template <typename Type>
-		Array<ArraySpan<Type> > arrayCommonSplit(Array<Type>& source, UInt spanIndex, UInt spanSize, Array<UInt>& sizes)
+		Array<ArraySpan<Type> > arrayCommonSplit(Type* data, UInt size, Array<UInt>& sizes, Vars *arrayVars)
 		{
 			UInt totalSize = 0;
 			for (UInt i = 0; i < sizes.size(); i++) totalSize += sizes[i];
-			SPADAS_ERROR_RETURNVAL(totalSize != spanSize, Array<ArraySpan<Type> >());
+			SPADAS_ERROR_RETURNVAL(totalSize != size, Array<ArraySpan<Type> >());
+			Array<Type> sourceArray;
+			UInt curIndex = 0;
+			if (arrayVars)
+			{
+				auto objBase = Object<ArrayVars<Type> >::castCreate(arrayVars);
+				sourceArray = *(Array<Type>*)(&objBase);
+				curIndex = (UInt)(data - sourceArray.data());
+			}
 			Array<ArraySpan<Type> > out = Array<ArraySpan<Type> >::createUninitialized(sizes.size());
-			UInt curIndex = spanIndex;
 			for (UInt i = 0; i < sizes.size(); i++)
 			{
 				UInt subArraySize = sizes[i];
@@ -451,7 +458,7 @@ namespace spadas
 				}
 				else
 				{
-					out.initialize(i, ArraySpan<Type>(source, curIndex, subArraySize));
+					out.initialize(i, arrayVars ? ArraySpan<Type>(sourceArray, curIndex, subArraySize) : ArraySpan<Type>(data + curIndex, subArraySize));
 					curIndex += subArraySize;
 				}
 			}
@@ -473,17 +480,6 @@ namespace spadas
 			ok = Array<Bool>(size);
 			for (UInt i = 0; i < size; i++) output.initialize(i, data[i].template as<TargetType>(ok[i]));
 			return output;
-		}
-
-		template <typename Type>
-		ArraySpan<Type> arrayCommonSub(Array<Type>& source, UInt spanIndex, UInt spanLength, UInt subIndex, UInt subLength, UInt& reserveSize)
-		{
-			SPADAS_ERROR_RETURNVAL(subIndex >= spanLength, ArraySpan<Type>());
-			if (subLength == 0) return ArraySpan<Type>();
-
-			subLength = math::min(subLength, spanLength - subIndex);
-			reserveSize = spanIndex + subIndex + subLength;
-			return ArraySpan<Type>(source, spanIndex + subIndex, subLength);
 		}
 	}
 
@@ -705,7 +701,7 @@ namespace spadas
 	{
 		SPADAS_ERROR_RETURNVAL(!this->vars, Array<ArraySpan<Type> >());
 		this->vars->reserveSize = math::max(this->vars->reserveSize, this->vars->size);
-		return internal::arrayCommonSplit(*this, 0, this->vars->size, sizes);
+		return internal::arrayCommonSplit(this->vars->data, this->vars->size, sizes, this->vars);
 	}
 
 	template<typename Type>
@@ -729,13 +725,10 @@ namespace spadas
 	}
 
 	template<typename Type>
-	ArraySpan<Type> Array<Type>::sub(UInt index, UInt size)
+	ArraySpan<Type> Array<Type>::span(UInt index, UInt size)
 	{
-		SPADAS_ERROR_RETURNVAL(!this->vars, ArraySpan<Type>());
-		UInt reserveSize = 0;
-		ArraySpan<Type> output = internal::arrayCommonSub(*this, 0, this->vars->size, index, size, reserveSize);
-		this->vars->reserveSize = math::max(this->vars->reserveSize, reserveSize);
-		return output;
+		if (this->vars) this->vars->reserveSize = math::max(this->vars->reserveSize, this->vars->size);
+		return ArraySpan<Type>(*this, index, size);
 	}
 
 	template<typename Type>
@@ -850,17 +843,83 @@ namespace spadas
 	}
 
 	template<typename Type>
-	ArraySpan<Type>::ArraySpan() : idx(0), siz(0)
+	ArraySpan<Type>::ArraySpan() : source(0), idx(0), siz(0)
 	{}
 
 	template<typename Type>
-	ArraySpan<Type>::ArraySpan(Array<Type>& sourceArray, UInt index, UInt size) : source(sourceArray), idx(index), siz(size)
-	{}
+	ArraySpan<Type>::ArraySpan(const Type *ptr, UInt size) : source(0), idx(0), siz(0)
+	{
+		SPADAS_ERROR_RETURN(ptr == NULL);
+		SPADAS_ERROR_RETURN(size == 0);
+		this->source = (ULong)ptr;
+		this->siz = size;
+	}
+
+	template<typename Type>
+	ArraySpan<Type>::ArraySpan(Array<Type>& sourceArray, UInt offset, UInt size) : source(0), idx(0), siz(0)
+	{
+		ArrayVars<Type> *vars = sourceArray.getVars();
+		SPADAS_ERROR_RETURN(size == 0);
+		SPADAS_ERROR_RETURN(!vars);
+		SPADAS_ERROR_RETURN(offset >= vars->size);
+		vars->retain();
+		this->source = (ULong)vars;
+		this->idx = (UInt)((ULong)(vars->data + offset) - this->source);
+		this->siz = math::min(size, vars->size - offset);
+	}
+
+	template<typename Type>
+	ArraySpan<Type>::ArraySpan(ArraySpan<Type>& sourceSpan, UInt offset, UInt size) : source(0), idx(0), siz(0)
+	{
+		SPADAS_ERROR_RETURN(size == 0);
+		SPADAS_ERROR_RETURN(sourceSpan.source == 0);
+		SPADAS_ERROR_RETURN(offset >= sourceSpan.siz);
+		if (sourceSpan.idx)
+		{
+			((Vars*)sourceSpan.source)->retain();
+			this->source = sourceSpan.source;
+			this->idx = sourceSpan.idx + offset * sizeof(Type);
+		}
+		else
+		{
+			this->source = sourceSpan.source + offset * sizeof(Type);
+		}
+		this->siz = math::min(size, sourceSpan.siz - offset);
+	}
+
+	template<typename Type>
+	ArraySpan<Type>::ArraySpan(const ArraySpan<Type>& span) : source(span.source), idx(span.idx), siz(span.siz)
+	{
+		if (this->idx) ((Vars*)this->source)->retain();
+	}
+
+	template<typename Type>
+	ArraySpan<Type>::~ArraySpan()
+	{
+		if (this->idx) ((Vars*)this->source)->release();
+	}
+
+	template<typename Type>
+	ArraySpan<Type>& ArraySpan<Type>::operator =(const ArraySpan<Type>& span)
+	{
+		if (this->idx) ((Vars*)this->source)->release();
+		this->source = span.source;
+		this->idx = span.idx;
+		this->siz = span.siz;
+		if (this->idx) ((Vars*)this->source)->retain();
+		return *this;
+	}
+
+	template<typename Type>
+	Bool ArraySpan<Type>::isRefCounting()
+	{
+		return this->idx != 0;
+	}
 
 	template<typename Type>
 	Type* ArraySpan<Type>::data()
 	{
-		return this->siz == 0 ? 0 : (this->source.data() + this->idx);
+		return (Type*)(this->source + this->idx);
 	}
 
 	template<typename Type>
@@ -878,147 +937,148 @@ namespace spadas
 	template<typename Type>
 	Array<Type> ArraySpan<Type>::clone()
 	{
-		if (!this->siz) return Array<Type>();
-		else return Array<Type>(this->source.data() + this->idx, this->siz);
+		if (this->source)
+		{
+			Array<Type> output = Array<Type>::createUninitialized(this->siz);
+			Type *src = (Type*)(this->source + this->idx);
+			for (UInt i = 0; i < this->siz; i++) output.initialize(i, src[i]);
+			return output;
+		}
+		else return Array<Type>();
 	}
 
 	template<typename Type>
 	Type& ArraySpan<Type>::operator [](UInt index)
 	{
 		SPADAS_ERROR_RETURNVAL(index >= this->siz, *(new Type));
-		return this->source.data()[this->idx + index];
+		return *(Type*)(source + idx + index * sizeof(Type));
 	}
 
 	template<typename Type>
 	Type& ArraySpan<Type>::first()
 	{
 		SPADAS_ERROR_RETURNVAL(this->siz == 0, *(new Type));
-		return this->source.data()[this->idx];
+		return *(Type*)(source + idx);
 	}
 
 	template<typename Type>
 	Type& ArraySpan<Type>::last()
 	{
 		SPADAS_ERROR_RETURNVAL(this->siz == 0, *(new Type));
-		return this->source.data()[this->idx + this->siz - 1];
+		return *(Type*)(source + idx + (this->siz - 1) * sizeof(Type));
 	}
 
 	template<typename Type>
 	Array<Type> ArraySpan<Type>::operator +(Array<Type> arr)
 	{
-		if (!this->siz) return arr.clone();
-		else return internal::arrayCommonPlus<Type>(this->source.data() + this->idx, this->siz, arr);
+		if (this->source) return internal::arrayCommonPlus<Type>((Type*)(this->source + this->idx), this->siz, arr);
+		else return arr.clone();
 	}
 
 	template<typename Type>
 	void ArraySpan<Type>::trim(UInt size)
 	{
 		SPADAS_ERROR_RETURN(size == 0);
-		if (size < this->siz) this->siz = size;
+		this->siz = math::min(this->siz, size);
 	}
 
 	template<typename Type>
 	void ArraySpan<Type>::set(Type value)
 	{
-		if (!this->siz) return;
-		else internal::arrayCommonSet<Type>(this->source.data() + this->idx, this->siz, value);
+		if (this->source) internal::arrayCommonSet<Type>((Type*)(this->source + this->idx), this->siz, value);
 	}
 
 	template<typename Type>
 	Bool ArraySpan<Type>::contain(Type val)
 	{
-		if (!this->siz) return FALSE;
-		else
+		if (this->source)
 		{
 			Func<Bool(Type&)> func = [val](Type& v){ return v == val; };
-			return internal::arrayCommonContain<Type>(this->source.data() + this->idx, this->siz, func);
+			return internal::arrayCommonContain<Type>((Type*)(this->source + this->idx), this->siz, func);
 		}
+		else return FALSE;
 	}
 
 	template<typename Type>
 	Bool ArraySpan<Type>::containAs(Func<Bool(Type&)> func)
 	{
-		if (!this->siz) return FALSE;
-		else return internal::arrayCommonContain<Type>(this->source.data() + this->idx, this->siz, func);
+		if (this->source) return internal::arrayCommonContain<Type>((Type*)(this->source + this->idx), this->siz, func);
+		else return FALSE;
 	}
 
 	template<typename Type>
 	Array<UInt> ArraySpan<Type>::search(Type val)
 	{
-		if (!this->siz) return Array<UInt>();
-		else
+		if (this->source)
 		{
 			Func<Bool(Type&)> func = [val](Type& v){ return v == val; };
-			return internal::arrayCommonSearch<Type>(this->source.data() + this->idx, this->siz, func);
+			return internal::arrayCommonSearch<Type>((Type*)(this->source + this->idx), this->siz, func);
 		}
+		else return Array<UInt>();
 	}
 
 	template<typename Type>
 	Array<UInt> ArraySpan<Type>::searchAs(Func<Bool(Type&)> func)
 	{
-		if (!this->siz) return Array<UInt>();
-		else return internal::arrayCommonSearch<Type>(this->source.data() + this->idx, this->siz, func);
+		if (this->source) return internal::arrayCommonSearch<Type>((Type*)(this->source + this->idx), this->siz, func);
+		else return Array<UInt>();
 	}
 
 	template<typename Type>
 	void ArraySpan<Type>::sort()
 	{
-		if (!this->siz) return;
-		else
+		if (this->source)
 		{
 			Func<Bool(Type&, Type&)> func = [](Type& a, Type& b){ return a > b; };
-			internal::arrayCommonSort<Type>(this->source.data() + this->idx, this->siz, func);
+			internal::arrayCommonSort<Type>((Type*)(this->source + this->idx), this->siz, func);
 		}
 	}
 
 	template<typename Type>
 	void ArraySpan<Type>::sortAs(Func<Bool(Type&, Type&)> func)
 	{
-		if (!this->siz) return;
-		else internal::arrayCommonSort<Type>(this->source.data() + this->idx, this->siz, func);
+		if (this->source) internal::arrayCommonSort<Type>((Type*)(this->source + this->idx), this->siz, func);
 	}
 
 	template<typename Type>
 	template<typename TargetType>
 	Array<TargetType> ArraySpan<Type>::convert(Func<TargetType(Type&)> func)
 	{
-		if (!this->siz) return Array<TargetType>();
-		else return internal::arrayCommonConvert<Type, TargetType>(this->source.data() + this->idx, this->siz, func);
+		if (this->source) return internal::arrayCommonConvert<Type, TargetType>((Type*)(this->source + this->idx), this->siz, func);
+		return Array<TargetType>();
 	}
 
 	template<typename Type>
 	Array<ArraySpan<Type> > ArraySpan<Type>::split(Array<UInt> sizes)
 	{
-		SPADAS_ERROR_RETURNVAL(this->siz == 0, Array<ArraySpan<Type> >());
-		return internal::arrayCommonSplit(this->source, this->idx, this->siz, sizes);
+		SPADAS_ERROR_RETURNVAL(!this->source, Array<ArraySpan<Type> >());
+		return internal::arrayCommonSplit((Type*)(this->source + this->idx), this->siz, sizes, idx ? (Vars*)source : NULL);
 	}
 
 	template<typename Type>
 	template<typename TargetType>
 	Array<TargetType> ArraySpan<Type>::asArray()
 	{
-		if (!this->siz) return Array<TargetType>();
-		else return internal::arrayCommonAsArray<Type, TargetType>(this->source.data() + this->idx, this->siz);
+		if (this->source) return internal::arrayCommonAsArray<Type, TargetType>((Type*)(this->source + this->idx), this->siz);
+		else return Array<TargetType>();
 	}
 
 	template<typename Type>
 	template<typename TargetType>
 	Array<TargetType> ArraySpan<Type>::asArray(Array<Bool>& ok)
 	{
-		if (!this->siz)
+		if (this->source) return internal::arrayCommonAsArray<Type, TargetType>((Type*)(this->source + this->idx), this->siz, ok);
+		else
 		{
 			ok = Array<Bool>();
 			return Array<TargetType>();
 		}
-		else return internal::arrayCommonAsArray<Type, TargetType>(this->source.data() + this->idx, this->siz, ok);
 	}
 
 	template<typename Type>
-	ArraySpan<Type> ArraySpan<Type>::sub(UInt index, UInt size)
+	ArraySpan<Type> ArraySpan<Type>::span(UInt index, UInt size)
 	{
-		SPADAS_ERROR_RETURNVAL(this->siz == 0, ArraySpan<Type>());
-		UInt dummy = 0;
-		return internal::arrayCommonSub(this->source, this->idx, this->siz, index, size, dummy);
+		return ArraySpan<Type>(*this, index, size);
 	}
 
 	template<typename Type>

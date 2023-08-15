@@ -1468,7 +1468,7 @@ UInt String::searchLast(String target)
 
 Array<StringSpan> String::split(String target)
 {
-	if (vars) return StringCommon::split(*this, 0, vars->length, target);
+	if (vars) return StringCommon::split(vars->data, vars->length, target, vars);
 	else return Array<StringSpan>();
 }
 
@@ -1477,10 +1477,9 @@ String String::replace(String oldString, String newString)
 	return StringCommon::replace(bytes(), length(), oldString, newString);
 }
 
-StringSpan String::sub(UInt index, UInt length, Bool trimStart, Bool trimEnd)
+StringSpan String::span(UInt index, UInt length)
 {
-	SPADAS_ERROR_RETURNVAL(!vars, StringSpan());
-	return StringCommon::sub(*this, 0, vars->length, index, length, trimStart, trimEnd);
+	return StringSpan(*this, index, length);
 }
 
 void String::ensureBuffer(UInt appendSize)

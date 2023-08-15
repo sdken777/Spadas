@@ -80,8 +80,7 @@ namespace string_internal
 		static Array<UInt> search(const Byte* srcData, UInt srcLength, String& string);
 		static UInt searchFirst(const Byte* srcData, UInt srcLength, String& string);
 		static UInt searchLast(const Byte* srcData, UInt srcLength, String& string);
-		static Array<StringSpan> split(String& source, UInt spanIndex, UInt spanLength, String& splitter);
+		static Array<StringSpan> split(const Byte* srcData, UInt srcLength, String& splitter, Vars *stringVars);
 		static String replace(const Byte* srcStringData, UInt srcStringLength, String& oldString, String& newString);
-		static StringSpan sub(String& source, UInt spanIndex, UInt spanLength, UInt subIndex, UInt subLength, Bool trimStart, Bool trimEnd);
 	};
 }

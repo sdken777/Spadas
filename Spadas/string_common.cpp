@@ -435,18 +435,30 @@ UInt StringCommon::searchLast(const Byte* srcData, UInt srcLength, String& strin
 	return UINF;
 }
 
-Array<StringSpan> StringCommon::split(String& source, UInt spanIndex, UInt spanLength, String& splitter)
+Array<StringSpan> StringCommon::split(const Byte* srcData, UInt srcLength, String& splitter, Vars *stringVars)
 {
-	if (spanLength == 0) return Array<StringSpan>();
+	if (srcLength == 0) return Array<StringSpan>();
 
 	UInt splitterLength = splitter.length();
 	SPADAS_ERROR_RETURNVAL(splitterLength == 0, Array<StringSpan>());
 
-	const Byte* srcData = source.bytes() + spanIndex;
-	Array<UInt> rawMatches = search(srcData, spanLength, splitter);
+	Array<UInt> rawMatches = search(srcData, srcLength, splitter);
 	
+    String sourceString;
+    UInt curIndex = 0;
+    if (stringVars)
+    {
+        auto objBase = Object<StringVars>::castCreate(stringVars);
+		sourceString = *(String*)(&objBase);
+        curIndex = (UInt)(srcData - sourceString.bytes());
+    }
+
 	UInt nRawMatches = rawMatches.size();
-	if (nRawMatches == 0) return Array<StringSpan>::scalar(StringSpan(source, spanIndex, spanLength));
+	if (nRawMatches == 0)
+	{
+		if (stringVars) return Array<StringSpan>::scalar(StringSpan(sourceString, curIndex, srcLength));
+		else return Array<StringSpan>::scalar(StringSpan(srcData, srcLength));
+	}
 	
 	Array<UInt> matchesArr(nRawMatches);
 	UInt *matches = matchesArr.data();
@@ -462,21 +474,20 @@ Array<StringSpan> StringCommon::split(String& source, UInt spanIndex, UInt spanL
 	Array<StringSpan> out = Array<StringSpan>::createUninitialized(outSize);
 
 	UInt index = 0;
-	StringSpan dummySpan;
 
-	if (matches[0] > 0) out.initialize(index++, StringSpan(source, spanIndex, matches[0]));
-	else out.initialize(index++, dummySpan);
+	if (matches[0] > 0) out.initialize(index++, stringVars ? StringSpan(sourceString, curIndex, matches[0]) : StringSpan(srcData, matches[0]));
+	else out.initialize(index++, StringSpan());
 
 	for (UInt i = 0; i < nMatches - 1; i++)
 	{
 		UInt subStringLength = math::max((Int)matches[i+1] - (Int)matches[i] - (Int)splitterLength, 0);
-		if (subStringLength > 0) out.initialize(index++, StringSpan(source, spanIndex + matches[i] + splitterLength, subStringLength));
-		else out.initialize(index++, dummySpan);
+		if (subStringLength > 0) out.initialize(index++, stringVars ? StringSpan(sourceString, curIndex + matches[i] + splitterLength, subStringLength) : StringSpan(srcData + matches[i] + splitterLength, subStringLength));
+		else out.initialize(index++, StringSpan());
 	}
 
 	UInt lastIndex = matches[nMatches-1] + splitterLength;
-	if (lastIndex >= spanLength) out.initialize(index++, dummySpan);
-	else out.initialize(index++, StringSpan(source, spanIndex + lastIndex, spanLength - lastIndex));
+	if (lastIndex >= srcLength) out.initialize(index++, StringSpan());
+	else out.initialize(index++, stringVars ? StringSpan(sourceString, curIndex + lastIndex, srcLength - lastIndex) : StringSpan(srcData + lastIndex, srcLength - lastIndex));
 	
 	return out;
 }
@@ -551,35 +562,4 @@ String StringCommon::replace(const Byte* srcStringData, UInt srcStringLength, St
 	}
 
 	return out;
-}
-
-StringSpan StringCommon::sub(String& source, UInt spanIndex, UInt spanLength, UInt subIndex, UInt subLength, Bool trimStart, Bool trimEnd)
-{
-	SPADAS_ERROR_RETURNVAL(subIndex >= spanLength, StringSpan());
-	if (subLength == 0) return StringSpan();
-
-	subLength = math::min(subLength, spanLength - subIndex);
-	if (!trimStart && !trimEnd) return StringSpan(source, spanIndex + subIndex, subLength);
-
-	UInt trimIndex = 0, trimLength = subLength, rawLength = subLength;
-	const Byte* data = source.bytes() + spanIndex + subIndex;
-	if (trimStart)
-	{
-		for (UInt i = 0; i < rawLength; i++)
-		{
-			if (data[i] != ' ') break;
-			trimIndex++;
-		}
-		if (trimIndex == rawLength) return StringSpan();
-		trimLength -= trimIndex;
-	}
-	if (trimEnd)
-	{
-		for (Int i = (Int)rawLength - 1; i > (Int)trimIndex; i--)
-		{
-			if (data[i] != ' ') break;
-			trimLength--;
-		}
-	}
-	return StringSpan(source, spanIndex + subIndex + trimIndex, trimLength);
 }

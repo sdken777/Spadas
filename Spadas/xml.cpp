@@ -426,7 +426,7 @@ namespace xml_internal
 				if (xmlCharsValidator.validate(chars[curIndex])) keyLength++;
 				curIndex++;
 			}
-			String key = attributesString.sub(keyIndex, keyLength).clone();
+			String key = attributesString.span(keyIndex, keyLength).clone();
 
 			// Quot
 			UInt leftQuotIndex = ++curIndex;
@@ -446,7 +446,7 @@ namespace xml_internal
 			String value;
 			if (valueLength > 0)
 			{
-				StringSpan valueSpan = attributesString.sub(valueIndex, valueLength);
+				StringSpan valueSpan = attributesString.span(valueIndex, valueLength);
 				value = decodeES(valueSpan, esBuffer);
 			}
 
@@ -805,12 +805,12 @@ Optional<XML> XML::createFromFile(Path xmlFilePath)
 	BinarySpan span;
     if (binary[0] == 0xEF && binary[1] == 0xBB && binary[2] == 0xBF)
     {
-		span = binary.sub(3);
+		span = binary.span(3);
     }
 	else
 	{
 		SPADAS_WARNING_MSG("No BOM");
-		span = binary.sub(0);
+		span = binary.span();
 	}
 
 	XML xml;

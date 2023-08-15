@@ -109,8 +109,8 @@ void Binary::set(Byte val)
 
 Array<BinarySpan> Binary::split(Array<UInt> sizes)
 {
-	if (!vars) return Array<BinarySpan>();
-	else return BinaryCommon::split(*this, 0, vars->size, sizes);
+	SPADAS_ERROR_RETURNVAL(!vars, Array<BinarySpan>());
+	return BinaryCommon::split(vars->data, vars->size, sizes, vars);
 }
 
 Binary Binary::reverse()
@@ -137,10 +137,9 @@ Binary Binary::toDES(String key)
 	else return BinaryCommon::toDES(vars->data, vars->size, key);
 }
 
-BinarySpan Binary::sub(UInt index, UInt size)
+BinarySpan Binary::span(UInt index, UInt size)
 {
-	SPADAS_ERROR_RETURNVAL(!vars, BinarySpan());
-	return BinaryCommon::sub(*this, 0, vars->size, index, size);
+	return BinarySpan(*this, index, size);
 }
 
 void Binary::copy(Binary src, Region srcRegion, UInt thisOffset)

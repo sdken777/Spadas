@@ -2,15 +2,75 @@
 
 using namespace binary_internal;
 
-BinarySpan::BinarySpan() : idx(0), siz(0)
+BinarySpan::BinarySpan() : source(0), idx(0), siz(0)
 {}
 
-BinarySpan::BinarySpan(Binary& sourceBinary, UInt index, UInt size) : source(sourceBinary), idx(index), siz(size)
-{}
+BinarySpan::BinarySpan(const Byte *ptr, UInt size) : source(0), idx(0), siz(0)
+{
+    SPADAS_ERROR_RETURN(ptr == NULL);
+    SPADAS_ERROR_RETURN(size == 0);
+    source = (ULong)ptr;
+    siz = size;
+}
+
+BinarySpan::BinarySpan(Binary& sourceBinary, UInt offset, UInt size) : source(0), idx(0), siz(0)
+{
+    BinaryVars *vars = sourceBinary.getVars();
+    SPADAS_ERROR_RETURN(size == 0);
+    SPADAS_ERROR_RETURN(!vars);
+    SPADAS_ERROR_RETURN(offset >= vars->size);
+    vars->retain();
+    source = (ULong)vars;
+    idx = (UInt)((ULong)vars->data + offset - source);
+    siz = math::min(size, vars->size - offset);
+}
+
+BinarySpan::BinarySpan(BinarySpan& sourceSpan, UInt offset, UInt size) : source(0), idx(0), siz(0)
+{
+    SPADAS_ERROR_RETURN(size == 0);
+    SPADAS_ERROR_RETURN(sourceSpan.source == 0);
+    SPADAS_ERROR_RETURN(offset >= sourceSpan.siz);
+    if (sourceSpan.idx)
+    {
+        ((Vars*)sourceSpan.source)->retain();
+        source = sourceSpan.source;
+        idx = sourceSpan.idx + offset;
+    }
+    else
+    {
+        source = sourceSpan.source + offset;
+    }
+    siz = math::min(size, sourceSpan.siz - offset);
+}
+
+BinarySpan::BinarySpan(const BinarySpan& span) : source(span.source), idx(span.idx), siz(span.siz)
+{
+    if (idx) ((Vars*)source)->retain();
+}
+
+BinarySpan::~BinarySpan()
+{
+    if (idx) ((Vars*)source)->release();
+}
+
+BinarySpan& BinarySpan::operator =(const BinarySpan& span)
+{
+    if (idx) ((Vars*)source)->release();
+    source = span.source;
+    idx = span.idx;
+    siz = span.siz;
+    if (idx) ((Vars*)source)->retain();
+    return *this;
+}
+
+Bool BinarySpan::isRefCounting()
+{
+    return idx != 0;
+}
 
 Byte* BinarySpan::data()
 {
-    return siz == 0 ? 0 : (source.data() + idx);
+    return (Byte*)(source + idx);
 }
 
 UInt BinarySpan::size()
@@ -25,66 +85,69 @@ Bool BinarySpan::isEmpty()
 
 Binary BinarySpan::clone()
 {
-    if (!siz) return Binary();
-    else return Binary(source.data() + idx, siz);
+    if (source)
+    {
+        Binary output(siz);
+        utility::memoryCopy((Byte*)(source + idx), output.data(), siz);
+        return output;
+    }
+    else return Binary();
 }
 
 Byte& BinarySpan::operator [](UInt index)
 {
     SPADAS_ERROR_RETURNVAL(index >= siz, *(new Byte));
-    return source.data()[idx + index];
+    return *(Byte*)(source + idx + index);
 }
 
 Binary BinarySpan::operator +(Binary bin)
 {
-	if (!siz) return bin.clone();
-	else return BinaryCommon::operatorPlus(source.data() + idx, siz, bin);
+    if (source) return BinaryCommon::operatorPlus((Byte*)(source + idx), siz, bin);
+	else return bin.clone();
 }
 
 void BinarySpan::trim(UInt size)
 {
     SPADAS_ERROR_RETURN(size == 0);
-    if (size < siz) siz = size;
+    siz = math::min(siz, size);
 }
 
 void BinarySpan::set(Byte val)
 {
-    if (!siz) return;
-    utility::memorySet(val, source.data() + idx, siz);
+    if (source) utility::memorySet(val, (Byte*)(source + idx), siz);
 }
 
 Array<BinarySpan> BinarySpan::split(Array<UInt> sizes)
 {
-	SPADAS_ERROR_RETURNVAL(siz == 0, Array<BinarySpan>());
-	return BinaryCommon::split(source, idx, siz, sizes);
+	SPADAS_ERROR_RETURNVAL(!source, Array<BinarySpan>());
+	return BinaryCommon::split((Byte*)(source + idx), siz, sizes, idx ? (Vars*)source : NULL);
 }
 
 Binary BinarySpan::reverse()
 {
-    if (!siz) return Binary();
-    return BinaryCommon::reverse(source.data() + idx, siz);
+    if (source) return BinaryCommon::reverse((Byte*)(source + idx), siz);
+    else return Binary();
 }
 
 String BinarySpan::toBase64()
 {
-    if (!siz) return String();
-    return BinaryCommon::toBase64(source.data() + idx, siz);
+    if (source) return BinaryCommon::toBase64((Byte*)(source + idx), siz);
+    else return String();
 }
 
 Binary BinarySpan::toSHA1()
 {
-    if (!siz) return Binary();
-    return BinaryCommon::toSHA1(source.data() + idx, siz);
+    if (source) return BinaryCommon::toSHA1((Byte*)(source + idx), siz);
+    else return Binary();
 }
 
 Binary BinarySpan::toDES(String key)
 {
-    if (!siz) return Binary();
-    return BinaryCommon::toDES(source.data() + idx, siz, key);
+    if (source) return BinaryCommon::toDES((Byte*)(source + idx), siz, key);
+    else return Binary();
 }
 
-BinarySpan BinarySpan::sub(UInt index, UInt size)
+BinarySpan BinarySpan::span(UInt index, UInt size)
 {
-	SPADAS_ERROR_RETURNVAL(siz == 0, BinarySpan());
-    return BinaryCommon::sub(source, idx, siz, index, size);
+    return BinarySpan(*this, index, size);
 }

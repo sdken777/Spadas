@@ -24,11 +24,10 @@ namespace binary_internal
 	public:
 		static Binary clone(const Byte* bytes, UInt size);
 		static Binary operatorPlus(const Byte* bytes, UInt size, Binary& append);
-		static Array<BinarySpan> split(Binary& source, UInt spanIndex, UInt spanSize, Array<UInt>& sizes);
+		static Array<BinarySpan> split(const Byte* bytes, UInt size, Array<UInt>& sizes, Vars *binaryVars);
 		static Binary reverse(const Byte* bytes, UInt size);
 		static String toBase64(const Byte* bytes, UInt size);
 		static Binary toSHA1(const Byte* bytes, UInt size);
 		static Binary toDES(const Byte* bytes, UInt size, String& key);
-		static BinarySpan sub(Binary& source, UInt spanIndex, UInt spanSize, UInt subIndex, UInt subSize);
 	};
 }

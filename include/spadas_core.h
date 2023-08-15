@@ -1281,7 +1281,7 @@ namespace spadas
 
 		/// \~English @brief Get the sub-array, which will be bound to the data of this array
 		/// \~Chinese @brief 取得子数组，其数据绑定至本数组的数据
-		ArraySpan<Type> sub(UInt index, UInt size = UINF);
+		ArraySpan<Type> span(UInt index = 0, UInt size = UINF);
 		
 		/// \~English @brief Get the iterator from the first element, then the elements can be modified
 		/// \~Chinese @brief 取得从第一个元素的遍历器，可修改元素
@@ -1349,8 +1349,8 @@ namespace spadas
 		Bool isValid() { return FALSE; }
 	};
 
-	/// \~English @brief Fixed-length array span, whose data bound to the data of the original array
-	/// \~Chinese @brief 定长数组片段，数据绑定至原定长数组的数据
+	/// \~English @brief Fixed-length array span, whose data bound to the external array data
+	/// \~Chinese @brief 定长数组片段，数据绑定至外部数组数据
 	template <typename Type> class ArraySpan
 	{
 	public:
@@ -1358,9 +1358,33 @@ namespace spadas
 		/// \~Chinese @brief 创建空片段
 		ArraySpan();
 
-		/// \~English @brief [Unsafe] Bind to the original array
-		/// \~Chinese @brief [非安全] 绑定至原定长数组
-		ArraySpan(Array<Type>& sourceArray, UInt index, UInt size);
+		/// \~English @brief [Unsafe] Bind to external array data
+		/// \~Chinese @brief [非安全] 绑定至外部数组数据
+		ArraySpan(const Type *ptr, UInt size);
+
+		/// \~English @brief Bind to data of spadas::Array object
+		/// \~Chinese @brief 绑定至 spadas::Array 对象的数据
+		ArraySpan(Array<Type>& sourceArray, UInt offset, UInt size);
+
+		/// \~English @brief Bind to data of spadas::ArraySpan object
+		/// \~Chinese @brief 绑定至 spadas::ArraySpan 对象的数据
+		ArraySpan(ArraySpan<Type>& sourceSpan, UInt offset, UInt size);
+
+		/// \~English @brief Copy constructor
+		/// \~Chinese @brief 拷贝构造函数
+		ArraySpan(const ArraySpan<Type>& span);
+		
+		/// \~English @brief Destructor
+		/// \~Chinese @brief 析构函数
+		~ArraySpan();
+
+		/// \~English @brief Redirection
+		/// \~Chinese @brief 重定向
+		ArraySpan<Type>& operator =(const ArraySpan<Type>& span);
+
+		/// \~English @brief Whether the source of the array span is a reference counting object
+		/// \~Chinese @brief 定长数组片段的源是否为一个引用计数对象
+		Bool isRefCounting();
 
 		/// \~English @brief [Unsafe] Get the head pointer of the array span
 		/// \~Chinese @brief [非安全] 取得数组片段的头指针
@@ -1455,10 +1479,10 @@ namespace spadas
 
 		/// \~English @brief Get the sub-array, which will be bound to the data of source array
 		/// \~Chinese @brief 取得子数组，其数据绑定至原数组的数据
-		ArraySpan<Type> sub(UInt index, UInt size = UINF);
+		ArraySpan<Type> span(UInt index = 0, UInt size = UINF);
 
 	private:
-		Array<Type> source;
+		ULong source;
 		UInt idx;
 		UInt siz;
 	};
@@ -2442,7 +2466,7 @@ namespace spadas
 
 		/// \~English @brief Obtain a sub-data block whose data is bound to the data of this data block
 		/// \~Chinese @brief 取得子数据块，其数据绑定至本数据块的数据
-		BinarySpan sub(UInt index, UInt size = UINF);
+		BinarySpan span(UInt index = 0, UInt size = UINF);
 
 		/// \~English @brief Copy data from a sub-area of another data block to a certain position of this data block
 		/// \~Chinese @brief 从另一个数据块的某个子区域拷贝数据到本数据块的某个位置
@@ -2467,8 +2491,8 @@ namespace spadas
 		Bool isValid() { return FALSE; }
 	};
 
-	/// \~English @brief Span of binary data, bound to the original binary data
-	/// \~Chinese @brief 二进制数据片段，绑定至原二进制数据
+	/// \~English @brief Span of binary data, bound to the external byte array
+	/// \~Chinese @brief 二进制数据片段，绑定至外部字节数组
 	class SPADAS_API BinarySpan
 	{
 	public:
@@ -2476,9 +2500,33 @@ namespace spadas
 		/// \~Chinese @brief 创建空片段
 		BinarySpan();
 
-		/// \~English @brief [Unsafe] Bind to original binary data
-		/// \~Chinese @brief [非安全] 绑定至原二进制数据
-		BinarySpan(Binary& sourceBinary, UInt index, UInt size);
+		/// \~English @brief [Unsafe] Bind to external byte array
+		/// \~Chinese @brief [非安全] 绑定至外部字节数组
+		BinarySpan(const Byte *ptr, UInt size);
+
+		/// \~English @brief Bind to data of spadas::Binary object
+		/// \~Chinese @brief 绑定至 spadas::Binary 对象的数据
+		BinarySpan(Binary& sourceBinary, UInt offset, UInt size);
+
+		/// \~English @brief Bind to data of spadas::BinarySpan object
+		/// \~Chinese @brief 绑定至 spadas::BinarySpan 对象的数据
+		BinarySpan(BinarySpan& sourceSpan, UInt offset, UInt size);
+
+		/// \~English @brief Copy constructor
+		/// \~Chinese @brief 拷贝构造函数
+		BinarySpan(const BinarySpan& span);
+		
+		/// \~English @brief Destructor
+		/// \~Chinese @brief 析构函数
+		~BinarySpan();
+
+		/// \~English @brief Redirection
+		/// \~Chinese @brief 重定向
+		BinarySpan& operator =(const BinarySpan& span);
+
+		/// \~English @brief Whether the source of the span is a reference counting object
+		/// \~Chinese @brief 数据片段的源是否为一个引用计数对象
+		Bool isRefCounting();
 
 		/// \~English @brief [Unsafe] Get the head pointer of the data span
 		/// \~Chinese @brief [非安全] 取得数据片段的头指针
@@ -2546,10 +2594,10 @@ namespace spadas
 
 		/// \~English @brief Get the sub-data span whose data is bound to the data of the original data block
 		/// \~Chinese @brief 取得子数据片段，其数据绑定至原数据块的数据
-		BinarySpan sub(UInt index, UInt size = UINF);
+		BinarySpan span(UInt index = 0, UInt size = UINF);
 
 	private:
-		Binary source;
+		ULong source;
 		UInt idx;
 		UInt siz;
 	};
@@ -2856,13 +2904,9 @@ namespace spadas
 		/// \~Chinese @param index 子字符串在本字符串的起始位置
 		/// \~English @param length Substring length
 		/// \~Chinese @param length 子字符串长度
-		/// \~English @param trimStart Whether to trim the space at the beginning
-		/// \~Chinese @param trimStart 是否裁剪掉开始处的空格
-		/// \~English @param trimEnd Whether to trim off the space at the end
-		/// \~Chinese @param trimEnd 是否裁剪掉结尾处的空格
 		/// \~English @returns Substring
 		/// \~Chinese @returns 子字符串
-		StringSpan sub(UInt index, UInt length = UINF, Bool trimStart = FALSE, Bool trimEnd = FALSE);
+		StringSpan span(UInt index = 0, UInt length = UINF);
 
 		/// \~English @brief Concatenate another string after this string (This will change the data of this object)
 		/// \~Chinese @brief 在本字符串后拼接另一个字符串(将更改本对象数据)
@@ -3071,8 +3115,8 @@ namespace spadas
 		static String mergeStrings(Array<String> strs, String separator);
 	};
 
-	/// \~English @brief String span, whose data bound to the data of the original string
-	/// \~Chinese @brief 字符串片段，数据绑定至原字符串的数据
+	/// \~English @brief String span, whose data bound to the external string data
+	/// \~Chinese @brief 字符串片段，数据绑定至外部字符串数据
 	class SPADAS_API StringSpan
 	{
 	public:
@@ -3080,9 +3124,33 @@ namespace spadas
 		/// \~Chinese @brief 创建空片段
 		StringSpan();
 
-		/// \~English @brief [Unsafe] Bind to original string
-		/// \~Chinese @brief [非安全] 绑定至原字符串
-		StringSpan(String& sourceString, UInt index, UInt length);
+		/// \~English @brief [Unsafe] Bind to external string data (not required to be terminated with 0)
+		/// \~Chinese @brief [非安全] 绑定至外部字符串数据（不要求以0结尾）
+		StringSpan(const Byte *ptr, UInt length);
+
+		/// \~English @brief Bind to data of spadas::String object
+		/// \~Chinese @brief 绑定至 spadas::String 对象的数据
+		StringSpan(String& sourceString, UInt offset, UInt length);
+
+		/// \~English @brief Bind to data of spadas::StringSpan object
+		/// \~Chinese @brief 绑定至 spadas::StringSpan 对象的数据
+		StringSpan(StringSpan& sourceSpan, UInt offset, UInt length);
+
+		/// \~English @brief Copy constructor
+		/// \~Chinese @brief 拷贝构造函数
+		StringSpan(const StringSpan& span);
+		
+		/// \~English @brief Destructor
+		/// \~Chinese @brief 析构函数
+		~StringSpan();
+
+		/// \~English @brief Redirection
+		/// \~Chinese @brief 重定向
+		StringSpan& operator =(const StringSpan& span);
+
+		/// \~English @brief Whether the source of the string span is a reference counting object
+		/// \~Chinese @brief 字符串片段的源是否为一个引用计数对象
+		Bool isRefCounting();
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
@@ -3222,16 +3290,12 @@ namespace spadas
 		/// \~Chinese @param index 子字符串在本字符串片段的起始位置
 		/// \~English @param length Substring length
 		/// \~Chinese @param length 子字符串长度
-		/// \~English @param trimStart Whether to trim the space at the beginning
-		/// \~Chinese @param trimStart 是否裁剪掉开始处的空格
-		/// \~English @param trimEnd Whether to trim off the space at the end
-		/// \~Chinese @param trimEnd 是否裁剪掉结尾处的空格
 		/// \~English @returns Substring
 		/// \~Chinese @returns 子字符串
-		StringSpan sub(UInt index, UInt length = UINF, Bool trimStart = FALSE, Bool trimEnd = FALSE);
+		StringSpan span(UInt index = 0, UInt length = UINF);
 
 	private:
-		String source;
+		ULong source;
 		UInt idx;
 		UInt len;
 	};
