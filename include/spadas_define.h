@@ -2,18 +2,18 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: Array/Binary/StringSpan支持绑定至外部指针，并增加isRefCounting方法。Array/Binary/String::sub改为span，且index参数可选
+// Update log / 更新记录: 减少XML解析时拷贝
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 28
+#define SPADAS_VERSION_BUILD 29
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.0.28 \n
-* \~Chinese 本文档对应Spadas版本：9.0.28 \n
+* \~English This document corresponds to Spadas version: 9.0.29 \n
+* \~Chinese 本文档对应Spadas版本：9.0.29 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *

@@ -461,7 +461,7 @@ namespace xml_internal
 		return out;
 	}
 
-	Bool readXMLBinary(String rawString, Binary& esBuffer, XML& xml)
+	Bool readXMLBinary(StringSpan rawString, Binary& esBuffer, XML& xml)
 	{
 		XMLNode root = xml.globalRoot();
 		XMLNode current;
@@ -797,20 +797,20 @@ Optional<XML> XML::createFromFile(Path xmlFilePath)
     
 	Binary binary = file.input();
     
-	SPADAS_ERROR_RETURNVAL(binary.size() < 8, Optional<XML>());
+	SPADAS_ERROR_RETURNVAL(binary.size() <= 4, Optional<XML>());
 
 	SPADAS_ERROR_RETURNVAL((binary[0] == 0xFE && binary[1] == 0xFF) || (binary[0] == 0xFF && binary[1] == 0xFE), Optional<XML>());
 	SPADAS_ERROR_RETURNVAL((binary[0] == 0 && binary[1] == 0 && binary[2] == 0xFE && binary[3] == 0xFF) || (binary[0] == 0xFF && binary[1] == 0xFE && binary[2] == 0 && binary[3] == 0), Optional<XML>());
 
-	BinarySpan span;
+	StringSpan span;
     if (binary[0] == 0xEF && binary[1] == 0xBB && binary[2] == 0xBF)
     {
-		span = binary.span(3);
+		span = StringSpan(&binary[3], binary.size() - 3);
     }
 	else
 	{
 		SPADAS_WARNING_MSG("No BOM");
-		span = binary.span();
+		span = StringSpan(binary.data(), binary.size());
 	}
 
 	XML xml;
@@ -822,10 +822,12 @@ Optional<XML> XML::createFromFile(Path xmlFilePath)
 
 Optional<XML> XML::createFromBinary(Binary xmlBinary)
 {
+	SPADAS_ERROR_RETURNVAL(xmlBinary.size() <= 4, Optional<XML>());
+
 	XML xml;
 	xml.setVars(new XMLVars(), TRUE);
 	Binary esBuffer(STRING_STREAM_BUFFER_SIZE);
-	if (readXMLBinary(xmlBinary, esBuffer, xml)) return xml;
+	if (readXMLBinary(StringSpan(xmlBinary.data(), xmlBinary.size()), esBuffer, xml)) return xml;
 	else return Optional<XML>();
 }
 
