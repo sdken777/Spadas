@@ -365,6 +365,10 @@ namespace spadas
 
 		/// \~English @brief Initialize based on offset and size
 		/// \~Chinese @brief 基于起始位置和大小初始化
+		Region2D(Int offsetI, Int offsetJ, UInt dim0, UInt dim1) : offsetJ(offsetJ), offsetI(offsetI), dim1(dim1), dim0(dim0) {}
+
+		/// \~English @brief Initialize based on offset and size
+		/// \~Chinese @brief 基于起始位置和大小初始化
 		Region2D(CoordInt2D offset, Size2D size) : offsetU(offset.u), offsetV(offset.v), width(size.width), height(size.height) {}
 
 		/// \~English @brief Whether it is equal to
@@ -419,6 +423,10 @@ namespace spadas
 		/// \~English @brief The default constructor, the value is initialized to 0
 		/// \~Chinese @brief 默认构造函数，值初始化为0
 		Region3D() : offsetU(0), offsetV(0), offsetW(0), width(0), height(0), depth(0) {}
+
+		/// \~English @brief Initialize based on offset and size
+		/// \~Chinese @brief 基于起始位置和大小初始化
+		Region3D(Int offsetI, Int offsetJ, Int offsetK, UInt dim0, UInt dim1, UInt dim2) : offsetJ(offsetJ), offsetI(offsetI), offsetK(offsetK), dim1(dim1), dim0(dim0), dim2(dim2) {}
 
 		/// \~English @brief Initialize based on offset and size
 		/// \~Chinese @brief 基于起始位置和大小初始化
@@ -4456,7 +4464,7 @@ namespace spadas
 
 		/// \~English @brief Get the sub-image, whose data will be bound to the data of this image
 		/// \~Chinese @brief 取得子图像，其数据绑定至本图像的数据
-		Image sub(Region2D region);
+		Image subImage(Region2D region);
 
 		/// \~English @brief Get the image pointer (without copying data), only supported by ByteGray and ByteBGR
 		/// \~Chinese @brief 取得图像指针（不拷贝数据），仅ByteGray和ByteBGR支持
@@ -4493,6 +4501,10 @@ namespace spadas
 		/// \~English @brief Get the first pixel data of a row, v=0 is the first row
 		/// \~Chinese @brief 取得某一行第一个像素数据，v=0为第一行
 		PixelData operator [](UInt v);
+
+		/// \~English @brief Call the specified function for each pixel (The function parameters are the row index starting from 0, column index starting from 0, and pixel data)
+		/// \~Chinese @brief 对每个像素调用指定函数（该函数参数分别为从0起算的行序号、列序号、像素数据）
+		void forPixels(Func<void(UInt, UInt, PixelData)> func);
 
 		/// \~English @brief Resize the image by the specified factor (faster)
 		/// \~Chinese @brief 按照指定倍数调整图像大小 (较快)

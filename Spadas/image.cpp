@@ -138,7 +138,7 @@ void Image::drawLayer(Image layer, CoordInt2D offset)
     }
 }
 
-Image Image::sub(Region2D region)
+Image Image::subImage(Region2D region)
 {
 	SPADAS_ERROR_RETURNVAL(!vars, Image());
 	SPADAS_ERROR_RETURNVAL(vars->format == PixelFormat::Value::ByteUYVY && (region.offsetU % 2 == 1 || region.width % 2 == 1), Image());
@@ -217,6 +217,20 @@ PixelData Image::operator[](UInt v)
     SPADAS_ERROR_RETURNVAL(!vars, PixelData());
     SPADAS_ERROR_RETURNVAL(v >= vars->height, PixelData());
 	return PixelData((Pointer)(vars->span.data() + v * vars->rowBytes), vars->bytesPerPixel);
+}
+
+void Image::forPixels(Func<void(UInt, UInt, PixelData)> func)
+{
+    SPADAS_ERROR_RETURN(!vars);
+
+    for (UInt v = 0; v < vars->height; v++)
+    {
+        Byte *rowPtr = vars->span.data() + v * vars->rowBytes;
+        for (UInt u = 0; u < vars->width; u++, rowPtr += vars->bytesPerPixel)
+        {
+            func(v, u, PixelData(rowPtr, vars->bytesPerPixel));
+        }
+    }
 }
 
 Image Image::resize(Enum<ResizeScale> resizeScale)
@@ -397,7 +411,7 @@ Image Image::resize(Size2D outputSize, Bool undistort, Enum<ResizeMode> mode)
         table.init();
 		
         Image image(outputSize, vars->format, FALSE);
-		Image subImage(*this);
+		Image sub(*this);
 		if (undistort)
 		{
 			UInt srcWidth = vars->width;
@@ -409,16 +423,16 @@ Image Image::resize(Size2D outputSize, Bool undistort, Enum<ResizeMode> mode)
 			{
 				UInt srcWidth0 = max(1u, dstWidth * srcHeight / dstHeight);
                 UInt srcStartCol = (srcWidth - srcWidth0) / 2;
-                subImage = sub(Region2D(CoordInt2D::uv(srcStartCol, 0), Size2D::wh(srcWidth0, srcHeight)));
+                sub = subImage(Region2D(CoordInt2D::uv(srcStartCol, 0), Size2D::wh(srcWidth0, srcHeight)));
 			}
 			else  // clip Up-Down
 			{
 				UInt srcHeight0 = max(1u, srcWidth * dstHeight / dstWidth);
                 UInt srcStartRow = (srcHeight - srcHeight0) / 2;
-                subImage = sub(Region2D(CoordInt2D::uv(0, srcStartRow), Size2D::wh(srcWidth, srcHeight0)));
+                sub = subImage(Region2D(CoordInt2D::uv(0, srcStartRow), Size2D::wh(srcWidth, srcHeight0)));
 			}
 		}
-		resizeNearestOrBilinear(subImage, image, mode);
+		resizeNearestOrBilinear(sub, image, mode);
         return image;
 	}
 	
