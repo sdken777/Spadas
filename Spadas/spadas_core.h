@@ -156,15 +156,15 @@ namespace spadas
 
 		/// \~English @brief The default constructor, the value is initialized to 0
 		/// \~Chinese @brief 默认构造函数，值初始化为0
-		SPADAS_API Size2D();
+		Size2D() : width(0), height(0) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
-		SPADAS_API Bool operator ==(Size2D size);
+		Bool operator ==(Size2D size) { return width == size.width && height == size.height; }
 
 		/// \~English @brief Whether it is not equal to
 		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(Size2D size);
+		Bool operator !=(Size2D size) { return !(width == size.width && height == size.height); }
 
 		/// \~English @brief Convert to string: [width]x[height]
 		/// \~Chinese @brief 转字符串: [width]x[height]
@@ -197,15 +197,15 @@ namespace spadas
 
 		/// \~English @brief The default constructor, the value is initialized to 0
 		/// \~Chinese @brief 默认构造函数，值初始化为0
-		SPADAS_API Size3D();
+		Size3D() : width(0), height(0), depth(0) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
-		SPADAS_API Bool operator ==(Size3D size);
+		Bool operator ==(Size3D size) { return width == size.width && height == size.height && depth == size.depth; }
 
 		/// \~English @brief Whether it is not equal to
 		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(Size3D size);
+		Bool operator !=(Size3D size) { return !(width == size.width && height == size.height && depth == size.depth); }
 
 		/// \~English @brief Convert to string: [width]x[height]x[depth]
 		/// \~Chinese @brief 转字符串: [width]x[height]x[depth]
@@ -234,15 +234,15 @@ namespace spadas
 
 		/// \~English @brief The default constructor, the value is initialized to 0
 		/// \~Chinese @brief 默认构造函数，值初始化为0
-		SPADAS_API Index2D();
+		Index2D() : u(0), v(0) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
-		SPADAS_API Bool operator ==(Index2D index);
+		Bool operator ==(Index2D index) { return u == index.u && v == index.v; }
 
 		/// \~English @brief Whether it is not equal to
 		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(Index2D index);
+		Bool operator !=(Index2D index) { return !(u == index.u && v == index.v); }
 
 		/// \~English @brief Convert to string: (u,v)
 		/// \~Chinese @brief 转字符串: (u,v)
@@ -279,15 +279,15 @@ namespace spadas
 
 		/// \~English @brief The default constructor, the value is initialized to 0
 		/// \~Chinese @brief 默认构造函数，值初始化为0
-		SPADAS_API Index3D();
+		Index3D() : u(0), v(0), w(0) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
-		SPADAS_API Bool operator ==(Index3D index);
+		Bool operator ==(Index3D index) { return u == index.u && v == index.v && w == index.w; }
 
 		/// \~English @brief Whether it is not equal to
 		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(Index3D index);
+		Bool operator !=(Index3D index) { return !(u == index.u && v == index.v && w == index.w); }
 
 		/// \~English @brief Convert to string: (u,v,w)
 		/// \~Chinese @brief 转字符串: (u,v,w)
@@ -320,19 +320,19 @@ namespace spadas
 		
 		/// \~English @brief The default constructor, the value is initialized to 0
 		/// \~Chinese @brief 默认构造函数，值初始化为0
-		SPADAS_API Region();
+		Region() : offset(0), size(0) {}
 
 		/// \~English @brief Initialize based on starting position and size
 		/// \~Chinese @brief 基于起始位置和大小初始化
-		SPADAS_API Region(Int offset, UInt size);
+		Region(Int offset, UInt size) : offset(offset), size(size) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
-		SPADAS_API Bool operator ==(Region region);
+		Bool operator ==(Region region) { return offset == region.offset && size == region.size; }
 
 		/// \~English @brief Whether it is not equal to
 		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(Region region);
+		Bool operator !=(Region region) { return !(offset == region.offset && size == region.size); }
 
 		/// \~English @brief Convert to string: offset->size
 		/// \~Chinese @brief 转字符串: offset->size
@@ -361,27 +361,27 @@ namespace spadas
 		
 		/// \~English @brief The default constructor, the value is initialized to 0
 		/// \~Chinese @brief 默认构造函数，值初始化为0
-		SPADAS_API Region2D();
+		Region2D() : offsetU(0), offsetV(0), width(0), height(0) {}
 
 		/// \~English @brief Initialize based on offset and size
 		/// \~Chinese @brief 基于起始位置和大小初始化
-		SPADAS_API Region2D(CoordInt2D offset, Size2D size);
+		Region2D(CoordInt2D offset, Size2D size) : offsetU(offset.u), offsetV(offset.v), width(size.width), height(size.height) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
-		SPADAS_API Bool operator ==(Region2D region);
+		Bool operator ==(Region2D region) { return offsetU == region.offsetU && width == region.width && offsetV == region.offsetV && height == region.height; }
 
 		/// \~English @brief Whether it is not equal to
 		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(Region2D region);
+		Bool operator !=(Region2D region) { return !(offsetU == region.offsetU && width == region.width && offsetV == region.offsetV && height == region.height); }
 
 		/// \~English @brief Get offset
 		/// \~Chinese @brief 获取起始位置
-		SPADAS_API CoordInt2D offset();
+		CoordInt2D offset() { CoordInt2D out; out.u = offsetU; out.v = offsetV; return out; }
 
 		/// \~English @brief Get size
 		/// \~Chinese @brief 获取大小
-		SPADAS_API Size2D size();
+		Size2D size() { Size2D out; out.width = width; out.height = height; return out; }
 
 		/// \~English @brief Convert to string: (offsetU->width,offsetV->height)
 		/// \~Chinese @brief 转字符串: (offsetU->width,offsetV->height)
@@ -418,27 +418,27 @@ namespace spadas
 
 		/// \~English @brief The default constructor, the value is initialized to 0
 		/// \~Chinese @brief 默认构造函数，值初始化为0
-		SPADAS_API Region3D();
+		Region3D() : offsetU(0), offsetV(0), offsetW(0), width(0), height(0), depth(0) {}
 
 		/// \~English @brief Initialize based on offset and size
 		/// \~Chinese @brief 基于起始位置和大小初始化
-		SPADAS_API Region3D(CoordInt3D offset, Size3D size);
+		Region3D(CoordInt3D offset, Size3D size) : offsetU(offset.u), offsetV(offset.v), offsetW(offset.w), width(size.width), height(size.height), depth(size.depth) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
-		SPADAS_API Bool operator ==(Region3D region);
+		Bool operator ==(Region3D region) { return offsetU == region.offsetU && width == region.width && offsetV == region.offsetV && height == region.height && offsetW == region.offsetW && depth == region.depth; }
 
 		/// \~English @brief Whether it is not equal to
 		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(Region3D region);
+		Bool operator !=(Region3D region) { return !(offsetU == region.offsetU && width == region.width && offsetV == region.offsetV && height == region.height && offsetW == region.offsetW && depth == region.depth); }
 
 		/// \~English @brief Get offset
 		/// \~Chinese @brief 获取起始位置
-		SPADAS_API CoordInt3D offset();
+		CoordInt3D offset() { CoordInt3D out; out.u = offsetU; out.v = offsetV; out.w = offsetW; return out; }
 
 		/// \~English @brief Get size
 		/// \~Chinese @brief 获取大小
-		SPADAS_API Size3D size();
+		Size3D size() { Size3D out; out.width = width; out.height = height; out.depth = depth; return out; }
 
 		/// \~English @brief Convert to string: (offsetU->width,offsetV->height,offsetW->depth)
 		/// \~Chinese @brief 转字符串: (offsetU->width,offsetV->height,offsetW->depth)
@@ -459,35 +459,35 @@ namespace spadas
 
 		/// \~English @brief The default constructor, the value is initialized to 0
 		/// \~Chinese @brief 默认构造函数，值初始化为0
-		SPADAS_API Vector2D();
+		Vector2D() : x(0), y(0) {}
 
 		/// \~English @brief Initialize based on horizontal and vertical coordinates
 		/// \~Chinese @brief 基于横纵坐标初始化
-		SPADAS_API Vector2D(Float x, Float y);
+		Vector2D(Float x, Float y) : x(x), y(y) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
-		SPADAS_API Bool operator ==(Vector2D vec);
+		Bool operator ==(Vector2D vec) { return x == vec.x && y == vec.y; }
 
 		/// \~English @brief Whether it is not equal to
 		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(Vector2D vec);
+		Bool operator !=(Vector2D vec) { return !(x == vec.x && y == vec.y); }
 
 		/// \~English @brief Vector addition
 		/// \~Chinese @brief 矢量相加
-		SPADAS_API Vector2D operator +(Vector2D vec);
+		Vector2D operator +(Vector2D vec) { return Vector2D(x + vec.x, y + vec.y); }
 
 		/// \~English @brief Vector subtraction
 		/// \~Chinese @brief 矢量相减
-		SPADAS_API Vector2D operator -(Vector2D vec);
+		Vector2D operator -(Vector2D vec) { return Vector2D(x - vec.x, y - vec.y); }
 
 		/// \~English @brief Vector multiplied by scale factor
 		/// \~Chinese @brief 矢量乘以比例系数
-		SPADAS_API Vector2D operator *(Float k);
+		Vector2D operator *(Float k) { return Vector2D(x * k, y * k); }
 
 		/// \~English @brief Vector inner product (dot product)
 		/// \~Chinese @brief 矢量内积（点乘）
-		SPADAS_API Float operator *(Vector2D vec);
+		Float operator *(Vector2D vec) { return x * vec.x + y * vec.y; }
 
 		/// \~English @brief Calculate the absolute value (length) of the vector
 		/// \~Chinese @brief 计算矢量的绝对值（长度）
@@ -532,35 +532,35 @@ namespace spadas
 
 		/// \~English @brief The default constructor, the value is initialized to 0
 		/// \~Chinese @brief 默认构造函数，值初始化为0
-		SPADAS_API Vector3D();
+		Vector3D() : x(0), y(0), z(0) {}
 
 		/// \~English @brief Initialize based on horizontal, vertical and depth coordinates
 		/// \~Chinese @brief 基于横纵深坐标初始化
-		SPADAS_API Vector3D(Float x, Float y, Float z);
+		Vector3D(Float x, Float y, Float z) : x(x), y(y), z(z) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
-		SPADAS_API Bool operator ==(Vector3D vec);
+		Bool operator ==(Vector3D vec) { return x == vec.x && y == vec.y && z == vec.z; }
 
 		/// \~English @brief Whether it is not equal to
 		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(Vector3D vec);
+		Bool operator !=(Vector3D vec) { return !(x == vec.x && y == vec.y && z == vec.z); }
 
 		/// \~English @brief Vector addition
 		/// \~Chinese @brief 矢量相加
-		SPADAS_API Vector3D operator +(Vector3D vec);
+		Vector3D operator +(Vector3D vec) { return Vector3D(x + vec.x, y + vec.y, z + vec.z); }
 
 		/// \~English @brief Vector subtraction
 		/// \~Chinese @brief 矢量相减
-		SPADAS_API Vector3D operator -(Vector3D vec);
+		Vector3D operator -(Vector3D vec) { return Vector3D(x - vec.x, y - vec.y, z - vec.z); }
 
 		/// \~English @brief Vector multiplied by scale factor
 		/// \~Chinese @brief 矢量乘以比例系数
-		SPADAS_API Vector3D operator *(Float k);
+		Vector3D operator *(Float k) { return Vector3D(x * k, y * k, z * k); }
 
 		/// \~English @brief Vector inner product (dot product)
 		/// \~Chinese @brief 矢量内积（点乘）
-		SPADAS_API Float operator *(Vector3D vec);
+		Float operator *(Vector3D vec) { return x * vec.x + y * vec.y + z * vec.z; }
 
 		/// \~English @brief Calculate the absolute value (length) of the vector
 		/// \~Chinese @brief 计算矢量的绝对值（长度）
@@ -601,19 +601,19 @@ namespace spadas
 
 		/// \~English @brief Default constructor, initialized to 0
 		/// \~Chinese @brief 默认构造函数，初始化为0
-		SPADAS_API Range();
+		Range() : lower(0), upper(0) {}
 
 		/// \~English @brief Initialization based on the upper and lower edges
 		/// \~Chinese @brief 基于上下沿初始化
-		SPADAS_API Range(Float lower, Float upper);
+		Range(Float lower, Float upper) : lower(lower), upper(upper) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
-		SPADAS_API Bool operator ==(Range range);
+		Bool operator ==(Range range) { return lower == range.lower && upper == range.upper; }
 
 		/// \~English @brief Whether it is not equal to
 		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(Range range);
+		Bool operator !=(Range range) { return !(lower == range.lower && upper == range.upper); }
 
 		/// \~English @brief Convert to string: lower~upper
 		/// \~Chinese @brief 转字符串: lower~upper
@@ -642,19 +642,19 @@ namespace spadas
 
 		/// \~English @brief Default constructor, initialized to 0
 		/// \~Chinese @brief 默认构造函数，初始化为0
-		SPADAS_API Range2D();
+		Range2D() : lowerX(0), upperX(0), lowerY(0), upperY(0) {}
 
 		/// \~English @brief Initialization based on the upper and lower edges
 		/// \~Chinese @brief 基于上下沿初始化
-		SPADAS_API Range2D(Float lowerX, Float upperX, Float lowerY, Float upperY);
+		Range2D(Float lowerX, Float upperX, Float lowerY, Float upperY) : lowerX(lowerX), upperX(upperX), lowerY(lowerY), upperY(upperY) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
-		SPADAS_API Bool operator ==(Range2D range);
+		Bool operator ==(Range2D range) { return lowerX == range.lowerX && upperX == range.upperX && lowerY == range.lowerY && upperY == range.upperY; }
 
 		/// \~English @brief Whether it is not equal to
 		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(Range2D range);
+		Bool operator !=(Range2D range) { return !(lowerX == range.lowerX && upperX == range.upperX && lowerY == range.lowerY && upperY == range.upperY); }
 
 		/// \~English @brief Convert to string: (lowerX~upperX,lowerY~upperY)
 		/// \~Chinese @brief 转字符串: (lowerX~upperX,lowerY~upperY)
@@ -699,19 +699,19 @@ namespace spadas
 
 		/// \~English @brief Default constructor, initialized to 0
 		/// \~Chinese @brief 默认构造函数，初始化为0
-		SPADAS_API Range3D();
+		Range3D() : lowerX(0), upperX(0), lowerY(0), upperY(0), lowerZ(0), upperZ(0) {}
 
 		/// \~English @brief Initialization based on the upper and lower edges
 		/// \~Chinese @brief 基于上下沿初始化
-		SPADAS_API Range3D(Float lowerX, Float upperX, Float lowerY, Float upperY, Float lowerZ, Float upperZ);
+		Range3D(Float lowerX, Float upperX, Float lowerY, Float upperY, Float lowerZ, Float upperZ) : lowerX(lowerX), upperX(upperX), lowerY(lowerY), upperY(upperY), lowerZ(lowerZ), upperZ(upperZ) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
-		SPADAS_API Bool operator ==(Range3D range);
+		Bool operator ==(Range3D range) { return lowerX == range.lowerX && upperX == range.upperX && lowerY == range.lowerY && upperY == range.upperY && lowerZ == range.lowerZ && upperZ == range.upperZ; }
 
 		/// \~English @brief Whether it is not equal to
 		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(Range3D range);
+		Bool operator !=(Range3D range) { return !(lowerX == range.lowerX && upperX == range.upperX && lowerY == range.lowerY && upperY == range.upperY && lowerZ == range.lowerZ && upperZ == range.upperZ); }
 
 		/// \~English @brief Convert to string: (lowerX~upperX,lowerY~upperY,lowerZ~upperZ)
 		/// \~Chinese @brief 转字符串: (lowerX~upperX,lowerY~upperY,lowerZ~upperZ)
@@ -767,7 +767,7 @@ namespace spadas
 		
 	private:
 		Int val;
-		Atom(const Atom& obj);
+		Atom(const Atom& obj) {}
 		Atom& operator =(const Atom& obj) { return *this; }
 	};
 	
@@ -831,7 +831,7 @@ namespace spadas
 	private:
 		Atom nRefs;
 		Atom varSpinLock;
-		Vars(const Vars& obj);
+		Vars(const Vars& obj) {}
 		Vars& operator =(const Vars& obj) { return *this; }
 	};
 	
@@ -994,7 +994,7 @@ namespace spadas
 	private:
 		Type obj;
 		Atom objSpinLock;
-		Safe(const Safe<Type>& obj);
+		Safe(const Safe<Type>& obj) {}
 		Safe<Type>& operator =(const Safe<Type>& obj) { return *this; }
 	};
 
@@ -1017,7 +1017,7 @@ namespace spadas
 
 	private:
 		Type obj;
-		SpinLocked(const SpinLocked& obj);
+		SpinLocked(const SpinLocked& obj) {}
 		SpinLocked& operator =(const SpinLocked& obj) { return *this; }
 	};
 
@@ -2105,13 +2105,11 @@ namespace spadas
 
 		/// \~English @brief Whether it is greater than, KeyType needs to support operator ">"
 		/// \~Chinese @brief 是否大于，需要KeyType支持>重载符
-		inline Bool operator >(KeyValue<KeyType, ValueType> target)
-		{ return key > target.key; }
+		Bool operator >(KeyValue<KeyType, ValueType> target) { return key > target.key; }
 
 		/// \~English @brief Whether it is less than or not, KeyType needs to support operator "<"
 		/// \~Chinese @brief 是否小于，需要KeyType支持<重载符
-		inline Bool operator <(KeyValue<KeyType, ValueType> target)
-		{ return key < target.key; }
+		Bool operator <(KeyValue<KeyType, ValueType> target) { return key < target.key; }
 	};
 
 	/// \~English @brief Numeric key, convert the value of the standard layout type into a key
@@ -3926,8 +3924,8 @@ namespace spadas
 		/// \~Chinese @brief 属性值
 		String value;
 
-		SPADAS_API XMLAttribute();
-		SPADAS_API XMLAttribute(String name, String value);
+		XMLAttribute() {}
+		XMLAttribute(String name, String value) : name(name), value(value) {}
 	};
 
 	/// \~English @brief XML element
@@ -4120,11 +4118,11 @@ namespace spadas
 		Byte g;
 		Byte b;
 
-		SPADAS_API ColorRGB();
-		SPADAS_API ColorRGB(Byte r, Byte g, Byte b);
-		SPADAS_API Bool operator ==(ColorRGB color);
-		SPADAS_API Bool operator !=(ColorRGB color);
-		SPADAS_API String toString();
+		ColorRGB() : r(0), g(0), b(0) {}
+		ColorRGB(Byte r, Byte g, Byte b) : r(r), g(g), b(b) {}
+		Bool operator ==(ColorRGB color) { return r == color.r && g == color.g && b == color.b; }
+		Bool operator !=(ColorRGB color) { return !(r == color.r && g == color.g && b == color.b); }
+		String toString() { return (String)r + "," + g + "," + b; }
 	};
 
 	/// \~English @brief Image Standard Resolution
@@ -4372,19 +4370,19 @@ namespace spadas
 
 		/// \~English @brief Invalid pointer
 		/// \~Chinese @brief 无效指针
-		SPADAS_API PixelData();
+		PixelData() : ptr(NULL), bytesPerPixel(0) {}
 
 		/// \~English @brief Normal creation
 		/// \~Chinese @brief 正常创建
-		SPADAS_API PixelData(Pointer ptr, UInt bytesPerPixel);
+		PixelData(Pointer ptr, UInt bytesPerPixel) : ptr(ptr), bytesPerPixel(bytesPerPixel) {}
 
 		/// \~English @brief Is it valid
 		/// \~Chinese @brief 是否有效
-		SPADAS_API Bool isValid();
+		Bool isValid() { return ptr != NULL; }
 
 		/// \~English @brief Get the pixel data on the specified index
 		/// \~Chinese @brief 获取指定序号上的像素数据
-		SPADAS_API PixelData operator [](UInt index);
+		PixelData operator [](UInt index) { return ptr ? PixelData((Pointer)((PointerInt)ptr + index * bytesPerPixel), bytesPerPixel) : PixelData(); }
 
 		/// \~English @brief Get the value of each channel of Byte type
 		/// \~Chinese @brief 获取Byte型的各通道值
@@ -5202,7 +5200,7 @@ namespace spadas
 		
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SPADAS_API ThreadStatus();
+		ThreadStatus() : isActive(FALSE), currentLoopTime(0.0f) {}
 	};
 	
 	/// \~English @brief Status information of a workflow
@@ -5227,7 +5225,7 @@ namespace spadas
 		
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SPADAS_API WorkflowStatus();
+		WorkflowStatus() : workflowID(0), isActive(FALSE) {}
 	};
 	
 	/// \~English @brief The workflow interface
@@ -5458,19 +5456,35 @@ namespace spadas
 
 		/// \~English @brief The default constructor, the time is January 1, 1900 0:00:00
 		/// \~Chinese @brief 默认构造函数，时间为1900年1月1日0时0分0秒
-		SPADAS_API Time();
+		Time() : year(1900), month(1), day(1), hour(0), minute(0), second(0) {}
 
 		/// \~English @brief Initialize based on the specified year, month, day, hour, minute, and second
 		/// \~Chinese @brief 基于指定年月日时分秒初始化
-		SPADAS_API Time(UInt year, UInt month, UInt day, UInt hour, UInt minute, UInt second);
+		Time(UInt year, UInt month, UInt day, UInt hour, UInt minute, UInt second) : year(year), month(month), day(day), hour(hour), minute(minute), second(second) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
-		SPADAS_API Bool operator ==(Time time);
+		Bool operator ==(Time time) { return year == time.year && month == time.month && day == time.day && hour == time.hour && minute == time.minute && second == time.second; }
 
 		/// \~English @brief Whether it is not equal to
 		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(Time time);
+		Bool operator !=(Time time) { return !(year == time.year && month == time.month && day == time.day && hour == time.hour && minute == time.minute && second == time.second); }
+
+		/// \~English @brief Get the hash value
+		/// \~Chinese @brief 获取哈希值
+		Word getHash() { return (Word)((((((UInt)second * 3 + (UInt)minute) * 3 + (UInt)hour) * 3 + (UInt)day) * 3 + (UInt)month) * 3 + (UInt)year); }
+
+		/// \~English @brief Create a date (year, month, day) string based on the specified separator
+		/// \~Chinese @brief 基于指定分隔符创建日期(年月日)字符串
+		String dateString(String separator = "/") { return String(this->year, 4) + separator + String(this->month, 2) + separator + String(this->day, 2); }
+
+		/// \~English @brief Create a time (hour, minute, second) string based on the specified separator
+		/// \~Chinese @brief 基于指定分隔符创建时间(时分秒)字符串
+		String timeString(String separator = ":") { return String(this->hour, 2) + separator + String(this->minute, 2) + separator + String(this->second, 2); }
+
+		/// \~English @brief Convert to string based on separators
+		/// \~Chinese @brief 基于分隔符转为字符串
+		String toString(String dateSeparator = "/", String timeSeparator = ":", String dateTimeSeparator = " ") { return dateString(dateSeparator) + dateTimeSeparator + timeString(timeSeparator); }
 
 		/// \~English @brief Is later than
 		/// \~Chinese @brief 是否大于
@@ -5479,22 +5493,6 @@ namespace spadas
 		/// \~English @brief Is earlier than
 		/// \~Chinese @brief 是否小于
 		SPADAS_API Bool operator <(Time time);
-
-		/// \~English @brief Get the hash value
-		/// \~Chinese @brief 获取哈希值
-		SPADAS_API Word getHash();
-
-		/// \~English @brief Create a date (year, month, day) string based on the specified separator
-		/// \~Chinese @brief 基于指定分隔符创建日期(年月日)字符串
-		SPADAS_API String dateString(String separator = "/");
-
-		/// \~English @brief Create a time (hour, minute, second) string based on the specified separator
-		/// \~Chinese @brief 基于指定分隔符创建时间(时分秒)字符串
-		SPADAS_API String timeString(String separator = ":");
-
-		/// \~English @brief Convert to string based on separators
-		/// \~Chinese @brief 基于分隔符转为字符串
-		SPADAS_API String toString(String dateSeparator = "/", String timeSeparator = ":", String dateTimeSeparator = " ");
 	};
 
 	/// \~English @brief Date and time with millisecond precision
@@ -5511,26 +5509,27 @@ namespace spadas
 
 		/// \~English @brief The default constructor, the time is January 1, 1900 0:00:00:00 milliseconds
 		/// \~Chinese @brief 默认构造函数，时间为1900年1月1日0时0分0秒0毫秒
-		TimeWithMS() : milliseconds(0)
-		{}
+		TimeWithMS() : milliseconds(0) {}
 
 		/// \~English @brief Initialization based on date and time with millisecond precision
 		/// \~Chinese @brief 基于日期和毫秒的初始化
-		TimeWithMS(Time dateTime, UInt milliseconds) : dateTime(dateTime), milliseconds(milliseconds)
-		{}
+		TimeWithMS(Time dateTime, UInt milliseconds) : dateTime(dateTime), milliseconds(milliseconds) {}
 
 		/// \~English @brief Initialization based on components
 		/// \~Chinese @brief 基于指定年月日时分秒初始化
-		TimeWithMS(UInt year, UInt month, UInt day, UInt hour, UInt minute, UInt second, UInt milliseconds) : dateTime(year, month, day, hour, minute, second), milliseconds(milliseconds)
-		{}
+		TimeWithMS(UInt year, UInt month, UInt day, UInt hour, UInt minute, UInt second, UInt milliseconds) : dateTime(year, month, day, hour, minute, second), milliseconds(milliseconds) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
-		SPADAS_API Bool operator ==(TimeWithMS time);
+		Bool operator ==(TimeWithMS time) { return dateTime == time.dateTime && milliseconds == time.milliseconds; }
 
 		/// \~English @brief Whether it is not equal to
 		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(TimeWithMS time);
+		Bool operator !=(TimeWithMS time) { return dateTime != time.dateTime || milliseconds != time.milliseconds; }
+
+		/// \~English @brief Convert to string based on separators
+		/// \~Chinese @brief 基于分隔符转为字符串
+		String toString(String dateSeparator = "/", String timeSeparator = ":", String dateTimeSeparator = " ", String msSeparator = ".") { return dateTime.toString(dateSeparator, timeSeparator, dateTimeSeparator) + msSeparator + String(milliseconds, 3); }
 
 		/// \~English @brief Returns a time based on this time plus/minus the specified milliseconds
 		/// \~Chinese @brief 返回在该时间基础上加/减指定毫秒的时间
@@ -5559,10 +5558,6 @@ namespace spadas
 		/// \~English @brief Convert from posix time as UTC time
 		/// \~Chinese @brief Posix时间转分量时间（按国际协调时间）
 		SPADAS_API void utcTimeFromPosix(MilliPosix posixTime);
-
-		/// \~English @brief Convert to string based on separators
-		/// \~Chinese @brief 基于分隔符转为字符串
-		SPADAS_API String toString(String dateSeparator = "/", String timeSeparator = ":", String dateTimeSeparator = " ", String msSeparator = ".");
 	};
 
 	/// \~English @brief Timer
@@ -5991,41 +5986,39 @@ namespace spadas
 
 		/// \~English @brief Default constructor, initialize to an invalid value
 		/// \~Chinese @brief 默认构造函数，初始化为无效值
-		OptionalBool() : valid(FALSE), value(FALSE)
-		{}
+		OptionalBool() : valid(FALSE), value(FALSE) {}
 
 		/// \~English @brief Initialize based on input boolean value
 		/// \~Chinese @brief 基于输入的布尔值初始化
-		OptionalBool(Bool val) : valid(TRUE), value(val)
-		{}
+		OptionalBool(Bool val) : valid(TRUE), value(val) {}
+
+		/// \~English @brief Assignment by the input boolean value
+		/// \~Chinese @brief 按输入的布尔值赋值
+		OptionalBool& operator =(Bool val) { valid = TRUE; value = val; return *this; }
+
+		/// \~English @brief Is valid and true
+		/// \~Chinese @brief 是否有效且为真
+		Bool isValidAndTrue() { return valid && value; }
+
+		/// \~English @brief Is valid and false
+		/// \~Chinese @brief 是否有效且为假
+		Bool isValidAndFalse() { return valid && !value; }
+
+		/// \~English @brief Whether it is equal to
+		/// \~Chinese @brief 是否相等
+		Bool operator ==(OptionalBool val) { if (!valid && !val.valid) return TRUE; if (!valid || !val.valid) return FALSE; return value == val.value; }
+
+		/// \~English @brief Whether it is not equal to
+		/// \~Chinese @brief 是否不等于
+		Bool operator !=(OptionalBool val) { if (!valid && !val.valid) return FALSE; if (!valid || !val.valid) return TRUE; return value != val.value; }
+
+		/// \~English @brief Convert to string, if invalid, convert to "(invalid)"
+		/// \~Chinese @brief 转字符串，若无效则转为(invalid)
+		String toString() { return valid ? String(value) : "(invalid)"; }
 
 		/// \~English @brief Initialize based on spadas::GeneralElement, all non-zero values are TRUE
 		/// \~Chinese @brief 基于 spadas::GeneralElement创建，非0都为TRUE
 		SPADAS_API OptionalBool(GeneralElement elem);
-
-		/// \~English @brief Assignment by the input boolean value
-		/// \~Chinese @brief 按输入的布尔值赋值
-		SPADAS_API OptionalBool& operator =(Bool val);
-
-		/// \~English @brief Is valid and true
-		/// \~Chinese @brief 是否有效且为真
-		SPADAS_API Bool isValidAndTrue();
-
-		/// \~English @brief Is valid and false
-		/// \~Chinese @brief 是否有效且为假
-		SPADAS_API Bool isValidAndFalse();
-
-		/// \~English @brief Whether it is equal to
-		/// \~Chinese @brief 是否相等
-		SPADAS_API Bool operator ==(OptionalBool val);
-
-		/// \~English @brief Whether it is not equal to
-		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(OptionalBool val);
-
-		/// \~English @brief Convert to string, if invalid, convert to "(invalid)"
-		/// \~Chinese @brief 转字符串，若无效则转为(invalid)
-		SPADAS_API String toString();
 	};
 
 	/// \~English @brief Substitution of Int type Optional
@@ -6042,33 +6035,31 @@ namespace spadas
 
 		/// \~English @brief Default constructor, initialize to an invalid value
 		/// \~Chinese @brief 默认构造函数，初始化为无效值
-		OptionalInt() : valid(FALSE), value(0)
-		{}
+		OptionalInt() : valid(FALSE), value(0) {}
 
 		/// \~English @brief Initialize based on input integer value
 		/// \~Chinese @brief 基于输入的整型值初始化
-		OptionalInt(Int val) : valid(TRUE), value(val)
-		{}
+		OptionalInt(Int val) : valid(TRUE), value(val) {}
+
+		/// \~English @brief Assignment by the input integer value
+		/// \~Chinese @brief 按输入的整型值赋值
+		OptionalInt& operator =(Int val) { valid = TRUE; value = val; return *this; }
+
+		/// \~English @brief Whether it is equal to
+		/// \~Chinese @brief 是否相等
+		Bool operator ==(OptionalInt val) { if (!valid && !val.valid) return TRUE; if (!valid || !val.valid) return FALSE; return value == val.value; }
+
+		/// \~English @brief Whether it is not equal to
+		/// \~Chinese @brief 是否不等于
+		Bool operator !=(OptionalInt val) { if (!valid && !val.valid) return FALSE; if (!valid || !val.valid) return TRUE; return value != val.value; }
+
+		/// \~English @brief Convert to string, if invalid, convert to "(invalid)"
+		/// \~Chinese @brief 转字符串，若无效则转为(invalid)
+		String toString() { return valid ? String(value) : "(invalid)"; }
 
 		/// \~English @brief Initialize based on spadas::GeneralElement
 		/// \~Chinese @brief 基于 spadas::GeneralElement创建
 		SPADAS_API OptionalInt(GeneralElement elem);
-
-		/// \~English @brief Assignment by the input integer value
-		/// \~Chinese @brief 按输入的整型值赋值
-		SPADAS_API OptionalInt& operator =(Int val);
-
-		/// \~English @brief Whether it is equal to
-		/// \~Chinese @brief 是否相等
-		SPADAS_API Bool operator ==(OptionalInt val);
-
-		/// \~English @brief Whether it is not equal to
-		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(OptionalInt val);
-
-		/// \~English @brief Convert to string, if invalid, convert to "(invalid)"
-		/// \~Chinese @brief 转字符串，若无效则转为(invalid)
-		SPADAS_API String toString();
 	};
 
 	/// \~English @brief Substitution of Double type Optional
@@ -6085,45 +6076,43 @@ namespace spadas
 
 		/// \~English @brief Default constructor, initialize to an invalid value
 		/// \~Chinese @brief 默认构造函数，初始化为无效值
-		OptionalDouble() : valid(FALSE), value(0)
-		{}
+		OptionalDouble() : valid(FALSE), value(0) {}
 
 		/// \~English @brief Initialize based on input floating point value
 		/// \~Chinese @brief 基于输入的浮点值初始化
-		OptionalDouble(Double val) : valid(TRUE), value(val)
-		{}
+		OptionalDouble(Double val) : valid(TRUE), value(val) {}
+
+		/// \~English @brief Assignment by the input floating point value
+		/// \~Chinese @brief 按输入的浮点值赋值
+		OptionalDouble& operator =(Double val) { valid = TRUE; value = val; return *this; }
+
+		/// \~English @brief Addition, if any value is invalid, return an invalid value
+		/// \~Chinese @brief 加法，若任一值为无效则返回无效值
+		OptionalDouble operator +(OptionalDouble val) { return (valid && val.valid) ? (value + val.value) : OptionalDouble(); }
+
+		/// \~English @brief Subtraction, if any value is invalid, return an invalid value
+		/// \~Chinese @brief 减法，若任一值为无效则返回无效值
+		OptionalDouble operator -(OptionalDouble val) { return (valid && val.valid) ? (value - val.value) : OptionalDouble(); }
+
+		/// \~English @brief Multiplication, if any value is invalid, return an invalid value
+		/// \~Chinese @brief 乘法，若任一值为无效则返回无效值
+		OptionalDouble operator *(OptionalDouble val) { return (valid && val.valid) ? (value * val.value) : OptionalDouble(); }
+
+		/// \~English @brief Whether it is equal to
+		/// \~Chinese @brief 是否相等
+		Bool operator ==(OptionalDouble val) { if (!valid && !val.valid) return TRUE; if (!valid || !val.valid) return FALSE; return value == val.value; }
+
+		/// \~English @brief Whether it is not equal to
+		/// \~Chinese @brief 是否不等于
+		Bool operator !=(OptionalDouble val) { if (!valid && !val.valid) return FALSE; if (!valid || !val.valid) return TRUE; return value != val.value; }
+
+		/// \~English @brief Convert string, if invalid, convert to "(invalid)"
+		/// \~Chinese @brief 转字符串，若无效则转为(invalid)
+		String toString() { return valid ? String(value) : "(invalid)"; }
 
 		/// \~English @brief Initialize based on spadas::GeneralElement
 		/// \~Chinese @brief 基于 spadas::GeneralElement创建
 		SPADAS_API OptionalDouble(GeneralElement elem);
-
-		/// \~English @brief Assignment by the input floating point value
-		/// \~Chinese @brief 按输入的浮点值赋值
-		SPADAS_API OptionalDouble& operator =(Double val);
-
-		/// \~English @brief Addition, if any value is invalid, return an invalid value
-		/// \~Chinese @brief 加法，若任一值为无效则返回无效值
-		SPADAS_API OptionalDouble operator +(OptionalDouble val);
-
-		/// \~English @brief Subtraction, if any value is invalid, return an invalid value
-		/// \~Chinese @brief 减法，若任一值为无效则返回无效值
-		SPADAS_API OptionalDouble operator -(OptionalDouble val);
-
-		/// \~English @brief Multiplication, if any value is invalid, return an invalid value
-		/// \~Chinese @brief 乘法，若任一值为无效则返回无效值
-		SPADAS_API OptionalDouble operator *(OptionalDouble val);
-
-		/// \~English @brief Whether it is equal to
-		/// \~Chinese @brief 是否相等
-		SPADAS_API Bool operator ==(OptionalDouble val);
-
-		/// \~English @brief Whether it is not equal to
-		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(OptionalDouble val);
-
-		/// \~English @brief Convert string, if invalid, convert to "(invalid)"
-		/// \~Chinese @brief 转字符串，若无效则转为(invalid)
-		SPADAS_API String toString();
 	};
 
 	/// \~English @brief Session identifier
@@ -6230,29 +6219,27 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		ShortTimestamp() : offset(0)
-		{}
+		ShortTimestamp() : offset(0) {}
 
 		/// \~English @brief Initialize based on session identifier and time offset
 		/// \~Chinese @brief 基于Session标识符和时间偏置初始化
-		ShortTimestamp(SessionIdentifier session, Double offset) : session(session), offset(offset)
-		{}
+		ShortTimestamp(SessionIdentifier session, Double offset) : session(session), offset(offset) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
-		SPADAS_API Bool operator ==(ShortTimestamp timestamp);
+		Bool operator ==(ShortTimestamp timestamp) { return session == timestamp.session && offset == timestamp.offset; }
 
 		/// \~English @brief Whether it is not equal to
 		/// \~Chinese @brief 是否不等于
-		SPADAS_API Bool operator !=(ShortTimestamp timestamp);
+		Bool operator !=(ShortTimestamp timestamp) { return session != timestamp.session || offset != timestamp.offset; }
 
 		/// \~English @brief Is later than
 		/// \~Chinese @brief 是否大于
-		SPADAS_API Bool operator >(ShortTimestamp timestamp);
+		Bool operator >(ShortTimestamp timestamp) { if (session == timestamp.session) return offset > timestamp.offset; else return session > timestamp.session; }
 
 		/// \~English @brief Is earlier than
 		/// \~Chinese @brief 是否小于
-		SPADAS_API Bool operator <(ShortTimestamp timestamp);
+		Bool operator <(ShortTimestamp timestamp) { if (session == timestamp.session) return offset < timestamp.offset; else return session < timestamp.session; }
 
 		/// \~English @brief Convert to a string. The format is "SessionYear-Month-Day-Hour-Minute-Second-Offset", such as 2019-01-01-12-30-45-123.456789
 		/// \~Chinese @brief 转为字符串显示，格式为"Session年-月-日-时-分-秒-偏置"，如2019-01-01-12-30-45-123.456789
@@ -6297,33 +6284,31 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		FullTimestamp() : offset(0), offsetSync(TimeOffsetSync::Value::None), cpuTick(0), hostPosix(0), guestPosix(0), serverPosix(0), gnssPosix(0)
-		{}
+		FullTimestamp() : offset(0), offsetSync(TimeOffsetSync::Value::None), cpuTick(0), hostPosix(0), guestPosix(0), serverPosix(0), gnssPosix(0) {}
 
 		/// \~English @brief Create from a simple timestamp, no synchronization information or session-irrelevant time information
 		/// \~Chinese @brief 从简单时间戳构造，无同步信息或Session无关时间信息
-		FullTimestamp(ShortTimestamp timestamp) : session(timestamp.session), offset(timestamp.offset), offsetSync(TimeOffsetSync::Value::None), cpuTick(0), hostPosix(0), guestPosix(0), serverPosix(0), gnssPosix(0)
-		{}
+		FullTimestamp(ShortTimestamp timestamp) : session(timestamp.session), offset(timestamp.offset), offsetSync(TimeOffsetSync::Value::None), cpuTick(0), hostPosix(0), guestPosix(0), serverPosix(0), gnssPosix(0) {}
 
 		/// \~English @brief Whether it is equal to (only compare session identifier and time offset)
 		/// \~Chinese @brief 是否等于（仅比较Session标识符和时间偏置）
-		SPADAS_API Bool operator ==(FullTimestamp timestamp);
+		Bool operator ==(FullTimestamp timestamp) { return session == timestamp.session && offset == timestamp.offset; }
 
 		/// \~English @brief Whether it is not equal to (only compare the session identifier and time offset)
 		/// \~Chinese @brief 是否不等于（仅比较Session标识符和时间偏置）
-		SPADAS_API Bool operator !=(FullTimestamp timestamp);
+		Bool operator !=(FullTimestamp timestamp) { return session != timestamp.session || offset != timestamp.offset; }
 
 		/// \~English @brief Is it later than (only compare session identifier and time offset)
 		/// \~Chinese @brief 是否大于（仅比较Session标识符和时间偏置）
-		SPADAS_API Bool operator >(FullTimestamp timestamp);
+		Bool operator >(FullTimestamp timestamp) { if (session == timestamp.session) return offset > timestamp.offset; else return session > timestamp.session; }
 
 		/// \~English @brief Is it earlier than (only compare session identifier and time offset)
 		/// \~Chinese @brief 是否小于（仅比较Session标识符和时间偏置）
-		SPADAS_API Bool operator <(FullTimestamp timestamp);
+		Bool operator <(FullTimestamp timestamp) { if (session == timestamp.session) return offset < timestamp.offset; else return session < timestamp.session; }
 
 		/// \~English @brief Convert to simple timestamp
 		/// \~Chinese @brief 转为简单时间戳
-		SPADAS_API ShortTimestamp toShort();
+		ShortTimestamp toShort() { return ShortTimestamp(session, offset); }
 
 		/// \~English @brief Convert to a string, the format is "SessionYear-Month-Day-Hour-Minute-Second-Offset", such as 2019-01-01-12-30-45-123.456789
 		/// \~Chinese @brief 转为字符串显示，格式为"Session年-月-日-时-分-秒-偏置"，如2019-01-01-12-30-45-123.456789
@@ -6387,13 +6372,11 @@ namespace spadas
 
 		/// \~English @brief The default constructor, the initial value is 0
 		/// \~Chinese @brief 默认构造函数，初始值为0
-		SessionSignal() : value(0)
-		{}
+		SessionSignal() : value(0) {}
 
 		/// \~English @brief Initialize based on timestamp and value
 		/// \~Chinese @brief 基于时间戳和数值初始化
-		SessionSignal(ShortTimestamp timestamp, Double val) : timestamp(timestamp), value(val)
-		{}
+		SessionSignal(ShortTimestamp timestamp, Double val) : timestamp(timestamp), value(val) {}
 	};
 
 	/// \~English @brief Signal data table, the key is the signal ID which format is "category:type:name". For example of bus signal, the category is the protocol file name, such as vehicle.dbc; the type is the message channel ID, such as 123
@@ -6422,13 +6405,11 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		GeneralDeviceData()
-		{}
+		GeneralDeviceData() {}
 
 		/// \~English @brief Initialize based on timestamp and data
 		/// \~Chinese @brief 基于时间戳和数据初始化
-		GeneralDeviceData(ULong cpuTick, Array<Double> vector, Binary binary) : cpuTick(cpuTick), vector(vector), binary(binary)
-		{}
+		GeneralDeviceData(ULong cpuTick, Array<Double> vector, Binary binary) : cpuTick(cpuTick), vector(vector), binary(binary) {}
 	};
 
 	/// \~English @brief General raw data
@@ -6449,13 +6430,11 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SessionGeneralRawData()
-		{}
+		SessionGeneralRawData() {}
 
 		/// \~English @brief Initialize based on timestamp and data
 		/// \~Chinese @brief 基于时间戳和数据初始化
-		SessionGeneralRawData(FullTimestamp timestamp, Array<Double> vector, Binary binary) : timestamp(timestamp), vector(vector), binary(binary)
-		{}
+		SessionGeneralRawData(FullTimestamp timestamp, Array<Double> vector, Binary binary) : timestamp(timestamp), vector(vector), binary(binary) {}
 	};
 
 	/// \~English @brief General raw data table, the key is the raw data protocol ID whose format is "xxx-v?", "xxx" indicates the data source, "v?" indicates the version
@@ -6605,37 +6584,31 @@ namespace spadas
 
 		/// \~English @brief Default constructor, create invalid sample element
 		/// \~Chinese @brief 默认构造函数，创建无效样本元素
-		GeneralElement() : valid(FALSE), isText(FALSE), value(0)
-		{}
+		GeneralElement() : valid(FALSE), isText(FALSE), value(0) {}
 
 		/// \~English @brief Create a valid numerical element
 		/// \~Chinese @brief 创建有效的值元素
-		GeneralElement(Double value) : valid(TRUE), isText(FALSE), value(value)
-		{}
+		GeneralElement(Double value) : valid(TRUE), isText(FALSE), value(value) {}
 
 		/// \~English @brief Create a valid text element
 		/// \~Chinese @brief 创建有效的文本元素
-		GeneralElement(String text) : valid(TRUE), isText(TRUE), value(0), text(text)
-		{}
+		GeneralElement(String text) : valid(TRUE), isText(TRUE), value(0), text(text) {}
 
 		/// \~English @brief Create based on spadas::OptionalBool, converted to 0 or 1
 		/// \~Chinese @brief 基于 spadas::OptionalBool 创建，转为0或1
-		GeneralElement(OptionalBool value) : valid(value.valid), isText(FALSE), value(value.value ? 1 : 0)
-		{}
+		GeneralElement(OptionalBool value) : valid(value.valid), isText(FALSE), value(value.value ? 1 : 0) {}
 
 		/// \~English @brief Create based on spadas::OptionalInt
 		/// \~Chinese @brief 基于 spadas::OptionalInt 创建
-		GeneralElement(OptionalInt value) : valid(value.valid), isText(FALSE), value((Double)value.value)
-		{}
+		GeneralElement(OptionalInt value) : valid(value.valid), isText(FALSE), value((Double)value.value) {}
 
 		/// \~English @brief Create based on spadas::OptionalDouble
 		/// \~Chinese @brief 基于 spadas::OptionalDouble 创建
-		GeneralElement(OptionalDouble value) : valid(value.valid), isText(FALSE), value(value.value)
-		{}
+		GeneralElement(OptionalDouble value) : valid(value.valid), isText(FALSE), value(value.value) {}
 
 		/// \~English @brief Convert to string, if invalid, convert to "(invalid)"
 		/// \~Chinese @brief 转字符串，若无效则转为(invalid)
-		SPADAS_API String toString();
+		String toString() { return valid ? (isText ? text : String(value)) : "(invalid)"; }
 	};
 
 	/// \~English @brief General sample
@@ -6656,18 +6629,15 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SessionGeneralSample() : significantCount(0)
-		{}
+		SessionGeneralSample() : significantCount(0) {}
 
 		/// \~English @brief Initialize based on timestamp and data
 		/// \~Chinese @brief 基于时间戳和数据初始化
-		SessionGeneralSample(FullTimestamp timestamp, Array<GeneralElement> values) : timestamp(timestamp), values(values), significantCount(0)
-		{}
+		SessionGeneralSample(FullTimestamp timestamp, Array<GeneralElement> values) : timestamp(timestamp), values(values), significantCount(0) {}
 
 		/// \~English @brief Initialize based on timestamp, data, and number of key elements
 		/// \~Chinese @brief 基于时间戳、数据、关键元素个数初始化
-		SessionGeneralSample(FullTimestamp timestamp, Array<GeneralElement> values, UInt significantCount) : timestamp(timestamp), values(values), significantCount(significantCount)
-		{}
+		SessionGeneralSample(FullTimestamp timestamp, Array<GeneralElement> values, UInt significantCount) : timestamp(timestamp), values(values), significantCount(significantCount) {}
 	};
 
 	/// \~English @brief General sample data table, the key is the sample protocol ID whose format is "xxx-v?" or "xxx-v?@?", "xxx" indicates the sample type, "v?" indicates the version, "@?" indicates the channel index that starts from 0
@@ -6884,17 +6854,11 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SessionMatrixSample() : rows(0), cols(0)
-		{}
+		SessionMatrixSample() : rows(0), cols(0) {}
 
 		/// \~English @brief Initialize based on matrix size
 		/// \~Chinese @brief 基于矩阵尺寸初始化
-		SessionMatrixSample(Size2D size)
-		{
-			matData = Array<Float>(size.dim0 * size.dim1);
-			rows = size.dim0;
-			cols = size.dim1;
-		}
+		SessionMatrixSample(Size2D size) { matData = Array<Float>(size.dim0 * size.dim1, 0); rows = size.dim0; cols = size.dim1; }
 	};
 
 	/// \~English @brief Matrix sample data table, the key is the sample protocol ID whose format is "xxx-v?" or "xxx-v?@?", "xxx" indicates the sample type, "v?" indicates the version, "@?" indicates the channel number that starts from 0
@@ -7114,8 +7078,7 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		BusDeviceData() : cpuTick(0), bridgeTimeOffset(0), bridgeGuestPosix(0), channel(0), id(0)
-		{}
+		BusDeviceData() : cpuTick(0), bridgeTimeOffset(0), bridgeGuestPosix(0), channel(0), id(0) {}
 	};
 
 	/// \~English @brief Bus raw data
@@ -7140,8 +7103,7 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SessionBusRawData() : channel(0), id(0)
-		{}
+		SessionBusRawData() : channel(0), id(0) {}
 	};
 
 	/// \~English @brief Bus raw data table (The length is 16, representing bus channels 1~16 respectively)
@@ -7216,8 +7178,7 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		BusDeviceID() : deviceSerial(0), deviceChannelIndex(0)
-		{}
+		BusDeviceID() : deviceSerial(0), deviceChannelIndex(0) {}
 	};
 
 	/// \~English @brief Bus device information
@@ -7242,8 +7203,7 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		BusDeviceInfo() : supportTransmitScheduled(FALSE)
-		{}
+		BusDeviceInfo() : supportTransmitScheduled(FALSE) {}
 	};
 
 	/// \~English @brief Bus device configuration
@@ -7272,8 +7232,7 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		BusDeviceConfig() : mapChannel(0)
-		{}
+		BusDeviceConfig() : mapChannel(0) {}
 	};
 
 	/// \~English @brief Bus data load
@@ -7290,8 +7249,7 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		BusChannelPayload() : mapChannel(0), payloadPercent(0)
-		{}
+		BusChannelPayload() : mapChannel(0), payloadPercent(0) {}
 	};
 
 	/// \~English @brief Bus message information
@@ -7308,12 +7266,11 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		BusMessageInfo() : channel(0), localID(0)
-		{}
+		BusMessageInfo() : channel(0), localID(0) {}
 
 		/// \~English @brief Convert to a message information identifier, the upper 32 bits are the software channel, and the lower 32 bits are the message ID
 		/// \~Chinese @brief 转换为报文信息标识符，高32位为软件通道，低32位为本通道ID
-		SPADAS_API ULong indicator();
+		ULong indicator() { return ((ULong)channel << 32) | (ULong)localID; }
 	};
 
 	/// \~English @brief Bus message
@@ -7334,13 +7291,11 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SessionBusMessage()
-		{}
+		SessionBusMessage() {}
 
 		/// \~English @brief Initialize based on information, timestamp and data
 		/// \~Chinese @brief 基于信息、时间戳和数据初始化
-		SessionBusMessage(ShortTimestamp timestamp, BusMessageInfo info, Binary data) : timestamp(timestamp), info(info), data(data)
-		{}
+		SessionBusMessage(ShortTimestamp timestamp, BusMessageInfo info, Binary data) : timestamp(timestamp), info(info), data(data) {}
 	};
 
 	/// \~English @brief Bus message data table, the key is the global ID of the message whose format is "protocol file name:message ID in this channel", such as vehicle.dbc:123
@@ -7485,8 +7440,7 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		VideoDeviceData() : cpuTick(0), guestPosix(0), gnssPosix(0), channel(0)
-		{}
+		VideoDeviceData() : cpuTick(0), guestPosix(0), gnssPosix(0), channel(0) {}
 	};
 
 	/// \~English @brief Video raw data
@@ -7515,8 +7469,7 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SessionVideoRawData() : channel(0)
-		{}
+		SessionVideoRawData() : channel(0) {}
 	};
 
 	/// \~English @brief Video raw data table (The length is 24, representing video channels A~X respectively)
@@ -7599,8 +7552,7 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		VideoDeviceInfo() : supportTransmitScheduled(FALSE)
-		{}
+		VideoDeviceInfo() : supportTransmitScheduled(FALSE) {}
 	};
 
 	/// \~English @brief Video device configuration
@@ -7629,8 +7581,7 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		VideoDeviceConfig() : mapChannel(0), frameRate(0)
-		{}
+		VideoDeviceConfig() : mapChannel(0), frameRate(0) {}
 	};
 
 	/// \~English @brief Video data for image processing
@@ -7659,8 +7610,7 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SessionVideoProcData() : channel(0)
-		{}
+		SessionVideoProcData() : channel(0) {}
 	};
 
 	/// \~English @brief Video data table for image processing (The length is 24, representing video channels A~X respectively)
@@ -7767,22 +7717,11 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		InputTables() : busRawDatas(BC_NUM), videoRawDatas(VC_NUM), videoProcDatas(VC_NUM)
-		{}
+		InputTables() : busRawDatas(BC_NUM), videoRawDatas(VC_NUM), videoProcDatas(VC_NUM) {}
 
 		/// \~English @brief Clear all data
 		/// \~Chinese @brief 清空所有数据
-		inline void clear()
-		{
-			rawDatas.clear();
-			busMessages.clear();
-			signals.clear();
-			samples.clear();
-			matrices.clear();
-			busRawDatas = SessionBusRawDataTable(BC_NUM);
-			videoRawDatas = SessionVideoRawDataTable(VC_NUM);
-			videoProcDatas = SessionVideoProcDataTable(VC_NUM);
-		}
+		void clear() { rawDatas.clear(); busMessages.clear(); signals.clear(); samples.clear(); matrices.clear(); busRawDatas = SessionBusRawDataTable(BC_NUM); videoRawDatas = SessionVideoRawDataTable(VC_NUM); videoProcDatas = SessionVideoProcDataTable(VC_NUM); }
 	};
 
 	/// \~English @brief All output data tables
@@ -7803,17 +7742,11 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		OutputTables()
-		{}
+		OutputTables() {}
 
 		/// \~English @brief Clear all data
 		/// \~Chinese @brief 清空所有数据
-		inline void clear()
-		{
-			signals.clear();
-			samples.clear();
-			matrices.clear();
-		}
+		void clear() { signals.clear(); samples.clear(); matrices.clear(); }
 	};
 
 	/// \~English @brief The state of standalone task
@@ -8287,7 +8220,7 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SPADAS_API BusMessageID();
+		BusMessageID() : message(0) {}
 
 		/// \~English @brief Initialize with the bus protocol ID and the message ID in this channel
 		/// \~Chinese @brief 按总线协议ID和本通道报文ID初始化
@@ -8320,7 +8253,7 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SPADAS_API BusSignalID();
+		BusSignalID() : message(0) {}
 
 		/// \~English @brief Initialize with the bus protocol ID, the message ID in this channel, and the signal name
 		/// \~Chinese @brief 按总线协议ID，本通道报文ID，以及信号名称初始化
@@ -8349,11 +8282,11 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SPADAS_API BusSignedSignalConfig();
+		BusSignedSignalConfig() : positiveAsZero(FALSE) {}
 
 		/// \~English @brief Is sign bit signal not configured
 		/// \~Chinese @brief 符号位信号配置是否有效
-		SPADAS_API Bool isSignOptional();
+		Bool isSignOptional() { return signSignalID.isEmpty() || signSignalID == "null"; }
 	};
 
 	/// \~English @brief OptionalDouble with sign bit
@@ -8378,16 +8311,15 @@ namespace spadas
 
 		/// \~English @brief Default constructor, all invalid
 		/// \~Chinese @brief 默认构造函数，初始化为无效值
-		OptionalSignedDouble() : positive(TRUE), value(0), signValid(FALSE), valueValid(FALSE)
-		{}
+		OptionalSignedDouble() : positive(TRUE), value(0), signValid(FALSE), valueValid(FALSE) {}
 
 		/// \~English @brief Set positive floating point value
 		/// \~Chinese @brief 设置正浮点值
-		SPADAS_API void setValue(Double value);
+		void setValue(Double value) { this->value = value; this->valueValid = TRUE; }
 
 		/// \~English @brief Set the sign bit
 		/// \~Chinese @brief 设置符号位
-		SPADAS_API void setSign(Bool positive);
+		void setSign(Bool positive) { this->positive = positive; this->signValid = TRUE; }
 
 		/// \~English @brief Convert to spadas::OptionalDouble
 		/// \~Chinese @brief 转为 spadas::OptionalDouble 类型

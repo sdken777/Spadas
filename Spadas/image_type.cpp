@@ -4,30 +4,6 @@
 using namespace spadas;
 using namespace spadas::math;
 
-// ColorRGB
-ColorRGB::ColorRGB() : r(0), g(0), b(0)
-{
-}
-
-ColorRGB::ColorRGB(Byte r0, Byte g0, Byte b0) : r(r0), g(g0), b(b0)
-{
-}
-
-Bool ColorRGB::operator ==(ColorRGB color)
-{
-	return r == color.r && g == color.g && b == color.b;
-}
-
-Bool ColorRGB::operator !=(ColorRGB color)
-{
-	return !(r == color.r && g == color.g && b == color.b);
-}
-
-String ColorRGB::toString()
-{
-	return (String)r + "," + g + "," + b;
-}
-
 // ImageResolution
 Size2D ImageResolution::size(Enum<spadas::ImageResolution> resolution)
 {
@@ -207,20 +183,6 @@ UInt PixelFormat::bytesPerPixel(Enum<PixelFormat> format)
 }
 
 // PixelData
-PixelData::PixelData() : ptr(NULL), bytesPerPixel(0)
-{
-}
-PixelData::PixelData(Pointer ptr0, UInt bytesPerPixel0) : ptr(ptr0), bytesPerPixel(bytesPerPixel0)
-{
-}
-Bool PixelData::isValid()
-{
-	return ptr != NULL;
-}
-PixelData PixelData::operator[](UInt index)
-{
-    return ptr ? PixelData((Pointer)((PointerInt)ptr + index * bytesPerPixel), bytesPerPixel) : PixelData();
-}
 BytePixel PixelData::getBytes()
 {
 	SPADAS_ERROR_RETURNVAL(!ptr, BytePixel());

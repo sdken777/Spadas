@@ -6,41 +6,6 @@ using namespace spadas;
 using namespace spadas::math;
 
 // Time
-Time::Time()
-{
-	this->year = 1900;
-	this->month = 1;
-	this->day = 1;
-	this->hour = 0;
-	this->minute = 0;
-	this->second = 0;
-}
-
-Time::Time(UInt year, UInt month, UInt day, UInt hour, UInt minute, UInt second)
-{
-	this->year = year;
-	this->month = month;
-	this->day = day;
-	this->hour = hour;
-	this->minute = minute;
-	this->second = second;
-}
-
-Bool Time::operator ==(Time time)
-{
-	return this->year == time.year &&
-		this->month == time.month &&
-		this->day == time.day &&
-		this->hour == time.hour &&
-		this->minute == time.minute &&
-		this->second == time.second;
-}
-
-Bool Time::operator !=(Time time)
-{
-	return !operator ==(time);
-}
-
 Bool Time::operator >(Time time)
 {
 	ULong t1 = ((ULong)this->year << 40) + ((ULong)this->month << 32) + ((ULong)this->day << 24) + 
@@ -59,37 +24,7 @@ Bool Time::operator <(Time time)
 	return t1 < t2;
 }
 
-Word Time::getHash()
-{
-	return (Word)((((((UInt)second * 3 + (UInt)minute) * 3 + (UInt)hour) * 3 + (UInt)day) * 3 + (UInt)month) * 3 + (UInt)year);
-}
-
-String Time::dateString(String separator)
-{
-	return String(this->year, 4) + separator + String(this->month, 2) + separator + String(this->day, 2);
-}
-
-String Time::timeString(String separator)
-{
-	return String(this->hour, 2) + separator + String(this->minute, 2) + separator + String(this->second, 2);
-}
-
-String Time::toString(String dateSeparator, String timeSeparator, String dateTimeSeparator)
-{
-	return dateString(dateSeparator) + dateTimeSeparator + timeString(timeSeparator);
-}
-
 // TimeWithMS
-Bool TimeWithMS::operator ==(TimeWithMS time)
-{
-	return dateTime == time.dateTime && milliseconds == time.milliseconds;
-}
-
-Bool TimeWithMS::operator !=(TimeWithMS time)
-{
-	return dateTime != time.dateTime || milliseconds != time.milliseconds;
-}
-
 TimeWithMS TimeWithMS::operator +(Long millisecond)
 {
 	ULong posixTime = localTimeToPosix();
@@ -199,9 +134,4 @@ void TimeWithMS::utcTimeFromPosix(MilliPosix posixTime)
 	dateTime.minute = t.tm_min;
 	dateTime.second = t.tm_sec;
 	milliseconds = posixTime % 1000;
-}
-
-String TimeWithMS::toString(String dateSeparator, String timeSeparator, String dateTimeSeparator, String msSeparator)
-{
-	return dateTime.toString(dateSeparator, timeSeparator, dateTimeSeparator) + msSeparator + String(milliseconds, 3);
 }

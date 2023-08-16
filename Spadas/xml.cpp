@@ -636,16 +636,6 @@ using namespace xml_internal;
 
 const String spadas::XML::TypeName = "spadas.XML";
 
-// XMLAttribute ///////////////////////////////////////////////////////////////////////////
-
-XMLAttribute::XMLAttribute()
-{
-}
-
-XMLAttribute::XMLAttribute(String name0, String value0) : name(name0), value(value0)
-{
-}
-
 // XMLElement ///////////////////////////////////////////////////////////////////////////
 
 XMLElement::XMLElement() : tag(unknownTag)
