@@ -27,6 +27,48 @@ namespace image_internal
 		UInt nColors;				// inout: 256
 		UInt nImportantColors;		// out: 256
 	};
+
+    struct CIEXYZ
+    {
+        Int ciexyzX;
+        Int ciexyzY;
+        Int ciexyzZ;
+    };
+
+    struct CIEXYZTRIPLE
+    {
+        CIEXYZ ciexyzRed;
+        CIEXYZ ciexyzGreen;
+        CIEXYZ ciexyzBlue;
+    };
+
+    struct InfoHeaderV5
+    {
+        UInt bV5Size;               // inout: 124
+        UInt bV5Width;              // inout: using
+        UInt bV5Height;             // inout: using
+        Word bV5Planes;             // inout: 1
+        Word bV5BitCount;           // inout: 32(BGRA)
+        UInt bV5Compression;        // inout: 3
+        UInt bV5SizeImage;          // out: 0
+        Int bV5XPelsPerMeter;       // out: 2795
+        Int bV5YPelsPerMeter;       // out: 2795
+        UInt bV5ClrUsed;            // out: 0
+        UInt bV5ClrImportant;       // out: 0
+        UInt bV5RedMask;            // inout: 0x00ff0000
+        UInt bV5GreenMask;          // inout: 0x0000ff00
+        UInt bV5BlueMask;           // inout: 0x000000ff
+        UInt bV5AlphaMask;          // out: 0xff000000
+        UInt bV5CSType;             // inout: 0x57696e20 "Win "
+        CIEXYZTRIPLE bV5Endpoints;  // out: 0
+        UInt bV5GammaRed;           // out: 0
+        UInt bV5GammaGreen;         // out: 0
+        UInt bV5GammaBlue;          // out: 0
+        UInt bV5Intent;             // out: 0
+        UInt bV5ProfileData;        // out: 0
+        UInt bV5ProfileSize;        // out: 0
+        UInt bV5Reserved;           // out: 0
+    };
 }
 
 using namespace spadas;
@@ -53,28 +95,56 @@ Image::Image(Path bmpFilePath)
 	/* load headers */
 	FileHeader fileHeader;
 	InfoHeader infoHeader;
+    InfoHeaderV5 infoHeaderV5;
     
     utility::memoryCopy(&fileData[2], &fileHeader, 12);
     utility::memoryCopy(&fileData[14], &infoHeader, 40);
-    
-    SPADAS_ERROR_RETURN(infoHeader.infoHeaderSize != 40);
-    SPADAS_ERROR_RETURN(infoHeader.compressType != 0);
-    SPADAS_ERROR_RETURN(infoHeader.nPlanes != 1);
 
-	Bool reverse = infoHeader.height > 0x7fffffff;
-	if (reverse) infoHeader.height = (UInt)-infoHeader.height;
+    UInt imageWidth = 0, imageHeight = 0, nColors = 0;
+    Word nBitsPerPixel = 0;
+
+    if (infoHeader.infoHeaderSize == 124)
+    {
+        utility::memoryCopy(&fileData[14], &infoHeaderV5, 124);
+
+        SPADAS_ERROR_RETURN(infoHeaderV5.bV5Compression != 3);
+        SPADAS_ERROR_RETURN(infoHeaderV5.bV5Planes != 1);
+        SPADAS_ERROR_RETURN(infoHeaderV5.bV5RedMask != 0x00ff0000);
+        SPADAS_ERROR_RETURN(infoHeaderV5.bV5GreenMask != 0x0000ff00);
+        SPADAS_ERROR_RETURN(infoHeaderV5.bV5BlueMask != 0x000000ff);
+        SPADAS_ERROR_RETURN(infoHeaderV5.bV5CSType != 0x57696e20);
+
+        imageWidth = infoHeaderV5.bV5Width;
+        imageHeight = infoHeaderV5.bV5Height;
+        nColors = infoHeaderV5.bV5ClrUsed;
+        nBitsPerPixel = infoHeaderV5.bV5BitCount;
+    }
+    else
+    {
+        SPADAS_ERROR_RETURN(infoHeader.infoHeaderSize != 40);
+        SPADAS_ERROR_RETURN(infoHeader.compressType != 0);
+        SPADAS_ERROR_RETURN(infoHeader.nPlanes != 1);
+
+        imageWidth = infoHeader.width;
+        imageHeight = infoHeader.height;
+        nColors = infoHeader.nColors;
+        nBitsPerPixel = infoHeader.nBitsPerPixel;
+    }
+
+	Bool reverse = imageHeight > 0x7fffffff;
+	if (reverse) imageHeight = (UInt)-imageHeight;
     
     UInt srcNChannels;
 	Enum<PixelFormat> outputFormat;
     Bool usePalette;
     Binary r, g, b, a;
-	switch (infoHeader.nBitsPerPixel)
+	switch (nBitsPerPixel)
 	{
         case 8:
         {
             srcNChannels = 1;
             usePalette = TRUE;
-            SPADAS_ERROR_RETURN(infoHeader.nColors != 0 && infoHeader.nColors != 256);
+            SPADAS_ERROR_RETURN(nColors != 0 && nColors != 256);
             r = Binary(256);
             g = Binary(256);
             b = Binary(256);
@@ -105,24 +175,24 @@ Image::Image(Path bmpFilePath)
             usePalette = FALSE;
             break;
         default:
-			SPADAS_ERROR_MSG("Invalid infoHeader.nBitsPerPixel");
+			SPADAS_ERROR_MSG("Invalid nBitsPerPixel");
             return;
 	}
 	
-	Image out(Size2D::wh(infoHeader.width, infoHeader.height), outputFormat, FALSE);
+	Image out(Size2D::wh(imageWidth, imageHeight), outputFormat, FALSE);
     
 	/* load image's data */
     Byte *srcData = &fileData[fileHeader.dataOffset];
-    UInt srcStep = ((infoHeader.width * srcNChannels - 1) & 0xfffffffc) + 4;
+    UInt srcStep = ((imageWidth * srcNChannels - 1) & 0xfffffffc) + 4;
     switch (outputFormat.value())
     {
         case PixelFormat::Value::ByteGray:
         {
-            for (UInt v = 0; v < infoHeader.height; v++)
+            for (UInt v = 0; v < imageHeight; v++)
             {
                 Byte *srcRow = &srcData[v * srcStep];
-                Byte *dstRow = out[infoHeader.height - v - 1].b;
-                for (UInt u = 0; u < infoHeader.width; u++)
+                Byte *dstRow = out[imageHeight - v - 1].b;
+                for (UInt u = 0; u < imageWidth; u++)
                 {
                     dstRow[u] = r[srcRow[u]];
                 }
@@ -131,9 +201,9 @@ Image::Image(Path bmpFilePath)
             break;
         case PixelFormat::Value::ByteBGR:
         {
-            for (UInt v = 0; v < infoHeader.height; v++)
+            for (UInt v = 0; v < imageHeight; v++)
             {
-                utility::memoryCopy(&srcData[v * srcStep], out[infoHeader.height - v - 1].ptr, infoHeader.width * 3);
+                utility::memoryCopy(&srcData[v * srcStep], out[imageHeight - v - 1].ptr, imageWidth * 3);
             }
         }
             break;
@@ -141,11 +211,11 @@ Image::Image(Path bmpFilePath)
         {
             if (usePalette)
             {
-                for (UInt v = 0; v < infoHeader.height; v++)
+                for (UInt v = 0; v < imageHeight; v++)
                 {
                     Byte *srcRow = &srcData[v * srcStep];
-                    Byte *dstRow = out[infoHeader.height - v - 1].b;
-                    for (UInt u = 0; u < infoHeader.width; u++)
+                    Byte *dstRow = out[imageHeight - v - 1].b;
+                    for (UInt u = 0; u < imageWidth; u++)
                     {
                         dstRow[4*u] = b[srcRow[u]];
                         dstRow[4*u+1] = g[srcRow[u]];
@@ -156,9 +226,9 @@ Image::Image(Path bmpFilePath)
             }
             else
             {
-                for (UInt v = 0; v < infoHeader.height; v++)
+                for (UInt v = 0; v < imageHeight; v++)
                 {
-                    utility::memoryCopy(&srcData[v * srcStep], out[infoHeader.height - v - 1].ptr, infoHeader.width * 4);
+                    utility::memoryCopy(&srcData[v * srcStep], out[imageHeight - v - 1].ptr, imageWidth * 4);
                 }
             }
         }
@@ -191,25 +261,72 @@ void Image::save(Path bmpFilePath)
 	/* generate headers */
 	FileHeader fileHeader;
 	InfoHeader infoHeader;
+    InfoHeaderV5 infoHeaderV5;
+    Bool useV5 = FALSE;
     
 	UInt dstStep = ((in.width() * PixelFormat::nChannels(outputFormat) - 1) & 0xfffffffc) + 4;
     
-	fileHeader.fileSize = 54 + (outputFormat == PixelFormat::Value::ByteGray ? 1024 : 0) + in.height() * dstStep;
-	fileHeader.reserved1 = 0;
-	fileHeader.reserved2 = 0;
-	fileHeader.dataOffset = 54 + (outputFormat == PixelFormat::Value::ByteGray ? 1024 : 0);
-    
-	infoHeader.infoHeaderSize = 40;
-	infoHeader.width = in.width();
-	infoHeader.height = in.height();
-	infoHeader.nPlanes = 1;
-	infoHeader.nBitsPerPixel = PixelFormat::nChannels(outputFormat) * 8;
-	infoHeader.compressType = 0;
-	infoHeader.dataSize = 0;
-	infoHeader.horizontalResolution = 2795;
-	infoHeader.verticalResolution = 2795;
-	infoHeader.nColors = (outputFormat == PixelFormat::Value::ByteGray ? 256 : 0);
-	infoHeader.nImportantColors = (outputFormat == PixelFormat::Value::ByteGray ? 256 : 0);
+    if (outputFormat == PixelFormat::Value::ByteGray || outputFormat == PixelFormat::Value::ByteBGR)
+    {
+        fileHeader.fileSize = 54 + (outputFormat == PixelFormat::Value::ByteGray ? 1024 : 0) + in.height() * dstStep;
+        fileHeader.reserved1 = 0;
+        fileHeader.reserved2 = 0;
+        fileHeader.dataOffset = 54 + (outputFormat == PixelFormat::Value::ByteGray ? 1024 : 0);
+        
+        infoHeader.infoHeaderSize = 40;
+        infoHeader.width = in.width();
+        infoHeader.height = in.height();
+        infoHeader.nPlanes = 1;
+        infoHeader.nBitsPerPixel = PixelFormat::nChannels(outputFormat) * 8;
+        infoHeader.compressType = 0;
+        infoHeader.dataSize = 0;
+        infoHeader.horizontalResolution = 2795;
+        infoHeader.verticalResolution = 2795;
+        infoHeader.nColors = (outputFormat == PixelFormat::Value::ByteGray ? 256 : 0);
+        infoHeader.nImportantColors = (outputFormat == PixelFormat::Value::ByteGray ? 256 : 0);
+    }
+    else // PixelFormat::ByteBGRA
+    {
+        fileHeader.fileSize = 138 + in.height() * dstStep;
+        fileHeader.reserved1 = 0;
+        fileHeader.reserved2 = 0;
+        fileHeader.dataOffset = 138;
+
+        infoHeaderV5.bV5Size = 124;
+        infoHeaderV5.bV5Width = in.width();
+        infoHeaderV5.bV5Height = in.height();
+        infoHeaderV5.bV5Planes = 1;
+        infoHeaderV5.bV5BitCount = 32;
+        infoHeaderV5.bV5Compression = 3;
+        infoHeaderV5.bV5SizeImage = 0;
+        infoHeaderV5.bV5XPelsPerMeter = 2795;
+        infoHeaderV5.bV5YPelsPerMeter = 2795;
+        infoHeaderV5.bV5ClrUsed = 0;
+        infoHeaderV5.bV5ClrImportant = 0;
+        infoHeaderV5.bV5RedMask = 0x00ff0000;
+        infoHeaderV5.bV5GreenMask = 0x0000ff00;
+        infoHeaderV5.bV5BlueMask = 0x000000ff;
+        infoHeaderV5.bV5AlphaMask = 0xff000000;
+        infoHeaderV5.bV5CSType = 0x57696e20;
+        infoHeaderV5.bV5Endpoints.ciexyzRed.ciexyzX = 0;
+        infoHeaderV5.bV5Endpoints.ciexyzRed.ciexyzY = 0;
+        infoHeaderV5.bV5Endpoints.ciexyzRed.ciexyzZ = 0;
+        infoHeaderV5.bV5Endpoints.ciexyzGreen.ciexyzX = 0;
+        infoHeaderV5.bV5Endpoints.ciexyzGreen.ciexyzY = 0;
+        infoHeaderV5.bV5Endpoints.ciexyzGreen.ciexyzZ = 0;
+        infoHeaderV5.bV5Endpoints.ciexyzBlue.ciexyzX = 0;
+        infoHeaderV5.bV5Endpoints.ciexyzBlue.ciexyzY = 0;
+        infoHeaderV5.bV5Endpoints.ciexyzBlue.ciexyzZ = 0;
+        infoHeaderV5.bV5GammaRed = 0;
+        infoHeaderV5.bV5GammaGreen = 0;
+        infoHeaderV5.bV5GammaBlue = 0;
+        infoHeaderV5.bV5Intent = 0;
+        infoHeaderV5.bV5ProfileData = 0;
+        infoHeaderV5.bV5ProfileSize = 0;
+        infoHeaderV5.bV5Reserved = 0;
+
+        useV5 = TRUE;
+    }
     
 	/* copy image data to buffer */
 	Binary fileData(fileHeader.fileSize);
@@ -218,7 +335,8 @@ void Image::save(Path bmpFilePath)
 	fileData[1] = 'M';
     
     utility::memoryCopy(&fileHeader, &fileData[2], 12);
-	utility::memoryCopy(&infoHeader, &fileData[14], 40);
+    if (useV5) utility::memoryCopy(&infoHeaderV5, &fileData[14], 124);
+    else utility::memoryCopy(&infoHeader, &fileData[14], 40);
     
     switch (outputFormat.value())
     {
@@ -242,12 +360,12 @@ void Image::save(Path bmpFilePath)
         case PixelFormat::Value::ByteBGR:
         case PixelFormat::Value::ByteBGRA:
         {
-            Byte *dstData = &fileData[54];
-            for (UInt v = 0; v < infoHeader.height; v++)
+            Byte *dstData = &fileData[fileHeader.dataOffset];
+            for (UInt v = 0; v < in.height(); v++)
             {
                 Byte *dstRow = &dstData[v * dstStep];
-                Byte *srcRow = in[infoHeader.height - v - 1].b;
-                utility::memoryCopy(srcRow, dstRow, infoHeader.width * PixelFormat::nChannels(outputFormat));
+                Byte *srcRow = in[in.height() - v - 1].b;
+                utility::memoryCopy(srcRow, dstRow, in.width() * PixelFormat::nChannels(outputFormat));
             }
         }
             break;
