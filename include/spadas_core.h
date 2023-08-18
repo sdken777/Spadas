@@ -8516,8 +8516,8 @@ namespace spadas
 
 		/// \~English @brief [Optional] Called when the locale config is being initialized
 		/// \~Chinese @brief [可选] 在初始化本土化配置时被调用
-		/// \~English @param languageCode Language code, "en" means English, "ch" means Chinese
-		/// \~Chinese @param languageCode 语言代号，"en"表示英文，"ch"表示中文
+		/// \~English @param languageCode Language code, "en" means English, "zh" means Chinese
+		/// \~Chinese @param languageCode 语言代号，"en"表示英文，"zh"表示中文
 		/// \~English @param preferPRCWeb Prefer to use web service in the People's Republic of China
 		/// \~Chinese @param preferPRCWeb 使用国内的网络服务
 		virtual void initLocaleInfo(String languageCode, Bool preferPRCWeb);
