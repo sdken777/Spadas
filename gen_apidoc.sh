@@ -1,4 +1,4 @@
-CUR_DIR=$(dirname "$0")
+CUR_DIR=$(cd $(dirname $0) && pwd)
 
 cd "$CUR_DIR"/doc
 DOCUMENT_LANGUAGE=Chinese doxygen Doxyfile-Spadas
