@@ -18,6 +18,9 @@ netcoreapp3.1/
 lib*/*spadas*
 bin*/*spadas*
 bin*/*test*
+bin*/debug/*spadas*
+bin*/debug/*test*
+include/
 
 # Build results
 [Rr]elease/
