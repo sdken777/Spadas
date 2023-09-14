@@ -2,14 +2,14 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// 版本定义 // 修复Path::folderContents可能崩溃问题
+// 版本定义 // 优化spin lock负载
 #define SPADAS_VERSION_MAJOR 8
 #define SPADAS_VERSION_MINOR 8
-#define SPADAS_VERSION_BUILD 6
+#define SPADAS_VERSION_BUILD 7
 
 /*! \mainpage
 * Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。\n
-* 本文档对应Spadas版本：8.8.6\n
+* 本文档对应Spadas版本：8.8.7\n
 *
 * \n
 * \section top1 基本功能概述
