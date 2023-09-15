@@ -165,7 +165,7 @@ namespace spadas
 	template <typename Type>
 	void Safe<Type>::operator =(Type target)
 	{
-		while (!this->objSpinLock.cas(0, 1)) {}
+		this->objSpinLock.casSpin(0, 1);
 		this->obj = target;
 		this->objSpinLock.decrease();
 	}
@@ -174,7 +174,7 @@ namespace spadas
 	template <typename VarsType>
 	void Safe<Type>::setVars(VarsType* newVars, Bool isNew)
 	{
-		while (!this->objSpinLock.cas(0, 1)) {}
+		this->objSpinLock.casSpin(0, 1);
 		this->obj.setVars(newVars, isNew);
 		this->objSpinLock.decrease();
 	}
@@ -182,7 +182,7 @@ namespace spadas
 	template <typename Type>
 	Type Safe<Type>::get()
 	{
-		while (!this->objSpinLock.cas(0, 1)) {}
+		this->objSpinLock.casSpin(0, 1);
 		Type output = this->obj;
 		this->objSpinLock.decrease();
 		return output;

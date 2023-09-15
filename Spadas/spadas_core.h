@@ -772,6 +772,10 @@ namespace spadas
 		/// \~English @brief If it is the old value, set it to the new value and return TRUE, otherwise return FALSE
 		/// \~Chinese @brief 若为旧值则设定为新值并返回TRUE，否则返回FALSE
 		Bool cas(Int oldVal, Int newVal) const;
+
+		/// \~English @brief Keep calling cas until it returns TRUE
+		/// \~Chinese @brief 不断调用cas，直到返回TRUE
+		void casSpin(Int oldVal, Int newVal) const;
 		
 	private:
 		Int val;

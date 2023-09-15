@@ -5,6 +5,12 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
+namespace spadas
+{
+	const UInt SPIN_INTERVAL_RANDOM_COUNT = 50;
+	const UInt SPIN_CAS_MAX_INTERVAL = 200;
+}
+
 using namespace spadas;
 
 Atom::Atom() : val(0)
@@ -99,3 +105,23 @@ Bool Atom::cas(Int oldVal, Int newVal) const
 }
 
 #endif
+
+void Atom::casSpin(Int oldVal, Int newVal) const
+{
+	if (cas(oldVal, newVal)) return;
+
+	while (TRUE)
+	{
+		for (auto e = math::random(SPIN_INTERVAL_RANDOM_COUNT).firstElem(); e.valid(); ++e)
+		{
+			UInt count = math::max(0u, (UInt)(SPIN_CAS_MAX_INTERVAL * e.value())) + 1;
+			UInt k = 0;
+			while (TRUE)
+			{
+				if (++k % count != 0) continue;
+				if (cas(oldVal, newVal)) return;
+				else break;
+			}
+		}
+	}
+}
