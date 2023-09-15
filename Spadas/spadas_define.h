@@ -2,12 +2,12 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: BGRA图像改为使用v5头输出bmp文件
+// Update log / 更新记录: 优化spin lock负载
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 8
 #define SPADAS_VERSION_MINOR 10
-#define SPADAS_VERSION_BUILD 5
+#define SPADAS_VERSION_BUILD 6
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n

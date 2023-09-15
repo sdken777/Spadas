@@ -67,6 +67,9 @@ namespace spadas
 			if (!isSpin) releaseLock(&context);
 		}
 	};
+
+	const UInt SPIN_INTERVAL_RANDOM_COUNT = 50;
+	const UInt SPIN_CAS_MAX_INTERVAL = 200;
 }
 
 using namespace spadas;
@@ -90,7 +93,22 @@ void Lock::enter()
 {
 	if (vars->isSpin)
 	{
-		while (!vars->spinLock.cas(0, 1)) {}
+		if (vars->spinLock.cas(0, 1)) return;
+
+		while (TRUE)
+		{
+			for (auto e = math::random(SPIN_INTERVAL_RANDOM_COUNT).firstElem(); e.valid(); ++e)
+			{
+				UInt count = math::max(0u, (UInt)(SPIN_CAS_MAX_INTERVAL * e.value())) + 1;
+				UInt k = 0;
+				while (TRUE)
+				{
+					if (++k % count != 0) continue;
+					if (vars->spinLock.cas(0, 1)) return;
+					else break;
+				}
+			}
+		}
 	}
 	else
 	{
@@ -108,7 +126,7 @@ void Lock::leave()
 		while (TRUE)
 		{
 			Int oldVal = vars->spinLock.get();
-			if (oldVal != 1 || vars->spinLock.cas(1, 0)) break;
+			if (oldVal != 1 || vars->spinLock.cas(1, 0)) return;
 		}
 	}
 	else
