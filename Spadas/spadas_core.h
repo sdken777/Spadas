@@ -1236,9 +1236,9 @@ namespace spadas
 		/// \~Chinese @returns 拼接后的数组
 		Array<Type> operator +(Array<Type> arr);
 
-		/// \~English @brief Reduce the size of the array
-		/// \~Chinese @brief 缩减数组大小
-		void trim(UInt size);
+		/// \~English @brief Reduce the size of the array, and return this array object
+		/// \~Chinese @brief 缩减数组大小，并返回本数组对象
+		Array<Type>& trim(UInt size);
 		
 		/// \~English @brief Assign the same value to all elements
 		/// \~Chinese @brief 对所有元素赋同一个值
@@ -1434,9 +1434,9 @@ namespace spadas
 		/// \~Chinese @returns 拼接后的数组
 		Array<Type> operator +(Array<Type> arr);
 
-		/// \~English @brief Reduce the size of the array span
-		/// \~Chinese @brief 缩减数组片段大小
-		void trim(UInt size);
+		/// \~English @brief Reduce the size of the array span, and return this span object
+		/// \~Chinese @brief 缩减数组片段大小，并返回本片段对象
+		ArraySpan<Type>& trim(UInt size);
 		
 		/// \~English @brief Assign the same value to all elements
 		/// \~Chinese @brief 对所有元素赋同一个值
@@ -2438,9 +2438,9 @@ namespace spadas
 		/// \~Chinese @returns 拼接后的数据块
 		Binary operator +(Binary bin);
 
-		/// \~English @brief Reduce the data block size
-		/// \~Chinese @brief 缩减数据块大小
-		void trim(UInt size);
+		/// \~English @brief Reduce the data block size, and return this object
+		/// \~Chinese @brief 缩减数据块大小，并返回本对象
+		Binary& trim(UInt size);
 
 		/// \~English @brief Assign the same value to all bytes
 		/// \~Chinese @brief 对所有字节赋同一个值
@@ -2566,9 +2566,9 @@ namespace spadas
 		/// \~Chinese @returns 拼接后的数据块
 		Binary operator +(Binary bin);
 
-		/// \~English @brief Reduce the data span size
-		/// \~Chinese @brief 缩减数据片段大小
-		void trim(UInt size);
+		/// \~English @brief Reduce the data span size, and return this object
+		/// \~Chinese @brief 缩减数据片段大小，并返回本对象
+		BinarySpan& trim(UInt size);
 
 		/// \~English @brief Assign the same value to all bytes
 		/// \~Chinese @brief 对所有字节赋同一个值
@@ -2899,6 +2899,10 @@ namespace spadas
 		/// \~English @brief Search the target string from the last character, and return the index of the first character of the first found target
 		/// \~Chinese @brief 从后往前搜索目标字符串，返回首个发现目标的首字符位置
 		UInt searchLast(String target);
+
+		/// \~English @brief Remove all spaces, tabs, returns, and newlines before and after, and return a new string
+		/// \~Chinese @brief 移除前后所有空格、制表符、回车、换行，并返回新字符串
+		String trim();
 		
 		/// \~English @brief Split this string with the specified string. For example, "12 34 56" is separated by spaces, and returns {"12", "34", "56"}. Note that when the string does not contain target, an empty array will be returned if the string is empty, and a scalar array will be returned if it is not empty
 		/// \~Chinese @brief 用指定字符串对本字符串进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串不含target时，若本字符串为空则返回空数组，非空则返回标量数组
@@ -3286,6 +3290,10 @@ namespace spadas
 		/// \~Chinese @brief 从后往前搜索目标字符串，返回首个发现目标的首字符位置
 		UInt searchLast(String target);
 		
+		/// \~English @brief Remove all spaces, tabs, returns, and newlines before and after, and return a new string
+		/// \~Chinese @brief 移除前后所有空格、制表符、回车、换行，并返回新字符串
+		String trim();
+
 		/// \~English @brief Split this string span with the specified string. For example, "12 34 56" is separated by spaces, and returns {"12", "34", "56"}. Note that when the string span does not contain target, an empty array will be returned if the string span is empty, and a scalar array will be returned if it is not empty
 		/// \~Chinese @brief 用指定字符串对本字符串片段进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串片段不含target时，若本字符串片段为空则返回空数组，非空则返回标量数组
 		Array<StringSpan> split(String target);

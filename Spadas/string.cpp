@@ -1466,6 +1466,12 @@ UInt String::searchLast(String target)
 	else return UINF;
 }
 
+String String::trim()
+{
+	if (vars) return StringCommon::trim(vars->data, vars->length);
+	else return String();
+}
+
 Array<StringSpan> String::split(String target)
 {
 	if (vars) return StringCommon::split(vars->data, vars->length, target, vars);

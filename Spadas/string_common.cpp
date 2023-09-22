@@ -435,6 +435,31 @@ UInt StringCommon::searchLast(const Byte* srcData, UInt srcLength, String& strin
 	return UINF;
 }
 
+String StringCommon::trim(const Byte* srcData, UInt srcLength)
+{
+	if (srcLength == 0) return String();
+
+	UInt trimIndex = 0, trimLength = srcLength, rawLength = srcLength;
+
+	for (UInt i = 0; i < rawLength; i++)
+	{
+		Byte c = (Char)srcData[i];
+		if (c != ' ' && c != '\t' && c != '\r' && c != '\n') break;
+		trimIndex++;
+	}
+	if (trimIndex == rawLength) return String();
+	trimLength -= trimIndex;
+
+	for (Int i = (Int)rawLength - 1; i > (Int)trimIndex; i--)
+	{
+		Byte c = (Char)srcData[i];
+		if (c != ' ' && c != '\t' && c != '\r' && c != '\n') break;
+		trimLength--;
+	}
+
+	return StringSpan(srcData + trimIndex, trimLength).clone();
+}
+
 Array<StringSpan> StringCommon::split(const Byte* srcData, UInt srcLength, String& splitter, Vars *stringVars)
 {
 	if (srcLength == 0) return Array<StringSpan>();

@@ -92,13 +92,14 @@ Binary Binary::operator +(Binary bin)
 	else return BinaryCommon::operatorPlus(vars->data, vars->size, bin);
 }
 
-void Binary::trim(UInt size)
+Binary& Binary::trim(UInt size)
 {
-	SPADAS_ERROR_RETURN(size == 0);
+	SPADAS_ERROR_RETURNVAL(size == 0, *this);
 	if (vars && size < vars->size)
 	{
 		vars->size = size;
 	}
+	return *this;
 }
 
 void Binary::set(Byte val)

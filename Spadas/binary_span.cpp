@@ -106,10 +106,11 @@ Binary BinarySpan::operator +(Binary bin)
 	else return bin.clone();
 }
 
-void BinarySpan::trim(UInt size)
+BinarySpan& BinarySpan::trim(UInt size)
 {
-    SPADAS_ERROR_RETURN(size == 0);
+    SPADAS_ERROR_RETURNVAL(size == 0, *this);
     siz = math::min(siz, size);
+    return *this;
 }
 
 void BinarySpan::set(Byte val)

@@ -611,9 +611,9 @@ namespace spadas
 	}
 
 	template<typename Type>
-	void Array<Type>::trim(UInt size)
+	Array<Type>& Array<Type>::trim(UInt size)
 	{
-		SPADAS_ERROR_RETURN(size == 0);
+		SPADAS_ERROR_RETURNVAL(size == 0, *this);
 		if (this->vars && size < this->vars->size)
 		{
 			if (!__is_trivial(Type))
@@ -625,6 +625,7 @@ namespace spadas
 			}
 			this->vars->size = size;
 		}
+		return *this;
 	}
 
 	template<typename Type>
@@ -976,10 +977,11 @@ namespace spadas
 	}
 
 	template<typename Type>
-	void ArraySpan<Type>::trim(UInt size)
+	ArraySpan<Type>& ArraySpan<Type>::trim(UInt size)
 	{
-		SPADAS_ERROR_RETURN(size == 0);
+		SPADAS_ERROR_RETURNVAL(size == 0, *this);
 		this->siz = math::min(this->siz, size);
+		return *this;
 	}
 
 	template<typename Type>

@@ -272,6 +272,12 @@ UInt StringSpan::searchLast(String target)
 	else return UINF;
 }
 
+String StringSpan::trim()
+{
+	if (source) return StringCommon::trim((Byte*)(source + idx), len);
+	else return String();
+}
+
 Array<StringSpan> StringSpan::split(String target)
 {
 	if (source) return StringCommon::split((Byte*)(source + idx), len, target, idx ? (Vars*)source : NULL);
