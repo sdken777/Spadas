@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "Windows主机/X86-Windows10目标",
+            "name": "Windows Host / X86-Windows10 Target",
             "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
             "compilerArgs": [
                 "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-windows10",
@@ -13,6 +13,7 @@
                 "${workspaceFolder}\\..\\include"
             ],
             "defines": [
+                // "SPADAS_WINDOWS_GUI",
                 "SPADAS_ENV_WINDOWS",
                 "SPADAS_ARCH_X86"
             ],
@@ -20,7 +21,7 @@
             "cppStandard": "c++17"
         },
         {
-            "name": "Windows主机/X86-Ubuntu2204目标",
+            "name": "Windows Host / X86-Ubuntu2204 Target",
             "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
             "compilerArgs": [
                 "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-ubuntu2204",
@@ -39,7 +40,7 @@
             "cppStandard": "c++17"
         },
         {
-            "name": "Windows主机/Arm-Ubuntu2204目标",
+            "name": "Windows Host / Arm-Ubuntu2204 Target",
             "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
             "compilerArgs": [
                 "--sysroot=C:\\msys64\\opt\\xtools-uni\\arm-ubuntu2204",
@@ -58,7 +59,7 @@
             "cppStandard": "c++17"
         },
         {
-            "name": "Windows主机/Arm-MacOS1203目标",
+            "name": "Windows Host / Arm-MacOS1203 Target",
             "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
             "compilerArgs": [
                 "--sysroot=C:\\msys64\\opt\\xtools-uni\\arm-macos1203",
@@ -77,7 +78,7 @@
             "cppStandard": "c++17"
         },
         {
-            "name": "Windows主机/X86-NILRT17目标",
+            "name": "Windows Host / X86-NILRT17 Target",
             "compilerPath": "C:\\msys64\\opt\\xtools-uni\\x86-nilrt17\\sysroots\\i686-nilrtsdk-mingw32\\usr\\bin\\x86_64-nilrt-linux\\x86_64-nilrt-linux-g++.exe",
             "compilerArgs": [
                 "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-nilrt17\\sysroots\\core2-64-nilrt-linux",
@@ -96,7 +97,7 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "非Windows主机/X86-Windows10目标",
+            "name": "General Host / X86-Windows10 Target",
             "compilerPath": "/opt/clang-15/bin/clang++",
             "compilerArgs": [
                 "--sysroot=/opt/xtools-uni/x86-windows10",
@@ -108,6 +109,7 @@
                 "${workspaceFolder}/../include"
             ],
             "defines": [
+                // "SPADAS_WINDOWS_GUI",
                 "SPADAS_ENV_WINDOWS",
                 "SPADAS_ARCH_X86"
             ],
@@ -115,7 +117,7 @@
             "cppStandard": "c++17"
         },
         {
-            "name": "非Windows主机/X86-Ubuntu2204目标",
+            "name": "General Host / X86-Ubuntu2204 Target",
             "compilerPath": "/opt/clang-15/bin/clang++",
             "compilerArgs": [
                 "--sysroot=/opt/xtools-uni/x86-ubuntu2204",
@@ -134,7 +136,7 @@
             "cppStandard": "c++17"
         },
         {
-            "name": "非Windows主机/Arm-Ubuntu2204目标",
+            "name": "General Host / Arm-Ubuntu2204 Target",
             "compilerPath": "/opt/clang-15/bin/clang++",
             "compilerArgs": [
                 "--sysroot=/opt/xtools-uni/arm-ubuntu2204",
@@ -153,7 +155,7 @@
             "cppStandard": "c++17"
         },
         {
-            "name": "非Windows主机/Arm-MacOS1203目标",
+            "name": "General Host / Arm-MacOS1203 Target",
             "compilerPath": "/opt/clang-15/bin/clang++",
             "compilerArgs": [
                 "--sysroot=/opt/xtools-uni/arm-macos1203",
@@ -172,7 +174,7 @@
             "cppStandard": "c++17"
         },
         {
-            "name": "非Windows主机/X86-NILRT17目标",
+            "name": "General Host / X86-NILRT17 Target",
             "compilerPath": "/opt/xtools-uni/x86-nilrt17/sysroots/x86_64-nilrtsdk-linux/usr/bin/x86_64-nilrt-linux/x86_64-nilrt-linux-g++",
             "compilerArgs": [
                 "--sysroot=/opt/xtools-uni/x86-nilrt17/sysroots/core2-64-nilrt-linux",

@@ -81,7 +81,7 @@
     "tasks": [
         {
             "type": "process",
-            "label": "调试构建",
+            "label": "Build (Debug)",
             "group": "build",
             "command": "make",
             "args": [
@@ -93,13 +93,13 @@
                 "MACRO_DEFINE=SPADAS_EXPORTS",
             ],
             "dependsOn": [
-                "(子任务)生成资源代码",
+                "Subtask: Generate resource code",
             ],
             "problemMatcher":"$gcc",
         },
         {
             "type": "process",
-            "label": "发布构建",
+            "label": "Build (Release)",
             "group": "build",
             "command": "cp",
             "args": [
@@ -113,20 +113,18 @@
             ],
             "dependsOrder": "sequence",
             "dependsOn": [
-                "(子任务)生成资源代码",
-                "(子任务)执行发布构建(X86-Windows10目标)",
-                "(子任务)执行发布构建(X86-Ubuntu2204目标)",
-                "(子任务)执行发布构建(Arm-Ubuntu2204目标)",
-                "(子任务)执行发布构建(Arm-MacOS1203目标)",
-                "(子任务)执行发布构建(X86-NILRT17目标)",
-                "(子任务)创建include文件夹",
+                "Subtask: Generate resource code",
+                "Subtask: Build for X86-Windows10 target (Release)",
+                "Subtask: Build for X86-Ubuntu2204 target (Release)",
+                "Subtask: Build for Arm-Ubuntu2204 target (Release)",
+                "Subtask: Build for Arm-MacOS1203 target (Release)",
+                "Subtask: Build for X86-NILRT17 target (Release)",
+                "Subtask: Create 'include' folder",
             ],
-            "problemMatcher":[],
         },
         {
             "type": "process",
-            "label": "清理",
-            "group": "build",
+            "label": "Clean",
             "command": "make",
             "args": [
                 "clean",
@@ -134,11 +132,11 @@
             "problemMatcher":[],
         },
 
-        // 以下为子任务
+        // Subtasks:
 
         {
             "type": "process",
-            "label": "(子任务)生成资源代码",
+            "label": "Subtask: Generate resource code",
             "hide": true,
             "command": "dotnet",
             "args": [
@@ -148,7 +146,7 @@
         },
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(X86-Windows10目标)",
+            "label": "Subtask: Build for X86-Windows10 target (Release)",
             "hide": true,
             "command": "make",
             "args": [
@@ -162,7 +160,7 @@
         },
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(X86-Ubuntu2204目标)",
+            "label": "Subtask: Build for X86-Ubuntu2204 target (Release)",
             "hide": true,
             "command": "make",
             "args": [
@@ -175,7 +173,7 @@
         },
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(Arm-Ubuntu2204目标)",
+            "label": "Subtask: Build for Arm-Ubuntu2204 target (Release)",
             "hide": true,
             "command": "make",
             "args": [
@@ -188,7 +186,7 @@
         },
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(Arm-MacOS1203目标)",
+            "label": "Subtask: Build for Arm-MacOS1203 target (Release)",
             "hide": true,
             "command": "make",
             "args": [
@@ -202,7 +200,7 @@
         },
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(X86-NILRT17目标)",
+            "label": "Subtask: Build for X86-NILRT17 target (Release)",
             "hide": true,
             "command": "make",
             "args": [
@@ -215,7 +213,7 @@
         },
         {
             "type": "process",
-            "label": "(子任务)创建include文件夹",
+            "label": "Subtask: Create 'include' folder",
             "hide": true,
             "command": "mkdir",
             "args": [

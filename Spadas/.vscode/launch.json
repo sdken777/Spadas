@@ -1,6 +1,6 @@
 {
     "version": "0.2.0",
-    "inputs": [
+"inputs": [
         {
             "id": "helper_platform_bin_name",
             "type": "command",
@@ -16,14 +16,14 @@
         }
     ],
     "configurations": [
-        {
-            "name": "调试运行",
+{
+            "name": "Run (Debug)",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/test",
             "args": [],
             "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/",
-            "preLaunchTask": "调试构建",
+            "preLaunchTask": "Build (Debug)",
             "windows": {
                 "env": { "_NO_DEBUG_HEAP": "1" },
             },
