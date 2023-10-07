@@ -81,11 +81,11 @@
     "tasks": [
         {
             "type": "process",
-            "label": "调试构建",
+            "label": "Build (Debug)",
             "group": "build",
             "command": "make",
             "dependsOn": [
-                "(子任务)生成资源代码",
+                "Subtask: Generate resource code",
             ],
             "problemMatcher":"$gcc",
             "windows": {
@@ -117,7 +117,7 @@
         },
         {
             "type": "process",
-            "label": "发布构建",
+            "label": "Build (Release)",
             "group": "build",
             "command": "cp",
             "args": [
@@ -131,19 +131,18 @@
             ],
             "dependsOrder": "sequence",
             "dependsOn": [
-                "(子任务)生成资源代码",
-                "(子任务)发布构建(X86-Windows目标)",
-                "(子任务)发布构建(X86-Ubuntu1804目标)",
-                "(子任务)发布构建(Arm-Ubuntu1604目标)",
-                "(子任务)发布构建(X86-MacOS1010目标)",
-                "(子任务)创建include文件夹",
+                "Subtask: Generate resource code",
+                "Subtask: Build for X86-Windows target (Release)",
+                "Subtask: Build for X86-Ubuntu1804 target (Release)",
+                "Subtask: Build for Arm-Ubuntu1604 target (Release)",
+                "Subtask: Build for X86-MacOS1010 target (Release)",
+                "Subtask: Create 'include' folder",
             ],
             "problemMatcher":[],
         },
         {
             "type": "process",
-            "label": "清理",
-            "group": "build",
+            "label": "Clean",
             "command": "make",
             "args": [
                 "clean",
@@ -151,11 +150,11 @@
             "problemMatcher":[],
         },
 
-        // 以下为子任务
+        // Subtasks:
 
         {
             "type": "process",
-            "label": "(子任务)生成资源代码",
+            "label": "Subtask: Generate resource code",
             "hide": true,
             "command": "dotnet",
             "args": [
@@ -165,7 +164,8 @@
         },
         {
             "type": "process",
-            "label": "(子任务)发布构建(X86-Windows目标)",
+            "label": "Subtask: Build for X86-Windows target (Release)",
+            "hide": true,
             "command": "make",
             "args": [
                 "-j${input:helper_thread_count}",
@@ -178,7 +178,8 @@
         },
         {
             "type": "process",
-            "label": "(子任务)发布构建(X86-Ubuntu1804目标)",
+            "label": "Subtask: Build for X86-Ubuntu1804 target (Release)",
+            "hide": true,
             "command": "make",
             "args": [
                 "-j${input:helper_thread_count}",
@@ -190,7 +191,8 @@
         },
         {
             "type": "process",
-            "label": "(子任务)发布构建(Arm-Ubuntu1604目标)",
+            "label": "Subtask: Build for Arm-Ubuntu1604 target (Release)",
+            "hide": true,
             "command": "make",
             "args": [
                 "-j${input:helper_thread_count}",
@@ -202,7 +204,8 @@
         },
         {
             "type": "process",
-            "label": "(子任务)发布构建(X86-MacOS1010目标)",
+            "label": "Subtask: Build for X86-MacOS1010 target (Release)",
+            "hide": true,
             "command": "make",
             "args": [
                 "-j${input:helper_thread_count}",
@@ -215,7 +218,8 @@
         },
         {
             "type": "process",
-            "label": "(子任务)创建include文件夹",
+            "label": "Subtask: Create 'include' folder",
+            "hide": true,
             "command": "mkdir",
             "args": [
                 "-p",

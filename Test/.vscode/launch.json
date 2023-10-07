@@ -17,7 +17,7 @@
     ],
     "configurations": [
         {
-            "name": "调试运行",
+            "name": "Run (Debug)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/test",
@@ -25,10 +25,10 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/",
             "environment": [],
-            "preLaunchTask": "调试构建",
+            "preLaunchTask": "Build (Debug)",
             "setupCommands": [
                 {
-                    "description": "为 gdb 启用整齐打印",
+                    "description": "Enable pretty-printing for gdb",
                     "text": "-enable-pretty-printing",
                     "ignoreFailures": true
                 }
@@ -47,7 +47,7 @@
             },
         },
         {
-            "name": "发布运行",
+            "name": "Run (Release)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/../${input:helper_platform_bin_name}/test",
@@ -55,7 +55,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/",
             "environment": [],
-            "preLaunchTask": "发布构建",
+            "preLaunchTask": "Build (Release)",
             "windows": {
                 "externalConsole": true,
                 "MIMode": "gdb",

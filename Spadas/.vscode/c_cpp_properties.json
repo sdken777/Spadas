@@ -1,19 +1,19 @@
 {
     "configurations": [
         {
-            "name": "Windows主机/X86-Windows目标",
+            "name": "Windows Host / X86-Windows Target",
             "compilerPath": "C:\\x-tools\\x86-windows\\bin\\x86_64-w64-mingw32-g++.exe",
             "includePath": [
-                ".\\",
-                ".\\3party",
-                "..\\include",
-                // "..\\include64",
+                "${workspaceFolder}",
+                "${workspaceFolder}\\..\\include",
+                // "${workspaceFolder}\\..\\include64",
                 "C:\\x-tools-headers\\x86-windows\\lib\\gcc\\x86_64-w64-mingw32\\8.3.0\\include",
                 "C:\\x-tools-headers\\x86-windows\\x86_64-w64-mingw32\\include\\c++\\8.3.0",
                 "C:\\x-tools-headers\\x86-windows\\x86_64-w64-mingw32\\include\\c++\\8.3.0\\x86_64-w64-mingw32",
                 "C:\\x-tools-headers\\x86-windows\\x86_64-w64-mingw32\\sysroot\\mingw\\include"
             ],
             "defines": [
+                // "SPADAS_WINDOWS_GUI",
                 "SPADAS_ENV_WINDOWS",
                 "SPADAS_ARCH_X86"
             ],
@@ -21,13 +21,12 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "Windows主机/X86-Ubuntu1804目标",
+            "name": "Windows Host / X86-Ubuntu1804 Target",
             "compilerPath": "C:\\x-tools\\x86-ubuntu1804\\bin\\x86_64-ubuntu18.04-linux-gnu-g++.exe",
             "includePath": [
-                ".\\",
-                ".\\3party",
-                "..\\include",
-                // "..\\includex",
+                "${workspaceFolder}",
+                "${workspaceFolder}\\..\\include",
+                // "${workspaceFolder}\\..\\includex",
                 "C:\\x-tools-headers\\x86-ubuntu1804\\lib\\gcc\\x86_64-ubuntu18.04-linux-gnu\\8.3.0\\include",
                 "C:\\x-tools-headers\\x86-ubuntu1804\\x86_64-ubuntu18.04-linux-gnu\\include\\c++\\8.3.0",
                 "C:\\x-tools-headers\\x86-ubuntu1804\\x86_64-ubuntu18.04-linux-gnu\\include\\c++\\8.3.0\\x86_64-ubuntu18.04-linux-gnu",
@@ -41,13 +40,12 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "Windows主机/Arm-Ubuntu1604目标",
+            "name": "Windows Host / Arm-Ubuntu1604 Target",
             "compilerPath": "C:\\x-tools\\arm-ubuntu1604\\bin\\aarch64-ubuntu16.04-linux-gnu-g++.exe",
             "includePath": [
-                ".\\",
-                ".\\3party",
-                "..\\include",
-                // "..\\includexa",
+                "${workspaceFolder}",
+                "${workspaceFolder}\\..\\include",
+                // "${workspaceFolder}\\..\\includexa",
                 "C:\\x-tools-headers\\arm-ubuntu1604\\lib\\gcc\\aarch64-ubuntu16.04-linux-gnu\\8.3.0\\include",
                 "C:\\x-tools-headers\\arm-ubuntu1604\\aarch64-ubuntu16.04-linux-gnu\\include\\c++\\8.3.0",
                 "C:\\x-tools-headers\\arm-ubuntu1604\\aarch64-ubuntu16.04-linux-gnu\\include\\c++\\8.3.0\\aarch64-ubuntu16.04-linux-gnu",
@@ -61,14 +59,13 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "Windows主机/X86-MacOS1010目标",
+            "name": "Windows Host / X86-MacOS1010 Target",
             "compilerPath": "C:\\x-tools\\x86-macos1010\\target\\bin2\\x86_64-apple-darwin14-clang++.exe",
             "compilerArgs": [ "-foc-compiler-path=C:\\x-tools\\x86-macos1010\\llvm-8\\bin" ],
             "includePath": [
-                ".\\",
-                ".\\3party",
-                "..\\include",
-                // "..\\includem",
+                "${workspaceFolder}",
+                "${workspaceFolder}\\..\\include",
+                // "${workspaceFolder}\\..\\includem",
                 "C:\\x-tools-headers\\x86-macos1010\\llvm-8\\lib\\clang\\8.0.0\\include",
                 "C:\\x-tools-headers\\x86-macos1010\\target\\SDK\\MacOSX10.10.sdk\\usr\\include\\c++\\v1",
                 "C:\\x-tools-headers\\x86-macos1010\\target\\SDK\\MacOSX10.10.sdk\\usr\\include"
@@ -81,19 +78,19 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "Linux主机/X86-Windows目标",
+            "name": "Linux Host / X86-Windows Target",
             "compilerPath": "/opt/x-tools/x86-windows/bin/x86_64-w64-mingw32-g++",
             "includePath": [
-                "./",
-                "./3party",
-                "../include",
-                // "../include64",
+                "${workspaceFolder}",
+                "${workspaceFolder}/../include",
+                // "${workspaceFolder}/../include64",
                 "/opt/x-tools/x86-windows/lib/gcc/x86_64-w64-mingw32/8.3.0/include",
                 "/opt/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0",
                 "/opt/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0/x86_64-w64-mingw32",
                 "/opt/x-tools/x86-windows/x86_64-w64-mingw32/sysroot/mingw/include"
             ],
             "defines": [
+                // "SPADAS_WINDOWS_GUI",
                 "SPADAS_ENV_WINDOWS",
                 "SPADAS_ARCH_X86"
             ],
@@ -101,13 +98,12 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "Linux主机/X86-Ubuntu1804目标",
+            "name": "Linux Host / X86-Ubuntu1804 Target",
             "compilerPath": "/opt/x-tools/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-g++",
             "includePath": [
-                "./",
-                "./3party",
-                "../include",
-                // "../includex",
+                "${workspaceFolder}",
+                "${workspaceFolder}/../include",
+                // "${workspaceFolder}/../includex",
                 "/opt/x-tools/x86-ubuntu1804/lib/gcc/x86_64-ubuntu18.04-linux-gnu/8.3.0/include",
                 "/opt/x-tools/x86-ubuntu1804/x86_64-ubuntu18.04-linux-gnu/include/c++/8.3.0",
                 "/opt/x-tools/x86-ubuntu1804/x86_64-ubuntu18.04-linux-gnu/include/c++/8.3.0/x86_64-ubuntu18.04-linux-gnu",
@@ -121,13 +117,12 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "Linux主机/Arm-Ubuntu1604目标",
+            "name": "Linux Host / Arm-Ubuntu1604 Target",
             "compilerPath": "/opt/x-tools/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-g++",
             "includePath": [
-                "./",
-                "./3party",
-                "../include",
-                // "../includexa",
+                "${workspaceFolder}",
+                "${workspaceFolder}/../include",
+                // "${workspaceFolder}/../includexa",
                 "/opt/x-tools/arm-ubuntu1604/lib/gcc/aarch64-ubuntu16.04-linux-gnu/8.3.0/include",
                 "/opt/x-tools/arm-ubuntu1604/aarch64-ubuntu16.04-linux-gnu/include/c++/8.3.0",
                 "/opt/x-tools/arm-ubuntu1604/aarch64-ubuntu16.04-linux-gnu/include/c++/8.3.0/aarch64-ubuntu16.04-linux-gnu",
@@ -141,14 +136,13 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "Linux主机/X86-MacOS1010目标",
+            "name": "Linux Host / X86-MacOS1010 Target",
             "compilerPath": "/opt/x-tools/x86-macos1010/target/bin/x86_64-apple-darwin14-clang++",
             "compilerArgs": [ "-foc-compiler-path=/opt/x-tools/x86-macos1010/llvm-8/bin" ],
             "includePath": [
-                "./",
-                "./3party",
-                "../include",
-                // "../includem",
+                "${workspaceFolder}",
+                "${workspaceFolder}/../include",
+                // "${workspaceFolder}/../includem",
                 "/opt/x-tools/x86-macos1010/llvm-8/lib/clang/8.0.0/include",
                 "/opt/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/v1",
                 "/opt/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include"
@@ -161,19 +155,19 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "MacOS主机/X86-Windows目标",
+            "name": "MacOS Host / X86-Windows Target",
             "compilerPath": "/Volumes/x-tools/x86-windows/bin/x86_64-w64-mingw32-g++",
             "includePath": [
-                "./",
-                "./3party",
-                "../include",
-                // "../include64",
+                "${workspaceFolder}",
+                "${workspaceFolder}/../include",
+                // "${workspaceFolder}/../include64",
                 "/Volumes/x-tools/x86-windows/lib/gcc/x86_64-w64-mingw32/8.3.0/include",
                 "/Volumes/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0",
                 "/Volumes/x-tools/x86-windows/x86_64-w64-mingw32/include/c++/8.3.0/x86_64-w64-mingw32",
                 "/Volumes/x-tools/x86-windows/x86_64-w64-mingw32/sysroot/mingw/include"
             ],
             "defines": [
+                // "SPADAS_WINDOWS_GUI",
                 "SPADAS_ENV_WINDOWS",
                 "SPADAS_ARCH_X86"
             ],
@@ -181,13 +175,12 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "MacOS主机/X86-Ubuntu1804目标",
+            "name": "MacOS Host / X86-Ubuntu1804 Target",
             "compilerPath": "/Volumes/x-tools/x86-ubuntu1804/bin/x86_64-ubuntu18.04-linux-gnu-g++",
             "includePath": [
-                "./",
-                "./3party",
-                "../include",
-                // "../includex",
+                "${workspaceFolder}",
+                "${workspaceFolder}/../include",
+                // "${workspaceFolder}/../includex",
                 "/Volumes/x-tools/x86-ubuntu1804/lib/gcc/x86_64-ubuntu18.04-linux-gnu/8.3.0/include",
                 "/Volumes/x-tools/x86-ubuntu1804/x86_64-ubuntu18.04-linux-gnu/include/c++/8.3.0",
                 "/Volumes/x-tools/x86-ubuntu1804/x86_64-ubuntu18.04-linux-gnu/include/c++/8.3.0/x86_64-ubuntu18.04-linux-gnu",
@@ -201,13 +194,12 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "MacOS主机/Arm-Ubuntu1604目标",
+            "name": "MacOS Host / Arm-Ubuntu1604 Target",
             "compilerPath": "/Volumes/x-tools/arm-ubuntu1604/bin/aarch64-ubuntu16.04-linux-gnu-g++",
             "includePath": [
-                "./",
-                "./3party",
-                "../include",
-                // "../includexa",
+                "${workspaceFolder}",
+                "${workspaceFolder}/../include",
+                // "${workspaceFolder}/../includexa",
                 "/Volumes/x-tools/arm-ubuntu1604/lib/gcc/aarch64-ubuntu16.04-linux-gnu/8.3.0/include",
                 "/Volumes/x-tools/arm-ubuntu1604/aarch64-ubuntu16.04-linux-gnu/include/c++/8.3.0",
                 "/Volumes/x-tools/arm-ubuntu1604/aarch64-ubuntu16.04-linux-gnu/include/c++/8.3.0/aarch64-ubuntu16.04-linux-gnu",
@@ -221,14 +213,13 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "MacOS主机/X86-MacOS1010目标",
+            "name": "MacOS Host / X86-MacOS1010 Target",
             "compilerPath": "/Volumes/x-tools/x86-macos1010/target/bin/x86_64-apple-darwin14-clang++",
             "compilerArgs": [ "-foc-compiler-path=/Volumes/x-tools/x86-macos1010/llvm-8/bin" ],
             "includePath": [
-                "./",
-                "./3party",
-                "../include",
-                // "../includem",
+                "${workspaceFolder}",
+                "${workspaceFolder}/../include",
+                // "${workspaceFolder}/../includem",
                 "/Volumes/x-tools/x86-macos1010/llvm-8/lib/clang/8.0.0/include",
                 "/Volumes/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include/c++/v1",
                 "/Volumes/x-tools/x86-macos1010/target/SDK/MacOSX10.10.sdk/usr/include"
