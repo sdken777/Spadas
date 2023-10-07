@@ -7430,6 +7430,19 @@ namespace spadas
 		Enum<VideoDataCodec> codec;
 	};
 
+	/// \~English @brief Extra data of a video frame, such as hardware information, etc
+	/// \~Chinese @brief 视频帧的额外数据，如硬件信息等
+	struct VideoExtraData
+	{
+		/// \~English @brief ID of extra data
+		/// \~Chinese @brief 额外数据的ID
+		String id;
+
+		/// \~English @brief Content of extra data
+		/// \~Chinese @brief 额外数据内容
+		Binary data;
+	};
+
 	/// \~English @brief Raw data from video device
 	/// \~Chinese @brief 视频设备输出原始数据
 	struct VideoDeviceData
@@ -7462,6 +7475,10 @@ namespace spadas
 		/// \~Chinese @brief 可选的预览图像，640x(360-480)分辨率的BGR图像
 		Optional<ImagePointer> preview;
 
+		/// \~English @brief Optional extra data
+		/// \~Chinese @brief 可选的额外数据
+		Optional<VideoExtraData> extraData;
+
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
 		VideoDeviceData() : cpuTick(0), guestPosix(0), gnssPosix(0), channel(0) {}
@@ -7490,6 +7507,10 @@ namespace spadas
 		/// \~English @brief Optional preview image, BGR image with 640x(360-480) resolution
 		/// \~Chinese @brief 可选的预览图像，640x(360-480)分辨率的BGR图像
 		Optional<ImagePointer> preview;
+
+		/// \~English @brief Optional extra data
+		/// \~Chinese @brief 可选的额外数据
+		Optional<VideoExtraData> extraData;
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
@@ -7632,6 +7653,10 @@ namespace spadas
 		/// \~Chinese @brief 图像的meta信息
 		Array<Double> meta;
 
+		/// \~English @brief Extra data
+		/// \~Chinese @brief 额外数据
+		Optional<VideoExtraData> extraData;
+
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
 		SessionVideoProcData() : channel(0) {}
@@ -7660,7 +7685,9 @@ namespace spadas
 		/// \~Chinese @param guestPosix 视频帧的采样时客机Posix时间，单位纳秒，0表示无效
 		/// \~English @param gnssPosix Satellite posix time at data sampling, in nanoseconds, 0 means invalid
 		/// \~Chinese @param gnssPosix 视频帧的采样时卫星Posix时间，单位纳秒，0表示无效
-		virtual void outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0);
+		/// \~English @param extraData Optional extra data
+		/// \~Chinese @param extraData 可选的额外数据
+		virtual void outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, Optional<VideoExtraData> extraData = Optional<VideoExtraData>());
 	};
 
 	/// \~English @brief Video raw data transmit interface
@@ -7680,9 +7707,11 @@ namespace spadas
 		/// \~Chinese @param size 视频帧的大小，像素单位
 		/// \~English @param data Video frame data
 		/// \~Chinese @param data 视频帧数据
+		/// \~English @param extraData Optional extra data
+		/// \~Chinese @param extraData 可选的额外数据
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual TransmitResult::Value transmitNow(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data);
+		virtual TransmitResult::Value transmitNow(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, Optional<VideoExtraData> extraData = Optional<VideoExtraData>());
 
 		/// \~English @brief Schedule to transmit data according to server posix time (must be greater than the timestamp of the last frame to transmit on the same channel)
 		/// \~Chinese @brief 指定按服务器Posix时间预约发送视频帧 (必须大于该通道上一帧预约发送报文的时间)
@@ -7698,9 +7727,11 @@ namespace spadas
 		/// \~Chinese @param serverPosix 授时服务器Posix时间，单位纳秒
 		/// \~English @param tolerance The maximum delayed transmit time allowed, in nanoseconds
 		/// \~Chinese @param tolerance 允许的最大延迟发送时间，单位纳秒
+		/// \~English @param extraData Optional extra data
+		/// \~Chinese @param extraData 可选的额外数据
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual TransmitResult::Value transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
+		virtual TransmitResult::Value transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance = UINF, Optional<VideoExtraData> extraData = Optional<VideoExtraData>());
 	};
 
 	/// \~English @brief All input data tables

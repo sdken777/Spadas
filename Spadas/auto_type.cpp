@@ -199,7 +199,7 @@ Time SessionIdentifier::toTime()
 }
 
 // IVideoPreviewExpress
-void IVideoPreviewExpress::outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix, NanoPosix gnssPosix)
+void IVideoPreviewExpress::outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix, NanoPosix gnssPosix, Optional<VideoExtraData> extraData)
 {
 }
 
@@ -236,12 +236,12 @@ TransmitResult::Value IBusMessageTransmitter::transmitAtServerPosix(UInt channel
 }
 
 // IVideoFrameTransmitter
-TransmitResult::Value IVideoFrameTransmitter::transmitNow(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data)
+TransmitResult::Value IVideoFrameTransmitter::transmitNow(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, Optional<VideoExtraData> extraData)
 {
 	return TransmitResult::Value::Unknown;
 }
 
-TransmitResult::Value IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance)
+TransmitResult::Value IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance, Optional<VideoExtraData> extraData)
 {
 	return TransmitResult::Value::Unknown;
 }
