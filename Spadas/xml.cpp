@@ -50,20 +50,22 @@ namespace xml_internal
 	}
 	
 	// escape sequence
-	String encodeES(String text, Bool includeQuotation)
+	String encodeES(String text, Bool attribName)
 	{
 		UInt textLength = text.length();
 		Byte *textData = text.bytes();
-		UInt countAmp = 0, countLt = 0, countGt = 0, countQuot = 0;
+		UInt countAmp = 0, countLt = 0, countGt = 0, countQuot = 0, countReturn = 0, countEnter = 0;
 		for (UInt i = 0; i < textLength; i++)
 		{
 			if (textData[i] == '&') countAmp++;
 			else if (textData[i] == '<') countLt++;
 			else if (textData[i] == '>') countGt++;
-			else if (includeQuotation && textData[i] == '\"') countQuot++;
+			else if (attribName && textData[i] == '\"') countQuot++;
+			else if (attribName && textData[i] == '\r') countReturn++;
+			else if (attribName && textData[i] == '\n') countEnter++;
 		}
 		
-		String out = String::createWithSize(textLength + 1 + countAmp * 4 + countQuot * 5 + countLt * 3 + countGt * 3);
+		String out = String::createWithSize(textLength + 1 + countAmp * 4 + countQuot * 5 + countLt * 3 + countGt * 3 + countReturn * 4 + countEnter * 4);
 		Byte* outData = out.bytes();
 		
 		UInt k = 0;
@@ -92,13 +94,29 @@ namespace xml_internal
 				outData[k++] = 't';
 				outData[k++] = ';';
 			}
-			else if (includeQuotation && character == '\"')
+			else if (attribName && character == '\"')
 			{
 				outData[k++] = '&';
 				outData[k++] = 'q';
 				outData[k++] = 'u';
 				outData[k++] = 'o';
 				outData[k++] = 't';
+				outData[k++] = ';';
+			}
+			else if (attribName && character == '\r')
+			{
+				outData[k++] = '&';
+				outData[k++] = '#';
+				outData[k++] = 'x';
+				outData[k++] = 'D';
+				outData[k++] = ';';
+			}
+			else if (attribName && character == '\n')
+			{
+				outData[k++] = '&';
+				outData[k++] = '#';
+				outData[k++] = 'x';
+				outData[k++] = 'A';
 				outData[k++] = ';';
 			}
 			else outData[k++] = character;
@@ -112,7 +130,7 @@ namespace xml_internal
 	{
 		UInt textLength = text.length();
 		Byte *textData = text.bytes();
-		UInt countAmp = 0, countLt = 0, countGt = 0, countQuot = 0;
+		UInt countAmp = 0, countLt = 0, countGt = 0, countQuot = 0, countReturn = 0, countEnter = 0;
 		for (UInt i = 0; i < textLength; i++)
 		{
 			if (textData[i] == '&')
@@ -121,10 +139,12 @@ namespace xml_internal
 				else if (i + 3 < textLength && textData[i+1] == 'l' && textData[i+2] == 't' && textData[i+3] == ';') { countLt++; i += 3; }
 				else if (i + 3 < textLength && textData[i+1] == 'g' && textData[i+2] == 't' && textData[i+3] == ';') { countGt++; i += 3; }
 				else if (i + 5 < textLength && textData[i+1] == 'q' && textData[i+2] == 'u' && textData[i+3] == 'o' && textData[i+4] == 't' && textData[i+5] == ';') { countQuot++; i += 5; }
+				else if (i + 4 < textLength && textData[i+1] == '#' && textData[i+2] == 'x' && textData[i+3] == 'D' && textData[i+4] == ';') { countReturn++; i += 4; }
+				else if (i + 4 < textLength && textData[i+1] == '#' && textData[i+2] == 'x' && textData[i+3] == 'A' && textData[i+4] == ';') { countEnter++; i += 4; }
 			}
 		}
 		
-		String out = String::createWithSize(textLength + 1 - countAmp * 4 - countQuot * 5 - countLt * 3 - countGt * 3);
+		String out = String::createWithSize(textLength + 1 - countAmp * 4 - countQuot * 5 - countLt * 3 - countGt * 3 - countReturn * 4 - countEnter * 4);
 		Byte* outData = out.bytes();
 		
 		UInt k = 0;
@@ -136,6 +156,8 @@ namespace xml_internal
 				else if (i + 3 < textLength && textData[i+1] == 'l' && textData[i+2] == 't' && textData[i+3] == ';') { outData[k++] = '<'; i += 3; }
 				else if (i + 3 < textLength && textData[i+1] == 'g' && textData[i+2] == 't' && textData[i+3] == ';') { outData[k++] = '>'; i += 3; }
 				else if (i + 5 < textLength && textData[i+1] == 'q' && textData[i+2] == 'u' && textData[i+3] == 'o' && textData[i+4] == 't' && textData[i+5] == ';') { outData[k++] = '\"'; i += 5; }
+				else if (i + 4 < textLength && textData[i+1] == '#' && textData[i+2] == 'x' && textData[i+3] == 'D' && textData[i+4] == ';') { outData[k++] = '\r'; i += 4; }
+				else if (i + 4 < textLength && textData[i+1] == '#' && textData[i+2] == 'x' && textData[i+3] == 'A' && textData[i+4] == ';') { outData[k++] = '\n'; i += 4; }
 				else outData[k++] = '&';
 			}
 			else outData[k++] = textData[i];
