@@ -73,8 +73,7 @@ namespace xml_internal
 					(c >= 'a' && c <= 'z') ||
 					(c == '_') ||
 					(c == '.') ||
-					(c == '-') ||
-					(c == ':');
+					(c == '-');
 			}
 		}
 		Bool validate(String& text)
@@ -191,7 +190,7 @@ namespace xml_internal
 		StringStreamElem *lastBuffer;
 	};
 
-	void encodeES(String& text, Bool includeQuotation, Binary& esBuffer, StringStream& stream) // escape sequence
+	void encodeES(String& text, Bool attributeName, Binary& esBuffer, StringStream& stream) // escape sequence
 	{
 		UInt textLength = text.length();
 		if (textLength == 0) return;
@@ -210,7 +209,11 @@ namespace xml_internal
 				outLength += 3;
 				break;
 			case (Byte)'\"':
-				outLength += includeQuotation ? 5 : 0;
+				outLength += attributeName ? 5 : 0;
+				break;
+			case (Byte)'\r':
+			case (Byte)'\n':
+				outLength += attributeName ? 4 : 0;
 				break;
 			}
 		}
@@ -249,13 +252,35 @@ namespace xml_internal
 				outData[k++] = ';';
 				break;
 			case (Byte)'\"':
-				if (includeQuotation)
+				if (attributeName)
 				{
 					outData[k++] = '&';
 					outData[k++] = 'q';
 					outData[k++] = 'u';
 					outData[k++] = 'o';
 					outData[k++] = 't';
+					outData[k++] = ';';
+				}
+				else outData[k++] = textData[i];
+				break;
+			case (Byte)'\r':
+				if (attributeName)
+				{
+					outData[k++] = '&';
+					outData[k++] = '#';
+					outData[k++] = 'x';
+					outData[k++] = 'D';
+					outData[k++] = ';';
+				}
+				else outData[k++] = textData[i];
+				break;
+			case (Byte)'\n':
+				if (attributeName)
+				{
+					outData[k++] = '&';
+					outData[k++] = '#';
+					outData[k++] = 'x';
+					outData[k++] = 'A';
 					outData[k++] = ';';
 				}
 				else outData[k++] = textData[i];
@@ -371,6 +396,8 @@ namespace xml_internal
 				else if (i + 3 < textLength && textData[i+1] == 'l' && textData[i+2] == 't' && textData[i+3] == ';') { decCount += 3; i += 3; }
 				else if (i + 3 < textLength && textData[i+1] == 'g' && textData[i+2] == 't' && textData[i+3] == ';') { decCount += 3; i += 3; }
 				else if (i + 5 < textLength && textData[i+1] == 'q' && textData[i+2] == 'u' && textData[i+3] == 'o' && textData[i+4] == 't' && textData[i+5] == ';') { decCount += 5; i += 5; }
+				else if (i + 4 < textLength && textData[i+1] == '#' && textData[i+2] == 'x' && textData[i+3] == 'D' && textData[i+4] == ';') { decCount += 4; i += 4; }
+				else if (i + 4 < textLength && textData[i+1] == '#' && textData[i+2] == 'x' && textData[i+3] == 'A' && textData[i+4] == ';') { decCount += 4; i += 4; }
 			}
 		}
 		if (decCount == 0) return text.clone();
@@ -388,6 +415,8 @@ namespace xml_internal
 				else if (i + 3 < textLength && textData[i+1] == 'l' && textData[i+2] == 't' && textData[i+3] == ';') { outData[k++] = '<'; i += 3; }
 				else if (i + 3 < textLength && textData[i+1] == 'g' && textData[i+2] == 't' && textData[i+3] == ';') { outData[k++] = '>'; i += 3; }
 				else if (i + 5 < textLength && textData[i+1] == 'q' && textData[i+2] == 'u' && textData[i+3] == 'o' && textData[i+4] == 't' && textData[i+5] == ';') { outData[k++] = '\"'; i += 5; }
+				else if (i + 4 < textLength && textData[i+1] == '#' && textData[i+2] == 'x' && textData[i+3] == 'D' && textData[i+4] == ';') { outData[k++] = '\r'; i += 4; }
+				else if (i + 4 < textLength && textData[i+1] == '#' && textData[i+2] == 'x' && textData[i+3] == 'A' && textData[i+4] == ';') { outData[k++] = '\n'; i += 4; }
 				else outData[k++] = '&';
 			}
 			else outData[k++] = textData[i];
