@@ -3354,11 +3354,11 @@ namespace spadas
 	/// \~English @brief [Multithread safe] Enumeration container. If you have high performance requirements, you should use Type::Value directly
 	/// \~English @details Type is an enumeration class, which needs to be defined as follows: \n
 	/// - With a definition of enum class "Value", which contains a "Default" enumeration value \n
-	/// - With the function "static const Char* toString(Value)", which returns the string of each enumeration value, and returns a null pointer 0 by default
+	/// - With a macro definition SPADAS_ENUM_VALUES, passing in all enumeration values except "Default"
 	/// \~Chinese @brief [多线程安全] 枚举类型容器。若有高性能要求，应直接使用Type::Value
 	/// \~Chinese @details 其中Type为枚举类，该类需要定义如下： \n
 	/// - 具有定义enum class Value，其中包含Default枚举值 \n
-	/// - 具有函数static const Char* toString(Value)，返回各枚举值的字符串，默认返回空指针0
+	/// - 具有宏定义SPADAS_ENUM_VALUES，传入Default以外所有枚举值
 	template <typename Type> class Enum
 	{
 	public:
@@ -3479,78 +3479,7 @@ namespace spadas
 			F8 = 63,
 			Unknown = 100,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(None);
-				ES(Enter);
-				ES(Space);
-				ES(Back);
-				ES(Esc);
-				ES(Tab);
-				ES(Shift);
-				ES(Ctrl);
-				ES(Insert);
-				ES(Delete);
-				ES(Home);
-				ES(End);
-				ES(PageUp);
-				ES(PageDown);
-				ES(Up);
-				ES(Down);
-				ES(Left);
-				ES(Right);
-				ES(Comma);
-				ES(Period);
-				ES(Key0);
-				ES(Key1);
-				ES(Key2);
-				ES(Key3);
-				ES(Key4);
-				ES(Key5);
-				ES(Key6);
-				ES(Key7);
-				ES(Key8);
-				ES(Key9);
-				ES(A);
-				ES(B);
-				ES(C);
-				ES(D);
-				ES(E);
-				ES(F);
-				ES(G);
-				ES(H);
-				ES(I);
-				ES(J);
-				ES(K);
-				ES(L);
-				ES(M);
-				ES(N);
-				ES(O);
-				ES(P);
-				ES(Q);
-				ES(R);
-				ES(S);
-				ES(T);
-				ES(U);
-				ES(V);
-				ES(W);
-				ES(X);
-				ES(Y);
-				ES(Z);
-				ES(F1);
-				ES(F2);
-				ES(F3);
-				ES(F4);
-				ES(F5);
-				ES(F6);
-				ES(F7);
-				ES(F8);
-				ES(Unknown);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(None, Enter, Space, Back, Esc, Tab, Shift, Ctrl, Insert, Delete, Home, End, PageUp, PageDown, Up, Down, Left, Right, Comma, Period, Key0, Key1, Key2, Key3, Key4, Key5, Key6, Key7, Key8, Key9, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, F1, F2, F3, F4, F5, F6, F7, F8, Unknown);
 	};
 
 	/// \~English @brief Message level
@@ -3566,17 +3495,7 @@ namespace spadas
 			Warning = 3,
 			Error = 4,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(Debug);
-				ES(Info);
-				ES(Warning);
-				ES(Error);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(Debug, Info, Warning, Error);
 	};
 
 	/// \~English @brief Console interface
@@ -4218,28 +4137,8 @@ namespace spadas
 			/// \~ @brief 3840 x 2160 (16:9)
 			HD4K = 15,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(QVGA);
-				ES(VGA);
-				ES(PAL720);
-				ES(PAL768);
-				ES(SVGA);
-				ES(XGA);
-				ES(WXGA);
-				ES(SXGA);
-				ES(SXGAPlus);
-				ES(UXGA);
-				ES(WSXGAPlus);
-				ES(HD720);
-				ES(HD1080);
-				ES(HD2K);
-				ES(HD4K);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(QVGA, VGA, PAL720, PAL768, SVGA, XGA, WXGA, SXGA, SXGAPlus, UXGA, WSXGAPlus, HD720, HD1080, HD2K, HD4K);
+
 		static Size2D size(Enum<ImageResolution> resolution);
 	};
 
@@ -4265,26 +4164,8 @@ namespace spadas
 			FloatGray = 32, // 0.0~1.0
 			FloatHSV = 33, // H(0.0~360.0) S(0.0~1.0) V(0.0~1.0)
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(ByteBGR);
-				ES(ByteRGB);
-				ES(ByteGray);
-				ES(ByteUYVY);
-				ES(ByteYUV);
-				ES(ByteBool);
-				ES(ByteBGRA);
-				ES(ByteRGBA);
-				ES(WordBGR);
-				ES(WordGray);
-				ES(FloatBGR);
-				ES(FloatGray);
-				ES(FloatHSV);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(ByteBGR, ByteRGB, ByteGray, ByteUYVY, ByteYUV, ByteBool, ByteBGRA, ByteRGBA, WordBGR, WordGray, FloatBGR, FloatGray, FloatHSV);
+
 		static Bool isColor(Enum<PixelFormat> format);
 		static Bool hasAlpha(Enum<PixelFormat> format);
 		static UInt nChannels(Enum<PixelFormat> format);
@@ -4303,16 +4184,7 @@ namespace spadas
 			Bilinear = 2,
 			Area = 3,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(Nearest);
-				ES(Bilinear);
-				ES(Area);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(Nearest, Bilinear, Area);
 	};
 
 	/// \~English @brief Image resizing multiplier
@@ -4328,17 +4200,7 @@ namespace spadas
 			Half = 2,
 			Double = 3,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(None);
-				ES(Quarter);
-				ES(Half);
-				ES(Double);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(None, Quarter, Half, Double);
 	};
 
 	/// \~English @brief The type of image rotation
@@ -4354,17 +4216,7 @@ namespace spadas
 			CW180 = 2,
 			CCW90 = 3,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(None);
-				ES(CW90);
-				ES(CW180);
-				ES(CCW90);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(None, CW90, CW180, CCW90);
 	};
 
 	/// \~English @brief The value of each channel of the pixel
@@ -5447,18 +5299,7 @@ namespace spadas
 			Windows = 6,
 			NILRT = 7,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(Unknown);
-				ES(Linux);
-				ES(MacOS);
-				ES(Windows);
-				ES(NILRT);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(Unknown, Linux, MacOS, Windows, NILRT);
 	};
 
 	/// \~English @brief Posix time in milliseconds
@@ -5746,18 +5587,7 @@ namespace spadas
 			/// \~Chinese @brief 队列已满，或容量已不足以发送当前数据
 			QueueFull = 4,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(OK);
-				ES(NotOpen);
-				ES(WrongMode);
-				ES(WrongSize);
-				ES(QueueFull);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(OK, NotOpen, WrongMode, WrongSize, QueueFull);
 	};
 
 
@@ -6236,16 +6066,7 @@ namespace spadas
 			/// \~Chinese @brief 已与卫星时间同步
 			Gnss = 2,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(None);
-				ES(Server);
-				ES(Gnss);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(None, Server, Gnss);
 	};
 
 	/// \~English @brief Simple timestamp
@@ -6387,18 +6208,7 @@ namespace spadas
 			/// \~Chinese @brief 采样时卫星Posix时间，单位纳秒
 			GnssPosix = 4,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(CPUTick);
-				ES(HostPosix);
-				ES(GuestPosix);
-				ES(ServerPosix);
-				ES(GnssPosix);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(CPUTick, HostPosix, GuestPosix, ServerPosix, GnssPosix);
 	};
 
 	/// \~English @brief Signal
@@ -6545,26 +6355,7 @@ namespace spadas
 			/// \~Chinese @brief 与配置的回注视频图像尺寸不一致
 			WrongSize = 12,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(Unknown);
-				ES(Transmitted);
-				ES(Added);
-				ES(Scheduled);
-				ES(NotRunning);
-				ES(PluginNotFound);
-				ES(Failed);
-				ES(NotSync);
-				ES(ScheduleUnsupported);
-				ES(TimeDisorder);
-				ES(InvalidChannel);
-				ES(WrongCodec);
-				ES(WrongSize);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(Unknown, Transmitted, Added, Scheduled, NotRunning, PluginNotFound, Failed, NotSync, ScheduleUnsupported, TimeDisorder, InvalidChannel, WrongCodec, WrongSize);
 	};
 
 	/// \~English @brief General raw data transmit interface
@@ -6720,19 +6511,7 @@ namespace spadas
 			/// \~Chinese @brief 未设置样本缓存的协议，详见 spadas::SessionSampleBuffer::setProtocol
 			NoProtocol = 5,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(OK);
-				ES(OutOfRange);
-				ES(NearestInstead);
-				ES(TooEarly);
-				ES(ParseError);
-				ES(NoProtocol);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(OK, OutOfRange, NearestInstead, TooEarly, ParseError, NoProtocol);
 	};
 
 	/// \~English @brief [Multithread safe] General sample buffer
@@ -6933,17 +6712,7 @@ namespace spadas
 			/// \~Chinese @brief 连接无错误，但存在一定问题
 			Warning = 3,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(NotConnect);
-				ES(OK);
-				ES(Error);
-				ES(Warning);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(NotConnect, OK, Error, Warning);
 	};
 
 	/// \~English @brief Bus channel type
@@ -6983,20 +6752,7 @@ namespace spadas
 			/// \~Chinese @brief SOME/IP车载以太网总线，报文数据为包含链路层等等协议的完整以太网帧数据，报文ID即Message ID(由Service ID和Method ID组成)
 			SomeIP = 6,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(Invalid);
-				ES(Can);
-				ES(CanFD);
-				ES(Lin);
-				ES(Flexray);
-				ES(Ethernet);
-				ES(SomeIP);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(Invalid, Can, CanFD, Lin, Flexray, Ethernet, SomeIP);
 	};
 
 	/// \~English @brief Bus baud rate
@@ -7047,48 +6803,7 @@ namespace spadas
 			FR_5M = 302,
 			FR_10M = 303, // default
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(Invalid);
-				ES(CAN_5k);
-				ES(CAN_10k);
-				ES(CAN_20k);
-				ES(CAN_33k);
-				ES(CAN_40k);
-				ES(CAN_50k);
-				ES(CAN_62k);
-				ES(CAN_80k);
-				ES(CAN_83k);
-				ES(CAN_100k);
-				ES(CAN_125k);
-				ES(CAN_200k);
-				ES(CAN_250k);
-				ES(CAN_400k);
-				ES(CAN_500k);
-				ES(CAN_666k);
-				ES(CAN_800k);
-				ES(CAN_1M);
-				ES(CANFD_500k);
-				ES(CANFD_1M);
-				ES(CANFD_2M);
-				ES(CANFD_4M);
-				ES(CANFD_8M);
-				ES(CANFD_6M);
-				ES(CANFD_2d5M);
-				ES(CANFD_5M);
-				ES(LIN_1k);
-				ES(LIN_9d6k);
-				ES(LIN_16d5k);
-				ES(LIN_19d2k);
-				ES(LIN_20k);
-				ES(FR_2d5M);
-				ES(FR_5M);
-				ES(FR_10M);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(Invalid, CAN_5k, CAN_10k, CAN_20k, CAN_33k, CAN_40k, CAN_50k, CAN_62k, CAN_80k, CAN_83k, CAN_100k, CAN_125k, CAN_200k, CAN_250k, CAN_400k, CAN_500k, CAN_666k, CAN_800k, CAN_1M, CANFD_500k, CANFD_1M, CANFD_2M, CANFD_4M, CANFD_8M, CANFD_6M, CANFD_2d5M, CANFD_5M, LIN_1k, LIN_9d6k, LIN_16d5k, LIN_19d2k, LIN_20k, FR_2d5M, FR_5M, FR_10M);
 	};
 
 	/// \~English @brief Raw data from bus device
@@ -7402,25 +7117,7 @@ namespace spadas
 			/// \~Chinese @brief Y16：无损编码，帧间独立，每数值16bit按大字序依次存储
 			Y16 = 11,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(Invalid);
-				ES(MJPEG);
-				ES(H264);
-				ES(YUV411);
-				ES(YUV420);
-				ES(H265);
-				ES(YUV422);
-				ES(RAW);
-				ES(RAW12);
-				ES(RAW14);
-				ES(RAW16);
-				ES(Y16);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(Invalid, MJPEG, H264, YUV411, YUV420, H265, YUV422, RAW, RAW12, RAW14, RAW16, Y16);
 	};
 
 	/// \~English @brief Video stream input mode
@@ -7574,16 +7271,7 @@ namespace spadas
 			/// \~Chinese @brief 在WithPreview的基础上，还支持通过 spadas::IVideoPreviewExpressX 直接输出
 			PreviewExpress = 2,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(NoPreview);
-				ES(WithPreview);
-				ES(PreviewExpress);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(NoPreview, WithPreview, PreviewExpress);
 	};
 
 	/// \~English @brief Video device information
@@ -7848,17 +7536,7 @@ namespace spadas
 			/// \~Chinese @brief 任务进行中
 			Progressing = 3,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(Unknown);
-				ES(Finished);
-				ES(Failed);
-				ES(Progressing);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(Unknown, Finished, Failed, Progressing);
 	};
 
 	/// \~English @brief Feedback interface for standalone task
@@ -7925,16 +7603,7 @@ namespace spadas
 			/// \~Chinese @brief 离线处理模式
 			OfflineMode = 2,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(Normal);
-				ES(OnlineMode);
-				ES(OfflineMode);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(Normal, OnlineMode, OfflineMode);
 	};
 
 	/// \~English @brief File reading mode
@@ -7966,18 +7635,7 @@ namespace spadas
 			/// \~Chinese @brief 远程采集模式下，从远程主机读取
 			FromRemote = 4,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(Normal);
-				ES(FromRaw);
-				ES(OfflineModeFromGeneration);
-				ES(ReplayModeFromGeneration);
-				ES(FromRemote);
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(Normal, FromRaw, OfflineModeFromGeneration, ReplayModeFromGeneration, FromRemote);
 	};
 
 	/// \~English @brief File R/W filter
@@ -8051,57 +7709,7 @@ namespace spadas
 			VideoChannelW = 222,
 			VideoChannelX = 223,
 		};
-		static const Char* toString(Value val)
-		{
-			switch (val)
-			{
-				ES(Invalid);
-				ES(Signal);
-				ES(Sample);
-				ES(Matrix);
-				case (Value)100: return "BusCH1";
-				case (Value)101: return "BusCH2";
-				case (Value)102: return "BusCH3";
-				case (Value)103: return "BusCH4";
-				case (Value)104: return "BusCH5";
-				case (Value)105: return "BusCH6";
-				case (Value)106: return "BusCH7";
-				case (Value)107: return "BusCH8";
-				case (Value)108: return "BusCH9";
-				case (Value)109: return "BusCH10";
-				case (Value)110: return "BusCH11";
-				case (Value)111: return "BusCH12";
-				case (Value)112: return "BusCH13";
-				case (Value)113: return "BusCH14";
-				case (Value)114: return "BusCH15";
-				case (Value)115: return "BusCH16";
-				case (Value)200: return "VideoChannelA";
-				case (Value)201: return "VideoChannelB";
-				case (Value)202: return "VideoChannelC";
-				case (Value)203: return "VideoChannelD";
-				case (Value)204: return "VideoChannelE";
-				case (Value)205: return "VideoChannelF";
-				case (Value)206: return "VideoChannelG";
-				case (Value)207: return "VideoChannelH";
-				case (Value)208: return "VideoChannelI";
-				case (Value)209: return "VideoChannelJ";
-				case (Value)210: return "VideoChannelK";
-				case (Value)211: return "VideoChannelL";
-				case (Value)212: return "VideoChannelM";
-				case (Value)213: return "VideoChannelN";
-				case (Value)214: return "VideoChannelO";
-				case (Value)215: return "VideoChannelP";
-				case (Value)216: return "VideoChannelQ";
-				case (Value)217: return "VideoChannelR";
-				case (Value)218: return "VideoChannelS";
-				case (Value)219: return "VideoChannelT";
-				case (Value)220: return "VideoChannelU";
-				case (Value)221: return "VideoChannelV";
-				case (Value)222: return "VideoChannelW";
-				case (Value)223: return "VideoChannelX";
-				default: return 0;
-			}
-		}
+		SPADAS_ENUM_VALUES(Invalid, Signal, Sample, Matrix, BusCH1, BusCH2, BusCH3, BusCH4, BusCH5, BusCH6, BusCH7, BusCH8, BusCH9, BusCH10, BusCH11, BusCH12, BusCH13, BusCH14, BusCH15, BusCH16, VideoChannelA, VideoChannelB, VideoChannelC, VideoChannelD, VideoChannelE, VideoChannelF, VideoChannelG, VideoChannelH, VideoChannelI, VideoChannelJ, VideoChannelK, VideoChannelL, VideoChannelM, VideoChannelN, VideoChannelO, VideoChannelP, VideoChannelQ, VideoChannelR, VideoChannelS, VideoChannelT, VideoChannelU, VideoChannelV, VideoChannelW, VideoChannelX);
 	};
 
 	/// \~English @brief File R/W basic information

@@ -2,18 +2,18 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 新增宏"cat"。移除SS。StringAppender的加号重载返回引用
+// Update log / 更新记录: ES改为SPADAS_ENUM_VALUES。PV改为see，PA改为seeArray
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 39
+#define SPADAS_VERSION_BUILD 40
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.0.39 \n
-* \~Chinese 本文档对应Spadas版本：9.0.39 \n
+* \~English This document corresponds to Spadas version: 9.0.40 \n
+* \~Chinese 本文档对应Spadas版本：9.0.40 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -331,15 +331,35 @@
 // Convenience for string concatenation / 方便字符串拼接
 #define cat +(spadas::String)
 
+// Recursive macro / 可递归宏
+#define EVAL0(...) __VA_ARGS__
+#define EVAL1(...) EVAL0(EVAL0(EVAL0(__VA_ARGS__)))
+#define EVAL2(...) EVAL1(EVAL1(EVAL1(__VA_ARGS__)))
+#define EVAL3(...) EVAL2(EVAL2(EVAL2(__VA_ARGS__)))
+#define EVAL4(...) EVAL3(EVAL3(EVAL3(__VA_ARGS__)))
+#define EVAL(...)  EVAL4(EVAL4(EVAL4(__VA_ARGS__)))
+
+#define MAP_END(...)
+#define MAP_OUT
+#define MAP_GET_END2() 0, MAP_END
+#define MAP_GET_END1(...) MAP_GET_END2
+#define MAP_GET_END(...) MAP_GET_END1
+#define MAP_NEXT0(test, next, ...) next MAP_OUT
+#define MAP_NEXT1(test, next) MAP_NEXT0(test, next, 0)
+#define MAP_NEXT(test, next)  MAP_NEXT1(MAP_GET_END test, next)
+
+#define MAP0(f, x, peek, ...) f(x) MAP_NEXT(peek, MAP1)(f, peek, __VA_ARGS__)
+#define MAP1(f, x, peek, ...) f(x) MAP_NEXT(peek, MAP0)(f, peek, __VA_ARGS__)
+#define MAP(f, ...) EVAL(MAP1(f, __VA_ARGS__, ()()(), ()()(), ()()(), 0))
+
 // Convenience for converting enumeration value to string / 方便实现枚举值转字符串
-#define ES(val) case Value::val: return #val
+#define MACRO_ENUM_VALUE(val) case Value::val: return #val;
+#define SPADAS_ENUM_VALUES(...) static const Char* toString(Value val) { switch (val) { MAP(MACRO_ENUM_VALUE, __VA_ARGS__) default: return 0; } }
 
 // Convenience for debugging / 方便调试
-#define PV(var) spadas::console::print((spadas::String) #var + " = " + var)
-#define PV2(var1, var2) spadas::console::print((spadas::String) #var1 + " = " + var1 + ", " + #var2 + " = " + var2)
-#define PV3(var1, var2, var3) spadas::console::print((spadas::String) #var1 + " = " + var1 + ", " + #var2 + " = " + var2 + ", " + #var3 + " = " + var3)
-#define PV4(var1, var2, var3, var4) spadas::console::print((spadas::String) #var1 + " = " + var1 + ", " + #var2 + " = " + var2 + ", " + #var3 + " = " + var3 + ", " + #var4 + " = " + var4)
-#define PA(arr) spadas::console::print((spadas::String) #arr + " = [ " + spadas::String::merge(arr) + " ]")
+#define MACRO_SEE(var) spadas::console::print((spadas::String) #var + " = " + var);
+#define see(...) MAP(MACRO_SEE, __VA_ARGS__)
+#define seeArray(arr) spadas::console::print((spadas::String) #arr + " = [ " + spadas::String::merge(arr) + " ]")
 
 // Definitions of infinity / 无限值定义
 #define FINF spadas::math::finf()
