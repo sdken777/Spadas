@@ -196,7 +196,7 @@ Path::Path(const Char pathStringChars[])
 	}
 	else
 	{
-		SPADAS_ERROR_MSG(SS"Invalid path: " + pathString);
+		SPADAS_ERROR_MSG("Invalid path: " cat pathString);
 	}
 }
 
@@ -215,7 +215,7 @@ Path::Path(String pathString)
 	}
 	else
 	{
-		SPADAS_ERROR_MSG(SS"Invalid path: " + pathString);
+		SPADAS_ERROR_MSG("Invalid path: " cat pathString);
 	}
 }
 
@@ -552,7 +552,7 @@ Path Path::childPath(String pathString)
 	}
 	else
 	{
-		SPADAS_ERROR_MSG(SS"Invalid path: " + pathString);
+		SPADAS_ERROR_MSG("Invalid path: " cat pathString);
 		return Path();
 	}
 }

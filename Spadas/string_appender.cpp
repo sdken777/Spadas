@@ -10,3 +10,8 @@ String StringAppender::toString()
 {
 	return str;
 }
+
+StringAppender& spadas::operator +(StringAppender appender, String str)
+{
+	return appender.operator +(str);
+}

@@ -21,8 +21,8 @@ void exampleFile()
 	}
 
 	// 可调用path和size方法获取文件信息
-	console::print(SS"Path: " + infile.path().fullPath());
-	console::print(SS"Size: " + infile.size());
+	console::print("Path: " cat infile.path());
+	console::print("Size: " cat infile.size());
 	infile.close();
 
 	// 移除文件

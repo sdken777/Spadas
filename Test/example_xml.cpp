@@ -13,7 +13,7 @@ void exampleXML()
 	Array<String> attribNames(100); /* 每个节点一百个属性 */
 	for (UInt n = 0; n < attribNames.size(); n++)
 	{
-		attribNames[n] = SS"number" + (n + 1);
+		attribNames[n] = "number" cat (n + 1);
 	}
 	for (UInt i = 0; i < 10000/* 一万个节点 */; i++)
 	{
@@ -27,17 +27,17 @@ void exampleXML()
 		}
 		xml.globalRoot().addLeaf(elem);
 	}
-	console::print(SS"Create contents: " + timer.check());
+	console::print("Create contents: " cat timer.check());
 
 	// XML序列化效率测试
 	timer.start();
 	Binary xmlBinary = xml.toBinary();
-	console::print(SS"To binary: " + timer.check());
+	console::print("To binary: " cat timer.check());
 
 	// XML反序列化效率测试
 	timer.start();
 	auto parsedXML = XML::createFromBinary(xmlBinary).value(XML());
-	console::print(SS"From binary: " + timer.check());
+	console::print("From binary: " cat timer.check());
 
 	// 验证结果
 	UInt attribCount = 0;
@@ -46,12 +46,12 @@ void exampleXML()
 	{
 		attribCount += e->value().attributes.size();
 	}
-	console::print(SS"Attribute count: " + attribCount);
-	console::print(SS"Binary size: " + xmlBinary.size() + "=" + parsedXML.toBinary().size());
+	console::print("Attribute count: " cat attribCount);
+	console::print("Binary size: " cat xmlBinary.size() cat "=" cat parsedXML.toBinary().size());
 
 	// XML析构效率测试
 	timer.start();
 	parsedXML = XML();
 	rootNode = XMLNode();
-	console::print(SS"Release: " + timer.check());
+	console::print("Release: " cat timer.check());
 }

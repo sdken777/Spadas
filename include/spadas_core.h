@@ -3330,7 +3330,7 @@ namespace spadas
 		/// \~English @brief Concatenate string
 		/// \~Chinese @brief 拼接字符串
 		template <typename Type>
-		StringAppender operator +(Type target);
+		StringAppender& operator +(Type target);
 
 		/// \~English @brief Convert to string object
 		/// \~Chinese @brief 转字符串
@@ -3339,6 +3339,15 @@ namespace spadas
 	private:
 		String str;
 	};
+
+	/// \~English @brief Convenience for l-value to concatenate string, see macro "cat"
+	/// ~\Chinese @brief 方便左值拼接字符串，详见宏"cat"
+	SPADAS_API StringAppender& operator +(StringAppender appender, String str);
+
+	/// \~English @brief Convenience for l-value to concatenate string, see macro "cat"
+	/// ~\Chinese @brief 方便左值拼接字符串，详见宏"cat"
+	template<typename Type>
+	StringAppender operator +(Type obj, String str);
 
 	// Enumeration object / 枚举对象 //////////////////////////////////////////////////////////////
 

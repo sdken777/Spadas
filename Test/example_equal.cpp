@@ -12,17 +12,17 @@ void exampleEqual()
 	String string1, string2, string3 = string1;
 	Timer timer1, timer2, timer3 = timer1;
 
-	console::print(SS"string1==string2 : " + (string1 == string2));
-	console::print(SS"string1==string3 : " + (string1 == string3));
-	console::print(SS"timer1==timer2 : " + (timer1 == timer2));
-	console::print(SS"timer1==timer3 : " + (timer1 == timer3));
+	console::print("string1==string2 : " cat (string1 == string2));
+	console::print("string1==string3 : " cat (string1 == string3));
+	console::print("timer1==timer2 : " cat (timer1 == timer2));
+	console::print("timer1==timer3 : " cat (timer1 == timer3));
 
 	// 统一使用contain判断数组是否包含某个值或对象
 	console::print("- 2 -");
 
 	auto strings = Array<String>::create(3, "abc", "def", "xyz");
-	console::print(SS"strings contains 'def': " + strings.contain("def"));
+	console::print("strings contains 'def': " cat strings.contain("def"));
 
 	Array<Timer> timers(3);
-	console::print(SS"timers contains Timer(): " + timers.contain(Timer()));
+	console::print("timers contains Timer(): " cat timers.contain(Timer()));
 }

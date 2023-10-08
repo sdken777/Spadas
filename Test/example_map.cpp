@@ -19,13 +19,13 @@ void exampleMap()
 	// 通过keyValues方法一次性拿出所有键值对，提高效率
 	for (auto pair = map1.keyValues().firstElem(); pair.valid(); ++pair)
 	{
-		console::print(SS pair->key.value() + " -> " + pair->value);
+		console::print(pair->key.value() cat " -> " cat pair->value);
 	}
 
 	// 通过get/tryGet在不新创建键值对的情况下获得值（使用[]索引将自动创建新键值对）
-	console::print(SS"Timer1 -> " + map2.get(timer1, "No timer"));
-	console::print(SS"Timer() -> " + map2.get(Timer(), "No timer"));
+	console::print("Timer1 -> " cat map2.get(timer1, "No timer"));
+	console::print("Timer() -> " cat map2.get(Timer(), "No timer"));
 
 	String timer2Value;
-	if (map2.tryGet(timer2, timer2Value)) console::print(SS"Timer2 -> " + timer2Value);
+	if (map2.tryGet(timer2, timer2Value)) console::print("Timer2 -> " cat timer2Value);
 }

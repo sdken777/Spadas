@@ -9,7 +9,7 @@ void examplePointTo()
 	// Optional::operator ->
 	console::print("- 1 -");
 
-	Optional<String> string = SS"ABC";
+	Optional<String> string = (String)"ABC";
 	console::print(string->toLower());
 
 	// ArrayElem::operator -> (ListElem类似)

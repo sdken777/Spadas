@@ -2,18 +2,18 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 新增Path(const Char[])
+// Update log / 更新记录: 新增宏"cat"。移除SS。StringAppender的加号重载返回引用
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 38
+#define SPADAS_VERSION_BUILD 39
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.0.38 \n
-* \~Chinese 本文档对应Spadas版本：9.0.38 \n
+* \~English This document corresponds to Spadas version: 9.0.39 \n
+* \~Chinese 本文档对应Spadas版本：9.0.39 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -328,8 +328,8 @@
 #define NULL 0
 #endif
 
-// Convenience for string conversion / 方便字符串转换
-#define SS (spadas::String)
+// Convenience for string concatenation / 方便字符串拼接
+#define cat +(spadas::String)
 
 // Convenience for converting enumeration value to string / 方便实现枚举值转字符串
 #define ES(val) case Value::val: return #val

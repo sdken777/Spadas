@@ -23,7 +23,7 @@ public:
 	SPADAS_VARS_DEF(MyObject, Vars); // 定义Vars关系以支持BaseObject类型转换
 	Double number;
 	MyObjectVars(Double val) : number(val) {}
-	String toString() override { return SS "My object with number: " + number; }
+	String toString() override { return "My object with number: " cat number; }
 };
 
 MyObject::MyObject() : Object<MyObjectVars>(new MyObjectVars(0), TRUE)
@@ -56,6 +56,6 @@ void exampleBaseObject()
 	if (objs[2].is<MyObject>())
 	{
 		MyObject myObj = objs[2].as<MyObject>();
-		console::print(SS"The number is: " + myObj.getNumber());
+		console::print("The number is: " cat myObj.getNumber());
 	}
 }

@@ -209,7 +209,7 @@ namespace spadas
 	}
 
 	template <typename Type>
-	const String Interface<Type>::TypeName = SS"spadas.Interface<" + typeid(Type).name() + ">";
+	const String Interface<Type>::TypeName = "spadas.Interface<" cat typeid(Type).name() cat ">";
 
 	template <typename Type> class InterfaceVars : public Vars
 	{
@@ -278,7 +278,7 @@ namespace spadas
 	}
 
 	template <typename Type>
-	const String Optional<Type>::TypeName = SS"spadas.Optional<" + typeid(Type).name() + ">";
+	const String Optional<Type>::TypeName = "spadas.Optional<" cat typeid(Type).name() cat ">";
 
 	template <typename Type> class OptionalVars : public Vars
 	{
@@ -484,7 +484,7 @@ namespace spadas
 	}
 
 	template <typename Type>
-	const String Array<Type>::TypeName = SS"spadas.Array<" + typeid(Type).name() + ">";
+	const String Array<Type>::TypeName = "spadas.Array<" cat typeid(Type).name() cat ">";
 
 	template<typename Type> class ArrayVars : public Vars
 	{
@@ -2034,7 +2034,7 @@ namespace spadas
 	}
 
 	template <typename Type>
-	const String ArrayX<Type>::TypeName = SS"spadas.ArrayX<" + typeid(Type).name() + ">";
+	const String ArrayX<Type>::TypeName = "spadas.ArrayX<" cat typeid(Type).name() cat ">";
 
 	template<typename Type> class ArrayXVars : public Vars
 	{
@@ -2377,7 +2377,7 @@ namespace spadas
 	}
 
 	template <typename Type>
-	const String List<Type>::TypeName = SS"spadas.List<" + typeid(Type).name() + ">";
+	const String List<Type>::TypeName = "spadas.List<" cat typeid(Type).name() cat ">";
 
 	template<typename Type> class ListVars : public Vars
 	{
@@ -2883,7 +2883,7 @@ namespace spadas
 
 	// Implementation of data stream / 数据流实现 ///////////////////////////////////////////////////////
 	template <typename Type>
-	const String Stream<Type>::TypeName = SS"spadas.Stream<" + typeid(Type).name() + ">";
+	const String Stream<Type>::TypeName = "spadas.Stream<" cat typeid(Type).name() cat ">";
 
 	template<typename Type> class StreamVars : public Vars
 	{
@@ -3341,7 +3341,7 @@ namespace spadas
 	}
 
 	template <typename KeyType, typename ValueType>
-	const String Map<KeyType, ValueType>::TypeName = SS"spadas.Map<" + typeid(KeyType).name() + "," + typeid(ValueType).name() + ">";
+	const String Map<KeyType, ValueType>::TypeName = "spadas.Map<" cat typeid(KeyType).name() cat "," cat typeid(ValueType).name() cat ">";
 
 	template <typename KeyType, typename ValueType> class MapVars : public Vars
 	{
@@ -3777,10 +3777,16 @@ namespace spadas
 	}
 
 	template <typename Type>
-	StringAppender StringAppender::operator +(Type target)
+	StringAppender& StringAppender::operator +(Type target)
 	{
 		this->str += target;
 		return *this;
+	}
+
+	template<typename Type>
+	StringAppender operator +(Type obj, String str)
+	{
+		return String(obj) + str;
 	}
 
 	// Implementation of enumeration class / 枚举类实现 ///////////////////////////////////////////////////////
@@ -3847,7 +3853,7 @@ namespace spadas
 
 	// Implementation of matrix class / 矩阵类实现 ///////////////////////////////////////////////////////
 	template <typename Type>
-	const String Matrix<Type>::TypeName = SS"spadas.Matrix<" + typeid(Type).name() + ">";
+	const String Matrix<Type>::TypeName = "spadas.Matrix<" cat typeid(Type).name() cat ">";
 
 	template<typename Type> class MatrixVars : public Vars
 	{
