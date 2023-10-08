@@ -8,10 +8,7 @@ void runExamples();
 
 int main(int argc, char* argv[])
 {
-	// runExamples();
-
-	XML xml = XML::createFromFile(SS"/home/ken/Desktop/test.xml").value();
-	console::print(xml.globalRoot()->attributes[0].value);
+	runExamples();
 
 	console::print("over");
 	console::waitKey();
