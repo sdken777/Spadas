@@ -7,14 +7,14 @@ using namespace spadas;
 void exampleFile()
 {
 	// 创建文本文件（统一输出带BOM头的UTF8编码文件，换行符为\n）
-	Path outPath = SS"sample.txt";
+	Path outPath = "sample.txt";
 	File outfile = File::createText(outPath);
 	outfile.print("新年好");
 	outfile.print("恭喜发财");
 	outfile.close();
 
 	// 读取文本文件（通过endOfFile判断文件是否结束）
-	File infile = File::openText((Path)"sample.txt");
+	File infile = File::openText("sample.txt");
 	while (!infile.endOfFile())
 	{
 		console::print(infile.scan());

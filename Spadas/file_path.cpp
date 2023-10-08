@@ -180,6 +180,26 @@ Path::Path()
 {
 }
 
+Path::Path(const Char pathStringChars[])
+{
+	String pathString(pathStringChars);
+	if (pathString.isEmpty()) return;
+
+	Bool isFolder = FALSE;
+	Array<StringSpan> components;
+	if (parsePathString(pathString, FALSE, components, isFolder))
+	{
+		PathVars *vars = new PathVars();
+		vars->isFolder = isFolder;
+		vars->components = components;
+		setVars(vars, TRUE);
+	}
+	else
+	{
+		SPADAS_ERROR_MSG(SS"Invalid path: " + pathString);
+	}
+}
+
 Path::Path(String pathString)
 {
 	if (pathString.isEmpty()) return;

@@ -3672,6 +3672,16 @@ namespace spadas
 		/// \~Chinese @param pathString 绝对路径或相对路径字符串，相对路径将基于当前工作目录 \n
 		/// - 若为文件夹，需显式的以路径分隔符"/"或"\"结尾 \n
 		/// - 可加入"../"或"..\"表示上层文件夹
+		Path(const Char pathString[]);
+
+		/// \~English @brief Initialize based on an absolute or relative path string
+		/// \~Chinese @brief 基于一个绝对路径或相对路径的字符串初始化
+		/// \~English @param pathString Absolute path or relative path string, the relative path will be based on the current working directory \n
+		/// - If it is a folder, it needs to be explicitly terminated with the path separator "/" or "\" \n
+		/// - You can add "../" or "..\" to indicate the parent folder
+		/// \~Chinese @param pathString 绝对路径或相对路径字符串，相对路径将基于当前工作目录 \n
+		/// - 若为文件夹，需显式的以路径分隔符"/"或"\"结尾 \n
+		/// - 可加入"../"或"..\"表示上层文件夹
 		Path(String pathString);
 
 		/// \~English @brief Get the file or folder name (without suffix)
