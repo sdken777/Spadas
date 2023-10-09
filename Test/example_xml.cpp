@@ -10,12 +10,12 @@ void exampleXML()
 	Timer timer;
 	XML xml;
 	UInt counter = 0;
-	Array<String> attribNames(100); /* One hundred attributes per node / 每个节点一百个属性 */
+	Array<String> attribNames(100); // One hundred attributes per node / 每个节点一百个属性
 	for (UInt n = 0; n < attribNames.size(); n++)
 	{
 		attribNames[n] = "number" cat (n + 1);
 	}
-	for (UInt i = 0; i < 10000/* Ten thousand nodes / 一万个节点 */; i++)
+	for (UInt i = 0; i < 10000; i++) // Ten thousand nodes / 一万个节点
 	{
 		XMLElement elem;
 		elem.tag = "numbers";

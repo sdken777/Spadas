@@ -2,18 +2,18 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: ES改为SPADAS_ENUM_VALUES。PV改为see，PA改为seeArray
+// Update log / 更新记录: see改为单行打印
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 40
+#define SPADAS_VERSION_BUILD 41
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.0.40 \n
-* \~Chinese 本文档对应Spadas版本：9.0.40 \n
+* \~English This document corresponds to Spadas version: 9.0.41 \n
+* \~Chinese 本文档对应Spadas版本：9.0.41 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -357,8 +357,8 @@
 #define SPADAS_ENUM_VALUES(...) static const Char* toString(Value val) { switch (val) { MAP(MACRO_ENUM_VALUE, __VA_ARGS__) default: return 0; } }
 
 // Convenience for debugging / 方便调试
-#define MACRO_SEE(var) spadas::console::print((spadas::String) #var + " = " + var);
-#define see(...) MAP(MACRO_SEE, __VA_ARGS__)
+#define MACRO_SEE(var) seeVarStringList.append((spadas::String) #var + " = " + var);
+#define see(...) ArrayX<String> seeVarStringList; MAP(MACRO_SEE, __VA_ARGS__) spadas::console::print(String::merge(seeVarStringList.toArray()));
 #define seeArray(arr) spadas::console::print((spadas::String) #arr + " = [ " + spadas::String::merge(arr) + " ]")
 
 // Definitions of infinity / 无限值定义
