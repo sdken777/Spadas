@@ -4,7 +4,7 @@
 
 using namespace spadas;
 
-// 实现一个Task类
+// Implement a task class / 实现一个Task类
 class TestThreads : public EmptyObject, public ITask
 {
 private:
@@ -15,7 +15,7 @@ private:
 	}
 };
 
-// 主函数
+// Main function / 主函数
 void exampleTask()
 {
 	TaskManager tm;

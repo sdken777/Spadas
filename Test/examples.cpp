@@ -42,7 +42,7 @@ void runExamples()
     exampleLambda();
 
     print("\n-- Example: ArrayX --");
-    exampleArrayX(); // GDB调试时析构可能耗时特别长
+    exampleArrayX(); // GDB debugging can take a long time / GDB调试时析构可能耗时特别长
 
     print("\n-- Example: Point To --");
     examplePointTo();
@@ -57,7 +57,7 @@ void runExamples()
     exampleTrim();
 
     print("\n-- Example: Console --");
-    exampleConsole(); // 需要控制台输入
+    exampleConsole(); // Console input required / 需要控制台输入
 
     print("\n-- Example: File --");
     exampleFile();

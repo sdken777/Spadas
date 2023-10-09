@@ -4,23 +4,23 @@
 
 using namespace spadas;
 
-// MyObject声明
+// Declaration of MyObject / MyObject声明
 class MyObject : public Object<class MyObjectVars>
 {
 public:
-	static const String TypeName; // 声明TypeName以支持BaseObject类型转换
+	static const String TypeName; // Declare TypeName to support BaseObject conversion / 声明TypeName以支持BaseObject类型转换
 	MyObject();
 	MyObject(Double number);
 	Double getNumber();
 };
 
-// MyObject实现
-const String MyObject::TypeName = "MyObject"; // 实现TypeName以支持BaseObject类型转换
+// Implementation of MyObject / MyObject实现
+const String MyObject::TypeName = "MyObject"; // Implement TypeName to support BaseObject conversion / 实现TypeName以支持BaseObject类型转换
 
 class MyObjectVars : public Vars
 {
 public:
-	SPADAS_VARS_DEF(MyObject, Vars); // 定义Vars关系以支持BaseObject类型转换
+	SPADAS_VARS_DEF(MyObject, Vars); // Declare Vars to support BaseObject conversion / 定义Vars关系以支持BaseObject类型转换
 	Double number;
 	MyObjectVars(Double val) : number(val) {}
 	String toString() override { return SS "My object with number: " + number; }
@@ -37,10 +37,10 @@ Double MyObject::getNumber()
 	return vars->number;
 }
 
-// 主函数
+// Main function / 主函数
 void exampleBaseObject()
 {
-	// 用BaseObject数组装入不同类型对象
+	// Put objects of different types into a BaseObject array / 用BaseObject数组装入不同类型对象
 	console::print("- 1 -");
 
 	auto objs = Array<BaseObject>(3);
@@ -50,7 +50,7 @@ void exampleBaseObject()
 
 	console::print(String::merge(objs, ", "));
 
-	// 转换回MyObject
+	// Convert to MyObject / 转换回MyObject
 	console::print("- 2 -");
 
 	Optional<MyObject> myObj = objs[2].cast<MyObject>();
