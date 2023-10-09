@@ -6,16 +6,16 @@ using namespace spadas;
 
 void exampleXML()
 {
-	// XML创建内容效率测试
+	// Efficiency test of XML content creation / XML创建内容效率测试
 	Timer timer;
 	XML xml;
 	UInt counter = 0;
-	Array<String> attribNames(100); /* 每个节点一百个属性 */
+	Array<String> attribNames(100); /* One hundred attributes per node / 每个节点一百个属性 */
 	for (UInt n = 0; n < attribNames.size(); n++)
 	{
 		attribNames[n] = "number" cat (n + 1);
 	}
-	for (UInt i = 0; i < 10000/* 一万个节点 */; i++)
+	for (UInt i = 0; i < 10000/* Ten thousand nodes / 一万个节点 */; i++)
 	{
 		XMLElement elem;
 		elem.tag = "numbers";
@@ -29,17 +29,17 @@ void exampleXML()
 	}
 	console::print("Create contents: " cat timer.check());
 
-	// XML序列化效率测试
+	// Efficiency test of XML serialization / XML序列化效率测试
 	timer.start();
 	Binary xmlBinary = xml.toBinary();
 	console::print("To binary: " cat timer.check());
 
-	// XML反序列化效率测试
+	// Efficiency test of XML deserialization / XML反序列化效率测试
 	timer.start();
 	auto parsedXML = XML::createFromBinary(xmlBinary).value(XML());
 	console::print("From binary: " cat timer.check());
 
-	// 验证结果
+	// Validate result / 验证结果
 	UInt attribCount = 0;
 	XMLNode rootNode = parsedXML.globalRoot();
 	for (auto e = rootNode.leaves().firstElem(); e.valid(); ++e)
@@ -49,7 +49,7 @@ void exampleXML()
 	console::print("Attribute count: " cat attribCount);
 	console::print("Binary size: " cat xmlBinary.size() cat "=" cat parsedXML.toBinary().size());
 
-	// XML析构效率测试
+	// Efficiency test of XML releasing / XML析构效率测试
 	timer.start();
 	parsedXML = XML();
 	rootNode = XMLNode();

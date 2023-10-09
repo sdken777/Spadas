@@ -6,7 +6,7 @@ using namespace spadas;
 
 void exampleForElement()
 {
-	// 遍历数组（比直接索引效率高）
+	// Array iteration (more efficient than indexing with []) / 遍历数组（比直接索引效率高）
 	console::print("- 1 -");
 
 	auto arr = Array<UInt>::create(3, 101, 123, 777);
@@ -14,12 +14,12 @@ void exampleForElement()
 	{
 		console::print(e.index() cat ": " cat e.value());
 	}
-	for (auto e = arr.lastElem(); e.valid(); --e) // 倒序遍历
+	for (auto e = arr.lastElem(); e.valid(); --e) // Reverse iteration / 倒序遍历
 	{
 		console::print(e.index() cat ": " cat e.value());
 	}
 
-	// 遍历链表（可一边遍历一边移除）
+	// Linked list iteration (nodes can be removed during iteration) / 遍历链表（可一边遍历一边移除）
 	console::print("- 2 -");
 
 	auto list = List<UInt>(arr);
