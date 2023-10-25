@@ -167,7 +167,12 @@ String IPluginV200::getPluginVersion()
 void IPluginV200::closePlugin()
 {}
 
-void IPluginV200::initLanguage(String languageCode)
+Dictionary<String> IPluginV200::getThirdPartyNotices()
+{
+	return Dictionary<String>();
+}
+
+void IPluginV200::initLocaleInfo(String languageCode, Bool preferPRCWeb)
 {}
 
 void IPluginV200::useLogger(Interface<ILogger> logger)

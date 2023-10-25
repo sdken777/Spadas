@@ -3,124 +3,19 @@
 
 using namespace spadas;
 
+// OptionalBool
 OptionalBool::OptionalBool(GeneralElement elem) : valid(elem.valid && !elem.isText), value(elem.value != 0)
 {}
 
-OptionalBool& OptionalBool::operator =(Bool val)
-{
-	valid = TRUE;
-	value = val;
-	return *this;
-}
-
-Bool OptionalBool::isValidAndTrue()
-{
-	return valid && value;
-}
-
-Bool OptionalBool::isValidAndFalse()
-{
-	return valid && !value;
-}
-
-Bool OptionalBool::operator ==(OptionalBool val)
-{
-	if (!valid && !val.valid) return TRUE;
-	else if (!valid || !val.valid) return FALSE;
-	return value == val.value;
-}
-
-Bool OptionalBool::operator !=(OptionalBool val)
-{
-	return !(operator ==(val));
-}
-
-String OptionalBool::toString()
-{
-	return valid ? String(value) : "(invalid)";
-}
-
+// OptionalInt
 OptionalInt::OptionalInt(GeneralElement elem) : valid(elem.valid && !elem.isText), value((Int)elem.value)
 {}
 
-OptionalInt& OptionalInt::operator =(Int val)
-{
-	valid = TRUE;
-	value = val;
-	return *this;
-}
-
-Bool OptionalInt::operator ==(OptionalInt val)
-{
-	if (!valid && !val.valid) return TRUE;
-	else if (!valid || !val.valid) return FALSE;
-	return value == val.value;
-}
-
-Bool OptionalInt::operator !=(OptionalInt val)
-{
-	return !(operator ==(val));
-}
-
-String OptionalInt::toString()
-{
-	return valid ? String(value) : "(invalid)";
-}
-
+// OptionalDouble
 OptionalDouble::OptionalDouble(GeneralElement elem) : valid(elem.valid && !elem.isText), value(elem.value)
 {}
 
-OptionalDouble& OptionalDouble::operator =(Double val)
-{
-	valid = TRUE;
-	value = val;
-	return *this;
-}
-
-OptionalDouble OptionalDouble::operator +(OptionalDouble val)
-{
-	return (valid && val.valid) ? (value + val.value) : OptionalDouble();
-}
-
-OptionalDouble OptionalDouble::operator -(OptionalDouble val)
-{
-	return (valid && val.valid) ? (value - val.value) : OptionalDouble();
-}
-
-OptionalDouble OptionalDouble::operator *(OptionalDouble val)
-{
-	return (valid && val.valid) ? (value * val.value) : OptionalDouble();
-}
-
-Bool OptionalDouble::operator ==(OptionalDouble val)
-{
-	if (!valid && !val.valid) return TRUE;
-	else if (!valid || !val.valid) return FALSE;
-	return value == val.value;
-}
-
-Bool OptionalDouble::operator !=(OptionalDouble val)
-{
-	return !(operator ==(val));
-}
-
-String OptionalDouble::toString()
-{
-	return valid ? String(value) : "(invalid)";
-}
-
-void OptionalSignedDouble::setValue(Double value)
-{
-	this->value = value;
-	this->valueValid = TRUE;
-}
-
-void OptionalSignedDouble::setSign(Bool positive)
-{
-	this->positive = positive;
-	this->signValid = TRUE;
-}
-
+// OptionalSignedDouble
 OptionalDouble OptionalSignedDouble::toOptionalDouble(Bool signOptional)
 {
 	if (signOptional)
@@ -147,28 +42,7 @@ OptionalDouble OptionalSignedDouble::toOptionalDouble(Bool signOptional)
 	}
 }
 
-Bool ShortTimestamp::operator ==(ShortTimestamp timestamp)
-{
-	return session == timestamp.session && offset == timestamp.offset;
-}
-
-Bool ShortTimestamp::operator !=(ShortTimestamp timestamp)
-{
-	return session != timestamp.session || offset != timestamp.offset;
-}
-
-Bool ShortTimestamp::operator >(ShortTimestamp timestamp)
-{
-	if (session == timestamp.session) return offset > timestamp.offset;
-	else return session > timestamp.session;
-}
-
-Bool ShortTimestamp::operator <(ShortTimestamp timestamp)
-{
-	if (session == timestamp.session) return offset < timestamp.offset;
-	else return session < timestamp.session;
-}
-
+// ShortTimestamp
 String ShortTimestamp::toString()
 {
 	Array<String> comps(2);
@@ -177,28 +51,7 @@ String ShortTimestamp::toString()
 	return String::merge(comps, "-");
 }
 
-Bool FullTimestamp::operator ==(FullTimestamp timestamp)
-{
-	return session == timestamp.session && offset == timestamp.offset;
-}
-
-Bool FullTimestamp::operator !=(FullTimestamp timestamp)
-{
-	return session != timestamp.session || offset != timestamp.offset;
-}
-
-Bool FullTimestamp::operator >(FullTimestamp timestamp)
-{
-	if (session == timestamp.session) return offset > timestamp.offset;
-	else return session > timestamp.session;
-}
-
-Bool FullTimestamp::operator <(FullTimestamp timestamp)
-{
-	if (session == timestamp.session) return offset < timestamp.offset;
-	else return session < timestamp.session;
-}
-
+// FullTimestamp
 String FullTimestamp::toString()
 {
 	Array<String> comps(2);
@@ -207,16 +60,7 @@ String FullTimestamp::toString()
 	return String::merge(comps, "-");
 }
 
-ShortTimestamp FullTimestamp::toShort()
-{
-	return ShortTimestamp(session, offset);
-}
-
-String GeneralElement::toString()
-{
-	return valid ? (isText ? text : String(value)) : "(invalid)";
-}
-
+// IStandaloneTaskCallback
 void IStandaloneTaskCallback::setTaskProgress(Enum<StandaloneTaskState> state, String description, Double progress)
 {
 }
@@ -225,6 +69,7 @@ void IStandaloneTaskCallback::setTaskReturnValue(String value)
 {
 }
 
+// ICrossTransmitter
 void ICrossTransmitter::sendToApp(String id, Binary data)
 {
 }
@@ -234,6 +79,7 @@ Bool ICrossTransmitter::sendToNative(String pluginType, String id, Binary data)
 	return FALSE;
 }
 
+// ICrossCaller
 Bool ICrossCaller::callAppFunction(String id, Binary input, Binary& output)
 {
 	return FALSE;
@@ -244,6 +90,7 @@ Bool ICrossCaller::callNativeFunction(String pluginType, String id, BaseObject c
 	return FALSE;
 }
 
+// SessionIdentifier
 SessionIdentifier::SessionIdentifier() : value(0)
 {}
 
@@ -351,60 +198,50 @@ Time SessionIdentifier::toTime()
 	return Time(year, month, day, hour, minute, second);
 }
 
-OptionalBool IGeneralDataTransmitter::transmitNow(String protocol, Array<Double> vector, Binary binary)
-{
-	return OptionalBool();
-}
-
-OptionalBool IGeneralDataTransmitter::transmitAtTimeOffset(String protocol, Array<Double> vector, Binary binary, Double offset, UInt tolerance)
-{
-	return OptionalBool();
-}
-
-OptionalBool IGeneralDataTransmitter::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance)
-{
-	return OptionalBool();
-}
-
-OptionalBool IBusMessageTransmitter::transmitNow(UInt channel, UInt id, Binary binary)
-{
-	return OptionalBool();
-}
-
-OptionalBool IBusMessageTransmitter::transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval)
-{
-	return OptionalBool();
-}
-
-OptionalBool IBusMessageTransmitter::transmitAtTimeOffset(UInt channel, UInt id, Binary binary, Double offset, UInt tolerance)
-{
-	return OptionalBool();
-}
-
-OptionalBool IBusMessageTransmitter::transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance)
-{
-	return OptionalBool();
-}
-
-void IVideoPreviewExpress::outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix, NanoPosix gnssPosix)
+// IVideoPreviewExpress
+void IVideoPreviewExpress::outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix, NanoPosix gnssPosix, Optional<VideoExtraData> extraData)
 {
 }
 
-OptionalBool IVideoFrameTransmitter::transmitNow(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data)
-{
-	return OptionalBool();
-}
-
-OptionalBool IVideoFrameTransmitter::transmitAtTimeOffset(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, Double offset, UInt tolerance)
-{
-	return OptionalBool();
-}
-
-OptionalBool IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance)
-{
-	return OptionalBool();
-}
-
+// IGeneralDeviceDataOutput
 void IGeneralDeviceDataOutput::outputGeneralDeviceData(GeneralDeviceData data)
 {
+}
+
+// IGeneralDataTransmitter
+TransmitResult::Value IGeneralDataTransmitter::transmitNow(String protocol, Array<Double> vector, Binary binary)
+{
+	return TransmitResult::Value::Unknown;
+}
+
+TransmitResult::Value IGeneralDataTransmitter::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance, String guestSyncID)
+{
+	return TransmitResult::Value::Unknown;
+}
+
+// IBusMessageTransmitter
+TransmitResult::Value IBusMessageTransmitter::transmitNow(UInt channel, UInt id, Binary binary)
+{
+	return TransmitResult::Value::Unknown;
+}
+
+TransmitResult::Value IBusMessageTransmitter::transmitRepeatedly(UInt channel, UInt id, Binary binary, UInt interval)
+{
+	return TransmitResult::Value::Unknown;
+}
+
+TransmitResult::Value IBusMessageTransmitter::transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance)
+{
+	return TransmitResult::Value::Unknown;
+}
+
+// IVideoFrameTransmitter
+TransmitResult::Value IVideoFrameTransmitter::transmitNow(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, Optional<VideoExtraData> extraData)
+{
+	return TransmitResult::Value::Unknown;
+}
+
+TransmitResult::Value IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance, Optional<VideoExtraData> extraData)
+{
+	return TransmitResult::Value::Unknown;
 }

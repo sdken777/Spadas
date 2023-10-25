@@ -42,6 +42,15 @@ namespace string_internal
 		return length;
 	}
 
+	Bool isSameString(const Byte *data1, const Byte *data2, UInt length)
+	{
+		for (UInt i = 0; i < length; i++)
+		{
+			if (data1[i] != data2[i]) return FALSE;
+		}
+		return TRUE;
+	}
+
 	Int compareString(const Byte *data1, UInt length1, const Byte *data2, UInt length2)
 	{
 		UInt overlapLength = math::min(length1, length2);
@@ -1277,28 +1286,20 @@ String::String(BinarySpan span)
 
 Bool String::operator ==(String string)
 {
-	if (length() == 0)
-	{
-		return string.length() == 0;
-	}
-	else
-	{
-		if (string.length() == 0) return FALSE;
-		else return compareString(vars->data, vars->length, string.vars->data, string.vars->length) == 0;
-	}
+	UInt thisLength = length();
+	UInt targetLength = string.length();
+	if (thisLength != targetLength) return FALSE;
+	else if (thisLength == 0) return TRUE;
+	else return isSameString(vars->data, string.vars->data, thisLength);
 }
 
 Bool String::operator !=(String string)
 {
-	if (length() == 0)
-	{
-		return string.length() != 0;
-	}
-	else
-	{
-		if (string.length() == 0) return TRUE;
-		else return compareString(vars->data, vars->length, string.vars->data, string.vars->length) != 0;
-	}
+	UInt thisLength = length();
+	UInt targetLength = string.length();
+	if (thisLength != targetLength) return TRUE;
+	else if (thisLength == 0) return FALSE;
+	else return !isSameString(vars->data, string.vars->data, thisLength);
 }
 
 Bool String::operator >(String string)
@@ -1449,12 +1450,31 @@ Bool String::endsWith(String target)
 
 Array<UInt> String::search(String target)
 {
-	return StringCommon::search(bytes(), length(), target);
+	if (vars) return StringCommon::search(vars->data, vars->length, target);
+	else return Array<UInt>();
+}
+
+UInt String::searchFirst(String target)
+{
+	if (vars) return StringCommon::searchFirst(vars->data, vars->length, target);
+	else return UINF;
+}
+
+UInt String::searchLast(String target)
+{
+	if (vars) return StringCommon::searchLast(vars->data, vars->length, target);
+	else return UINF;
+}
+
+String String::trim()
+{
+	if (vars) return StringCommon::trim(vars->data, vars->length);
+	else return String();
 }
 
 Array<StringSpan> String::split(String target)
 {
-	if (vars) return StringCommon::split(*this, 0, vars->length, target);
+	if (vars) return StringCommon::split(vars->data, vars->length, target, vars);
 	else return Array<StringSpan>();
 }
 
@@ -1463,10 +1483,9 @@ String String::replace(String oldString, String newString)
 	return StringCommon::replace(bytes(), length(), oldString, newString);
 }
 
-StringSpan String::sub(UInt index, UInt length, Bool trimStart, Bool trimEnd)
+StringSpan String::span(UInt index, UInt length)
 {
-	SPADAS_ERROR_RETURNVAL(!vars, StringSpan());
-	return StringCommon::sub(*this, 0, vars->length, index, length, trimStart, trimEnd);
+	return StringSpan(*this, index, length);
 }
 
 void String::ensureBuffer(UInt appendSize)

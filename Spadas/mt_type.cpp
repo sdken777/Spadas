@@ -3,14 +3,6 @@
 
 using namespace spadas;
 
-ThreadStatus::ThreadStatus() : isActive(FALSE), currentLoopTime(0.0f)
-{
-}
-
-WorkflowStatus::WorkflowStatus() : workflowID(0), isActive(FALSE)
-{
-}
-
 void ITask::onRunTask(Flag shouldEnd)
 {
 

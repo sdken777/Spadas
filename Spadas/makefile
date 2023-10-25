@@ -1,35 +1,36 @@
 
-# 参数说明
-# [必需] TYPE : 输出目标类型（lib：库文件，exe：可执行文件）
-# [必需] MODE : 编译模式（debug：调试，release：发布）
-# [必需] PLATFORM : 目标运行平台（linux：Linux-64位X86，linuxarm：Linux-64位Arm，windows：Windows-64位X86，macos：MacOS-64位X86，macosarm：MacOS-64位Arm，nilrt：NILRT-64位X86）
-# [必需] COMPILE : 编译工具链（local：本机编译，cross：交叉编译）
-# [必需] TARGET : 输出目标名称，前后缀不用加
-# [可选] TARGET_VERSION : 输出目标版本号，仅针对.so和.dylib库文件
-# [可选] DEPENDS : 依赖库，前后缀不用加，以空格分隔
-# [可选] FRAMEWORKS : 依赖MacOS框架，前后缀不用加，以空格分隔
-# [可选] MACRO_DEFINE : 额外的宏定义，以空格分隔
-# [可选] SEARCH_INCLUDE : 额外的头文件搜索路径，以空格分隔
-# [可选] SEARCH_LIB : 额外的库文件搜索路径，以空格分隔
-# [可选] PREBUILD_COMMAND : 在编译前运行的命令行指令
-# [可选] POSTBUILD_COMMAND : 在编译后运行的命令行指令
-# [可选] FILTEROUT_CPP : 不编译的.cpp文件，需要加后缀，以空格分隔
-# [可选] FILTEROUT_CC : 不编译的.cc文件，需要加后缀，以空格分隔
-# [可选] FILTEROUT_C :不编译的.c文件，需要加后缀，以空格分隔
-# [可选] FILTEROUT_MM :不编译的.mm文件，需要加后缀，以空格分隔
-# [可选] FILTEROUT_H : 不依赖的.h文件，需要加后缀，以空格分隔
-# [可选] FILTEROUT_HPP : 不依赖的.hpp文件，需要加后缀，以空格分隔
+# Parameter Description
+# [Required] TYPE: Output target type (lib: library file, exe: executable file)
+# [Required] MODE: Compile mode (debug, release)
+# [Required] PLATFORM: Target running platform (linux: Linux 64bit X86, linuxarm: Linux 64bit Arm, windows: Windows 64bit X86, macos: MacOS 64bit X86, macosarm: MacOS 64bit Arm, nilrt: NILRT 64bit X86)
+# [Required] COMPILE: Compile toolchain (local: native compile, cross: cross-compile)
+# [Required] TARGET: The target name. Prefix and suffix are not required
+# [Optional] TARGET_VERSION: Target version number. Only for.so and .dylib library files
+# [Optional] DEPENDS: Depended libraries. Prefix and suffix are not required, separated by Spaces
+# [Optional] FRAMEWORKS: Depended frameworks on the MacOS. Prefix and suffix are not added, separated by Spaces
+# [Optional] MACRO_DEFINE: Additional macro definitions, separated by Spaces
+# [Optional] SEARCH_INCLUDE: Additional search paths for header files, separated by Spaces
+# [Optional] SEARCH_LIB: Additional search paths for library files, separated by Spaces
+# [Optional] PREBUILD_COMMAND: Commands to run before compilation
+# [Optional] POSTBUILD_COMMAND: Commands to run after compilation
+# [Optional] FILTEROUT_CPP: The .cpp files not to compile, which must be suffified and separated by Spaces
+# [Optional] FILTEROUT_CC: The .cc files not to compile, which must be suffified and separated by Spaces
+# [Optional] FILTEROUT_C: The .c files not to compile, which must be suffified and separated by Spaces
+# [Optional] FILTEROUT_MM: The .mm files not to compile, which must be suffified and separated by Spaces
+# [Optional] FILTEROUT_H: The .h files not to scan, which must be suffified and separated by Spaces
+# [Optional] FILTEROUT_HPP: The .hpp files not to scan, which must be suffified and separated by Spaces
+# [Optional] WINDOWS_GUI: Windows target only, yes for GUI program, no for console program
 
 .DEFAULT:all
 .PHONY:clean
 .SUFFIXES:.c .cpp .cc .o .h .hpp
 
-# 获取源文件集
+# Query source files
 SRCS_C=$(filter-out $(FILTEROUT_C), $(wildcard *.c **/*.c **/**/*.c **/**/**/*.c))
 SRCS_CPP=$(filter-out $(FILTEROUT_CPP), $(wildcard *.cpp **/*.cpp **/**/*.cpp **/**/**/*.cpp))
 SRCS_CC=$(filter-out $(FILTEROUT_CC), $(wildcard *.cc **/*.cc **/**/*.cc **/**/**/*.cc))
 
-# 确定本机平台
+# Query host OS
 HOST_OS_NAME=$(shell uname -sm | awk -F' ' '{print tolower($$1)}' | awk -F'-' '{print $$1}')
 HOST_ARCH_NAME=$(shell uname -sm | awk -F' ' '{print tolower($$2)}')
 HOST_NAME=$(HOST_OS_NAME)-$(HOST_ARCH_NAME)
@@ -49,7 +50,7 @@ ifeq ($(HOST_NAME), darwin-arm64)
 	HOST=macosarm
 endif
 
-# 目标运行平台相关
+# Target running platform related
 ifeq ($(PLATFORM), linux)
 	USE_CLANG=yes
 	INCLUDE_DIR=includex
@@ -151,11 +152,11 @@ ifeq ($(PLATFORM), nilrt)
 	OBJS=$(SRCS_CPP:.cpp=.o) $(SRCS_CC:.cc=.o) $(SRCS_C:.c=.o)
 endif
 
-# 获取头文件集
+# Query header files
 HEADERS_H=$(filter-out $(FILTEROUT_H), $(wildcard *.h **/*.h **/**/*.h **/**/**/*.h ../include/*.h ../$(INCLUDE_DIR)/*.h))
 HEADERS_HPP=$(filter-out $(FILTEROUT_HPP), $(wildcard *.hpp **/*.hpp **/**/*.hpp **/**/**/*.hpp ../include/*.hpp ../$(INCLUDE_DIR)/*.hpp))
 
-# 输出目标类型相关
+# Output target type related
 ifeq ($(TYPE), lib)
 	OUT_NAME=$(LIB_PREFIX)$(TARGET)$(BIN_EXT)
 	LINK_OPTION=-shared
@@ -165,7 +166,7 @@ ifeq ($(TYPE), exe)
 	LINK_OPTION=
 endif
 
-# 编译模式相关
+# Compile mode related
 COMPILE_OPTION=-fmessage-length=0 -fvisibility=hidden -fPIC -Wall
 ifeq ($(MODE), release)
 	OBJ_PATH=Release/$(PLATFORM)
@@ -179,17 +180,18 @@ ifeq ($(MODE), debug)
 endif
 OBJS:=$(addprefix $(OBJ_PATH)/, $(OBJS))
 
-# lib名称与输出路径
+# Library name and output path
 LIB_NAME=$(LIB_PREFIX)$(TARGET)$(LIB_EXT)
 LIB_PATH=../$(LIB_DIR)
 
-# 交叉编译工具链路径
+# Compile toolchain path
 XTOOLS_PATH=/opt/xtools-uni
 CLANG_PATH=/opt/clang-15
 
-# 编译工具链相关
+# Compile toolchain related
+COMPILE_OPTION_CPP=
 ifeq ($(USE_CLANG), yes)
-	COMPILE_OPTION:=$(COMPILE_OPTION) -std=c++11
+	COMPILE_OPTION_CPP:=$(COMPILE_OPTION_CPP) -std=c++11
 	COMPILER_C_EXE=$(CLANG_PATH)/bin/clang
 	COMPILER_CPP_EXE=$(CLANG_PATH)/bin/clang++
 	COMPILER_OBJC_EXE=$(CLANG_PATH)/bin/clang++
@@ -218,7 +220,7 @@ ifeq ($(USE_CLANG), yes)
 endif
 ifeq ($(COMPILE), cross)
 	ifeq ($(PLATFORM), nilrt)
-		COMPILE_OPTION:=$(COMPILE_OPTION) -std=c++11
+		COMPILE_OPTION_CPP:=$(COMPILE_OPTION_CPP) -std=c++11
 		SYSROOT_OPTION=--sysroot=/opt/xtools-uni/x86-nilrt17/sysroots/core2-64-nilrt-linux
 		ifeq ($(HOST), windows)
 			COMPILER_C_EXE=/opt/xtools-uni/x86-nilrt17/sysroots/i686-nilrtsdk-mingw32/usr/bin/x86_64-nilrt-linux/x86_64-nilrt-linux-gcc -m64 -march=core2 -mtune=core2 -msse3 -mfpmath=sse
@@ -233,7 +235,15 @@ ifeq ($(COMPILE), cross)
 	endif
 endif
 
-# 输出lib与bin选项
+# Windows GUI related
+ifeq ($(PLATFORM), windows)
+	ifeq ($(WINDOWS_GUI), yes)
+		COMPILE_OPTION:=$(COMPILE_OPTION) -DSPADAS_WINDOWS_GUI
+		LINK_OPTION:=$(LINK_OPTION) -mwindows -municode
+	endif
+endif
+
+# Output lib and bin options
 PRELIB_COMMAND=
 POSTLIB_COMMAND=
 ifeq ($(PLATFORM), linux)
@@ -316,7 +326,7 @@ ifeq ($(TYPE), exe)
 endif
 LINK_OPTION:=$(LINK_OPTION) $(WL_OPTION)
 
-# strip命令
+# strip command
 ifeq ($(MODE), release)
 	STRIP_COMMAND=$(STRIP_EXE) $(OUT_PATH)/$(OUT_NAME)
 endif
@@ -324,7 +334,7 @@ ifeq ($(MODE), debug)
 	STRIP_COMMAND=
 endif
 
-# 编译流程
+# Build process
 all:pre $(OBJS)
 	$(COMPILER_CPP_EXE) $(SYSROOT_OPTION) $(LINK_OPTION) -L../$(LIB_DIR) -o $(OUT_PATH)/$(OUT_NAME) $(OBJS) $(addprefix -l, $(DEPENDS)) $(addprefix -L, $(SEARCH_LIB)) $(addprefix -framework , $(FRAMEWORKS))
 	$(STRIP_COMMAND)
@@ -338,15 +348,15 @@ $(OBJ_PATH)/%.o:%.c $(HEADERS_H) $(HEADERS_HPP)
 
 $(OBJ_PATH)/%.o:%.cpp $(HEADERS_H) $(HEADERS_HPP)
 	mkdir -p `dirname $@`
-	$(COMPILER_CPP_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
+	$(COMPILER_CPP_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) $(COMPILE_OPTION_CPP) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 
 $(OBJ_PATH)/%.o:%.cc $(HEADERS_H) $(HEADERS_HPP)
 	mkdir -p `dirname $@`
-	$(COMPILER_CPP_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
+	$(COMPILER_CPP_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) $(COMPILE_OPTION_CPP) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 
 $(OBJ_PATH)/%.o:%.mm $(HEADERS_H) $(HEADERS_HPP)
 	mkdir -p `dirname $@`
-	$(COMPILER_OBJC_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
+	$(COMPILER_OBJC_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) $(COMPILE_OPTION_CPP) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 
 pre:
 	$(PREBUILD_COMMAND)

@@ -9,7 +9,6 @@ namespace image_internal
 	/* constants */
 	const UInt MAX_WIDTH = 16384;
 	const UInt MAX_HEIGHT = 16384;
-	const UInt DEFAULT_SIZE = 16;
 	
 	/* color conversion table */
     struct ColorConvertTable
@@ -219,17 +218,7 @@ void rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWidth, UInt srcHeight
 	IRowCvt *createRowCvt(RowIOType srcType, RowIOType dstType);
 	IRowCvt *createRowFlip(RowIOType type);
 	IRowRsz* createRowRsz(RowIOType type);
-	
-	/* merge3d */
-	void mergeStereoByte(Image src[2], Image& dst, Enum<MergeMode> targetMergeMode, UInt nChannels);
-	void mergeStereoWord(Image src[2], Image& dst, Enum<MergeMode> targetMergeMode, UInt nChannels);
-	void splitStereoByte(Image src, Image dst[2], Enum<MergeMode> srcMergeMode, UInt nChannels);
-	void splitStereoWord(Image src, Image dst[2], Enum<MergeMode> srcMergeMode, UInt nChannels);
-	void mergeFieldGeneric(Image src[2], Image& dst);
-	void splitFieldByte(Image src, Image dst[2], UInt nChannels);
-	void splitFieldWord(Image src, Image dst[2], UInt nChannels);
-	void splitFieldFloat(Image src, Image dst[2], UInt nChannels);
-	
+
 	/* resize (area, scale) */
 	void areaResizeColorByte(Image src, Image& dst, Float widthRatio, Float heightRatio, UInt nChannels);
 	void areaResizeColorWord(Image src, Image& dst, Float widthRatio, Float heightRatio);
@@ -295,7 +284,10 @@ void rsz(Pointer* src, Pointer dst, UInt srcWidth, UInt dstWidth, UInt srcHeight
 	void rotateInt(Image src, Image& dst, Bool isColor, Enum<ImageRotation> rotation);
     
     /* for image data construction */
-    UInt calcImageDataSize(Size2D size, Enum<PixelFormat> format);
+    inline UInt calcImageByteSize(Size2D size, Enum<PixelFormat> format)
+    {
+        return size.height * (((size.width * PixelFormat::bytesPerPixel(format) - 1) / 8) + 1) * 8;
+    }
 }
 
 namespace spadas
@@ -310,19 +302,6 @@ namespace spadas
 		Enum<PixelFormat> format;
 		UInt rowBytes;
         UInt bytesPerPixel;
-        Pointer data;
-		
-        // the following initialized by constructor
-		Array<ULong> data0;
-        
-        ImageVars() : width(0), height(0), rowBytes(0), bytesPerPixel(0), data(NULL)
-        {
-        }
-        ImageVars(UInt data0Size) : width(0), height(0), rowBytes(0), bytesPerPixel(0), data(NULL), data0(data0Size)
-        {
-        }
-        ImageVars(Array<ULong> data00) : width(0), height(0), rowBytes(0), bytesPerPixel(0), data(NULL), data0(data00)
-        {
-        }
+		BinarySpan span;
 	};
 }

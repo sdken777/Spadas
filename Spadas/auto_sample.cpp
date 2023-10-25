@@ -69,7 +69,7 @@ String SessionSampleBuffer::getProtocol(Bool withChannel)
 	else
 	{
 		if (atIndices.size() != 1 || atIndices[0] == 0) {}
-		else protocol = withChannel ? vars->protocol : vars->protocol.sub(0, atIndices[0]).clone();
+		else protocol = withChannel ? vars->protocol : vars->protocol.span(0, atIndices[0]).clone();
 	}
 	vars->spinLeave();
 	return protocol;

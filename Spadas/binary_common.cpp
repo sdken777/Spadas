@@ -19,13 +19,22 @@ Binary BinaryCommon::operatorPlus(const Byte* bytes, UInt size, Binary& append)
     return out;
 }
 
-Array<BinarySpan> BinaryCommon::split(Binary& source, UInt spanIndex, UInt spanSize, Array<UInt>& sizes)
+Array<BinarySpan> BinaryCommon::split(const Byte* bytes, UInt size, Array<UInt>& sizes, Vars *binaryVars)
 {
     UInt totalSize = 0;
     for (UInt i = 0; i < sizes.size(); i++) totalSize += sizes[i];
-	SPADAS_ERROR_RETURNVAL(totalSize != spanSize, Array<BinarySpan>());
+	SPADAS_ERROR_RETURNVAL(totalSize != size, Array<BinarySpan>());
+
+    Binary sourceBinary;
+    UInt curIndex = 0;
+    if (binaryVars)
+    {
+        auto objBase = Object<BinaryVars>::castCreate(binaryVars);
+		sourceBinary = *(Binary*)(&objBase);
+        curIndex = (UInt)(bytes - sourceBinary.data());
+    }
+    
     Array<BinarySpan> out = Array<BinarySpan>::createUninitialized(sizes.size());
-    UInt curIndex = spanIndex;
     for (UInt i = 0; i < sizes.size(); i++)
     {
         UInt subArraySize = sizes[i];
@@ -35,7 +44,7 @@ Array<BinarySpan> BinaryCommon::split(Binary& source, UInt spanIndex, UInt spanS
         }
         else
         {
-            out.initialize(i, BinarySpan(source, curIndex, subArraySize));
+            out.initialize(i, binaryVars ? BinarySpan(sourceBinary, curIndex, subArraySize) : BinarySpan(bytes + curIndex, subArraySize));
             curIndex += subArraySize;
         }
     }
@@ -51,37 +60,4 @@ Binary BinaryCommon::reverse(const Byte* bytes, UInt size)
 		dst[i] = bytes[size - i - 1];
 	}
 	return out;
-}
-
-String BinaryCommon::toBase64(const Byte* bytes, UInt size)
-{
-	Char *base64EncodedChars = base64Encode((Char*)bytes, size);
-	if (base64EncodedChars == NULL) return String();
-
-	String result = base64EncodedChars;
-	delete[] base64EncodedChars;
-	return result;
-}
-
-Binary BinaryCommon::toSHA1(const Byte* bytes, UInt size)
-{
-	Binary encoded(20);
-	calc_sha1(bytes, size, encoded.data());
-	return encoded;
-}
-
-Binary BinaryCommon::toDES(const Byte* bytes, UInt size, String& key)
-{
-	if (key.isEmpty()) key = "spadas";
-	Binary sha1 = key.toBinary().toSHA1();
-	return desEncode(sha1, bytes, size);
-}
-
-BinarySpan BinaryCommon::sub(Binary& source, UInt spanIndex, UInt spanSize, UInt subIndex, UInt subSize)
-{
-    SPADAS_ERROR_RETURNVAL(subIndex >= spanSize, BinarySpan());
-    if (subSize == 0) return BinarySpan();
-
-    subSize = math::min(subSize, spanSize - subIndex);
-    return BinarySpan(source, spanIndex + subIndex, subSize);
 }

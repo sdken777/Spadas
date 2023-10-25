@@ -16,5 +16,5 @@ public:
 void exampleEmptyObject()
 {
 	Interface<IPluginLatest> plugin = NoVarsObject();
-	console::print(plugin->getPluginType() + " " + plugin->getPluginVersion());
+	console::print(plugin->getPluginType() cat " " cat plugin->getPluginVersion());
 }

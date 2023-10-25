@@ -1,143 +1,8 @@
 ﻿
 #include "spadas.h"
 
-namespace spadas
-{
-	class ImageMetaVars : public Vars
-	{
-    public:
-		Enum<AspectRatio> aspectRatio;
-		Enum<FrameRate> frameRate;
-		Enum<InterlaceMode> interlaceMode;
-		Enum<MergeMode> mergeMode;
-		TimeCode timeCode;
-	};
-}
-
 using namespace spadas;
 using namespace spadas::math;
-
-// FrameRate
-Float FrameRate::rate(Enum<FrameRate> frameRate)
-{
-    switch (frameRate.value())
-	{
-		case FrameRate::Value::Unknown:
-			return FINF;
-		case FrameRate::Value::_23_98:
-			return 24.0f / 1001;
-		case FrameRate::Value::_24:
-			return 24.0f;
-		case FrameRate::Value::_25:
-			return 25.0f;
-		case FrameRate::Value::_29_97:
-			return 30.0f / 1001;
-		case FrameRate::Value::_30:
-			return 30.0f;
-		case FrameRate::Value::_50:
-			return 50.0f;
-		case FrameRate::Value::_59_94:
-			return 60.0f / 1001;
-		case FrameRate::Value::_60:
-			return 60.0f;
-        default:
-            return FINF;
-	}
-}
-Float FrameRate::period(Enum<FrameRate> frameRate)
-{
-    Float rate = FrameRate::rate(frameRate);
-    if (rate == FINF) return FINF;
-    else return 1000.0f / rate;
-}
-
-// InterlaceMode
-Bool InterlaceMode::isInterlaced(Enum<InterlaceMode> mode)
-{
-    switch (mode.value())
-	{
-		case InterlaceMode::Value::Progressive:
-			return FALSE;
-		case InterlaceMode::Value::UpperFirst:
-			return TRUE;
-		case InterlaceMode::Value::LowerFirst:
-			return TRUE;
-        default:
-            return FALSE;
-	}
-}
-
-// MergeMode
-Bool MergeMode::is3DMerged(Enum<MergeMode> mode)
-{
-    switch (mode.value())
-	{
-		case MergeMode::Value::Normal:
-			return FALSE;
-		case MergeMode::Value::LeftEye:
-			return FALSE;
-		case MergeMode::Value::RightEye:
-			return FALSE;
-		case MergeMode::Value::HalfSideBySide:
-			return TRUE;
-		case MergeMode::Value::FullSideBySide:
-			return TRUE;
-		case MergeMode::Value::LineByLineLR:
-			return TRUE;
-		case MergeMode::Value::LineByLineRL:
-			return TRUE;
-        default:
-            return FALSE;
-	}
-}
-
-// TimeCode
-TimeCode::TimeCode() : hour(0), minute(0), second(0), frame(0)
-{
-}
-
-TimeCode::TimeCode(UInt hour0, UInt minute0, UInt second0, UInt frame0) : hour(hour0), minute(minute0), second(second0), frame(frame0)
-{
-}
-
-Bool TimeCode::operator ==(TimeCode time)
-{
-	return hour == time.hour && minute == time.minute && second == time.second && frame == time.frame;
-}
-
-Bool TimeCode::operator !=(TimeCode time)
-{
-	return !(hour == time.hour && minute == time.minute && second == time.second && frame == time.frame);
-}
-
-String TimeCode::toString()
-{
-	return String(hour, 2) + ":" + String(minute, 2) + ":" + String(second, 2) + "." + String(frame, 3);
-}
-
-// ColorRGB
-ColorRGB::ColorRGB() : r(0), g(0), b(0)
-{
-}
-
-ColorRGB::ColorRGB(Byte r0, Byte g0, Byte b0) : r(r0), g(g0), b(b0)
-{
-}
-
-Bool ColorRGB::operator ==(ColorRGB color)
-{
-	return r == color.r && g == color.g && b == color.b;
-}
-
-Bool ColorRGB::operator !=(ColorRGB color)
-{
-	return !(r == color.r && g == color.g && b == color.b);
-}
-
-String ColorRGB::toString()
-{
-	return (String)r + "," + g + "," + b;
-}
 
 // ImageResolution
 Size2D ImageResolution::size(Enum<spadas::ImageResolution> resolution)
@@ -170,6 +35,10 @@ Size2D ImageResolution::size(Enum<spadas::ImageResolution> resolution)
             return Size2D::wh(1280, 720);
         case ImageResolution::Value::HD1080:
             return Size2D::wh(1920, 1080);
+		case ImageResolution::Value::HD2K:
+			return Size2D::wh(2560, 1440);
+		case ImageResolution::Value::HD4K:
+			return Size2D::wh(3840, 2160);
         default:
             return Size2D();
     }
@@ -313,21 +182,7 @@ UInt PixelFormat::bytesPerPixel(Enum<PixelFormat> format)
 	}
 }
 
-/* PixelData */
-PixelData::PixelData() : ptr(NULL), bytesPerPixel(0)
-{
-}
-PixelData::PixelData(Pointer ptr0, UInt bytesPerPixel0) : ptr(ptr0), bytesPerPixel(bytesPerPixel0)
-{
-}
-Bool PixelData::isValid()
-{
-	return ptr != NULL;
-}
-PixelData PixelData::operator[](UInt index)
-{
-    return ptr ? PixelData((Pointer)((PointerInt)ptr + index * bytesPerPixel), bytesPerPixel) : PixelData();
-}
+// PixelData
 BytePixel PixelData::getBytes()
 {
 	SPADAS_ERROR_RETURNVAL(!ptr, BytePixel());
@@ -471,14 +326,4 @@ void PixelData::set(FloatPixel floats)
 		SPADAS_ERROR_MSG("Invalid bytesPerPixel");
 		break;
 	}
-}
-
-/* ImagePair */
-ImagePair::ImagePair()
-{
-
-}
-ImagePair::ImagePair(Image image10, Image image20) : image1(image10), image2(image20)
-{
-
 }

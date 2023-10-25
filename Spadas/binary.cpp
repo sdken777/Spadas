@@ -1,10 +1,6 @@
 ﻿
 #include "binary.h"
 
-#if defined(SPADAS_ENV_MACOS)
-#pragma clang diagnostic ignored "-Wvarargs"
-#endif
-
 using namespace spadas;
 using namespace binary_internal;
 
@@ -63,26 +59,6 @@ Binary Binary::create(UInt size, UInt firstByte, ...)
 	return out;
 }
 
-Optional<Binary> Binary::createFromBase64(String base64)
-{
-	if (base64.isEmpty()) return Binary();
-
-	UInt base64DecodedLen;
-	Byte *base64DecodedBytes = base64Decode(base64.chars().data(), base64DecodedLen, true);
-	if (base64DecodedBytes == NULL) return Optional<Binary>();
-
-	Binary base64Decoded(base64DecodedBytes, base64DecodedLen);
-	delete[] base64DecodedBytes;
-	return base64Decoded;
-}
-
-Optional<Binary> Binary::createFromDES(Binary encrypted, String key)
-{
-	if (key.isEmpty()) key = "spadas";
-	Binary sha1 = key.toBinary().toSHA1();
-	return desDecode(encrypted, sha1);
-}
-
 Byte *Binary::data()
 {
 	return vars ? vars->data : 0;
@@ -116,13 +92,14 @@ Binary Binary::operator +(Binary bin)
 	else return BinaryCommon::operatorPlus(vars->data, vars->size, bin);
 }
 
-void Binary::trim(UInt size)
+Binary& Binary::trim(UInt size)
 {
-	SPADAS_ERROR_RETURN(size == 0);
+	SPADAS_ERROR_RETURNVAL(size == 0, *this);
 	if (vars && size < vars->size)
 	{
 		vars->size = size;
 	}
+	return *this;
 }
 
 void Binary::set(Byte val)
@@ -133,8 +110,8 @@ void Binary::set(Byte val)
 
 Array<BinarySpan> Binary::split(Array<UInt> sizes)
 {
-	if (!vars) return Array<BinarySpan>();
-	else return BinaryCommon::split(*this, 0, vars->size, sizes);
+	SPADAS_ERROR_RETURNVAL(!vars, Array<BinarySpan>());
+	return BinaryCommon::split(vars->data, vars->size, sizes, vars);
 }
 
 Binary Binary::reverse()
@@ -161,10 +138,9 @@ Binary Binary::toDES(String key)
 	else return BinaryCommon::toDES(vars->data, vars->size, key);
 }
 
-BinarySpan Binary::sub(UInt index, UInt size)
+BinarySpan Binary::span(UInt index, UInt size)
 {
-	SPADAS_ERROR_RETURNVAL(!vars, BinarySpan());
-	return BinaryCommon::sub(*this, 0, vars->size, index, size);
+	return BinarySpan(*this, index, size);
 }
 
 void Binary::copy(Binary src, Region srcRegion, UInt thisOffset)

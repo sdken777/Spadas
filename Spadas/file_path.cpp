@@ -180,6 +180,26 @@ Path::Path()
 {
 }
 
+Path::Path(const Char pathStringChars[])
+{
+	String pathString(pathStringChars);
+	if (pathString.isEmpty()) return;
+
+	Bool isFolder = FALSE;
+	Array<StringSpan> components;
+	if (parsePathString(pathString, FALSE, components, isFolder))
+	{
+		PathVars *vars = new PathVars();
+		vars->isFolder = isFolder;
+		vars->components = components;
+		setVars(vars, TRUE);
+	}
+	else
+	{
+		SPADAS_ERROR_MSG("Invalid path: " cat pathString);
+	}
+}
+
 Path::Path(String pathString)
 {
 	if (pathString.isEmpty()) return;
@@ -195,7 +215,7 @@ Path::Path(String pathString)
 	}
 	else
 	{
-		SPADAS_ERROR_MSG(SS"Invalid path: " + pathString);
+		SPADAS_ERROR_MSG("Invalid path: " cat pathString);
 	}
 }
 
@@ -207,7 +227,7 @@ String Path::name()
 	Array<UInt> dotIndices = fileFullName.search(dot);
 	
 	if (dotIndices.isEmpty()) return fileFullName.clone();
-	else return fileFullName.sub(0, dotIndices[dotIndices.size() - 1]).clone();
+	else return fileFullName.span(0, dotIndices[dotIndices.size() - 1]).clone();
 }
 
 String Path::extension()
@@ -218,7 +238,7 @@ String Path::extension()
 	Array<UInt> dotIndices = fileFullName.search(dot);
 	
 	if (dotIndices.isEmpty()) return String();
-	else return fileFullName.sub(dotIndices[dotIndices.size() - 1]).clone();
+	else return fileFullName.span(dotIndices[dotIndices.size() - 1]).clone();
 }
 
 String Path::fullName()
@@ -356,7 +376,7 @@ void file_internal::moveOrCopy(Path srcPath, Path dstPath, Bool isCopy, Bool mer
 			for (UInt i = 0; i < srcContents.size(); i++)
 			{
 				String srcContentString = srcContents[i].fullPath();
-				String childPath = srcContentString.sub(srcPathLen).clone();
+				String childPath = srcContentString.span(srcPathLen).clone();
 				Path dstContent = dstPath.childPath(childPath);
 				String dstContentString = dstContent.fullPath();
 				if (dstContent.isFolder())
@@ -532,7 +552,7 @@ Path Path::childPath(String pathString)
 	}
 	else
 	{
-		SPADAS_ERROR_MSG(SS"Invalid path: " + pathString);
+		SPADAS_ERROR_MSG("Invalid path: " cat pathString);
 		return Path();
 	}
 }
@@ -563,7 +583,7 @@ Bool Path::contain(Path path, String& pathString)
 	}
 	else
 	{
-		pathString = dstPathString.sub(srcPathLen).clone();
+		pathString = dstPathString.span(srcPathLen).clone();
 		return TRUE;
 	}
 }

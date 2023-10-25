@@ -10,6 +10,7 @@ void exampleCreate();
 void exampleBaseObject();
 void exampleForElement();
 void exampleLambda();
+void exampleEnum();
 void exampleArrayX();
 void exampleList();
 void exampleXML();
@@ -43,6 +44,9 @@ void runExamples()
 
     print("\n-- Example: Lambda --");
     exampleLambda();
+
+    print("\n-- Example: Enumeration --");
+    exampleEnum();
 
     print("\n-- Example: ArrayX --");
     exampleArrayX();

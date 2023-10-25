@@ -1,4 +1,4 @@
-CUR_DIR=$(dirname "$0")
+CUR_DIR=$(cd $(dirname $0) && pwd)
 
 dos2unix "$CUR_DIR"/export.sh
 chmod -v +x "$CUR_DIR"/export.sh

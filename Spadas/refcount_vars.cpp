@@ -31,7 +31,7 @@ UInt Vars::getRefCount()
 
 void Vars::spinEnter()
 {
-	while (!varSpinLock.cas(0, 1)) {}
+	varSpinLock.casSpin(0, 1);
 }
 
 void Vars::spinLeave()

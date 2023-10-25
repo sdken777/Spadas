@@ -9,10 +9,10 @@ void examplePointTo()
 	// Optional::operator ->
 	console::print("- 1 -");
 
-	Optional<String> string = SS"ABC";
+	Optional<String> string = (String)"ABC";
 	console::print(string->toLower());
 
-	// ArrayElem::operator -> (ListElem类似)
+	// ArrayElem::operator -> (ListElem is similar / ListElem类似)
 	console::print("- 2 -");
 
 	Array<String> arr = Array<String>::create(2, "DEF", "XYZ");
@@ -21,7 +21,7 @@ void examplePointTo()
 		console::print(e->toLower());
 	}
 
-	// TreeNode::operator -> (ListNode类似)
+	// TreeNode::operator -> (ListNode is similar / ListNode类似)
 	console::print("- 3 -");
 
 	XML xml;

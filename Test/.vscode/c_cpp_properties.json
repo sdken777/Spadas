@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "Windows主机/X86-Windows7目标",
+            "name": "Windows Host / X86-Windows7 Target",
             "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
             "compilerArgs": [
                 "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-windows7",
@@ -9,10 +9,11 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}\\..\\include",
                 // "${workspaceFolder}\\..\\include64",
+                "${workspaceFolder}\\..\\include"
             ],
             "defines": [
+                // "SPADAS_WINDOWS_GUI",
                 "SPADAS_ENV_WINDOWS",
                 "SPADAS_ARCH_X86"
             ],
@@ -20,7 +21,7 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "Windows主机/X86-Ubuntu1804目标",
+            "name": "Windows Host / X86-Ubuntu1804 Target",
             "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
             "compilerArgs": [
                 "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-ubuntu1804",
@@ -28,8 +29,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}\\..\\include",
                 // "${workspaceFolder}\\..\\includex",
+                "${workspaceFolder}\\..\\include"
             ],
             "defines": [
                 "SPADAS_ENV_LINUX",
@@ -39,7 +40,7 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "Windows主机/Arm-Ubuntu1604目标",
+            "name": "Windows Host / Arm-Ubuntu1604 Target",
             "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
             "compilerArgs": [
                 "--sysroot=C:\\msys64\\opt\\xtools-uni\\arm-ubuntu1604",
@@ -47,8 +48,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}\\..\\include",
                 // "${workspaceFolder}\\..\\includexa",
+                "${workspaceFolder}\\..\\include"
             ],
             "defines": [
                 "SPADAS_ENV_LINUX",
@@ -58,7 +59,7 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "Windows主机/X86-MacOS1013目标",
+            "name": "Windows Host / X86-MacOS1013 Target",
             "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
             "compilerArgs": [
                 "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-macos1013",
@@ -66,8 +67,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}\\..\\include",
                 // "${workspaceFolder}\\..\\includem",
+                "${workspaceFolder}\\..\\include"
             ],
             "defines": [
                 "SPADAS_ENV_MACOS",
@@ -77,7 +78,7 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "Windows主机/Arm-MacOS1203目标",
+            "name": "Windows Host / Arm-MacOS1203 Target",
             "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
             "compilerArgs": [
                 "--sysroot=C:\\msys64\\opt\\xtools-uni\\arm-macos1203",
@@ -85,8 +86,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}\\..\\include",
                 // "${workspaceFolder}\\..\\includema",
+                "${workspaceFolder}\\..\\include"
             ],
             "defines": [
                 "SPADAS_ENV_MACOS",
@@ -96,7 +97,7 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "Windows主机/X86-NILRT17目标",
+            "name": "Windows Host / X86-NILRT17 Target",
             "compilerPath": "C:\\msys64\\opt\\xtools-uni\\x86-nilrt17\\sysroots\\i686-nilrtsdk-mingw32\\usr\\bin\\x86_64-nilrt-linux\\x86_64-nilrt-linux-g++.exe",
             "compilerArgs": [
                 "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-nilrt17\\sysroots\\core2-64-nilrt-linux",
@@ -104,8 +105,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}\\..\\include",
                 // "${workspaceFolder}\\..\\includeni",
+                "${workspaceFolder}\\..\\include"
             ],
             "defines": [
                 "SPADAS_ENV_NILRT",
@@ -115,7 +116,7 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "非Windows主机/X86-Windows7目标",
+            "name": "General Host / X86-Windows7 Target",
             "compilerPath": "/opt/clang-15/bin/clang++",
             "compilerArgs": [
                 "--sysroot=/opt/xtools-uni/x86-windows7",
@@ -123,10 +124,11 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}/../include",
                 // "${workspaceFolder}/../include64",
+                "${workspaceFolder}/../include"
             ],
             "defines": [
+                // "SPADAS_WINDOWS_GUI",
                 "SPADAS_ENV_WINDOWS",
                 "SPADAS_ARCH_X86"
             ],
@@ -134,7 +136,7 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "非Windows主机/X86-Ubuntu1804目标",
+            "name": "General Host / X86-Ubuntu1804 Target",
             "compilerPath": "/opt/clang-15/bin/clang++",
             "compilerArgs": [
                 "--sysroot=/opt/xtools-uni/x86-ubuntu1804",
@@ -142,8 +144,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}/../include",
                 // "${workspaceFolder}/../includex",
+                "${workspaceFolder}/../include"
             ],
             "defines": [
                 "SPADAS_ENV_LINUX",
@@ -153,7 +155,7 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "非Windows主机/Arm-Ubuntu1604目标",
+            "name": "General Host / Arm-Ubuntu1604 Target",
             "compilerPath": "/opt/clang-15/bin/clang++",
             "compilerArgs": [
                 "--sysroot=/opt/xtools-uni/arm-ubuntu1604",
@@ -161,8 +163,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}/../include",
                 // "${workspaceFolder}/../includexa",
+                "${workspaceFolder}/../include"
             ],
             "defines": [
                 "SPADAS_ENV_LINUX",
@@ -172,7 +174,7 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "非Windows主机/X86-MacOS1013目标",
+            "name": "General Host / X86-MacOS1013 Target",
             "compilerPath": "/opt/clang-15/bin/clang++",
             "compilerArgs": [
                 "--sysroot=/opt/xtools-uni/x86-macos1013",
@@ -180,8 +182,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}/../include",
                 // "${workspaceFolder}/../includem",
+                "${workspaceFolder}/../include",
             ],
             "defines": [
                 "SPADAS_ENV_MACOS",
@@ -191,7 +193,7 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "非Windows主机/Arm-MacOS1203目标",
+            "name": "General Host / Arm-MacOS1203 Target",
             "compilerPath": "/opt/clang-15/bin/clang++",
             "compilerArgs": [
                 "--sysroot=/opt/xtools-uni/arm-macos1203",
@@ -199,8 +201,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}/../include",
                 // "${workspaceFolder}/../includema",
+                "${workspaceFolder}/../include"
             ],
             "defines": [
                 "SPADAS_ENV_MACOS",
@@ -210,7 +212,7 @@
             "cppStandard": "c++11"
         },
         {
-            "name": "非Windows主机/X86-NILRT17目标",
+            "name": "General Host / X86-NILRT17 Target",
             "compilerPath": "/opt/xtools-uni/x86-nilrt17/sysroots/x86_64-nilrtsdk-linux/usr/bin/x86_64-nilrt-linux/x86_64-nilrt-linux-g++",
             "compilerArgs": [
                 "--sysroot=/opt/xtools-uni/x86-nilrt17/sysroots/core2-64-nilrt-linux",
@@ -218,8 +220,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}/../include",
                 // "${workspaceFolder}/../includeni",
+                "${workspaceFolder}/../include"
             ],
             "defines": [
                 "SPADAS_ENV_NILRT",
@@ -227,7 +229,7 @@
             ],
             "intelliSenseMode": "gcc-x64",
             "cppStandard": "c++11"
-        },
+        }
     ],
     "version": 4
 }

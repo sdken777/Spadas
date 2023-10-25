@@ -81,7 +81,7 @@
     "tasks": [
         {
             "type": "process",
-            "label": "调试构建",
+            "label": "Build (Debug)",
             "group": "build",
             "command": "make",
             "args": [
@@ -91,28 +91,30 @@
                 "DEPENDS=${input:helper_platform_env_var_depends}",
                 "FRAMEWORKS=${input:helper_platform_env_var_frameworks}",
             ],
+            // "dependsOn": [
+            //     "Subtask: Generate resource code",
+            // ],
             "problemMatcher":"$gcc",
         },
         {
             "type": "process",
-            "label": "发布构建",
+            "label": "Build (Release)",
             "group": "build",
             "command": "echo",
             "args": [ "Done." ],
             "dependsOrder": "sequence",
             "dependsOn": [
-                "(子任务)执行发布构建(X86-Windows7目标)",
-                "(子任务)执行发布构建(X86-Ubuntu1804目标)",
-                "(子任务)执行发布构建(Arm-Ubuntu1604目标)",
-                "(子任务)执行发布构建(X86-MacOS1013目标)",
-                "(子任务)执行发布构建(Arm-MacOS1203目标)",
+                // "Subtask: Generate resource code",
+                "Subtask: Build for X86-Windows7 target (Release)",
+                "Subtask: Build for X86-Ubuntu1804 target (Release)",
+                "Subtask: Build for Arm-Ubuntu1604 target (Release)",
+                "Subtask: Build for X86-MacOS1013 target (Release)",
+                "Subtask: Build for Arm-MacOS1203 target (Release)",
             ],
-            "problemMatcher":[],
         },
         {
             "type": "process",
-            "label": "清理",
-            "group": "build",
+            "label": "Clean",
             "command": "make",
             "args": [
                 "clean",
@@ -120,11 +122,21 @@
             "problemMatcher":[],
         },
 
-        // 以下为子任务
+        // Subtasks:
 
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(X86-Windows7目标)",
+            "label": "Subtask: Generate resource code",
+            "hide": true,
+            "command": "dotnet",
+            "args": [
+                "../bin/VSCodeHelper.dll",
+                "gen_resource_code",
+            ],
+        },
+        {
+            "type": "process",
+            "label": "Subtask: Build for X86-Windows7 target (Release)",
             "hide": true,
             "command": "make",
             "args": [
@@ -137,7 +149,7 @@
         },
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(X86-Ubuntu1804目标)",
+            "label": "Subtask: Build for X86-Ubuntu1804 target (Release)",
             "hide": true,
             "command": "make",
             "args": [
@@ -150,7 +162,7 @@
         },
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(Arm-Ubuntu1604目标)",
+            "label": "Subtask: Build for Arm-Ubuntu1604 target (Release)",
             "hide": true,
             "command": "make",
             "args": [
@@ -163,7 +175,7 @@
         },
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(X86-MacOS1013目标)",
+            "label": "Subtask: Build for X86-MacOS1013 target (Release)",
             "hide": true,
             "command": "make",
             "args": [
@@ -177,7 +189,7 @@
         },
         {
             "type": "process",
-            "label": "(子任务)执行发布构建(Arm-MacOS1203目标)",
+            "label": "Subtask: Build for Arm-MacOS1203 target (Release)",
             "hide": true,
             "command": "make",
             "args": [

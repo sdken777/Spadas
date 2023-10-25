@@ -47,6 +47,7 @@ namespace string_internal
 	UInt printToString(Char dst[], UInt dstSize, const Char format[], ...);
 
 	// 比较字符串
+	Bool isSameString(const Byte *data1, const Byte *data2, UInt length);
 	Int compareString(const Byte *data1, UInt length1, const Byte *data2, UInt length2);
 
 	// Windows下的ANSI与WChar字符串互转
@@ -74,11 +75,13 @@ namespace string_internal
 		static String toUpper(const Byte* bytes, UInt len);
 		static String toLower(const Byte* bytes, UInt len);
 		static Bool startsWith(const Byte* srcData, UInt srcLength, String& target);
-		static Bool endsWith(const Byte* srcData, UInt srcLength, String target);
+		static Bool endsWith(const Byte* srcData, UInt srcLength, String& target);
 		static Binary toBinary(const Byte* bytes, UInt len);
-		static Array<UInt> search(const Byte* srcData, UInt srcLength, String string);
-		static Array<StringSpan> split(String& source, UInt spanIndex, UInt spanLength, String& splitter);
+		static Array<UInt> search(const Byte* srcData, UInt srcLength, String& string);
+		static UInt searchFirst(const Byte* srcData, UInt srcLength, String& string);
+		static UInt searchLast(const Byte* srcData, UInt srcLength, String& string);
+		static String trim(const Byte*srcData, UInt srcLength);
+		static Array<StringSpan> split(const Byte* srcData, UInt srcLength, String& splitter, Vars *stringVars);
 		static String replace(const Byte* srcStringData, UInt srcStringLength, String& oldString, String& newString);
-		static StringSpan sub(String& source, UInt spanIndex, UInt spanLength, UInt subIndex, UInt subLength, Bool trimStart, Bool trimEnd);
 	};
 }

@@ -4,7 +4,7 @@
 
 using namespace spadas;
 
-// 实现一个Task类
+// Implement a task class / 实现一个Task类
 class TestThreads : public EmptyObject, public ITask
 {
 private:
@@ -15,7 +15,7 @@ private:
 	}
 };
 
-// 主函数
+// Main function / 主函数
 void exampleTask()
 {
 	TaskManager tm;
@@ -27,10 +27,10 @@ void exampleTask()
 		tm.start(task);
 		tm.stop(task);
 		tm.start(TestThreads());
-		console::print((String)count++ + ":" + tm.getTasks().size());
+		console::print(count++ cat ":" cat tm.getTasks().size());
 	}
 
 	tm.stopAll();
 
-	console::print(SS"Final:" + tm.getTasks().size());
+	console::print("Final:" cat tm.getTasks().size());
 }

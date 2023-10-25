@@ -17,25 +17,25 @@
     ],
     "configurations": [
         {
-            "name": "调试运行",
+            "name": "Run (Debug)",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/test",
             "args": [],
             "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/",
-            "preLaunchTask": "调试构建",
+            "preLaunchTask": "Build (Debug)",
             "windows": {
                 "env": { "_NO_DEBUG_HEAP": "1" },
             },
         },
         {
-            "name": "发布运行",
+            "name": "Run (Release)",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/../${input:helper_platform_bin_name}/test",
             "args": [],
             "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/",
-            "preLaunchTask": "发布构建",
+            "preLaunchTask": "Build (Release)",
             "windows": {
                 "env": { "_NO_DEBUG_HEAP": "1" },
             },

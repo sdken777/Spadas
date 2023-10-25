@@ -6,13 +6,13 @@ using namespace spadas;
 
 void exampleConsole()
 {
-	// 从控制台输入文本并弹出对话框显示
+	// Enter text from the console and show in a message box / 从控制台输入文本并弹出对话框显示
 	console::print("Input some text.");
 
 	String text = console::scan();
 	if (!text.isEmpty()) console::popup(text);
 
-	// 按键检测，输入Q退出
+	// Key detection, enter Q to exit / 按键检测，输入Q退出
 	console::print("Press keys, Q to break (5 seconds timeout).");
 	Timer timer;
 	while (timer.check() < 5000)

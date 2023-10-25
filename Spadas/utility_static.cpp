@@ -1,14 +1,15 @@
 ﻿
 #include "oscillator.h"
-#include <memory.h>
 #include <time.h>
 #include <stdlib.h>
 #include <sys/timeb.h>
 
-#define MEMOP_THRESH 16
-
-#if !defined(SPADAS_ENV_NILRT)
+#if defined(SPADAS_ENV_LINUX)
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
+#if defined(SPADAS_ENV_WINDOWS)
+#include <windows.h>
 #endif
 
 namespace utility_internal
@@ -28,14 +29,6 @@ using namespace spadas;
 using namespace oscillator_internal;
 using namespace utility_internal;
 
-// isBigEndian
-Bool spadas::system::isBigEndian()
-{
-	Word a = 255;
-	Byte *aPtr = (Byte*)&a;
-	return *aPtr != 255;
-}
-
 // exit
 void spadas::system::exit()
 {
@@ -45,14 +38,14 @@ void spadas::system::exit()
 // memorySet
 void spadas::utility::memorySet(Byte value, Pointer dst, UInt setSize)
 {
-	if (setSize < MEMOP_THRESH)
+	SPADAS_ERROR_RETURN(!dst);
+
+	Long k = setSize;
+	Byte *dstBytes = (Byte*)dst;
+
+	while (--k >= 0)
 	{
-		Byte* dstBytes = (Byte*)dst;
-		for (UInt i = 0; i < setSize; i++) dstBytes[i] = value;
-	}
-	else
-	{
-		memset(dst, (int)value, (size_t)setSize);
+		*dstBytes++ = value;
 	}
 }
 
@@ -73,27 +66,38 @@ Enum<Environment> spadas::system::getEnv()
 }
 
 // command
+#if defined(SPADAS_ENV_WINDOWS)
+void spadas::system::command(String cmd)
+{
+    STARTUPINFOW si;
+    utility::memorySet(0, &si, sizeof(STARTUPINFOW));
+    si.cb = sizeof(STARTUPINFOW);
+
+    PROCESS_INFORMATION pi;
+    utility::memorySet(0, &pi, sizeof(PROCESS_INFORMATION));
+
+    BOOL ret = CreateProcessW(NULL, cmd.wchars().data(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    if (ret) WaitForSingleObject(pi.hProcess, UINF);
+}
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 void spadas::system::command(String cmd)
 {
 	if (::system(cmd.chars().data())) {};
 }
+#endif
 
 // memoryCopy
 void spadas::utility::memoryCopy(ConstPointer src, Pointer dst, UInt copySize)
 {
-	if (copySize < MEMOP_THRESH)
+	SPADAS_ERROR_RETURN(!src || !dst);
+
+	Long k = copySize;
+	const Byte *srcBytes = (const Byte*)src;
+	Byte *dstBytes = (Byte*)dst;
+
+	while (--k >= 0)
 	{
-		const Byte* srcBytes = (const Byte*)src;
-		Byte* dstBytes = (Byte*)dst;
-		for (UInt i = 0; i < copySize; i++) dstBytes[i] = srcBytes[i];
-	}
-	else
-	{
-#if defined(SPADAS_ENV_WINDOWS)
-		memcpy_s(dst, (rsize_t)copySize, src, (rsize_t)copySize);
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
-		memcpy(dst, src, (size_t)copySize);
-#endif
+		*dstBytes++ = *srcBytes++;
 	}
 }
 
@@ -232,7 +236,7 @@ void spadas::system::addEnvironmentPath(Path path)
 	SPADAS_ERROR_RETURN(path.isNull() || !path.isFolder());
 
 	String targetFolder = path.fullPath();
-	targetFolder = targetFolder.sub(0, targetFolder.length() - 1).clone();
+	targetFolder = targetFolder.span(0, targetFolder.length() - 1).clone();
 
 	auto k = [targetFolder](StringSpan comp){ return comp == targetFolder; };
 
@@ -259,7 +263,7 @@ void spadas::system::addEnvironmentPath(Path path)
 	SPADAS_ERROR_RETURN(path.isNull() || !path.isFolder());
 
 	String targetFolder = path.fullPath();
-	targetFolder = targetFolder.sub(0, targetFolder.length() - 1).clone();
+	targetFolder = targetFolder.span(0, targetFolder.length() - 1).clone();
 
 	String env = getenv("PATH");
 	Array<StringSpan> envComps = env.split(":");

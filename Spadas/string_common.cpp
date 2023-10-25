@@ -265,7 +265,7 @@ Bool StringCommon::startsWith(const Byte* srcData, UInt srcLength, String& targe
 	return TRUE;
 }
 
-Bool StringCommon::endsWith(const Byte* srcData, UInt srcLength, String target)
+Bool StringCommon::endsWith(const Byte* srcData, UInt srcLength, String& target)
 {
 	UInt targetLength = target.length();
 	if (srcLength == 0 || targetLength == 0) return FALSE;
@@ -286,7 +286,7 @@ Binary StringCommon::toBinary(const Byte* bytes, UInt len)
 	else return Binary(bytes, len);
 }
 
-Array<UInt> StringCommon::search(const Byte* srcData, UInt srcLength, String string)
+Array<UInt> StringCommon::search(const Byte* srcData, UInt srcLength, String& string)
 {
 	if (srcLength == 0) return Array<UInt>();
 
@@ -295,41 +295,65 @@ Array<UInt> StringCommon::search(const Byte* srcData, UInt srcLength, String str
 	if (subLength > srcLength) return Array<UInt>();
 
 	Byte *subData = string.getVars()->data;
+	const UInt forCount = srcLength - subLength;
 
 	if (srcLength >= 64)
 	{
 		ArrayX<UInt> bufIndices(srcLength >= 8192 ? (srcLength >= 1048576 ? 256 : 64) : 16);
-		for (UInt i = 0; i <= srcLength - subLength; i++)
+		if (subLength == 1)
 		{
-			Bool match = TRUE;
-			for (UInt n = 0, j = i; n < subLength; n++, j++)
+			Byte targetByte = subData[0];
+			for (UInt i = 0; i <= forCount; i++)
 			{
-				if (srcData[j] != subData[n])
-				{
-					match = FALSE;
-					break;
-				}
+				if (srcData[i] == targetByte) bufIndices.append(i);
 			}
-			if (match) bufIndices.append(i);
+		}
+		else
+		{
+			for (UInt i = 0; i <= forCount; i++)
+			{
+				Bool match = TRUE;
+				for (UInt n = 0, j = i; n < subLength; n++, j++)
+				{
+					if (srcData[j] != subData[n])
+					{
+						match = FALSE;
+						break;
+					}
+				}
+				if (match) bufIndices.append(i);
+			}
 		}
 		return bufIndices.toArray();
 	}
 	else
 	{
 		Array<UInt> bufIndices(srcLength);
+		UInt *bufIndicesData = bufIndices.data();
 		UInt nBufIndices = 0;
-		for (UInt i = 0; i <= srcLength - subLength; i++)
+		if (subLength == 1)
 		{
-			Bool match = TRUE;
-			for (UInt n = 0, j = i; n < subLength; n++, j++)
+			Byte targetByte = subData[0];
+			for (UInt i = 0; i <= forCount; i++)
 			{
-				if (srcData[j] != subData[n])
-				{
-					match = FALSE;
-					break;
-				}
+				if (srcData[i] == targetByte) bufIndicesData[nBufIndices++] = i;
 			}
-			if (match) bufIndices[nBufIndices++] = i;
+		}
+		else
+		{
+			for (UInt i = 0; i <= forCount; i++)
+			{
+				Bool match = TRUE;
+				for (UInt n = 0, j = i; n < subLength; n++, j++)
+				{
+					if (srcData[j] != subData[n])
+					{
+						match = FALSE;
+						break;
+					}
+				}
+				if (match) bufIndicesData[nBufIndices++] = i;
+			}
 		}
 		if (nBufIndices == 0) return Array<UInt>();
 		bufIndices.trim(nBufIndices);
@@ -337,18 +361,129 @@ Array<UInt> StringCommon::search(const Byte* srcData, UInt srcLength, String str
 	}
 }
 
-Array<StringSpan> StringCommon::split(String& source, UInt spanIndex, UInt spanLength, String& splitter)
+UInt StringCommon::searchFirst(const Byte* srcData, UInt srcLength, String& string)
 {
-	if (spanLength == 0) return Array<StringSpan>();
+	if (srcLength == 0) return UINF;
+
+	UInt subLength = string.length();
+	SPADAS_ERROR_RETURNVAL(subLength == 0, UINF);
+	if (subLength > srcLength) return UINF;
+
+	Byte *subData = string.getVars()->data;
+	const UInt forCount = srcLength - subLength;
+
+	if (subLength == 1)
+	{
+		Byte targetByte = subData[0];
+		for (UInt i = 0; i <= forCount; i++)
+		{
+			if (srcData[i] == targetByte) return i;
+		}
+	}
+	else
+	{
+		for (UInt i = 0; i <= forCount; i++)
+		{
+			Bool match = TRUE;
+			for (UInt n = 0, j = i; n < subLength; n++, j++)
+			{
+				if (srcData[j] != subData[n])
+				{
+					match = FALSE;
+					break;
+				}
+			}
+			if (match) return i;
+		}
+	}
+	return UINF;
+}
+
+UInt StringCommon::searchLast(const Byte* srcData, UInt srcLength, String& string)
+{
+	if (srcLength == 0) return UINF;
+
+	UInt subLength = string.length();
+	SPADAS_ERROR_RETURNVAL(subLength == 0, UINF);
+	if (subLength > srcLength) return UINF;
+
+	Byte *subData = string.getVars()->data;
+	if (subLength == 1)
+	{
+		Byte targetByte = subData[0];
+		for (Int i = (Int)(srcLength - subLength); i >= 0; i--)
+		{
+			if (srcData[i] == targetByte) return i;
+		}
+	}
+	else
+	{
+		for (Int i = (Int)(srcLength - subLength); i >= 0; i--)
+		{
+			Bool match = TRUE;
+			for (UInt n = 0, j = i; n < subLength; n++, j++)
+			{
+				if (srcData[j] != subData[n])
+				{
+					match = FALSE;
+					break;
+				}
+			}
+			if (match) return i;
+		}
+	}
+	return UINF;
+}
+
+String StringCommon::trim(const Byte* srcData, UInt srcLength)
+{
+	if (srcLength == 0) return String();
+
+	UInt trimIndex = 0, trimLength = srcLength, rawLength = srcLength;
+
+	for (UInt i = 0; i < rawLength; i++)
+	{
+		Byte c = (Char)srcData[i];
+		if (c != ' ' && c != '\t' && c != '\r' && c != '\n') break;
+		trimIndex++;
+	}
+	if (trimIndex == rawLength) return String();
+	trimLength -= trimIndex;
+
+	for (Int i = (Int)rawLength - 1; i > (Int)trimIndex; i--)
+	{
+		Byte c = (Char)srcData[i];
+		if (c != ' ' && c != '\t' && c != '\r' && c != '\n') break;
+		trimLength--;
+	}
+
+	return StringSpan(srcData + trimIndex, trimLength).clone();
+}
+
+Array<StringSpan> StringCommon::split(const Byte* srcData, UInt srcLength, String& splitter, Vars *stringVars)
+{
+	if (srcLength == 0) return Array<StringSpan>();
 
 	UInt splitterLength = splitter.length();
 	SPADAS_ERROR_RETURNVAL(splitterLength == 0, Array<StringSpan>());
 
-	const Byte* srcData = source.bytes() + spanIndex;
-	Array<UInt> rawMatches = search(srcData, spanLength, splitter);
+	Array<UInt> rawMatches = search(srcData, srcLength, splitter);
 	
+    String sourceString;
+    UInt curIndex = 0;
+    if (stringVars)
+    {
+        auto objBase = Object<StringVars>::castCreate(stringVars);
+		sourceString = *(String*)(&objBase);
+        curIndex = (UInt)(srcData - sourceString.bytes());
+    }
+
 	UInt nRawMatches = rawMatches.size();
-	if (nRawMatches == 0) return Array<StringSpan>::scalar(StringSpan(source, spanIndex, spanLength));
+	if (nRawMatches == 0)
+	{
+		if (stringVars) return Array<StringSpan>::scalar(StringSpan(sourceString, curIndex, srcLength));
+		else return Array<StringSpan>::scalar(StringSpan(srcData, srcLength));
+	}
 	
 	Array<UInt> matchesArr(nRawMatches);
 	UInt *matches = matchesArr.data();
@@ -364,21 +499,20 @@ Array<StringSpan> StringCommon::split(String& source, UInt spanIndex, UInt spanL
 	Array<StringSpan> out = Array<StringSpan>::createUninitialized(outSize);
 
 	UInt index = 0;
-	StringSpan dummySpan;
 
-	if (matches[0] > 0) out.initialize(index++, StringSpan(source, spanIndex, matches[0]));
-	else out.initialize(index++, dummySpan);
+	if (matches[0] > 0) out.initialize(index++, stringVars ? StringSpan(sourceString, curIndex, matches[0]) : StringSpan(srcData, matches[0]));
+	else out.initialize(index++, StringSpan());
 
 	for (UInt i = 0; i < nMatches - 1; i++)
 	{
 		UInt subStringLength = math::max((Int)matches[i+1] - (Int)matches[i] - (Int)splitterLength, 0);
-		if (subStringLength > 0) out.initialize(index++, StringSpan(source, spanIndex + matches[i] + splitterLength, subStringLength));
-		else out.initialize(index++, dummySpan);
+		if (subStringLength > 0) out.initialize(index++, stringVars ? StringSpan(sourceString, curIndex + matches[i] + splitterLength, subStringLength) : StringSpan(srcData + matches[i] + splitterLength, subStringLength));
+		else out.initialize(index++, StringSpan());
 	}
 
 	UInt lastIndex = matches[nMatches-1] + splitterLength;
-	if (lastIndex >= spanLength) out.initialize(index++, dummySpan);
-	else out.initialize(index++, StringSpan(source, spanIndex + lastIndex, spanLength - lastIndex));
+	if (lastIndex >= srcLength) out.initialize(index++, StringSpan());
+	else out.initialize(index++, stringVars ? StringSpan(sourceString, curIndex + lastIndex, srcLength - lastIndex) : StringSpan(srcData + lastIndex, srcLength - lastIndex));
 	
 	return out;
 }
@@ -453,35 +587,4 @@ String StringCommon::replace(const Byte* srcStringData, UInt srcStringLength, St
 	}
 
 	return out;
-}
-
-StringSpan StringCommon::sub(String& source, UInt spanIndex, UInt spanLength, UInt subIndex, UInt subLength, Bool trimStart, Bool trimEnd)
-{
-	SPADAS_ERROR_RETURNVAL(subIndex >= spanLength, StringSpan());
-	if (subLength == 0) return StringSpan();
-
-	subLength = math::min(subLength, spanLength - subIndex);
-	if (!trimStart && !trimEnd) return StringSpan(source, spanIndex + subIndex, subLength);
-
-	UInt trimIndex = 0, trimLength = subLength, rawLength = subLength;
-	const Byte* data = source.bytes() + spanIndex + subIndex;
-	if (trimStart)
-	{
-		for (UInt i = 0; i < rawLength; i++)
-		{
-			if (data[i] != ' ') break;
-			trimIndex++;
-		}
-		if (trimIndex == rawLength) return StringSpan();
-		trimLength -= trimIndex;
-	}
-	if (trimEnd)
-	{
-		for (Int i = (Int)rawLength - 1; i > (Int)trimIndex; i--)
-		{
-			if (data[i] != ' ') break;
-			trimLength--;
-		}
-	}
-	return StringSpan(source, spanIndex + subIndex + trimIndex, trimLength);
 }

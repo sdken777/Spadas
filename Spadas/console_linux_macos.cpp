@@ -209,7 +209,7 @@ void console::popup(String text)
 #if defined(SPADAS_ENV_NILRT)
 void console::popup(String text)
 {
-	console::print(SS"[console::popup] " + text);
+	console::print("[console::popup] " cat text);
 }
 #endif
 
