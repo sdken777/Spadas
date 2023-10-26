@@ -176,7 +176,7 @@ void DefaultConsole::print(String text, Enum<MessageLevel> level)
 	{
 		Array<WChar> wchars = text.wchars();
 		Binary ansis(wchars.size() * 2);
-		UInt ansiLength = wCharToAnsi(wchars.data(), wchars.size(), ansis.data(), ansis.size());
+		UInt ansiLength = wCharToAnsi(wchars.data(), wchars.size() - 1, ansis.data(), ansis.size());
 		ansis[ansiLength] = 0;
 		printf_s("%s\n", (Char*)ansis.data());
 	}
