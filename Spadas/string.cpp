@@ -862,8 +862,13 @@ String::String(Array<WChar> text)
 {
 	if (text.isEmpty()) return;
 
+	UInt textLength = 0;
 	WChar *textData = text.data();
-	UInt textLength = text.size();
+	for (; textLength < text.size(); textLength++)
+	{
+		if (textData[textLength] == 0) break;
+	}
+	if (textLength == 0) return;
 
 	initBuffer(textLength * 4 + 4);
 	vars->length = wCharToUTF8(textData, textLength, (Char*)vars->data, vars->size);
@@ -1671,8 +1676,13 @@ void String::operator +=(Array<WChar> text)
 {
 	if (text.isEmpty()) return;
 
+	UInt textLength = 0;
 	WChar *textData = text.data();
-	UInt textLength = text.size();
+	for (; textLength < text.size(); textLength++)
+	{
+		if (textData[textLength] == 0) break;
+	}
+	if (textLength == 0) return;
 
 	UInt originLength = vars ? vars->length : 0;
 	ensureBuffer(textLength * 4 + 4);
