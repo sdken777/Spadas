@@ -7,7 +7,7 @@ namespace spadas
 	class BigIntegerVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(BigInteger, Vars)
+		SPADAS_VARS(BigInteger, Vars)
 
 		Bool sign; // TRUE: positive or zero, FALSE: negative
 		BigIntegerWrapper bigIntNum;
@@ -22,8 +22,6 @@ namespace spadas
 }
 
 using namespace spadas;
-
-const String spadas::BigInteger::TypeName = "spadas.BigInteger";
 
 BigInteger::BigInteger() : Object<BigIntegerVars>(new BigIntegerVars, TRUE)
 {

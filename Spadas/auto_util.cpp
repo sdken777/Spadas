@@ -6,7 +6,7 @@ namespace spadas
 	class GeneralIOObjectVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(GeneralIOObject, Vars)
+		SPADAS_VARS(GeneralIOObject, Vars)
 
 		Binary input;
 		Binary output;
@@ -265,8 +265,6 @@ void IFlexHandler::createData(Pointer data)
 void IFlexHandler::destroyData(Pointer data)
 {
 }
-
-const String spadas::GeneralIOObject::TypeName = "spadas.GeneralIOObject";
 
 GeneralIOObject::GeneralIOObject() : Object<GeneralIOObjectVars>(new GeneralIOObjectVars, TRUE)
 {

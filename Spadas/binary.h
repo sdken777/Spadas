@@ -6,7 +6,7 @@ namespace spadas
 	class BinaryVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(Binary, Vars)
+		SPADAS_VARS(Binary, Vars)
 
 		UInt size;
 		Byte* data;

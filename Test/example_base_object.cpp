@@ -8,19 +8,17 @@ using namespace spadas;
 class MyObject : public Object<class MyObjectVars>
 {
 public:
-	static const String TypeName; // Declare TypeName to support BaseObject conversion / 声明TypeName以支持BaseObject类型转换
+	SPADAS_TYPE("MyObject") // Declare type name to support type conversion / 声明类型名称以支持类型转换
 	MyObject();
 	MyObject(Double number);
 	Double getNumber();
 };
 
 // Implementation of MyObject / MyObject实现
-const String MyObject::TypeName = "MyObject"; // Implement TypeName to support BaseObject conversion / 实现TypeName以支持BaseObject类型转换
-
 class MyObjectVars : public Vars
 {
 public:
-	SPADAS_VARS_DEF(MyObject, Vars); // Declare Vars to support BaseObject conversion / 定义Vars关系以支持BaseObject类型转换
+	SPADAS_VARS(MyObject, Vars); // Declare Vars to support type conversion / 定义Vars关系以支持类型转换
 	Double number;
 	MyObjectVars(Double val) : number(val) {}
 	String toString() override { return "My object with number: " cat number; }

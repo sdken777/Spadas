@@ -2,18 +2,18 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 修正String(Array<WChar>)和operator +=(Array<WChar>)
+// Update log / 更新记录: TypeName改为静态函数typeName()。增加SPADAS_TYPE宏。SPADAS_VARS_DEF简化为SPADAS_VARS
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 42
+#define SPADAS_VERSION_BUILD 43
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.0.42 \n
-* \~Chinese 本文档对应Spadas版本：9.0.42 \n
+* \~English This document corresponds to Spadas version: 9.0.43 \n
+* \~Chinese 本文档对应Spadas版本：9.0.43 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -367,10 +367,11 @@
 #define DINF spadas::math::dinf()
 #define NDINF spadas::math::ndinf()
 
-// Convenience for Vars definition / 方便变量数据定义
-#define SPADAS_VARS_DEF(classType, baseVarsType) virtual spadas::String getTypeName() override { return classType::TypeName; } \
-virtual spadas::Bool isType(spadas::ULong typeID) override { return typeID == classType::TypeName.getID() || baseVarsType::isType(typeID); } \
-virtual spadas::Bool isType(spadas::String typeName) override { return typeName == classType::TypeName || baseVarsType::isType(typeName); }
+// Convenience for type conversion definitions / 方便用于类型转换的定义
+#define SPADAS_TYPE(typeNameString) static String typeName() { static String name = typeNameString; return name; }
+#define SPADAS_VARS(classType, baseVarsType) virtual spadas::String getTypeName() override { return classType::typeName(); } \
+virtual spadas::Bool isType(spadas::ULong id) override { return id == classType::typeName().getID() || baseVarsType::isType(id); } \
+virtual spadas::Bool isType(spadas::String name) override { return name == classType::typeName() || baseVarsType::isType(name); }
 
 // Definition of channel numbers / 通道数量定义
 #define BC_NUM 16 // Bus / 总线

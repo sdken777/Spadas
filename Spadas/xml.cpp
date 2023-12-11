@@ -23,7 +23,7 @@ namespace spadas
 	class XMLVars : public Vars
 	{
     public:
-		SPADAS_VARS_DEF(XML, Vars)
+		SPADAS_VARS(XML, Vars)
 
 		ArrayX<XMLCell> cells; // 首个为根节点
 
@@ -662,8 +662,6 @@ namespace xml_internal
 }
 
 using namespace xml_internal;
-
-const String spadas::XML::TypeName = "spadas.XML";
 
 // XMLElement ///////////////////////////////////////////////////////////////////////////
 

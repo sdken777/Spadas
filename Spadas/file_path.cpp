@@ -137,7 +137,7 @@ namespace spadas
 	class PathVars : public Vars
 	{
     public:
-		SPADAS_VARS_DEF(Path, Vars)
+		SPADAS_VARS(Path, Vars)
 
 		Bool isFolder;
 		Array<StringSpan> components; // 首个为root
@@ -173,8 +173,6 @@ namespace spadas
 using namespace spadas;
 using namespace spadas::console;
 using namespace file_internal;
-
-const String spadas::Path::TypeName = "spadas.Path";
 
 Path::Path()
 {

@@ -822,11 +822,11 @@ namespace spadas
 
 		/// \~English @brief Whether it is the type (by class type ID)
 		/// \~Chinese @brief 按类ID判断是否为该类型
-		virtual Bool isType(ULong typeID);
+		virtual Bool isType(ULong id);
 
 		/// \~English @brief Whether it is the type (by class type name)
 		/// \~Chinese @brief 按类名称判断是否为该类型
-		virtual Bool isType(String typeName);
+		virtual Bool isType(String name);
 
 		/// \~English @brief Get the string description
 		/// \~Chinese @brief 获取字符串描述
@@ -968,9 +968,7 @@ namespace spadas
 	class SPADAS_API BaseObject : public Object<Vars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -1042,9 +1040,7 @@ namespace spadas
 	template <typename Type> class Interface : public Object<InterfaceVars<Type> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -1085,9 +1081,7 @@ namespace spadas
 	template <typename Type> class Optional : public Object<OptionalVars<Type> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -1170,9 +1164,7 @@ namespace spadas
 	template <typename Type> class Array : public Object<ArrayVars<Type> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Default constructor, create an empty array
 		/// \~Chinese @brief 默认构造函数，创建一个空数组
@@ -1782,9 +1774,7 @@ namespace spadas
 	template <typename Type> class ArrayX : public Object<ArrayXVars<Type> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Create an empty array, each segment size is 16
 		/// \~Chinese @brief 创建一个空数组，每段大小为16
@@ -1934,9 +1924,7 @@ namespace spadas
 	template <typename Type> class List : public Object<ListVars<Type> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Create an empty linked list
 		/// \~Chinese @brief 创建一个空链表
@@ -2012,9 +2000,7 @@ namespace spadas
 	template <typename Type> class Stream : public Object<StreamVars<Type> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Create a data stream with a capacity of 1, and its elements can be discarded
 		/// \~Chinese @brief 创建容量为1的数据流，且其元素可丢弃
@@ -2174,9 +2160,7 @@ namespace spadas
 	template <typename KeyType, typename ValueType> class Map : public Object<MapVars<KeyType, ValueType> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Create an empty mapping table, the default number of buckets is 256
 		/// \~Chinese @brief 创建空的映射表，默认bucket个数为256
@@ -2354,9 +2338,7 @@ namespace spadas
 	class SPADAS_API Binary : public Object<class BinaryVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Create an empty data block (length is 0)
 		/// \~Chinese @brief 创建一个空数据块（长度为0）
@@ -2619,9 +2601,7 @@ namespace spadas
 	class SPADAS_API String : public Object<class StringVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.String")
 
 		/// \~English @brief Create an empty string
 		/// \~Chinese @brief 创建空字符串
@@ -3584,9 +3564,7 @@ namespace spadas
 	class SPADAS_API Path : public Object<class PathVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Path")
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -3761,9 +3739,7 @@ namespace spadas
 	class SPADAS_API File : public Object<class FileVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.File")
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -3847,9 +3823,7 @@ namespace spadas
 	class SPADAS_API FileConsole : public Object<class FileConsoleVars>, public IConsole
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.FileConsole")
 
 		/// \~English @brief Create an object to ignore all printing
 		/// \~Chinese @brief 创建用于忽略所有打印的对象
@@ -3912,9 +3886,7 @@ namespace spadas
 	class SPADAS_API XML : public Object<class XMLVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.XML")
 
 		/// \~English @brief Create an empty document (root node's tag is "root")
 		/// \~Chinese @brief 创建一个空文档（根标签为root）
@@ -4305,9 +4277,7 @@ namespace spadas
 	class SPADAS_API Image : public Object<class ImageVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Image")
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -4457,9 +4427,7 @@ namespace spadas
 	class SPADAS_API BigInteger : public Object<class BigIntegerVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.BigInteger")
 
 		/// \~English @brief Zero
 		/// \~Chinese @brief 零
@@ -4539,9 +4507,7 @@ namespace spadas
 	template <typename Type> class Matrix : public Object<class MatrixVars<Type> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Matrix<" cat typeid(Type).name() cat ">")
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -4922,9 +4888,7 @@ namespace spadas
 	class SPADAS_API Lock : public Object<class LockVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Lock")
 
 		/// \~English @brief Create a non-spinlock object (default is not entered)
 		/// \~Chinese @brief 创建非自旋锁对象 (默认为未进入)
@@ -4980,9 +4944,7 @@ namespace spadas
 	class SPADAS_API Flag : public Object<class FlagVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Flag")
 
 		/// \~English @brief Create a Flag object (the default is "not set" state)
 		/// \~Chinese @brief 创建Flag对象 (默认为not set状态)
@@ -5044,9 +5006,7 @@ namespace spadas
 	class SPADAS_API Barrier : public Object<class BarrierVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Barrier")
 
 		/// \~English @brief Create a synchronizer object (default strength is 0)
 		/// \~Chinese @brief 创建一个同步器对象 (默认强度为0)
@@ -5164,9 +5124,7 @@ namespace spadas
 	class SPADAS_API Threads : public Object<class ThreadsVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Threads")
 
 		/// \~English @brief Invalid object (should be created by Threads::start or Threads::begin)
 		/// \~Chinese @brief 无效对象（应由 Threads::start 或 Threads::begin 创建）
@@ -5246,9 +5204,7 @@ namespace spadas
 	class SPADAS_API TaskManager : public Object<class TaskManagerVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.TaskManager")
 
 		/// \~English @brief Create task thread manager
 		/// \~Chinese @brief 创建任务线程管理器
@@ -5449,9 +5405,7 @@ namespace spadas
 	class SPADAS_API Timer : public Object<class TimerVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Timer")
 
 		/// \~English @brief Create a timer object and start it immediately
 		/// \~Chinese @brief 创建一个计时器对象并立即启动
@@ -5507,9 +5461,7 @@ namespace spadas
 	class SPADAS_API Tick : public Object<class TickVars>, public IWorkflow
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Tick")
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -5537,9 +5489,7 @@ namespace spadas
 	class SPADAS_API MemoryMap : public Object<class MemoryMapVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.MemoryMap")
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -5596,9 +5546,7 @@ namespace spadas
 	class SPADAS_API MemoryMapStream : public Object<class MemoryMapStreamVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.MemoryMapStream")
 
 		/// \~English @brief Create a data stream (unopened state)
 		/// \~Chinese @brief 创建一个数据流（未开启状态）
@@ -5660,9 +5608,7 @@ namespace spadas
 	class SPADAS_API LibraryLoader : public Object<class LibraryLoaderVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.LibraryLoader")
 
 		/// \~English @brief Create a dynamic library loader
 		/// \~Chinese @brief 创建动态库加载器
@@ -6519,9 +6465,7 @@ namespace spadas
 	class SPADAS_API SessionSampleBuffer : public Object<class SessionSampleBufferVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.SessionSampleBuffer")
 
 		/// \~English @brief Create a sample buffer
 		/// \~Chinese @brief 创建样本缓存
@@ -8124,9 +8068,7 @@ namespace spadas
 	class SPADAS_API GeneralIOObject : public Object<class GeneralIOObjectVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.GeneralIOObject")
 
 		/// \~English @brief Create object
 		/// \~Chinese @brief 创建对象

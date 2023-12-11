@@ -14,8 +14,6 @@ using namespace spadas::console;
 using namespace spadas::utility;
 using namespace image_internal;
 
-const String spadas::Image::TypeName = "spadas.Image";
-
 Image::Image()
 {
 }

@@ -16,7 +16,7 @@ namespace spadas
 	class TaskManagerVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(TaskManager, Vars)
+		SPADAS_VARS(TaskManager, Vars)
 
 		ListNode<TaskThreadContext> threads;
 		Lock threadsLock;
@@ -41,8 +41,6 @@ namespace spadas
 
 using namespace spadas;
 using namespace console_internal;
-
-const String spadas::TaskManager::TypeName = "spadas.TaskManager";
 
 #if defined(SPADAS_ENV_WINDOWS)
 

@@ -7,7 +7,7 @@ namespace spadas
 	class TickVars : public Vars
     {
     public:
-		SPADAS_VARS_DEF(Tick, Vars)
+		SPADAS_VARS(Tick, Vars)
 
 		String name;
 		Interface<ITickHandler> handler;
@@ -23,8 +23,6 @@ namespace spadas
 
 using namespace spadas;
 using namespace oscillator_internal;
-
-const String spadas::Tick::TypeName = "spadas.Tick";
 
 void ITickHandler::onTick(String name)
 {

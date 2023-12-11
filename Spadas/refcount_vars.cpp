@@ -6,7 +6,7 @@ using namespace spadas;
 Atom globalObjectCounter;
 String objectNamePostfix = " object";
 
-const String BaseObject::TypeName = "spadas.BaseObject";
+String BaseObject::typeName() { static String name = "spadas.BaseObject"; return name; }
 
 Vars::Vars() : nRefs(1)
 {
@@ -46,17 +46,17 @@ UInt Vars::getObjectCount()
 
 String Vars::getTypeName()
 {
-	return BaseObject::TypeName;
+	return BaseObject::typeName();
 }
 
-Bool Vars::isType(ULong typeID)
+Bool Vars::isType(ULong id)
 {
-	return typeID == BaseObject::TypeName.getID();
+	return id == BaseObject::typeName().getID();
 }
 
-Bool Vars::isType(String typeName)
+Bool Vars::isType(String name)
 {
-	return typeName == BaseObject::TypeName;
+	return name == BaseObject::typeName();
 }
 
 String Vars::toString()

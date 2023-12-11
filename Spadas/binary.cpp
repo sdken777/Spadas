@@ -4,7 +4,7 @@
 using namespace spadas;
 using namespace binary_internal;
 
-const String spadas::Binary::TypeName = "spadas.Binary";
+String spadas::Binary::typeName() { static String name = "spadas.Binary"; return name; }
 
 Binary::Binary()
 {}

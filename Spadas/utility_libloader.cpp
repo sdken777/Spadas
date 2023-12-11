@@ -17,7 +17,7 @@ namespace spadas
 	class LibraryLoaderVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(LibraryLoader, Vars)
+		SPADAS_VARS(LibraryLoader, Vars)
 
 #if defined(SPADAS_ENV_WINDOWS)
 		HMODULE module;
@@ -32,8 +32,6 @@ namespace spadas
 }
 
 using namespace spadas;
-
-const String spadas::LibraryLoader::TypeName = "spadas.LibraryLoader";
 
 LibraryLoader::LibraryLoader() : Object<LibraryLoaderVars>(new LibraryLoaderVars, TRUE)
 {

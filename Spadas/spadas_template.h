@@ -95,7 +95,7 @@ namespace spadas
 	template<typename TargetType>
 	Bool Object<VarsType>::is()
 	{
-		return !vars || ((Vars*)vars)->isType(TargetType::TypeName.getID()) || ((Vars*)vars)->isType(TargetType::TypeName);
+		return !vars || ((Vars*)vars)->isType(TargetType::typeName().getID()) || ((Vars*)vars)->isType(TargetType::typeName());
 	}
 
 	template<typename VarsType>
@@ -115,7 +115,7 @@ namespace spadas
 			ok = TRUE;
 			return TargetType();
 		}
-		else if (((Vars*)vars)->isType(TargetType::TypeName.getID()) || ((Vars*)vars)->isType(TargetType::TypeName))
+		else if (((Vars*)vars)->isType(TargetType::typeName().getID()) || ((Vars*)vars)->isType(TargetType::typeName()))
 		{
 			auto objBase = TargetType::castCreate((Vars*)vars);
 			ok = TRUE;
@@ -209,12 +209,12 @@ namespace spadas
 	}
 
 	template <typename Type>
-	const String Interface<Type>::TypeName = "spadas.Interface<" cat typeid(Type).name() cat ">";
+	String Interface<Type>::typeName() { static String name = "spadas.Interface<" cat typeid(Type).name() cat ">"; return name; }
 
 	template <typename Type> class InterfaceVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(Interface<Type>, Vars)
+		SPADAS_VARS(Interface<Type>, Vars)
 		Type *implement;
 		Vars *implementVars;
 		InterfaceVars(Type *implement0, Vars *implementVars0) : implement(implement0), implementVars(implementVars0)
@@ -278,12 +278,12 @@ namespace spadas
 	}
 
 	template <typename Type>
-	const String Optional<Type>::TypeName = "spadas.Optional<" cat typeid(Type).name() cat ">";
+	String Optional<Type>::typeName() { static String name = "spadas.Optional<" cat typeid(Type).name() cat ">"; return name; }
 
 	template <typename Type> class OptionalVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(Optional<Type>, Vars)
+		SPADAS_VARS(Optional<Type>, Vars)
 		Type val;
 		OptionalVars(Type& v) : val(v)
 		{}
@@ -484,12 +484,12 @@ namespace spadas
 	}
 
 	template <typename Type>
-	const String Array<Type>::TypeName = "spadas.Array<" cat typeid(Type).name() cat ">";
+	String Array<Type>::typeName() { static String name = "spadas.Array<" cat typeid(Type).name() cat ">"; return name; }
 
 	template<typename Type> class ArrayVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(Array<Type>, Vars)
+		SPADAS_VARS(Array<Type>, Vars)
 		UInt size;
 		UInt reserveSize;
 		Type *data;
@@ -2034,12 +2034,12 @@ namespace spadas
 	}
 
 	template <typename Type>
-	const String ArrayX<Type>::TypeName = "spadas.ArrayX<" cat typeid(Type).name() cat ">";
+	String ArrayX<Type>::typeName() { static String name = "spadas.ArrayX<" cat typeid(Type).name() cat ">"; return name; }
 
 	template<typename Type> class ArrayXVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(ArrayX<Type>, Vars)
+		SPADAS_VARS(ArrayX<Type>, Vars)
 		UInt size;
 		UInt segmentSize;
 		Bool withDefault;
@@ -2377,12 +2377,12 @@ namespace spadas
 	}
 
 	template <typename Type>
-	const String List<Type>::TypeName = "spadas.List<" cat typeid(Type).name() cat ">";
-
+	String List<Type>::typeName() { static String name = "spadas.List<" cat typeid(Type).name() cat ">"; return name; }
+ 
 	template<typename Type> class ListVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(List<Type>, Vars)
+		SPADAS_VARS(List<Type>, Vars)
 		UInt size;
 		volatile Int elemRefs;
 		internal::ListSegment<Type> *firstSeg;
@@ -2883,12 +2883,12 @@ namespace spadas
 
 	// Implementation of data stream / 数据流实现 ///////////////////////////////////////////////////////
 	template <typename Type>
-	const String Stream<Type>::TypeName = "spadas.Stream<" cat typeid(Type).name() cat ">";
+	String Stream<Type>::typeName() { static String name = "spadas.Stream<" cat typeid(Type).name() cat ">"; return name; }
 
 	template<typename Type> class StreamVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(Stream<Type>, Vars)
+		SPADAS_VARS(Stream<Type>, Vars)
 		UInt capacity;
 		volatile UInt nElements;
 		UInt nDiscarded;
@@ -3341,12 +3341,12 @@ namespace spadas
 	}
 
 	template <typename KeyType, typename ValueType>
-	const String Map<KeyType, ValueType>::TypeName = "spadas.Map<" cat typeid(KeyType).name() cat "," cat typeid(ValueType).name() cat ">";
+	String Map<KeyType, ValueType>::typeName() { static String name = "spadas.Map<" cat typeid(KeyType).name() cat "," cat typeid(ValueType).name() cat ">"; return name; }
 
 	template <typename KeyType, typename ValueType> class MapVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(Map<KeyType COMMA ValueType>, Vars)
+		SPADAS_VARS(Map<KeyType COMMA ValueType>, Vars)
 		Word mask;
 		UInt size;
 		Array<ListNode<KeyValue<KeyType, ValueType> >* > table;
@@ -3852,13 +3852,10 @@ namespace spadas
 	}
 
 	// Implementation of matrix class / 矩阵类实现 ///////////////////////////////////////////////////////
-	template <typename Type>
-	const String Matrix<Type>::TypeName = "spadas.Matrix<" cat typeid(Type).name() cat ">";
-
 	template<typename Type> class MatrixVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(Matrix<Type>, Vars)
+		SPADAS_VARS(Matrix<Type>, Vars)
 		Array<UInt> dims;
 		UInt nElems;
 		Array<Type> data0;

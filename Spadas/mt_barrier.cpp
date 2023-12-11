@@ -6,7 +6,7 @@ namespace spadas
 	class BarrierVars : public Vars
 	{
     public:
-		SPADAS_VARS_DEF(Barrier, Vars)
+		SPADAS_VARS(Barrier, Vars)
 
 		volatile UInt strength;
 		volatile UInt nJoined;
@@ -30,8 +30,6 @@ namespace spadas
 }
 
 using namespace spadas;
-
-const String spadas::Barrier::TypeName = "spadas.Barrier";
 
 Barrier::Barrier() : Object<class BarrierVars>(new BarrierVars(), TRUE)
 {

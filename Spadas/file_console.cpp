@@ -6,7 +6,7 @@ namespace spadas
 	class FileConsoleVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(FileConsole, Vars)
+		SPADAS_VARS(FileConsole, Vars)
 
 		File file;
 		String errorPrefix;
@@ -25,8 +25,6 @@ namespace spadas
 }
 
 using namespace spadas;
-
-const String spadas::FileConsole::TypeName = "spadas.FileConsole";
 
 FileConsole::FileConsole() : Object<FileConsoleVars>(new FileConsoleVars, TRUE)
 {
