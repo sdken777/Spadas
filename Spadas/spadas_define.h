@@ -2,18 +2,18 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: TypeName改为静态函数typeName()。增加SPADAS_TYPE宏。SPADAS_VARS_DEF简化为SPADAS_VARS
+// Update log / 更新记录: 合并workPath和executableFolderPath为appParentPath。新增Path::currentPath/setCurrentPath/setAppParentPath。移除setWork/ExecutableFolderPath
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 43
+#define SPADAS_VERSION_BUILD 44
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.0.43 \n
-* \~Chinese 本文档对应Spadas版本：9.0.43 \n
+* \~English This document corresponds to Spadas version: 9.0.44 \n
+* \~Chinese 本文档对应Spadas版本：9.0.44 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *

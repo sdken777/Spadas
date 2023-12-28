@@ -25,7 +25,8 @@ namespace file_internal
 		else
 		{
 			if (absoluteLimited) return FALSE;
-			buf.append(pathsInfo.workPathComponents);
+			if (pathsInfo.appParentPathComponents.isEmpty()) return FALSE;
+			buf.append(pathsInfo.appParentPathComponents);
 		}
 
 		UInt len = pathString.length();
@@ -84,51 +85,38 @@ namespace file_internal
 	{
 		Bool dummy = FALSE;
 
-		String executableFolderPath = getExecutableFolderPathString();
-		if (!executableFolderPath.isEmpty() && parsePathString(executableFolderPath, TRUE, executableFolderPathComponents, dummy))
+		String appParentPath = getAppParentPathString(FALSE);
+		if (!appParentPath.isEmpty() && parsePathString(appParentPath, TRUE, appParentPathComponents, dummy))
 		{
-			executableFolderPathString = componentsToString(executableFolderPathComponents, TRUE);
+			appParentPathString = componentsToString(appParentPathComponents, TRUE);
 		}
-		
-		String workPath = getWorkPathString();
-		if (!workPath.isEmpty() && parsePathString(workPath, TRUE, workPathComponents, dummy))
+
+		String executableParentPath = getAppParentPathString(TRUE);
+		if (!executableParentPath.isEmpty() && parsePathString(executableParentPath, TRUE, executableParentPathComponents, dummy))
 		{
-			workPathString = componentsToString(workPathComponents, TRUE);
+			executableParentPathString = componentsToString(executableParentPathComponents, TRUE);
 		}
-		
+
 		String homePath = getHomePathString();
 		if (!homePath.isEmpty() && parsePathString(homePath, TRUE, homePathComponents, dummy))
 		{
 			homePathString = componentsToString(homePathComponents, TRUE);
 		}
-		
-		String spadasFilesPath = getSpadasFilesPathString();
+
+		String spadasFilesPath = homePath.isEmpty() ? String() : (homePath + "SpadasFiles" + Path::separator()).toString();
 		if (!spadasFilesPath.isEmpty() && parsePathString(spadasFilesPath, TRUE, spadasFilesPathComponents, dummy))
 		{
 			spadasFilesPathString = componentsToString(spadasFilesPathComponents, TRUE);
 		}
 		if (!spadasFilesPath.isEmpty() && !folderExist(spadasFilesPath)) folderCreate(spadasFilesPath);
 	}
-	void PathsInfo::setWorkPath(String path)
+
+	void PathsInfo::setAppParentPath(Array<StringSpan> components, String pathString)
 	{
-		Array<StringSpan> components;
-		Bool isFolder = FALSE;
-		if (parsePathString(path, TRUE, components, isFolder) && isFolder && folderExist(path))
-		{
-			workPathComponents = components;
-			workPathString = componentsToString(workPathComponents, TRUE);
-		}
+		appParentPathComponents = components;
+		appParentPathString = pathString;
 	}
-	void PathsInfo::setExecutableFolderPath(String path)
-	{
-		Array<StringSpan> components;
-		Bool isFolder = FALSE;
-		if (parsePathString(path, TRUE, components, isFolder) && isFolder && folderExist(path))
-		{
-			executableFolderPathComponents = components;
-			executableFolderPathString = componentsToString(executableFolderPathComponents, TRUE);
-		}
-	}
+
 	PathsInfo pathsInfo;
 }
 
@@ -658,32 +646,26 @@ String Path::separator()
 	return getSeparatorChar();
 }
 
-Path Path::workPath()
+Path Path::appParentPath(Bool asExecutable)
 {
-	if (pathsInfo.workPathComponents.isEmpty()) return Path();
+	Array<StringSpan> components = asExecutable ? pathsInfo.executableParentPathComponents : pathsInfo.appParentPathComponents;
+	String pathString = asExecutable ? pathsInfo.executableParentPathString : pathsInfo.appParentPathString;
+
+	if (components.isEmpty()) return Path();
 
 	PathVars *newVars = new PathVars();
 	newVars->isFolder = TRUE;
-	newVars->components = pathsInfo.workPathComponents;
-	newVars->pathString = pathsInfo.workPathString;
+	newVars->components = components;
+	newVars->pathString = pathString;
     
     Path path;
 	path.setVars(newVars, TRUE);
     return path;
 }
 
-Path Path::executableFolderPath()
+Path Path::currentPath()
 {
-	if (pathsInfo.executableFolderPathComponents.isEmpty()) return Path();
-
-	PathVars *newVars = new PathVars();
-	newVars->isFolder = TRUE;
-	newVars->components = pathsInfo.executableFolderPathComponents;
-	newVars->pathString = pathsInfo.executableFolderPathString;
-    
-    Path path;
-	path.setVars(newVars, TRUE);
-    return path;
+	return Path(getCurrentPathString());
 }
 
 Path Path::homePath()
@@ -714,12 +696,20 @@ Path Path::spadasFilesPath()
     return path;
 }
 
-void Path::setWorkPath(String pathString)
+void Path::setCurrentPath(Path path)
 {
-	pathsInfo.setWorkPath(pathString);
+	SPADAS_ERROR_RETURN(path.isNull());
+	SPADAS_ERROR_RETURN(!path.isFolder());
+	SPADAS_ERROR_RETURN(!path.exist());
+
+	setCurrentPathString(path.fullPath());
 }
 
-void Path::setExecutableFolderPath(String pathString)
+void Path::setAppParentPath(Path path)
 {
-	pathsInfo.setExecutableFolderPath(pathString);
+	SPADAS_ERROR_RETURN(path.isNull());
+	SPADAS_ERROR_RETURN(!path.isFolder());
+	SPADAS_ERROR_RETURN(!path.exist());
+
+	pathsInfo.setAppParentPath(path.vars->components.clone(), path.fullPath());
 }

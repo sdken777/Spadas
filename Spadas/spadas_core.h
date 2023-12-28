@@ -3572,20 +3572,20 @@ namespace spadas
 
 		/// \~English @brief Initialize based on an absolute or relative path string
 		/// \~Chinese @brief 基于一个绝对路径或相对路径的字符串初始化
-		/// \~English @param pathString Absolute path or relative path string, the relative path will be based on the current working directory \n
+		/// \~English @param pathString Absolute path or relative path string, the relative path will be based on appParentPath() \n
 		/// - If it is a folder, it needs to be explicitly terminated with the path separator "/" or "\" \n
 		/// - You can add "../" or "..\" to indicate the parent folder
-		/// \~Chinese @param pathString 绝对路径或相对路径字符串，相对路径将基于当前工作目录 \n
+		/// \~Chinese @param pathString 绝对路径或相对路径字符串，相对路径将基于appParentPath() \n
 		/// - 若为文件夹，需显式的以路径分隔符"/"或"\"结尾 \n
 		/// - 可加入"../"或"..\"表示上层文件夹
 		Path(const Char pathString[]);
 
 		/// \~English @brief Initialize based on an absolute or relative path string
 		/// \~Chinese @brief 基于一个绝对路径或相对路径的字符串初始化
-		/// \~English @param pathString Absolute path or relative path string, the relative path will be based on the current working directory \n
+		/// \~English @param pathString Absolute path or relative path string, the relative path will be based on appParentPath() \n
 		/// - If it is a folder, it needs to be explicitly terminated with the path separator "/" or "\" \n
 		/// - You can add "../" or "..\" to indicate the parent folder
-		/// \~Chinese @param pathString 绝对路径或相对路径字符串，相对路径将基于当前工作目录 \n
+		/// \~Chinese @param pathString 绝对路径或相对路径字符串，相对路径将基于appParentPath() \n
 		/// - 若为文件夹，需显式的以路径分隔符"/"或"\"结尾 \n
 		/// - 可加入"../"或"..\"表示上层文件夹
 		Path(String pathString);
@@ -3687,15 +3687,15 @@ namespace spadas
 		Path childFolder(String childFullName);
 
 		/// \~English @brief (Folder-only) Generate a child file path or subfolder path based on the input relative path (folders end with path separator "/" or "\")
-		/// \~Chinese @brief (仅限文件夹) 输入当前文件夹内的相对路径，生成文件或文件夹路径 (文件夹以路径分隔符/或\结尾)
+		/// \~Chinese @brief (仅限文件夹) 输入本文件夹内的相对路径，生成文件或文件夹路径 (文件夹以路径分隔符/或\结尾)
 		Path childPath(String pathString);
 
-		/// \~English @brief (Folder-only) Check if the target path is contained within the current folder
-		/// \~Chinese @brief (仅限文件夹) 检查目标路径是否包含在当前文件夹内
+		/// \~English @brief (Folder-only) Check if the target path is contained within this folder
+		/// \~Chinese @brief (仅限文件夹) 检查目标路径是否包含在本文件夹内
 		Bool contain(Path path);
 
-		/// \~English @brief (Folder-only) Check if the target path is contained within the current folder. If included, output the relative path based on the current folder to pathString
-		/// \~Chinese @brief (仅限文件夹) 检查目标路径是否包含在当前文件夹内。若包含，则输出基于当前文件夹的相对路径至pathString
+		/// \~English @brief (Folder-only) Check if the target path is contained within this folder. If included, output the relative path based on this folder to pathString
+		/// \~Chinese @brief (仅限文件夹) 检查目标路径是否包含在本文件夹内。若包含，则输出基于本文件夹的相对路径至pathString
 		Bool contain(Path path, String& pathString);
 
 		/// \~English @brief Obtain the parent folder path of the file or folder (if this path is the root directory of the disk, such as c:\, etc., an invalid path will be returned)
@@ -3706,13 +3706,13 @@ namespace spadas
 		/// \~Chinese @brief 获得当前操作系统下的路径分隔符
 		static String separator();
 
-		/// \~English @brief Get the working directory
-		/// \~Chinese @brief 获得工作目录
-		static Path workPath();
+		/// \~English @brief Get the directory where the application resides (On MacOS, asExecutable can be set to TRUE to obtain the directory where the executable program resides)
+		/// \~Chinese @brief 获得应用程序所在目录（MacOS下可设置asExecutable为TRUE以取得可执行程序所在目录）
+		static Path appParentPath(Bool asExecutable = FALSE);
 
-		/// \~English @brief Get the directory where the executable program is located
-		/// \~Chinese @brief 获得可执行程序所在目录
-		static Path executableFolderPath();
+		/// \~English @brief Get system's current directory
+		/// \~Chinese @brief 获得系统当前目录
+		static Path currentPath();
 
 		/// \~English @brief Get user root directory
 		/// \~Chinese @brief 获得用户根目录
@@ -3722,13 +3722,13 @@ namespace spadas
 		/// \~Chinese @brief 获得SpadasFiles目录
 		static Path spadasFilesPath();
 
-		/// \~English @brief Set the working directory (note that it should end with a path separator "/" or "\")
-		/// \~Chinese @brief 设置工作目录 (注意应以路径分隔符"/"或"\"结尾)
-		static void setWorkPath(String pathString);
+		/// \~English @brief Change system's current directory
+		/// \~Chinese @brief 改变系统当前目录
+		static void setCurrentPath(Path path);
 
-		/// \~English @brief Set the directory where the executable program is located (note that it should end with the path separator "/" or "\")
-		/// \~Chinese @brief 设置可执行程序所在目录 (注意应以路径分隔符"/"或"\"结尾)
-		static void setExecutableFolderPath(String pathString);
+		/// \~English @brief Manually set the directory where the application resides
+		/// \~Chinese @brief 手动设置应用程序所在目录
+		static void setAppParentPath(Path path);
 
 	private:
 		static void addFolderContents(ArrayX<Path>& contents, String folderPathString, Array<StringSpan>& folderComponents);
