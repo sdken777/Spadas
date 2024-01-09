@@ -2050,6 +2050,10 @@ namespace spadas
 		/// \~Chinese @brief 批量推入新元素，若推入过程中检测到interrupt则返回FALSE(此时可能已推入部分元素)
 		Bool enqueue(Array<Type> newElements, Flag interrupt);
 
+		/// \~English @brief Dequeue one element, and return whether successfully dequeued
+		/// \~Chinese @brief 取出一个元素，返回是否成功
+		Bool dequeueOne(Type& elem);
+
 		/// \~English @brief Try to dequeue the specified number of elements, the actual dequeued number is subject to the returned object (the element with index 0 in the returned array is the earliest)
 		/// \~Chinese @brief 尝试取出指定数量的元素，实际取出数量以返回对象为准 (返回的数组中序号0的元素为最早)
 		Array<Type> dequeue(UInt amount = UINF);
@@ -5016,7 +5020,7 @@ namespace spadas
 		/// \~Chinese @brief 设置强度
 		void setStrength(UInt strength);
 
-		/// \~English @brief nter the synchronization state, when the number of threads entering the synchronization state is equal to the strength of the synchronizer, it will return TRUE (return FALSE if it times out)
+		/// \~English @brief Enter the synchronization state, when the number of threads entering the synchronization state is equal to the strength of the synchronizer, it will return TRUE (return FALSE if it times out)
 		/// \~Chinese @brief 进入同步状态，当进入同步状态的线程数等于同步器强度时结束返回TRUE (超时则返回FALSE)
 		Bool against(Flag interrupt);
 
@@ -5618,7 +5622,7 @@ namespace spadas
 		/// \~Chinese @brief 使用指定文件夹下的库名称打开动态库（无需添加lib等前缀或后缀名），libVersion用于指定so等动态库的后缀版本号（如"1.0"）
 		Bool openWithName(Path libDir, String libName, String libVersion = String());
 
-		/// \~English @brief Use the library name under the specified folder to open the dynamic library (no need to add a prefix or suffix such as "lib"), libVersion is used to speify the suffix version number of the dynamic library such as so (such as "1.0"), and output an error message if it fails
+		/// \~English @brief Use the library name under the specified folder to open the dynamic library (no need to add a prefix or suffix such as "lib"), libVersion is used to specify the suffix version number of the dynamic library such as so (such as "1.0"), and output an error message if it fails
 		/// \~Chinese @brief 使用指定文件夹下的库名称打开动态库（无需添加lib等前缀或后缀名），libVersion用于指定so等动态库的后缀版本号（如"1.0"），若失败则输出错误信息
 		Bool openWithName(Path libDir, String libName, String libVersion, String& errorMessage);
 

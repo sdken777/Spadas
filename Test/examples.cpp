@@ -13,6 +13,7 @@ void exampleLambda();
 void exampleEnum();
 void exampleArrayX();
 void exampleList();
+void exampleStream();
 void exampleXML();
 void examplePointTo();
 void exampleEqual();
@@ -53,6 +54,9 @@ void runExamples()
 
     print("\n-- Example: List --");
     exampleList();
+
+    print("\n-- Example: Stream --");
+    exampleStream();
 
     print("\n-- Example: XML --");
     exampleXML();

@@ -2050,6 +2050,10 @@ namespace spadas
 		/// \~Chinese @brief 批量推入新元素，若推入过程中检测到interrupt则返回FALSE(此时可能已推入部分元素)
 		Bool enqueue(Array<Type> newElements, Flag interrupt);
 
+		/// \~English @brief Dequeue one element, and return whether successfully dequeued
+		/// \~Chinese @brief 取出一个元素，返回是否成功
+		Bool dequeueOne(Type& elem);
+
 		/// \~English @brief Try to dequeue the specified number of elements, the actual dequeued number is subject to the returned object (the element with index 0 in the returned array is the earliest)
 		/// \~Chinese @brief 尝试取出指定数量的元素，实际取出数量以返回对象为准 (返回的数组中序号0的元素为最早)
 		Array<Type> dequeue(UInt amount = UINF);
