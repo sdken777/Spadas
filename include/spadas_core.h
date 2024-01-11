@@ -822,11 +822,11 @@ namespace spadas
 
 		/// \~English @brief Whether it is the type (by class type ID)
 		/// \~Chinese @brief 按类ID判断是否为该类型
-		virtual Bool isType(ULong typeID);
+		virtual Bool isType(ULong id);
 
 		/// \~English @brief Whether it is the type (by class type name)
 		/// \~Chinese @brief 按类名称判断是否为该类型
-		virtual Bool isType(String typeName);
+		virtual Bool isType(String name);
 
 		/// \~English @brief Get the string description
 		/// \~Chinese @brief 获取字符串描述
@@ -968,9 +968,7 @@ namespace spadas
 	class SPADAS_API BaseObject : public Object<Vars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -1042,9 +1040,7 @@ namespace spadas
 	template <typename Type> class Interface : public Object<InterfaceVars<Type> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -1085,9 +1081,7 @@ namespace spadas
 	template <typename Type> class Optional : public Object<OptionalVars<Type> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -1170,9 +1164,7 @@ namespace spadas
 	template <typename Type> class Array : public Object<ArrayVars<Type> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Default constructor, create an empty array
 		/// \~Chinese @brief 默认构造函数，创建一个空数组
@@ -1782,9 +1774,7 @@ namespace spadas
 	template <typename Type> class ArrayX : public Object<ArrayXVars<Type> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Create an empty array, each segment size is 16
 		/// \~Chinese @brief 创建一个空数组，每段大小为16
@@ -1934,9 +1924,7 @@ namespace spadas
 	template <typename Type> class List : public Object<ListVars<Type> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Create an empty linked list
 		/// \~Chinese @brief 创建一个空链表
@@ -2012,9 +2000,7 @@ namespace spadas
 	template <typename Type> class Stream : public Object<StreamVars<Type> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Create a data stream with a capacity of 1, and its elements can be discarded
 		/// \~Chinese @brief 创建容量为1的数据流，且其元素可丢弃
@@ -2063,6 +2049,10 @@ namespace spadas
 		/// \~English @brief Enqueue new elements in batches, and return FALSE if an interrupt is detected during the enqueue process (some elements may have been enqueued at this time)
 		/// \~Chinese @brief 批量推入新元素，若推入过程中检测到interrupt则返回FALSE(此时可能已推入部分元素)
 		Bool enqueue(Array<Type> newElements, Flag interrupt);
+
+		/// \~English @brief Dequeue one element, and return whether successfully dequeued
+		/// \~Chinese @brief 取出一个元素，返回是否成功
+		Bool dequeueOne(Type& elem);
 
 		/// \~English @brief Try to dequeue the specified number of elements, the actual dequeued number is subject to the returned object (the element with index 0 in the returned array is the earliest)
 		/// \~Chinese @brief 尝试取出指定数量的元素，实际取出数量以返回对象为准 (返回的数组中序号0的元素为最早)
@@ -2174,9 +2164,7 @@ namespace spadas
 	template <typename KeyType, typename ValueType> class Map : public Object<MapVars<KeyType, ValueType> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Create an empty mapping table, the default number of buckets is 256
 		/// \~Chinese @brief 创建空的映射表，默认bucket个数为256
@@ -2354,9 +2342,7 @@ namespace spadas
 	class SPADAS_API Binary : public Object<class BinaryVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		static String typeName();
 
 		/// \~English @brief Create an empty data block (length is 0)
 		/// \~Chinese @brief 创建一个空数据块（长度为0）
@@ -2619,9 +2605,7 @@ namespace spadas
 	class SPADAS_API String : public Object<class StringVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.String")
 
 		/// \~English @brief Create an empty string
 		/// \~Chinese @brief 创建空字符串
@@ -3584,9 +3568,7 @@ namespace spadas
 	class SPADAS_API Path : public Object<class PathVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Path")
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -3594,20 +3576,20 @@ namespace spadas
 
 		/// \~English @brief Initialize based on an absolute or relative path string
 		/// \~Chinese @brief 基于一个绝对路径或相对路径的字符串初始化
-		/// \~English @param pathString Absolute path or relative path string, the relative path will be based on the current working directory \n
+		/// \~English @param pathString Absolute path or relative path string, the relative path will be based on appParentPath() \n
 		/// - If it is a folder, it needs to be explicitly terminated with the path separator "/" or "\" \n
 		/// - You can add "../" or "..\" to indicate the parent folder
-		/// \~Chinese @param pathString 绝对路径或相对路径字符串，相对路径将基于当前工作目录 \n
+		/// \~Chinese @param pathString 绝对路径或相对路径字符串，相对路径将基于appParentPath() \n
 		/// - 若为文件夹，需显式的以路径分隔符"/"或"\"结尾 \n
 		/// - 可加入"../"或"..\"表示上层文件夹
 		Path(const Char pathString[]);
 
 		/// \~English @brief Initialize based on an absolute or relative path string
 		/// \~Chinese @brief 基于一个绝对路径或相对路径的字符串初始化
-		/// \~English @param pathString Absolute path or relative path string, the relative path will be based on the current working directory \n
+		/// \~English @param pathString Absolute path or relative path string, the relative path will be based on appParentPath() \n
 		/// - If it is a folder, it needs to be explicitly terminated with the path separator "/" or "\" \n
 		/// - You can add "../" or "..\" to indicate the parent folder
-		/// \~Chinese @param pathString 绝对路径或相对路径字符串，相对路径将基于当前工作目录 \n
+		/// \~Chinese @param pathString 绝对路径或相对路径字符串，相对路径将基于appParentPath() \n
 		/// - 若为文件夹，需显式的以路径分隔符"/"或"\"结尾 \n
 		/// - 可加入"../"或"..\"表示上层文件夹
 		Path(String pathString);
@@ -3709,15 +3691,15 @@ namespace spadas
 		Path childFolder(String childFullName);
 
 		/// \~English @brief (Folder-only) Generate a child file path or subfolder path based on the input relative path (folders end with path separator "/" or "\")
-		/// \~Chinese @brief (仅限文件夹) 输入当前文件夹内的相对路径，生成文件或文件夹路径 (文件夹以路径分隔符/或\结尾)
+		/// \~Chinese @brief (仅限文件夹) 输入本文件夹内的相对路径，生成文件或文件夹路径 (文件夹以路径分隔符/或\结尾)
 		Path childPath(String pathString);
 
-		/// \~English @brief (Folder-only) Check if the target path is contained within the current folder
-		/// \~Chinese @brief (仅限文件夹) 检查目标路径是否包含在当前文件夹内
+		/// \~English @brief (Folder-only) Check if the target path is contained within this folder
+		/// \~Chinese @brief (仅限文件夹) 检查目标路径是否包含在本文件夹内
 		Bool contain(Path path);
 
-		/// \~English @brief (Folder-only) Check if the target path is contained within the current folder. If included, output the relative path based on the current folder to pathString
-		/// \~Chinese @brief (仅限文件夹) 检查目标路径是否包含在当前文件夹内。若包含，则输出基于当前文件夹的相对路径至pathString
+		/// \~English @brief (Folder-only) Check if the target path is contained within this folder. If included, output the relative path based on this folder to pathString
+		/// \~Chinese @brief (仅限文件夹) 检查目标路径是否包含在本文件夹内。若包含，则输出基于本文件夹的相对路径至pathString
 		Bool contain(Path path, String& pathString);
 
 		/// \~English @brief Obtain the parent folder path of the file or folder (if this path is the root directory of the disk, such as c:\, etc., an invalid path will be returned)
@@ -3728,13 +3710,13 @@ namespace spadas
 		/// \~Chinese @brief 获得当前操作系统下的路径分隔符
 		static String separator();
 
-		/// \~English @brief Get the working directory
-		/// \~Chinese @brief 获得工作目录
-		static Path workPath();
+		/// \~English @brief Get the directory where the application resides (On MacOS, asExecutable can be set to TRUE to obtain the directory where the executable program resides)
+		/// \~Chinese @brief 获得应用程序所在目录（MacOS下可设置asExecutable为TRUE以取得可执行程序所在目录）
+		static Path appParentPath(Bool asExecutable = FALSE);
 
-		/// \~English @brief Get the directory where the executable program is located
-		/// \~Chinese @brief 获得可执行程序所在目录
-		static Path executableFolderPath();
+		/// \~English @brief Get system's current directory
+		/// \~Chinese @brief 获得系统当前目录
+		static Path currentPath();
 
 		/// \~English @brief Get user root directory
 		/// \~Chinese @brief 获得用户根目录
@@ -3744,13 +3726,13 @@ namespace spadas
 		/// \~Chinese @brief 获得SpadasFiles目录
 		static Path spadasFilesPath();
 
-		/// \~English @brief Set the working directory (note that it should end with a path separator "/" or "\")
-		/// \~Chinese @brief 设置工作目录 (注意应以路径分隔符"/"或"\"结尾)
-		static void setWorkPath(String pathString);
+		/// \~English @brief Change system's current directory
+		/// \~Chinese @brief 改变系统当前目录
+		static void setCurrentPath(Path path);
 
-		/// \~English @brief Set the directory where the executable program is located (note that it should end with the path separator "/" or "\")
-		/// \~Chinese @brief 设置可执行程序所在目录 (注意应以路径分隔符"/"或"\"结尾)
-		static void setExecutableFolderPath(String pathString);
+		/// \~English @brief Manually set the directory where the application resides
+		/// \~Chinese @brief 手动设置应用程序所在目录
+		static void setAppParentPath(Path path);
 
 	private:
 		static void addFolderContents(ArrayX<Path>& contents, String folderPathString, Array<StringSpan>& folderComponents);
@@ -3761,9 +3743,7 @@ namespace spadas
 	class SPADAS_API File : public Object<class FileVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.File")
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -3847,9 +3827,7 @@ namespace spadas
 	class SPADAS_API FileConsole : public Object<class FileConsoleVars>, public IConsole
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.FileConsole")
 
 		/// \~English @brief Create an object to ignore all printing
 		/// \~Chinese @brief 创建用于忽略所有打印的对象
@@ -3912,9 +3890,7 @@ namespace spadas
 	class SPADAS_API XML : public Object<class XMLVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.XML")
 
 		/// \~English @brief Create an empty document (root node's tag is "root")
 		/// \~Chinese @brief 创建一个空文档（根标签为root）
@@ -4305,9 +4281,7 @@ namespace spadas
 	class SPADAS_API Image : public Object<class ImageVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Image")
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -4457,9 +4431,7 @@ namespace spadas
 	class SPADAS_API BigInteger : public Object<class BigIntegerVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.BigInteger")
 
 		/// \~English @brief Zero
 		/// \~Chinese @brief 零
@@ -4539,9 +4511,7 @@ namespace spadas
 	template <typename Type> class Matrix : public Object<class MatrixVars<Type> >
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Matrix<" cat typeid(Type).name() cat ">")
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -4922,9 +4892,7 @@ namespace spadas
 	class SPADAS_API Lock : public Object<class LockVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Lock")
 
 		/// \~English @brief Create a non-spinlock object (default is not entered)
 		/// \~Chinese @brief 创建非自旋锁对象 (默认为未进入)
@@ -4980,9 +4948,7 @@ namespace spadas
 	class SPADAS_API Flag : public Object<class FlagVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Flag")
 
 		/// \~English @brief Create a Flag object (the default is "not set" state)
 		/// \~Chinese @brief 创建Flag对象 (默认为not set状态)
@@ -5044,9 +5010,7 @@ namespace spadas
 	class SPADAS_API Barrier : public Object<class BarrierVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Barrier")
 
 		/// \~English @brief Create a synchronizer object (default strength is 0)
 		/// \~Chinese @brief 创建一个同步器对象 (默认强度为0)
@@ -5056,7 +5020,7 @@ namespace spadas
 		/// \~Chinese @brief 设置强度
 		void setStrength(UInt strength);
 
-		/// \~English @brief nter the synchronization state, when the number of threads entering the synchronization state is equal to the strength of the synchronizer, it will return TRUE (return FALSE if it times out)
+		/// \~English @brief Enter the synchronization state, when the number of threads entering the synchronization state is equal to the strength of the synchronizer, it will return TRUE (return FALSE if it times out)
 		/// \~Chinese @brief 进入同步状态，当进入同步状态的线程数等于同步器强度时结束返回TRUE (超时则返回FALSE)
 		Bool against(Flag interrupt);
 
@@ -5164,9 +5128,7 @@ namespace spadas
 	class SPADAS_API Threads : public Object<class ThreadsVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Threads")
 
 		/// \~English @brief Invalid object (should be created by Threads::start or Threads::begin)
 		/// \~Chinese @brief 无效对象（应由 Threads::start 或 Threads::begin 创建）
@@ -5246,9 +5208,7 @@ namespace spadas
 	class SPADAS_API TaskManager : public Object<class TaskManagerVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.TaskManager")
 
 		/// \~English @brief Create task thread manager
 		/// \~Chinese @brief 创建任务线程管理器
@@ -5449,9 +5409,7 @@ namespace spadas
 	class SPADAS_API Timer : public Object<class TimerVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Timer")
 
 		/// \~English @brief Create a timer object and start it immediately
 		/// \~Chinese @brief 创建一个计时器对象并立即启动
@@ -5507,9 +5465,7 @@ namespace spadas
 	class SPADAS_API Tick : public Object<class TickVars>, public IWorkflow
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.Tick")
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -5537,9 +5493,7 @@ namespace spadas
 	class SPADAS_API MemoryMap : public Object<class MemoryMapVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.MemoryMap")
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -5596,9 +5550,7 @@ namespace spadas
 	class SPADAS_API MemoryMapStream : public Object<class MemoryMapStreamVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.MemoryMapStream")
 
 		/// \~English @brief Create a data stream (unopened state)
 		/// \~Chinese @brief 创建一个数据流（未开启状态）
@@ -5660,9 +5612,7 @@ namespace spadas
 	class SPADAS_API LibraryLoader : public Object<class LibraryLoaderVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.LibraryLoader")
 
 		/// \~English @brief Create a dynamic library loader
 		/// \~Chinese @brief 创建动态库加载器
@@ -5672,7 +5622,7 @@ namespace spadas
 		/// \~Chinese @brief 使用指定文件夹下的库名称打开动态库（无需添加lib等前缀或后缀名），libVersion用于指定so等动态库的后缀版本号（如"1.0"）
 		Bool openWithName(Path libDir, String libName, String libVersion = String());
 
-		/// \~English @brief Use the library name under the specified folder to open the dynamic library (no need to add a prefix or suffix such as "lib"), libVersion is used to speify the suffix version number of the dynamic library such as so (such as "1.0"), and output an error message if it fails
+		/// \~English @brief Use the library name under the specified folder to open the dynamic library (no need to add a prefix or suffix such as "lib"), libVersion is used to specify the suffix version number of the dynamic library such as so (such as "1.0"), and output an error message if it fails
 		/// \~Chinese @brief 使用指定文件夹下的库名称打开动态库（无需添加lib等前缀或后缀名），libVersion用于指定so等动态库的后缀版本号（如"1.0"），若失败则输出错误信息
 		Bool openWithName(Path libDir, String libName, String libVersion, String& errorMessage);
 
@@ -6519,9 +6469,7 @@ namespace spadas
 	class SPADAS_API SessionSampleBuffer : public Object<class SessionSampleBufferVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.SessionSampleBuffer")
 
 		/// \~English @brief Create a sample buffer
 		/// \~Chinese @brief 创建样本缓存
@@ -8124,9 +8072,7 @@ namespace spadas
 	class SPADAS_API GeneralIOObject : public Object<class GeneralIOObjectVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.GeneralIOObject")
 
 		/// \~English @brief Create object
 		/// \~Chinese @brief 创建对象

@@ -29,7 +29,7 @@ StringSpan::StringSpan(String& sourceString, UInt offset, UInt length) : source(
 
     vars->retain();
     source = (ULong)vars;
-    idx = (UInt)((ULong)vars->data + offset - source);
+    idx = offset | 0x80000000; // refCounting flag (offset maybe zero)
     len = math::min(length, vars->length - offset);
 }
 
@@ -136,7 +136,7 @@ Bool StringSpan::operator <(StringSpan span)
 
 const Byte *StringSpan::bytes()
 {
-	return (Byte*)(source + idx);
+	return idx ? (((StringVars*)source)->data + (idx & 0x7fffffff)) : (Byte*)(source + idx);
 }
 
 UInt StringSpan::length()
@@ -151,142 +151,142 @@ Bool StringSpan::isEmpty()
 
 Word StringSpan::getHash()
 {
-	if (source) return StringCommon::getHashCode((Byte*)(source + idx), len);
+	if (source) return StringCommon::getHashCode(bytes(), len);
 	else return 0;
 }
 
 String StringSpan::clone()
 {
-	if (source) return StringCommon::clone((Byte*)(source + idx), len);
+	if (source) return StringCommon::clone(bytes(), len);
 	else return String();
 }
 
 Array<Char> StringSpan::chars()
 {
-	return StringCommon::chars((Byte*)(source + idx), len);
+	return StringCommon::chars(bytes(), len);
 }
 
 Array<WChar> StringSpan::wchars()
 {
-	return StringCommon::wchars((Byte*)(source + idx), len);
+	return StringCommon::wchars(bytes(), len);
 }
 
 StringAppender StringSpan::operator +(String string)
 {
-	return StringCommon::operatorPlus((Byte*)(source + idx), len, string);
+	return StringCommon::operatorPlus(bytes(), len, string);
 }
 
 Optional<Int> StringSpan::toInt()
 {
-	if (source) return StringCommon::toInt((Byte*)(source + idx), len);
+	if (source) return StringCommon::toInt(bytes(), len);
 	else return Optional<Int>();
 }
 
 Optional<Long> StringSpan::toLong()
 {
-	if (source) return StringCommon::toLong((Byte*)(source + idx), len);
+	if (source) return StringCommon::toLong(bytes(), len);
 	else return Optional<Long>();
 }
 
 Optional<Float> StringSpan::toFloat()
 {
-	if (source) return StringCommon::toFloat((Byte*)(source + idx), len);
+	if (source) return StringCommon::toFloat(bytes(), len);
 	else return Optional<Float>();
 }
 
 Optional<Double> StringSpan::toDouble()
 {
-	if (source) return StringCommon::toDouble((Byte*)(source + idx), len);
+	if (source) return StringCommon::toDouble(bytes(), len);
 	else return Optional<Double>();
 }
 
 Bool StringSpan::toNumber(Int& number)
 {
-	if (source) return StringCommon::toNumber((Byte*)(source + idx), len, number);
+	if (source) return StringCommon::toNumber(bytes(), len, number);
 	else return FALSE;
 }
 
 Bool StringSpan::toNumber(Long& number)
 {
-	if (source) return StringCommon::toNumber((Byte*)(source + idx), len, number);
+	if (source) return StringCommon::toNumber(bytes(), len, number);
 	else return FALSE;
 }
 
 Bool StringSpan::toNumber(Float& number)
 {
-	if (source) return StringCommon::toNumber((Byte*)(source + idx), len, number);
+	if (source) return StringCommon::toNumber(bytes(), len, number);
 	else return FALSE;
 }
 
 Bool StringSpan::toNumber(Double& number)
 {
-	if (source) return StringCommon::toNumber((Byte*)(source + idx), len, number);
+	if (source) return StringCommon::toNumber(bytes(), len, number);
 	else return FALSE;
 }
 
 Binary StringSpan::toBinary()
 {
-	if (source) return StringCommon::toBinary((Byte*)(source + idx), len);
+	if (source) return StringCommon::toBinary(bytes(), len);
 	else return Binary();
 }
 
 String StringSpan::toUpper()
 {
-	if (source) return StringCommon::toUpper((Byte*)(source + idx), len);
+	if (source) return StringCommon::toUpper(bytes(), len);
 	else return String();
 }
 
 String StringSpan::toLower()
 {
-	if (source) return StringCommon::toLower((Byte*)(source + idx), len);
+	if (source) return StringCommon::toLower(bytes(), len);
 	else return String();
 }
 
 Bool StringSpan::startsWith(String target)
 {
-	if (source) return StringCommon::startsWith((Byte*)(source + idx), len, target);
+	if (source) return StringCommon::startsWith(bytes(), len, target);
 	else return FALSE;
 }
 
 Bool StringSpan::endsWith(String target)
 {
-	if (source) return StringCommon::endsWith((Byte*)(source + idx), len, target);
+	if (source) return StringCommon::endsWith(bytes(), len, target);
 	else return FALSE;
 }
 
 Array<UInt> StringSpan::search(String target)
 {
-	if (source) return StringCommon::search((Byte*)(source + idx), len, target);
+	if (source) return StringCommon::search(bytes(), len, target);
 	else return Array<UInt>();
 }
 
 UInt StringSpan::searchFirst(String target)
 {
-	if (source) return StringCommon::searchFirst((Byte*)(source + idx), len, target);
+	if (source) return StringCommon::searchFirst(bytes(), len, target);
 	else return UINF;
 }
 
 UInt StringSpan::searchLast(String target)
 {
-	if (source) return StringCommon::searchLast((Byte*)(source + idx), len, target);
+	if (source) return StringCommon::searchLast(bytes(), len, target);
 	else return UINF;
 }
 
 String StringSpan::trim()
 {
-	if (source) return StringCommon::trim((Byte*)(source + idx), len);
+	if (source) return StringCommon::trim(bytes(), len);
 	else return String();
 }
 
 Array<StringSpan> StringSpan::split(String target)
 {
-	if (source) return StringCommon::split((Byte*)(source + idx), len, target, idx ? (Vars*)source : NULL);
+	if (source) return StringCommon::split(bytes(), len, target, idx ? (Vars*)source : NULL);
 	else return Array<StringSpan>();
 }
 
 String StringSpan::replace(String oldString, String newString)
 {
-	return StringCommon::replace((Byte*)(source + idx), len, oldString, newString);
+	return StringCommon::replace(bytes(), len, oldString, newString);
 }
 
 StringSpan StringSpan::span(UInt index, UInt length)

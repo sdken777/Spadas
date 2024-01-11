@@ -70,7 +70,7 @@ namespace spadas
 	class FlagVars : public Vars
 	{
     public:
-		SPADAS_VARS_DEF(Flag, Vars)
+		SPADAS_VARS(Flag, Vars)
 
 		volatile Bool flag;
 		volatile Bool waitingSet, waitingReset;
@@ -199,8 +199,6 @@ Bool Flag::check()
 }
 
 #endif
-
-const String spadas::Flag::TypeName = "spadas.Flag";
 
 Flag::Flag() : Object<class FlagVars>(new FlagVars(), TRUE)
 {

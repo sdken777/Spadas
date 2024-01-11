@@ -721,8 +721,6 @@ namespace string_internal
 using namespace spadas;
 using namespace string_internal;
 
-const String spadas::String::TypeName = "spadas.String";
-
 String::String()
 {}
 

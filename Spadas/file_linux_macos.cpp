@@ -22,13 +22,14 @@ namespace file_internal
 {
 	using namespace spadas;
 
+	// paths
 	Char getSeparatorChar()
 	{
 		return '/';
 	}
 
 #if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
-	String getExecutableFolderPathString()
+	String getAppParentPathString(Bool asExecutable)
 	{
 		Char procname[FILENAME_MAX];
 		int len = readlink("/proc/self/exe", procname, FILENAME_MAX - 1);
@@ -43,11 +44,6 @@ namespace file_internal
 		return executablePathString.span(0, slashLocations.last() + 1).clone();
 	}
 
-	String getWorkPathString()
-	{
-		return getExecutableFolderPathString();
-	}
-
 	String getHomePathString()
 	{
 		struct passwd *pwuid = getpwuid(getuid());
@@ -60,52 +56,51 @@ namespace file_internal
 	}
 #endif
 #if defined(SPADAS_ENV_MACOS)
-	String getExecutableFolderPathString()
+	String getAppParentPathString(Bool asExecutable)
 	{
 		CFBundleRef mainBundle = CFBundleGetMainBundle();
-		CFURLRef url = CFBundleCopyExecutableURL(mainBundle);
-
-		CFStringRef filePathString = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
-		CFRelease(url);
-
-		char buffer[1024];
-		bool ok = CFStringGetCString(filePathString, buffer, 1024, kCFStringEncodingUTF8);
-		CFRelease(filePathString);
-
-		if (!ok) return String();
-
-		String executablePathString(buffer);
-		Array<UInt> slashLocations = executablePathString.search('/');
-		if (slashLocations.isEmpty()) return String();
-
-		return executablePathString.span(0, slashLocations.last() + 1).clone();
-	}
-
-	String getWorkPathString()
-	{
-		CFBundleRef mainBundle = CFBundleGetMainBundle();
-		CFURLRef url = CFBundleCopyBundleURL(mainBundle);
-
-		CFStringRef filePathString = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
-		CFRelease(url);
-
-		char buffer[1024];
-		bool ok = CFStringGetCString(filePathString, buffer, 1024, kCFStringEncodingUTF8);
-		CFRelease(filePathString);
-
-		if (!ok) return String();
-		
-		String bundlePathString(buffer);
-		if (bundlePathString.endsWith(".app"))
+		if (asExecutable)
 		{
-			Array<UInt> slashLocations = bundlePathString.search('/');
+			CFURLRef url = CFBundleCopyExecutableURL(mainBundle);
+			CFStringRef filePathString = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
+			CFRelease(url);
+
+			char buffer[1024];
+			bool ok = CFStringGetCString(filePathString, buffer, 1024, kCFStringEncodingUTF8);
+			CFRelease(filePathString);
+
+			if (!ok) return String();
+
+			String executablePathString(buffer);
+			Array<UInt> slashLocations = executablePathString.search('/');
 			if (slashLocations.isEmpty()) return String();
 
-			return bundlePathString.span(0, slashLocations.last() + 1).clone();
+			return executablePathString.span(0, slashLocations.last() + 1).clone();
 		}
 		else
 		{
-			return bundlePathString + "/";
+			CFURLRef url = CFBundleCopyBundleURL(mainBundle);
+			CFStringRef filePathString = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
+			CFRelease(url);
+
+			char buffer[1024];
+			bool ok = CFStringGetCString(filePathString, buffer, 1024, kCFStringEncodingUTF8);
+			CFRelease(filePathString);
+
+			if (!ok) return String();
+			
+			String bundlePathString(buffer);
+			if (bundlePathString.endsWith(".app"))
+			{
+				Array<UInt> slashLocations = bundlePathString.search('/');
+				if (slashLocations.isEmpty()) return String();
+
+				return bundlePathString.span(0, slashLocations.last() + 1).clone();
+			}
+			else
+			{
+				return bundlePathString + "/";
+			}
 		}
 	}
 
@@ -115,11 +110,20 @@ namespace file_internal
 	}
 #endif
 
-	String getSpadasFilesPathString()
+	String getCurrentPathString()
 	{
-		String homePath = getHomePathString();
-		if (homePath.isEmpty()) return String();
-		else return homePath + "SpadasFiles/";
+		Char pathChars[1024];
+		getcwd(pathChars, 1024);
+		pathChars[1023] = 0;
+
+		String output(pathChars);
+		if (output.endsWith("/")) return output;
+		else return output + "/";
+	}
+
+	void setCurrentPathString(String pathString)
+	{
+		chdir(pathString.chars().data());
 	}
 
 	Bool isPathStringValid(String pathString, UInt& rootLength, Bool& isAbsolute)
@@ -143,6 +147,7 @@ namespace file_internal
 		}
 	}
 
+	// file I/O operations
 	Pointer fileOpen(String file, Bool outputMode, Bool appendMode)
 	{
 		return (Pointer)fopen(file.chars().data(), outputMode ? (appendMode ? "a+" : "w+") : "r");

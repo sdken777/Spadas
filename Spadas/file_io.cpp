@@ -18,7 +18,7 @@ namespace spadas
 	class FileVars : public Vars
 	{
     public:
-		SPADAS_VARS_DEF(File, Vars)
+		SPADAS_VARS(File, Vars)
 
 		Path path;
 		Pointer file;
@@ -55,8 +55,6 @@ namespace spadas
 
 using namespace spadas;
 using namespace file_internal;
-
-const String spadas::File::TypeName = "spadas.File";
 
 File::File()
 {

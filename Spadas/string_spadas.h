@@ -6,7 +6,7 @@ namespace spadas
 	class StringVars : public Vars
 	{
     public:
-		SPADAS_VARS_DEF(String, Vars)
+		SPADAS_VARS(String, Vars)
 
 		UInt size;
 		UInt length;

@@ -75,8 +75,6 @@ namespace spadas
 
 using namespace spadas;
 
-const String spadas::Lock::TypeName = "spadas.Lock";
-
 Lock::Lock() : Object<class LockVars>(new LockVars(FALSE), TRUE)
 {
 }

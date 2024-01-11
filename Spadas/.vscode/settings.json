@@ -8,5 +8,8 @@
         "*.vcxproj": true,
         "*.vcxproj.user": true,
         "*.vcxproj.filters": true
+    },
+    "files.associations": {
+        "typeinfo": "cpp"
     }
 }

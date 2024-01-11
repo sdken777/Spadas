@@ -77,7 +77,7 @@ namespace spadas
 	class TimerVars : public Vars
 	{
     public:
-		SPADAS_VARS_DEF(Timer, Vars)
+		SPADAS_VARS(Timer, Vars)
 
 		ULong startCPUTick;
 
@@ -103,8 +103,6 @@ namespace timer_interval
 
 using namespace spadas;
 using namespace timer_interval;
-
-const String spadas::Timer::TypeName = "spadas.Timer";
 
 Timer::Timer() : Object<TimerVars>(new TimerVars(getCurrentCPUTick()), TRUE)
 {}

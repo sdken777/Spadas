@@ -14,7 +14,7 @@ namespace spadas
 	class MemoryMapVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(MemoryMap, Vars)
+		SPADAS_VARS(MemoryMap, Vars)
 
 		HANDLE fileHandle;
 		HANDLE mmapHandle;
@@ -53,8 +53,6 @@ namespace spadas
 }
 
 using namespace spadas;
-
-const String spadas::MemoryMap::TypeName = "spadas.MemoryMap";
 
 MemoryMap::MemoryMap()
 {
@@ -122,7 +120,7 @@ namespace spadas
 	class MemoryMapVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(MemoryMap, Vars)
+		SPADAS_VARS(MemoryMap, Vars)
 
 		UInt fileDescriptor;
 		Pointer virtualPointer;
@@ -160,8 +158,6 @@ namespace spadas
 }
 
 using namespace spadas;
-
-const String spadas::MemoryMap::TypeName = "spadas.MemoryMap";
 
 MemoryMap::MemoryMap()
 {
@@ -213,7 +209,7 @@ namespace spadas
     class MemoryMapStreamVars : public Vars
     {
     public:
-		SPADAS_VARS_DEF(MemoryMapStream, Vars)
+		SPADAS_VARS(MemoryMapStream, Vars)
 
         MemoryMap mm; // 8<SendCount> + 8<ReceiveCount> + (4<DataSize> + slotSize) * slotCount(Slots)
         Path path;
@@ -230,8 +226,6 @@ namespace spadas
 }
 
 using namespace spadas;
-
-const String spadas::MemoryMapStream::TypeName = "spadas.MemoryMapStream";
 
 MemoryMapStream::MemoryMapStream() : Object<MemoryMapStreamVars>(new MemoryMapStreamVars, TRUE)
 {

@@ -6,7 +6,7 @@ namespace spadas
 	class SessionSampleBufferVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(SessionSampleBuffer, Vars)
+		SPADAS_VARS(SessionSampleBuffer, Vars)
 
 		String protocol;
 		ListNode<SessionGeneralSample> nodes;
@@ -39,8 +39,6 @@ namespace spadas
 }
 
 using namespace spadas;
-
-const String spadas::SessionSampleBuffer::TypeName = "spadas.SessionSampleBuffer";
 
 SessionSampleBuffer::SessionSampleBuffer() : Object<SessionSampleBufferVars>(new SessionSampleBufferVars, TRUE)
 {

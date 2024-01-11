@@ -9,25 +9,24 @@ namespace file_internal
 	class PathsInfo
 	{
 	public:
-		Array<StringSpan> workPathComponents;
-		String workPathString;
-		Array<StringSpan> executableFolderPathComponents;
-		String executableFolderPathString;
+		Array<StringSpan> appParentPathComponents;
+		String appParentPathString;
+		Array<StringSpan> executableParentPathComponents;
+		String executableParentPathString;
 		Array<StringSpan> homePathComponents;
 		String homePathString;
 		Array<StringSpan> spadasFilesPathComponents;
 		String spadasFilesPathString;
 
 		PathsInfo();
-		void setWorkPath(String path);
-		void setExecutableFolderPath(String path);
+		void setAppParentPath(Array<StringSpan> components, String pathString);
 	};
 	extern PathsInfo pathsInfo;
 
-	String getWorkPathString();
-	String getExecutableFolderPathString();
+	String getAppParentPathString(Bool asExecutable);
 	String getHomePathString();
-	String getSpadasFilesPathString();
+	String getCurrentPathString();
+	void setCurrentPathString(String pathString);
 	Char getSeparatorChar();
 	Bool isPathStringValid(String pathString, UInt& rootLength, Bool& isAbsolute);
 

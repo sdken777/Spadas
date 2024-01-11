@@ -9,7 +9,7 @@ namespace spadas
 	class ThreadsVars : public Vars
 	{
 	public:
-    	SPADAS_VARS_DEF(Threads, Vars)
+    	SPADAS_VARS(Threads, Vars)
 
         Interface<IWorkflow> workflow;
         WorkflowStatus status;
@@ -173,8 +173,6 @@ namespace spadas
 using namespace spadas;
 using namespace oscillator_internal;
 using namespace console_internal;
-
-const String spadas::Threads::TypeName = "spadas.Threads";
 
 #if defined(SPADAS_ENV_WINDOWS)
 

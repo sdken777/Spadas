@@ -18,7 +18,7 @@ namespace file_internal
 	using namespace string_internal;
 
 	// paths
-	String getExecutableFolderPathString()
+	String getAppParentPathString(Bool asExecutable)
 	{
 		WChar buffer[1024];
 		GetModuleFileNameW(NULL, buffer, 1024);
@@ -29,10 +29,7 @@ namespace file_internal
 		if (slashLocations.isEmpty()) return String();
 		else return bufferString.span(0, slashLocations.last() + 1).clone();
 	}
-	String getWorkPathString()
-	{
-		return getExecutableFolderPathString();
-	}
+
 	String getHomePathString()
 	{
 		WChar path[1024];
@@ -45,11 +42,21 @@ namespace file_internal
 		if (pathString.bytes()[pathString.length()-1] != (Byte)separator) return pathString + separator;
 		else return pathString;
 	}
-	String getSpadasFilesPathString()
+
+	String getCurrentPathString()
 	{
-		String homePath = getHomePathString();
-		if (homePath.isEmpty()) return String();
-		else return homePath + "SpadasFiles\\";
+		WChar pathChars[1024];
+		UInt validChars = GetCurrentDirectoryW(1024, pathChars);
+		pathChars[math::min(1023u, validChars)] = 0;
+		
+		String output(pathChars);
+		if (output.endsWith("\\")) return output;
+		else return output + "\\";
+	}
+
+	void setCurrentPathString(String pathString)
+	{
+		SetCurrentDirectoryW(pathString.wchars().data());
 	}
 
 	Char getSeparatorChar()

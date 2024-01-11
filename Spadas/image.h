@@ -295,7 +295,7 @@ namespace spadas
 	class ImageVars : public Vars
 	{
     public:
-		SPADAS_VARS_DEF(Image, Vars)
+		SPADAS_VARS(Image, Vars)
 
 		UInt width;
 		UInt height;
