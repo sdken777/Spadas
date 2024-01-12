@@ -25,8 +25,8 @@ namespace file_internal
 		else
 		{
 			if (absoluteLimited) return FALSE;
-			if (pathsInfo.appParentPathComponents.isEmpty()) return FALSE;
-			buf.append(pathsInfo.appParentPathComponents);
+			if (pathsInfo.entryFolderPathComponents.isEmpty()) return FALSE;
+			buf.append(pathsInfo.entryFolderPathComponents);
 		}
 
 		UInt len = pathString.length();
@@ -85,16 +85,16 @@ namespace file_internal
 	{
 		Bool dummy = FALSE;
 
-		String appParentPath = getAppParentPathString(FALSE);
-		if (!appParentPath.isEmpty() && parsePathString(appParentPath, TRUE, appParentPathComponents, dummy))
+		String entryFolderPath = getEntryFolderPathString(FALSE);
+		if (!entryFolderPath.isEmpty() && parsePathString(entryFolderPath, TRUE, entryFolderPathComponents, dummy))
 		{
-			appParentPathString = componentsToString(appParentPathComponents, TRUE);
+			entryFolderPathString = componentsToString(entryFolderPathComponents, TRUE);
 		}
 
-		String executableParentPath = getAppParentPathString(TRUE);
-		if (!executableParentPath.isEmpty() && parsePathString(executableParentPath, TRUE, executableParentPathComponents, dummy))
+		String appFolderPath = getEntryFolderPathString(TRUE);
+		if (!appFolderPath.isEmpty() && parsePathString(appFolderPath, TRUE, appFolderPathComponents, dummy))
 		{
-			executableParentPathString = componentsToString(executableParentPathComponents, TRUE);
+			appFolderPathString = componentsToString(appFolderPathComponents, TRUE);
 		}
 
 		String homePath = getHomePathString();
@@ -111,10 +111,26 @@ namespace file_internal
 		if (!spadasFilesPath.isEmpty() && !folderExist(spadasFilesPath)) folderCreate(spadasFilesPath);
 	}
 
-	void PathsInfo::setAppParentPath(Array<StringSpan> components, String pathString)
+	void PathsInfo::setEntryFolderPath(Array<StringSpan> components, String pathString)
 	{
-		appParentPathComponents = components;
-		appParentPathString = pathString;
+		entryFolderPathComponents = components;
+		entryFolderPathString = pathString;
+
+		Bool inAppBundle = FALSE;
+		if (system::getEnv() == Environment::Value::MacOS)
+		{
+			if (components.size() >= 4 && components.last() == "MacOS" && components[components.size() - 2] == "Contents" && components[components.size() - 3].endsWith(".app"))
+			{
+				appFolderPathComponents = components.span(0, components.size() - 3).clone();
+				appFolderPathString = componentsToString(appFolderPathComponents, TRUE);
+				inAppBundle = TRUE;
+			}
+		}
+		if (!inAppBundle)
+		{
+			appFolderPathComponents = components;
+			appFolderPathString = pathString;
+		}
 	}
 
 	PathsInfo pathsInfo;
@@ -646,10 +662,10 @@ String Path::separator()
 	return getSeparatorChar();
 }
 
-Path Path::appParentPath(Bool asExecutable)
+Path Path::entryFolderPath(Bool forApp)
 {
-	Array<StringSpan> components = asExecutable ? pathsInfo.executableParentPathComponents : pathsInfo.appParentPathComponents;
-	String pathString = asExecutable ? pathsInfo.executableParentPathString : pathsInfo.appParentPathString;
+	Array<StringSpan> components = forApp ? pathsInfo.appFolderPathComponents : pathsInfo.entryFolderPathComponents;
+	String pathString = forApp ? pathsInfo.appFolderPathString : pathsInfo.entryFolderPathString;
 
 	if (components.isEmpty()) return Path();
 
@@ -705,11 +721,11 @@ void Path::setCurrentPath(Path path)
 	setCurrentPathString(path.fullPath());
 }
 
-void Path::setAppParentPath(Path path)
+void Path::setEntryFolderPath(Path path)
 {
 	SPADAS_ERROR_RETURN(path.isNull());
 	SPADAS_ERROR_RETURN(!path.isFolder());
 	SPADAS_ERROR_RETURN(!path.exist());
 
-	pathsInfo.setAppParentPath(path.vars->components.clone(), path.fullPath());
+	pathsInfo.setEntryFolderPath(path.vars->components.clone(), path.fullPath());
 }

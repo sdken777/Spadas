@@ -18,7 +18,7 @@ namespace file_internal
 	using namespace string_internal;
 
 	// paths
-	String getAppParentPathString(Bool asExecutable)
+	String getEntryFolderPathString(Bool forApp)
 	{
 		WChar buffer[1024];
 		GetModuleFileNameW(NULL, buffer, 1024);

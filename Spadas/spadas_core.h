@@ -3576,20 +3576,20 @@ namespace spadas
 
 		/// \~English @brief Initialize based on an absolute or relative path string
 		/// \~Chinese @brief 基于一个绝对路径或相对路径的字符串初始化
-		/// \~English @param pathString Absolute path or relative path string, the relative path will be based on appParentPath() \n
+		/// \~English @param pathString Absolute path or relative path string, the relative path will be based on entryFolderPath() \n
 		/// - If it is a folder, it needs to be explicitly terminated with the path separator "/" or "\" \n
 		/// - You can add "../" or "..\" to indicate the parent folder
-		/// \~Chinese @param pathString 绝对路径或相对路径字符串，相对路径将基于appParentPath() \n
+		/// \~Chinese @param pathString 绝对路径或相对路径字符串，相对路径将基于entryFolderPath() \n
 		/// - 若为文件夹，需显式的以路径分隔符"/"或"\"结尾 \n
 		/// - 可加入"../"或"..\"表示上层文件夹
 		Path(const Char pathString[]);
 
 		/// \~English @brief Initialize based on an absolute or relative path string
 		/// \~Chinese @brief 基于一个绝对路径或相对路径的字符串初始化
-		/// \~English @param pathString Absolute path or relative path string, the relative path will be based on appParentPath() \n
+		/// \~English @param pathString Absolute path or relative path string, the relative path will be based on entryFolderPath() \n
 		/// - If it is a folder, it needs to be explicitly terminated with the path separator "/" or "\" \n
 		/// - You can add "../" or "..\" to indicate the parent folder
-		/// \~Chinese @param pathString 绝对路径或相对路径字符串，相对路径将基于appParentPath() \n
+		/// \~Chinese @param pathString 绝对路径或相对路径字符串，相对路径将基于entryFolderPath() \n
 		/// - 若为文件夹，需显式的以路径分隔符"/"或"\"结尾 \n
 		/// - 可加入"../"或"..\"表示上层文件夹
 		Path(String pathString);
@@ -3710,9 +3710,9 @@ namespace spadas
 		/// \~Chinese @brief 获得当前操作系统下的路径分隔符
 		static String separator();
 
-		/// \~English @brief Get the directory where the application resides (On MacOS, asExecutable can be set to TRUE to obtain the directory where the executable program resides)
-		/// \~Chinese @brief 获得应用程序所在目录（MacOS下可设置asExecutable为TRUE以取得可执行程序所在目录）
-		static Path appParentPath(Bool asExecutable = FALSE);
+		/// \~English @brief Get the directory where the entry module resides (On MacOS, forApp can be set to TRUE to obtain the directory where the .app bundle resides)
+		/// \~Chinese @brief 获得入口模块所在目录（MacOS下可设置forApp为TRUE以取得.app文件夹所在目录）
+		static Path entryFolderPath(Bool forApp = FALSE);
 
 		/// \~English @brief Get system's current directory
 		/// \~Chinese @brief 获得系统当前目录
@@ -3730,9 +3730,9 @@ namespace spadas
 		/// \~Chinese @brief 改变系统当前目录
 		static void setCurrentPath(Path path);
 
-		/// \~English @brief Manually set the directory where the application resides
-		/// \~Chinese @brief 手动设置应用程序所在目录
-		static void setAppParentPath(Path path);
+		/// \~English @brief Manually set the directory where the entry module resides
+		/// \~Chinese @brief 手动设置入口模块所在目录
+		static void setEntryFolderPath(Path path);
 
 	private:
 		static void addFolderContents(ArrayX<Path>& contents, String folderPathString, Array<StringSpan>& folderComponents);
