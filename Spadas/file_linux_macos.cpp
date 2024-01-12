@@ -29,7 +29,7 @@ namespace file_internal
 	}
 
 #if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
-	String getAppParentPathString(Bool asExecutable)
+	String getEntryFolderPathString(Bool forApp)
 	{
 		Char procname[FILENAME_MAX];
 		int len = readlink("/proc/self/exe", procname, FILENAME_MAX - 1);
@@ -56,10 +56,10 @@ namespace file_internal
 	}
 #endif
 #if defined(SPADAS_ENV_MACOS)
-	String getAppParentPathString(Bool asExecutable)
+	String getEntryFolderPathString(Bool forApp)
 	{
 		CFBundleRef mainBundle = CFBundleGetMainBundle();
-		if (asExecutable)
+		if (!forApp)
 		{
 			CFURLRef url = CFBundleCopyExecutableURL(mainBundle);
 			CFStringRef filePathString = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);

@@ -9,21 +9,21 @@ namespace file_internal
 	class PathsInfo
 	{
 	public:
-		Array<StringSpan> appParentPathComponents;
-		String appParentPathString;
-		Array<StringSpan> executableParentPathComponents;
-		String executableParentPathString;
+		Array<StringSpan> entryFolderPathComponents;
+		String entryFolderPathString;
+		Array<StringSpan> appFolderPathComponents;
+		String appFolderPathString;
 		Array<StringSpan> homePathComponents;
 		String homePathString;
 		Array<StringSpan> spadasFilesPathComponents;
 		String spadasFilesPathString;
 
 		PathsInfo();
-		void setAppParentPath(Array<StringSpan> components, String pathString);
+		void setEntryFolderPath(Array<StringSpan> components, String pathString);
 	};
 	extern PathsInfo pathsInfo;
 
-	String getAppParentPathString(Bool asExecutable);
+	String getEntryFolderPathString(Bool forApp);
 	String getHomePathString();
 	String getCurrentPathString();
 	void setCurrentPathString(String pathString);
