@@ -36,6 +36,19 @@ namespace image_internal
         Binary packet(raw_data, write_length);
         writeContext->buffer.addToTail(packet);
     }
+
+    struct DecodeJPGErrorContainer
+    {
+        jpeg_error_mgr error;
+        jmp_buf jumpBuffer;
+    };
+
+    void decodeJPGErrorExit(j_common_ptr context)
+    {
+        DecodeJPGErrorContainer *container = (DecodeJPGErrorContainer*)context->err;
+        (*context->err->output_message)(context);
+        longjmp(container->jumpBuffer, 1);
+    }
 };
 
 using namespace image_internal;
@@ -59,7 +72,7 @@ Image spadas::decodePNG(Binary pngData)
     {
         png_destroy_info_struct(context, &info);
         png_destroy_read_struct(&context, NULL, NULL);
-        SPADAS_ERROR_MSG("setjmp(png_jmpbuf(context))");
+        SPADAS_ERROR_MSG("Decoder failed");
         return Image();
     }
 
@@ -188,10 +201,17 @@ Image spadas::decodeJPG(Binary jpgData)
     SPADAS_ERROR_RETURNVAL(jpgData.isEmpty(), Image());
 
     jpeg_decompress_struct context;
-    jpeg_error_mgr errorMsg;
-    context.err = jpeg_std_error(&errorMsg);
-    jpeg_create_decompress(&context);
+    DecodeJPGErrorContainer errorContainer;
+    context.err = jpeg_std_error(&errorContainer.error);
+    errorContainer.error.error_exit = decodeJPGErrorExit;
+    if (setjmp(errorContainer.jumpBuffer))
+    {
+        jpeg_destroy_decompress(&context);
+        SPADAS_ERROR_MSG("Decoder failed");
+        return Image();
+    }
 
+    jpeg_create_decompress(&context);
     jpeg_mem_src(&context, jpgData.data(), jpgData.size());
 
     int result = jpeg_read_header(&context, TRUE);
