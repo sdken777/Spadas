@@ -29,7 +29,7 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                // "${workspaceFolder}\\..\\includex",
+                "${workspaceFolder}\\..\\includex",
                 "${workspaceFolder}\\..\\include"
             ],
             "defines": [
@@ -48,7 +48,7 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                // "${workspaceFolder}\\..\\includexa",
+                "${workspaceFolder}\\..\\includexa",
                 "${workspaceFolder}\\..\\include"
             ],
             "defines": [
@@ -125,7 +125,7 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                // "${workspaceFolder}/../includex",
+                "${workspaceFolder}/../includex",
                 "${workspaceFolder}/../include"
             ],
             "defines": [
@@ -144,7 +144,7 @@
             ],
             "includePath": [
                 "${workspaceFolder}",
-                // "${workspaceFolder}/../includexa",
+                "${workspaceFolder}/../includexa",
                 "${workspaceFolder}/../include"
             ],
             "defines": [

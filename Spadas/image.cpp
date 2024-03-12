@@ -51,6 +51,50 @@ Image::Image(ImagePointer pointer)
 	vars->bytesPerPixel = PixelFormat::bytesPerPixel(vars->format);
 }
 
+Image::Image(Enum<ImageFileFormat> format, Binary fileData)
+{
+    SPADAS_ERROR_RETURN(fileData.isEmpty());
+
+    switch (format.value())
+    {
+    case ImageFileFormat::Value::BMP:
+        operator =(decodeBMP(fileData));
+        break;
+    case ImageFileFormat::Value::JPG:
+        operator =(decodeJPG(fileData));
+        break;
+    case ImageFileFormat::Value::PNG:
+        operator =(decodePNG(fileData));
+        break;
+    default:
+        SPADAS_ERROR_MSG("Invalid format");
+        break;
+    }
+}
+
+Image::Image(Path filePath)
+{
+    SPADAS_ERROR_RETURN(filePath.isNull() || filePath.isFolder());
+    SPADAS_ERROR_RETURN(!filePath.exist());
+
+    String ext = filePath.extension();
+    SPADAS_ERROR_RETURN(ext != ".bmp" && ext != ".jpg" && ext != ".jpeg" && ext != ".png");
+
+	File file = File::openBinary(filePath);
+    SPADAS_ERROR_RETURN(file.isNull());
+
+	Binary fileData = file.input();
+    SPADAS_ERROR_RETURN(fileData.isEmpty());
+
+    Enum<ImageFileFormat> format;
+    if (ext == ".bmp") format = ImageFileFormat::Value::BMP;
+    else if (ext == ".jpg" || ext == ".jpeg") format = ImageFileFormat::Value::JPG;
+    else if (ext == ".png") format = ImageFileFormat::Value::PNG;
+    else return;
+
+    operator =(Image(format, fileData));
+}
+
 Bool Image::isRefCounting()
 {
     SPADAS_ERROR_RETURNVAL(!vars, FALSE);
@@ -1055,6 +1099,54 @@ Array<Image> Image::genMipmap(UInt nLevels)
         mipmap[i] = mipmap[i-1].resize(ResizeScale::Value::Half);
 	}
     return mipmap;
+}
+
+Binary Image::toBinary(Enum<ImageFileFormat> format, UInt jpgQuality)
+{
+    SPADAS_ERROR_RETURNVAL(!vars, Binary());
+
+    Binary output;
+    switch (format.value())
+    {
+    case ImageFileFormat::Value::BMP:
+        output = encodeBMP(*this);
+        break;
+    case ImageFileFormat::Value::JPG:
+        SPADAS_ERROR_RETURNVAL(jpgQuality > 100, Binary());
+        output = encodeJPG(*this, jpgQuality);
+        break;
+    case ImageFileFormat::Value::PNG:
+        output = encodePNG(*this);
+        break;
+    default:
+        SPADAS_ERROR_MSG("Invalid format");
+        break;
+    }
+
+    return output;
+}
+
+void Image::save(Path filePath, UInt jpgQuality)
+{
+    SPADAS_ERROR_RETURN(!vars);
+    SPADAS_ERROR_RETURN(filePath.isNull() || filePath.isFolder());
+
+    String ext = filePath.extension();
+    SPADAS_ERROR_RETURN(ext != ".bmp" && ext != ".jpg" && ext != ".jpeg" && ext != ".png");
+    
+    Enum<ImageFileFormat> format;
+    if (ext == ".bmp") format = ImageFileFormat::Value::BMP;
+    else if (ext == ".jpg" || ext == ".jpeg") format = ImageFileFormat::Value::JPG;
+    else if (ext == ".png") format = ImageFileFormat::Value::PNG;
+    else return;
+
+    Binary fileData = toBinary(format, jpgQuality);
+    if (fileData.isEmpty()) return;
+
+	File file = File::createBinary(filePath);
+	SPADAS_ERROR_RETURN(file.isNull());
+    
+	file.output(fileData);
 }
 
 String Image::getInfoText()

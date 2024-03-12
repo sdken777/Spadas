@@ -74,23 +74,11 @@ namespace image_internal
 using namespace spadas;
 using namespace image_internal;
 
-Image::Image(Path bmpFilePath)
+Image spadas::decodeBMP(Binary fileData)
 {
-    SPADAS_ERROR_RETURN(bmpFilePath.isNull() || bmpFilePath.isFolder());
-
-	/* check file extension */
-    SPADAS_ERROR_RETURN(bmpFilePath.extension() != ".bmp");
-    
-	/* load data from file */
-    SPADAS_ERROR_RETURN(!bmpFilePath.exist());
-    
-	File file = File::openBinary(bmpFilePath);
-    if (file.isNull()) return;
-    
-	Binary fileData = file.input();
-    
 	/* check magic number */
-    SPADAS_ERROR_RETURN(fileData[0] != 'B' || fileData[1] != 'M');
+    SPADAS_ERROR_RETURNVAL(fileData.size() < 54, Image());
+    SPADAS_ERROR_RETURNVAL(fileData[0] != 'B' || fileData[1] != 'M', Image());
     
 	/* load headers */
 	FileHeader fileHeader;
@@ -105,14 +93,15 @@ Image::Image(Path bmpFilePath)
 
     if (infoHeader.infoHeaderSize == 124)
     {
+        SPADAS_ERROR_RETURNVAL(fileData.size() < 138, Image());
         utility::memoryCopy(&fileData[14], &infoHeaderV5, 124);
 
-        SPADAS_ERROR_RETURN(infoHeaderV5.bV5Compression != 3);
-        SPADAS_ERROR_RETURN(infoHeaderV5.bV5Planes != 1);
-        SPADAS_ERROR_RETURN(infoHeaderV5.bV5RedMask != 0x00ff0000);
-        SPADAS_ERROR_RETURN(infoHeaderV5.bV5GreenMask != 0x0000ff00);
-        SPADAS_ERROR_RETURN(infoHeaderV5.bV5BlueMask != 0x000000ff);
-        SPADAS_ERROR_RETURN(infoHeaderV5.bV5CSType != 0x57696e20);
+        SPADAS_ERROR_RETURNVAL(infoHeaderV5.bV5Compression != 3, Image());
+        SPADAS_ERROR_RETURNVAL(infoHeaderV5.bV5Planes != 1, Image());
+        SPADAS_ERROR_RETURNVAL(infoHeaderV5.bV5RedMask != 0x00ff0000, Image());
+        SPADAS_ERROR_RETURNVAL(infoHeaderV5.bV5GreenMask != 0x0000ff00, Image());
+        SPADAS_ERROR_RETURNVAL(infoHeaderV5.bV5BlueMask != 0x000000ff, Image());
+        SPADAS_ERROR_RETURNVAL(infoHeaderV5.bV5CSType != 0x57696e20, Image());
 
         imageWidth = infoHeaderV5.bV5Width;
         imageHeight = infoHeaderV5.bV5Height;
@@ -121,9 +110,9 @@ Image::Image(Path bmpFilePath)
     }
     else
     {
-        SPADAS_ERROR_RETURN(infoHeader.infoHeaderSize != 40);
-        SPADAS_ERROR_RETURN(infoHeader.compressType != 0);
-        SPADAS_ERROR_RETURN(infoHeader.nPlanes != 1);
+        SPADAS_ERROR_RETURNVAL(infoHeader.infoHeaderSize != 40, Image());
+        SPADAS_ERROR_RETURNVAL(infoHeader.compressType != 0, Image());
+        SPADAS_ERROR_RETURNVAL(infoHeader.nPlanes != 1, Image());
 
         imageWidth = infoHeader.width;
         imageHeight = infoHeader.height;
@@ -144,7 +133,7 @@ Image::Image(Path bmpFilePath)
         {
             srcNChannels = 1;
             usePalette = TRUE;
-            SPADAS_ERROR_RETURN(nColors != 0 && nColors != 256);
+            SPADAS_ERROR_RETURNVAL(nColors != 0 && nColors != 256, Image());
             r = Binary(256);
             g = Binary(256);
             b = Binary(256);
@@ -176,7 +165,7 @@ Image::Image(Path bmpFilePath)
             break;
         default:
 			SPADAS_ERROR_MSG("Invalid nBitsPerPixel");
-            return;
+            return Image();
 	}
 	
 	Image out(Size2D::wh(imageWidth, imageHeight), outputFormat, FALSE);
@@ -237,26 +226,21 @@ Image::Image(Path bmpFilePath)
             break;
     }
 
-	if (reverse) operator =(out.flip(TRUE, FALSE));
-	else operator =(out);
+	if (reverse) return out.flip(TRUE, FALSE);
+	return out;
 }
 
-void Image::save(Path bmpFilePath)
+Binary spadas::encodeBMP(Image image)
 {
-    SPADAS_ERROR_RETURN(!vars);
-    SPADAS_ERROR_RETURN(bmpFilePath.isNull() || bmpFilePath.isFolder());
+    SPADAS_ERROR_RETURNVAL(image.isNull(), Binary());
 
-	/* check file extension */
-    SPADAS_ERROR_RETURN(bmpFilePath.extension() != ".bmp");
-    
 	/* convert pixel format */
     Enum<PixelFormat> outputFormat;
-    if (PixelFormat::hasAlpha(vars->format)) outputFormat = PixelFormat::Value::ByteBGRA;
-    else if (PixelFormat::isColor(vars->format)) outputFormat = PixelFormat::Value::ByteBGR;
+    if (PixelFormat::hasAlpha(image.format())) outputFormat = PixelFormat::Value::ByteBGRA;
+    else if (PixelFormat::isColor(image.format())) outputFormat = PixelFormat::Value::ByteBGR;
     else outputFormat = PixelFormat::Value::ByteGray;
     
-	Image in(*this);
-    if (vars->format != outputFormat) in = convert(outputFormat);
+    if (image.format() != outputFormat) image = image.convert(outputFormat);
     
 	/* generate headers */
 	FileHeader fileHeader;
@@ -264,18 +248,18 @@ void Image::save(Path bmpFilePath)
     InfoHeaderV5 infoHeaderV5;
     Bool useV5 = FALSE;
     
-	UInt dstStep = ((in.width() * PixelFormat::nChannels(outputFormat) - 1) & 0xfffffffc) + 4;
+	UInt dstStep = ((image.width() * PixelFormat::nChannels(outputFormat) - 1) & 0xfffffffc) + 4;
     
     if (outputFormat == PixelFormat::Value::ByteGray || outputFormat == PixelFormat::Value::ByteBGR)
     {
-        fileHeader.fileSize = 54 + (outputFormat == PixelFormat::Value::ByteGray ? 1024 : 0) + in.height() * dstStep;
+        fileHeader.fileSize = 54 + (outputFormat == PixelFormat::Value::ByteGray ? 1024 : 0) + image.height() * dstStep;
         fileHeader.reserved1 = 0;
         fileHeader.reserved2 = 0;
         fileHeader.dataOffset = 54 + (outputFormat == PixelFormat::Value::ByteGray ? 1024 : 0);
         
         infoHeader.infoHeaderSize = 40;
-        infoHeader.width = in.width();
-        infoHeader.height = in.height();
+        infoHeader.width = image.width();
+        infoHeader.height = image.height();
         infoHeader.nPlanes = 1;
         infoHeader.nBitsPerPixel = PixelFormat::nChannels(outputFormat) * 8;
         infoHeader.compressType = 0;
@@ -287,14 +271,14 @@ void Image::save(Path bmpFilePath)
     }
     else // PixelFormat::ByteBGRA
     {
-        fileHeader.fileSize = 138 + in.height() * dstStep;
+        fileHeader.fileSize = 138 + image.height() * dstStep;
         fileHeader.reserved1 = 0;
         fileHeader.reserved2 = 0;
         fileHeader.dataOffset = 138;
 
         infoHeaderV5.bV5Size = 124;
-        infoHeaderV5.bV5Width = in.width();
-        infoHeaderV5.bV5Height = in.height();
+        infoHeaderV5.bV5Width = image.width();
+        infoHeaderV5.bV5Height = image.height();
         infoHeaderV5.bV5Planes = 1;
         infoHeaderV5.bV5BitCount = 32;
         infoHeaderV5.bV5Compression = 3;
@@ -352,7 +336,7 @@ void Image::save(Path bmpFilePath)
             for (UInt v = 0; v < infoHeader.height; v++)
             {
                 Byte *dstRow = &dstPixelData[v * dstStep];
-                Byte *srcRow = in[infoHeader.height - v - 1].b;
+                Byte *srcRow = image[infoHeader.height - v - 1].b;
                 utility::memoryCopy(srcRow, dstRow, infoHeader.width);
             }
         }
@@ -361,11 +345,11 @@ void Image::save(Path bmpFilePath)
         case PixelFormat::Value::ByteBGRA:
         {
             Byte *dstData = &fileData[fileHeader.dataOffset];
-            for (UInt v = 0; v < in.height(); v++)
+            for (UInt v = 0; v < image.height(); v++)
             {
                 Byte *dstRow = &dstData[v * dstStep];
-                Byte *srcRow = in[in.height() - v - 1].b;
-                utility::memoryCopy(srcRow, dstRow, in.width() * PixelFormat::nChannels(outputFormat));
+                Byte *srcRow = image[image.height() - v - 1].b;
+                utility::memoryCopy(srcRow, dstRow, image.width() * PixelFormat::nChannels(outputFormat));
             }
         }
             break;
@@ -373,9 +357,5 @@ void Image::save(Path bmpFilePath)
             break;
     }
     
-	/* write buffer to file */
-	File file = File::createBinary(bmpFilePath);
-	if (!file.isValid()) return;
-    
-	file.output(fileData);
+	return fileData;
 }

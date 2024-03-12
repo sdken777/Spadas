@@ -304,4 +304,11 @@ namespace spadas
         UInt bytesPerPixel;
 		BinarySpan span;
 	};
+
+	Image decodeBMP(Binary bmpData);
+	Binary encodeBMP(Image image);
+	Image decodeJPG(Binary jpgData);
+	Binary encodeJPG(Image image, UInt quality/* 0~100 */);
+	Image decodePNG(Binary pngData);
+	Binary encodePNG(Image image);
 }

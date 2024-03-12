@@ -17,5 +17,10 @@ Dictionary<String> spadas::system::getSpadasThirdPartyNotices()
 	table["C++ 11 BigInteger Library"] = resource_C___11_BigInteger_Library_LICENSE;
 	table["base64.h base64.c"] = resource_base64_h_base64_c_LICENSE;
 	table["svd.h svd.c pythag.h"] = resource_svd_h_svd_c_pythag_h_LICENSE;
+	if (getEnv() == Environment::Value::Linux)
+	{
+		table["libjpeg"] = resource_libjpeg_LICENSE;
+		table["libpng"] = resource_libpng_LICENSE;
+	}
 	return table;
 }
