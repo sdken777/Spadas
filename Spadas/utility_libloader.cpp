@@ -53,7 +53,7 @@ Bool LibraryLoader::openWithName(Path libDir, String libName, String libVersion,
 #if defined(SPADAS_ENV_WINDOWS)
 	Path libPath = libDir.childFile(libName + ".dll");
 #endif
-#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
+#if defined(SPADAS_ENV_LINUX)
 	Path libPath = libDir.childFile("lib" cat libName cat ".so" cat versionPostfix);
 #endif
 #if defined(SPADAS_ENV_MACOS)

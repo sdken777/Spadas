@@ -24,7 +24,7 @@ void leaveLock(CRITICAL_SECTION *context)
 	LeaveCriticalSection(context);
 }
 
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include <pthread.h>
 #undef NULL

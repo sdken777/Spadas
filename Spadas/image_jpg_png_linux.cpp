@@ -303,35 +303,3 @@ Binary spadas::encodeJPG(Image image, UInt quality)
 }
 
 #endif
-
-#if defined(SPADAS_ENV_NILRT)
-
-#include "image.h"
-
-using namespace spadas;
-
-Image spadas::decodeJPG(Binary jpgData)
-{
-    SPADAS_ERROR_MSG("Unsupported on NILRT");
-    return Image();
-}
-
-Binary spadas::encodeJPG(Image image, UInt quality)
-{
-    SPADAS_ERROR_MSG("Unsupported on NILRT");
-    return Binary();
-}
-
-Image spadas::decodePNG(Binary pngData)
-{
-    SPADAS_ERROR_MSG("Unsupported on NILRT");
-    return Image();
-}
-
-Binary spadas::encodePNG(Image image)
-{
-    SPADAS_ERROR_MSG("Unsupported on NILRT");
-    return Binary();
-}
-
-#endif

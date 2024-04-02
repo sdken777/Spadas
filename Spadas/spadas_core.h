@@ -5280,9 +5280,8 @@ namespace spadas
 			Linux = 3,
 			MacOS = 4,
 			Windows = 6,
-			NILRT = 7,
 		};
-		SPADAS_ENUM_VALUES(Unknown, Linux, MacOS, Windows, NILRT);
+		SPADAS_ENUM_VALUES(Unknown, Linux, MacOS, Windows);
 	};
 
 	/// \~English @brief Posix time in milliseconds

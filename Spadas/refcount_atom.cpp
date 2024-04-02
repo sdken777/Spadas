@@ -56,7 +56,7 @@ Bool Atom::cas(Int oldVal, Int newVal) const
 
 #endif
 
-#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
+#if defined(SPADAS_ENV_LINUX)
 
 Int Atom::increase() const
 {

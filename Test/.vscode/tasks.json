@@ -8,7 +8,6 @@
             "DEPENDS_X86_LINUX": "spadas",
             "DEPENDS_ARM_LINUX": "spadas",
             "DEPENDS_ARM_MACOS": "spadas",
-            "DEPENDS_X86_NILRT": "spadas",
             "FRAMEWORKS_ARM_MACOS": "",
         }
     },
@@ -108,7 +107,6 @@
                 "Subtask: Build for X86-Ubuntu2204 target (Release)",
                 "Subtask: Build for Arm-Ubuntu2204 target (Release)",
                 "Subtask: Build for Arm-MacOS1203 target (Release)",
-                "Subtask: Build for X86-NILRT17 target (Release)",
             ],
         },
         {
@@ -183,19 +181,6 @@
                 "PLATFORM=macosarm",
                 "DEPENDS=$(DEPENDS_ARM_MACOS)",
                 "FRAMEWORKS=$(FRAMEWORKS_ARM_MACOS)",
-            ],
-            "problemMatcher":"$gcc",
-        },
-        {
-            "type": "process",
-            "label": "Subtask: Build for X86-NILRT17 target (Release)",
-            "hide": true,
-            "command": "make",
-            "args": [
-                "-j${input:helper_thread_count}",
-                "MODE=release",
-                "PLATFORM=nilrt",
-                "DEPENDS=$(DEPENDS_X86_NILRT)",
             ],
             "problemMatcher":"$gcc",
         },

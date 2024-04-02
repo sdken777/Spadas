@@ -9,7 +9,6 @@ chmod -v +x "$CUR_DIR"/gen_apidoc.sh
 chmod -v +x "$CUR_DIR"/binx/test
 chmod -v +x "$CUR_DIR"/binxa/test
 chmod -v +x "$CUR_DIR"/binma/test
-chmod -v +x "$CUR_DIR"/binni/test
 
 echo "Done. (Spadas/init_exe.sh)"
 sleep 1

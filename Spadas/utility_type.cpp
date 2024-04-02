@@ -104,7 +104,7 @@ void TimeWithMS::localTimeFromPosix(MilliPosix posixTime)
 	tm t;
 #if defined(SPADAS_ENV_WINDOWS)
 	localtime_s(&t, &t1);
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 	localtime_r(&t1, &t);
 #endif
 
@@ -123,7 +123,7 @@ void TimeWithMS::utcTimeFromPosix(MilliPosix posixTime)
 	tm t;
 #if defined(SPADAS_ENV_WINDOWS)
 	gmtime_s(&t, &t1);
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 	gmtime_r(&t1, &t);
 #endif
 

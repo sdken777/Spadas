@@ -1,5 +1,5 @@
 ﻿
-#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include "console.h"
 #include <stdio.h>
@@ -87,7 +87,7 @@ namespace console_internal
 
 			case 27:
 			{
-#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
+#if defined(SPADAS_ENV_LINUX)
 				if (stdin->_IO_read_ptr == stdin->_IO_read_end)
 				{
 					return Key::Value::Esc;
@@ -204,12 +204,6 @@ void console::popup(String text)
 	CFStringRef cfString = CFStringCreateWithBytes(NULL, (UInt8*)text.chars().data(), text.length(), kCFStringEncodingUTF8, false);
 	CFUserNotificationDisplayAlert(0, kCFUserNotificationNoteAlertLevel, NULL, NULL, NULL, CFSTR(""), cfString, NULL, NULL, NULL, NULL);
 	CFRelease(cfString);
-}
-#endif
-#if defined(SPADAS_ENV_NILRT)
-void console::popup(String text)
-{
-	console::print("[console::popup] " cat text);
 }
 #endif
 
