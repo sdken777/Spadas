@@ -2,18 +2,18 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 改为Path::entryFolderPath/setEntryFolderPath
+// Update log / 更新记录: 不再支持NILRT
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 47
+#define SPADAS_VERSION_BUILD 50
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.0.47 \n
-* \~Chinese 本文档对应Spadas版本：9.0.47 \n
+* \~English This document corresponds to Spadas version: 9.0.50 \n
+* \~Chinese 本文档对应Spadas版本：9.0.50 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -250,7 +250,7 @@
 #define SPADAS_DEFAULT_API __declspec(dllexport)
 #define SPADAS_WINDOWS_DLLIMPORT __declspec(dllimport)
 #endif
-#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 #define SPADAS_DEFAULT_API __attribute__ ((visibility("default")))
 #endif
 

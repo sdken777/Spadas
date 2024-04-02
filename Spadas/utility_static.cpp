@@ -58,8 +58,6 @@ Enum<Environment> spadas::system::getEnv()
 	return Environment::Value::Windows;
 #elif defined(SPADAS_ENV_MACOS)
 	return Environment::Value::MacOS;
-#elif defined(SPADAS_ENV_NILRT)
-	return Environment::Value::NILRT;
 #else
 	return Environment::Value::Unknown;
 #endif
@@ -120,7 +118,7 @@ Time spadas::system::getTime()
 
 	return out;
 }
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 Time spadas::system::getTime()
 {
 	time_t longTime;
@@ -162,7 +160,7 @@ TimeWithMS spadas::system::getTimeWithMS()
 
 	return out;
 }
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 TimeWithMS spadas::system::getTimeWithMS()
 {
 	timeb nowTime;
@@ -199,7 +197,7 @@ void spadas::system::wait(UInt time)
 		if (wc.sampleCount.increase() <= 100 && failed) wc.failCount.increase();
 		sleepTime(time);
 	}
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 	sleepTime(time);
 #endif
 }
@@ -230,7 +228,7 @@ void spadas::system::addEnvironmentPath(Path path)
 	String newVar = src + ";" + target;
 	SetEnvironmentVariableW(L"Path", newVar.wchars().data());
 }
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
+#elif defined(SPADAS_ENV_LINUX)
 void spadas::system::addEnvironmentPath(Path path)
 {
 	SPADAS_ERROR_RETURN(path.isNull() || !path.isFolder());

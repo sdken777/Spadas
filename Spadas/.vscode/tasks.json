@@ -5,13 +5,13 @@
             "COMPILE": "cross",
             "TARGET": "spadas",
             "TARGET_VERSION": "9",
-            "DEPENDS_X86_WINDOWS": "winmm ws2_32 iphlpapi",
-            "DEPENDS_X86_LINUX": "pthread dl",
-            "DEPENDS_ARM_LINUX": "pthread dl",
+            "DEPENDS_X86_WINDOWS": "winmm ws2_32 ole32 oleaut32 iphlpapi windowscodecs",
+            "DEPENDS_X86_LINUX": "pthread dl jpeg png",
+            "DEPENDS_ARM_LINUX": "pthread dl jpeg png",
             "DEPENDS_X86_MACOS": "pthread dl",
             "DEPENDS_ARM_MACOS": "pthread dl",
-            "FRAMEWORKS_X86_MACOS": "CoreServices",
-            "FRAMEWORKS_ARM_MACOS": "CoreServices",
+            "FRAMEWORKS_X86_MACOS": "CoreServices CoreServices CoreGraphics ImageIO",
+            "FRAMEWORKS_ARM_MACOS": "CoreFoundation CoreServices CoreGraphics ImageIO",
         }
     },
     "inputs": [

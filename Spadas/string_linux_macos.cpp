@@ -1,5 +1,5 @@
 ﻿
-#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include "string_spadas.h"
 #include "3party/ConvertUTF.h"

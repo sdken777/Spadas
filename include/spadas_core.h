@@ -4195,6 +4195,21 @@ namespace spadas
 		SPADAS_ENUM_VALUES(None, CW90, CW180, CCW90);
 	};
 
+	/// \~English @brief The format of image file
+	/// \~Chinese @brief 图像文件格式
+	class SPADAS_API ImageFileFormat
+	{
+	public:
+		enum class Value
+		{
+			Default = 0,
+			BMP = 0,
+			JPG = 1,
+			PNG = 2,
+		};
+		SPADAS_ENUM_VALUES(BMP, JPG, PNG);
+	};
+
 	/// \~English @brief The value of each channel of the pixel
 	/// \~Chinese @brief 像素各通道值
 	template <typename Type> struct PixelChannels
@@ -4299,9 +4314,13 @@ namespace spadas
 		/// \~Chinese @brief 从图像指针创建图像（不拷贝数据）
 		Image(ImagePointer pointer);
 
-		/// \~English @brief Read the image from the .bmp file, the format may be ByteBGR, ByteBGRA or ByteGray depending on the content of the file
-		/// \~Chinese @brief 从.bmp文件读取图像，根据文件内容不同其格式可能为ByteBGR，ByteBGRA或ByteGray
-		Image(Path bmpFilePath);
+		/// \~English @brief Read the image from the .bmp, .jpg or .png file data, the format may be ByteBGR, ByteBGRA or ByteGray depending on the data
+		/// \~Chinese @brief 从.bmp, .jpg或.png文件数据读取图像，根据数据不同其格式可能为ByteBGR，ByteBGRA或ByteGray
+		Image(Enum<ImageFileFormat> format, Binary fileData);
+
+		/// \~English @brief Read the image from the .bmp, .jpg or .png file, the format may be ByteBGR, ByteBGRA or ByteGray depending on the content of the file
+		/// \~Chinese @brief 从.bmp, .jpg或.png文件读取图像，根据文件内容不同其格式可能为ByteBGR，ByteBGRA或ByteGray
+		Image(Path filePath);
 
 		/// \~English @brief Whether the source of data is a reference counting object
 		/// \~Chinese @brief 数据源是否为一个引用计数对象
@@ -4415,9 +4434,13 @@ namespace spadas
 		/// \~Chinese @brief 生成mipmap (级别0为源图像，级别越高图像越小)
 		Array<Image> genMipmap(UInt nLevels);
 
-		/// \~English @brief Save to .bmp file
-		/// \~Chinese @brief 保存至.bmp文件
-		void save(Path bmpFilePath);
+		/// \~English @brief Encode to .bmp, .jpg or .png file data. You can set jpgQuality while encoding to .jpg (ranges 0~100, 0 for smallest file, 100 for highest quality)
+		/// \~Chinese @brief 编码至.bmp, .jpg或.png文件数据，编码为.jpg时可通过jpgQuality指定编码质量（0~100，0则文件最小，100则图像质量最高）
+		Binary toBinary(Enum<ImageFileFormat> format, UInt jpgQuality = UINF);
+
+		/// \~English @brief Save to .bmp, .jpg or .png file. You can set jpgQuality while saving to .jpg file (ranges 0~100, 0 for smallest file, 100 for highest quality)
+		/// \~Chinese @brief 保存至.bmp, .jpg或.png文件，存储为.jpg时可通过jpgQuality指定编码质量（0~100，0则文件最小，100则图像质量最高）
+		void save(Path filePath, UInt jpgQuality = UINF);
 
 		/// \~English @brief Use text to describe information such as image size, pixel format, etc.
 		/// \~Chinese @brief 用文本表述图像大小、像素格式等信息
@@ -5257,9 +5280,8 @@ namespace spadas
 			Linux = 3,
 			MacOS = 4,
 			Windows = 6,
-			NILRT = 7,
 		};
-		SPADAS_ENUM_VALUES(Unknown, Linux, MacOS, Windows, NILRT);
+		SPADAS_ENUM_VALUES(Unknown, Linux, MacOS, Windows);
 	};
 
 	/// \~English @brief Posix time in milliseconds

@@ -1,5 +1,5 @@
 ﻿
-#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
+#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include "file.h"
 #include <memory.h>
@@ -28,7 +28,7 @@ namespace file_internal
 		return '/';
 	}
 
-#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
+#if defined(SPADAS_ENV_LINUX)
 	String getEntryFolderPathString(Bool forApp)
 	{
 		Char procname[FILENAME_MAX];

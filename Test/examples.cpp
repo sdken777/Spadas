@@ -23,6 +23,7 @@ void exampleConsole();
 void exampleFile();
 void exampleLock();
 void exampleTask();
+void exampleImage();
 void exampleMatrix();
 void exampleThreadSafe();
 
@@ -84,6 +85,9 @@ void runExamples()
 
     print("\n-- Example: Task --");
     exampleTask();
+
+    print("\n-- Example: Image --");
+    exampleImage();
 
     print("\n-- Example: Matrix --");
     exampleMatrix();

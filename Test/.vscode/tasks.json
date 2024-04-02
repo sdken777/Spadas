@@ -91,9 +91,9 @@
                 "DEPENDS=${input:helper_platform_env_var_depends}",
                 "FRAMEWORKS=${input:helper_platform_env_var_frameworks}",
             ],
-            // "dependsOn": [
-            //     "Subtask: Generate resource code",
-            // ],
+            "dependsOn": [
+                "Subtask: Generate resource code",
+            ],
             "problemMatcher":"$gcc",
         },
         {
@@ -104,7 +104,7 @@
             "args": [ "Done." ],
             "dependsOrder": "sequence",
             "dependsOn": [
-                // "Subtask: Generate resource code",
+                "Subtask: Generate resource code",
                 "Subtask: Build for X86-Windows7 target (Release)",
                 "Subtask: Build for X86-Ubuntu1804 target (Release)",
                 "Subtask: Build for Arm-Ubuntu1604 target (Release)",

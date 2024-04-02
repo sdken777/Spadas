@@ -187,7 +187,7 @@ void OscillatorVars::stopOscillator(UInt id)
 	timeKillEvent(id);
 }
 
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include <pthread.h>
 #include <sys/time.h>

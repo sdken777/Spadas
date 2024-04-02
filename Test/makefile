@@ -2,7 +2,7 @@
 # Parameter Description
 # [Required] TYPE: Output target type (lib: library file, exe: executable file)
 # [Required] MODE: Compile mode (debug, release)
-# [Required] PLATFORM: Target running platform (linux: Linux 64bit X86, linuxarm: Linux 64bit Arm, windows: Windows 64bit X86, macos: MacOS 64bit X86, macosarm: MacOS 64bit Arm, nilrt: NILRT 64bit X86)
+# [Required] PLATFORM: Target running platform (linux: Linux 64bit X86, linuxarm: Linux 64bit Arm, windows: Windows 64bit X86, macos: MacOS 64bit X86, macosarm: MacOS 64bit Arm)
 # [Required] COMPILE: Compile toolchain (local: native compile, cross: cross-compile)
 # [Required] TARGET: The target name. Prefix and suffix are not required
 # [Optional] TARGET_VERSION: Target version number. Only for.so and .dylib library files
@@ -52,7 +52,6 @@ endif
 
 # Target running platform related
 ifeq ($(PLATFORM), linux)
-	USE_CLANG=yes
 	INCLUDE_DIR=includex
 	LIB_DIR=libx
 	BIN_DIR=binx
@@ -69,7 +68,6 @@ ifeq ($(PLATFORM), linux)
 	OBJS=$(SRCS_CPP:.cpp=.o) $(SRCS_CC:.cc=.o) $(SRCS_C:.c=.o)
 endif
 ifeq ($(PLATFORM), linuxarm)
-	USE_CLANG=yes
 	INCLUDE_DIR=includexa
 	LIB_DIR=libxa
 	BIN_DIR=binxa
@@ -86,7 +84,6 @@ ifeq ($(PLATFORM), linuxarm)
 	OBJS=$(SRCS_CPP:.cpp=.o) $(SRCS_CC:.cc=.o) $(SRCS_C:.c=.o)
 endif
 ifeq ($(PLATFORM), windows)
-	USE_CLANG=yes
 	INCLUDE_DIR=include64
 	LIB_DIR=lib64
 	BIN_DIR=bin64
@@ -117,7 +114,6 @@ ifeq ($(PLATFORM), macos)
 	OBJS=$(SRCS_CPP:.cpp=.o) $(SRCS_CC:.cc=.o) $(SRCS_C:.c=.o) $(SRCS_MM:.mm=.o)
 endif
 ifeq ($(PLATFORM), macosarm)
-	USE_CLANG=yes
 	INCLUDE_DIR=includema
 	LIB_DIR=libma
 	BIN_DIR=binma
@@ -133,23 +129,6 @@ ifeq ($(PLATFORM), macosarm)
 	ARCH_DEFINE=SPADAS_ARCH_ARM
 	SRCS_MM=$(filter-out $(FILTEROUT_MM), $(wildcard *.mm **/*.mm **/**/*.mm **/**/**/*.mm))
 	OBJS=$(SRCS_CPP:.cpp=.o) $(SRCS_CC:.cc=.o) $(SRCS_C:.c=.o) $(SRCS_MM:.mm=.o)
-endif
-ifeq ($(PLATFORM), nilrt)
-	USE_CLANG=no
-	INCLUDE_DIR=includeni
-	LIB_DIR=libni
-	BIN_DIR=binni
-	LIB_PREFIX=lib
-	LIB_EXT=.so
-	ifdef TARGET_VERSION
-		BIN_EXT=.so.$(TARGET_VERSION)
-	else
-		BIN_EXT=.so
-	endif
-	EXE_EXT=
-	ENV_DEFINE=SPADAS_ENV_NILRT
-	ARCH_DEFINE=SPADAS_ARCH_X86
-	OBJS=$(SRCS_CPP:.cpp=.o) $(SRCS_CC:.cc=.o) $(SRCS_C:.c=.o)
 endif
 
 # Query header files
@@ -189,49 +168,30 @@ XTOOLS_PATH=/opt/xtools-uni
 CLANG_PATH=/opt/clang-15
 
 # Compile toolchain related
-COMPILE_OPTION_CPP=
-ifeq ($(USE_CLANG), yes)
-	COMPILE_OPTION_CPP:=$(COMPILE_OPTION_CPP) -std=c++11
-	COMPILER_C_EXE=$(CLANG_PATH)/bin/clang
-	COMPILER_CPP_EXE=$(CLANG_PATH)/bin/clang++
-	COMPILER_OBJC_EXE=$(CLANG_PATH)/bin/clang++
-	STRIP_EXE=$(CLANG_PATH)/bin/llvm-strip
-	ifeq ($(COMPILE), local)
-		SYSROOT_OPTION=
-	endif
-	ifeq ($(COMPILE), cross)
-		LINK_OPTION:=$(LINK_OPTION) -fuse-ld=lld
-		ifeq ($(PLATFORM), linux)
-			SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/x86-ubuntu1804 --target=x86_64-ubuntu18.04-linux-gnu
-		endif
-		ifeq ($(PLATFORM), linuxarm)
-			SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/arm-ubuntu1604 --target=aarch64-ubuntu16.04-linux-gnu
-		endif
-		ifeq ($(PLATFORM), windows)
-			SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/x86-windows7 --target=x86_64-w64-mingw32
-		endif
-		ifeq ($(PLATFORM), macos)
-			SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/x86-macos1013 --target=x86_64-apple-darwin14
-		endif
-		ifeq ($(PLATFORM), macosarm)
-			SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/arm-macos1203 --target=arm64-apple-darwin21.4.0
-		endif
-	endif
+COMPILE_OPTION_CPP=-std=c++11
+COMPILER_C_EXE=$(CLANG_PATH)/bin/clang
+COMPILER_CPP_EXE=$(CLANG_PATH)/bin/clang++
+COMPILER_OBJC_EXE=$(CLANG_PATH)/bin/clang++
+STRIP_EXE=$(CLANG_PATH)/bin/llvm-strip
+ifeq ($(COMPILE), local)
+	SYSROOT_OPTION=
 endif
 ifeq ($(COMPILE), cross)
-	ifeq ($(PLATFORM), nilrt)
-		COMPILE_OPTION_CPP:=$(COMPILE_OPTION_CPP) -std=c++11
-		SYSROOT_OPTION=--sysroot=/opt/xtools-uni/x86-nilrt17/sysroots/core2-64-nilrt-linux
-		ifeq ($(HOST), windows)
-			COMPILER_C_EXE=/opt/xtools-uni/x86-nilrt17/sysroots/i686-nilrtsdk-mingw32/usr/bin/x86_64-nilrt-linux/x86_64-nilrt-linux-gcc -m64 -march=core2 -mtune=core2 -msse3 -mfpmath=sse
-			COMPILER_CPP_EXE=/opt/xtools-uni/x86-nilrt17/sysroots/i686-nilrtsdk-mingw32/usr/bin/x86_64-nilrt-linux/x86_64-nilrt-linux-g++ -m64 -march=core2 -mtune=core2 -msse3 -mfpmath=sse
-			STRIP_EXE=/opt/xtools-uni/x86-nilrt17/sysroots/i686-nilrtsdk-mingw32/usr/bin/x86_64-nilrt-linux/x86_64-nilrt-linux-strip
-		endif
-		ifeq ($(HOST), linux)
-			COMPILER_C_EXE=/opt/xtools-uni/x86-nilrt17/sysroots/x86_64-nilrtsdk-linux/usr/bin/x86_64-nilrt-linux/x86_64-nilrt-linux-gcc -m64 -march=core2 -mtune=core2 -msse3 -mfpmath=sse
-			COMPILER_CPP_EXE=/opt/xtools-uni/x86-nilrt17/sysroots/x86_64-nilrtsdk-linux/usr/bin/x86_64-nilrt-linux/x86_64-nilrt-linux-g++ -m64 -march=core2 -mtune=core2 -msse3 -mfpmath=sse
-			STRIP_EXE=/opt/xtools-uni/x86-nilrt17/sysroots/x86_64-nilrtsdk-linux/usr/bin/x86_64-nilrt-linux/x86_64-nilrt-linux-strip
-		endif
+	LINK_OPTION:=$(LINK_OPTION) -fuse-ld=lld
+	ifeq ($(PLATFORM), linux)
+		SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/x86-ubuntu1804 --target=x86_64-ubuntu18.04-linux-gnu
+	endif
+	ifeq ($(PLATFORM), linuxarm)
+		SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/arm-ubuntu1604 --target=aarch64-ubuntu16.04-linux-gnu
+	endif
+	ifeq ($(PLATFORM), windows)
+		SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/x86-windows7 --target=x86_64-w64-mingw32
+	endif
+	ifeq ($(PLATFORM), macos)
+		SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/x86-macos1013 --target=x86_64-apple-darwin14
+	endif
+	ifeq ($(PLATFORM), macosarm)
+		SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/arm-macos1203 --target=arm64-apple-darwin21.4.0
 	endif
 endif
 
@@ -259,9 +219,6 @@ ifeq ($(PLATFORM), macos)
 	WL_OPTION=-Wl,-rpath,./
 endif
 ifeq ($(PLATFORM), macosarm)
-	WL_OPTION=-Wl,-rpath,./
-endif
-ifeq ($(PLATFORM), nilrt)
 	WL_OPTION=-Wl,-rpath,./
 endif
 ifeq ($(TYPE), lib)
@@ -303,24 +260,12 @@ ifeq ($(TYPE), lib)
 			POSTLIB_COMMAND=cp -vf $(OUT_PATH)/$(OUT_NAME) $(LIB_PATH)/$(LIB_NAME)
 		endif
 	endif
-	ifeq ($(PLATFORM), nilrt)
-		WL_OPTION:=$(WL_OPTION),-rpath-link,$(LIB_PATH)/
-		ifneq ($(BIN_EXT), $(LIB_EXT))
-			WL_OPTION:=$(WL_OPTION),-soname,$(OUT_NAME)
-		endif
-		ifeq ($(MODE), release)
-			POSTLIB_COMMAND=cp -vf $(OUT_PATH)/$(OUT_NAME) $(LIB_PATH)/$(LIB_NAME)
-		endif
-	endif
 endif
 ifeq ($(TYPE), exe)
 	ifeq ($(PLATFORM), linux)
 		WL_OPTION:=$(WL_OPTION),-rpath-link,$(LIB_PATH)/
 	endif
 	ifeq ($(PLATFORM), linuxarm)
-		WL_OPTION:=$(WL_OPTION),-rpath-link,$(LIB_PATH)/
-	endif
-	ifeq ($(PLATFORM), nilrt)
 		WL_OPTION:=$(WL_OPTION),-rpath-link,$(LIB_PATH)/
 	endif
 endif

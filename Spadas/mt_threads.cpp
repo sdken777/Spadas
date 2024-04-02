@@ -199,12 +199,12 @@ void threadCreate(ThreadsVars *vars)
 
 UInt __stdcall threadFunc(Pointer param)
 
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS) || defined(SPADAS_ENV_NILRT)
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
 #include <pthread.h>
 #include <unistd.h>
 
-#if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_NILRT)
+#if defined(SPADAS_ENV_LINUX)
 #include <linux/unistd.h>
 UInt Threads::getCurrentThreadID()
 {
