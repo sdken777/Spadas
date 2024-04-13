@@ -140,6 +140,12 @@ namespace spadas
 	// Flag bit / 标志位
 	class Flag;
 
+	// Sample / 样本
+	class SessionSample;
+
+	// General sample element / 通用样本元素
+	struct GeneralElement;
+
 	// Space and Index / 空间与索引 //////////////////////////////////////////////////////////////
 
 	/// \~English @brief 2D size
@@ -1715,7 +1721,7 @@ namespace spadas
 		/// \~Chinese @brief 创建一个节点，并给其数据赋指定值
 		GraphNode(NType val);
 		
-		/// \~English @brief et the reference of the data
+		/// \~English @brief Get the reference of the data
 		/// \~Chinese @brief 取得数据的引用
 		NType& value();
 
@@ -5814,9 +5820,6 @@ namespace spadas
 
 	// Plugin related type definition / 插件相关类型定义 //////////////////////////////////////////////////////////////
 
-	// General sample element (Forward declaration) / 通用样本元素（前置声明）
-	struct GeneralElement;
-
 	/// \~English @brief Substitution of Bool type Optional
 	/// \~Chinese @brief 代替Bool类型Optional
 	struct OptionalBool
@@ -6372,7 +6375,62 @@ namespace spadas
 		virtual TransmitResult::Value transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance, String guestSyncID);
 	};
 
-	/// \~English @brief Generic sample element
+	/// \~English @brief Variables of sample
+	/// \~Chinese @brief 样本的变量数据
+	class SPADAS_API SessionSampleVars : public Vars
+	{
+	public:		
+		/// \~English @brief Timestamp
+		/// \~Chinese @brief 时间戳
+		FullTimestamp timestamp;
+
+		/// \~English @brief Specialized from general sample or matrix sample
+		/// \~Chinese @brief 从通用样本或矩阵样本特化
+		virtual Bool fromSample(String protocol, SessionSample sample);
+
+		/// \~English @brief Whether specialized sample interpolation is supported
+		/// \~Chinese @brief 是否支持特化样本插值
+		virtual Bool supportInterpolation();
+
+		/// \~English @brief Specialized sample interpolation
+		/// \~Chinese @brief 特化样本插值
+		virtual SessionSample interpolate(SessionSample& s1, Double w1, SessionSample& s2, Double w2, FullTimestamp timestamp);
+
+	protected:
+		virtual String getTypeName() override;
+		virtual Bool isType(ULong id) override;
+		virtual Bool isType(String name) override;
+	};
+
+	/// \~English @brief Sample
+	/// \~Chinese @brief 样本
+	class SPADAS_API SessionSample : public Object<SessionSampleVars>
+	{
+	public:
+		SPADAS_TYPE("spadas.SessionSample")
+
+		/// \~English @brief Default constructor
+		/// \~Chinese @brief 默认构造函数
+		SessionSample();
+
+		/// \~English @brief Get the reference of the timestamp
+		/// \~Chinese @brief 取得时间戳的引用
+		FullTimestamp& timestamp();
+
+		/// \~English @brief Specialized from general sample or matrix sample
+		/// \~Chinese @brief 从通用样本或矩阵样本特化
+		Bool fromSample(String protocol, SessionSample sample);
+
+		/// \~English @brief Whether specialized sample interpolation is supported
+		/// \~Chinese @brief 是否支持特化样本插值
+		Bool supportInterpolation();
+
+		/// \~English @brief Specialized sample interpolation
+		/// \~Chinese @brief 特化样本插值
+		SessionSample interpolate(SessionSample& s1, Double w1, SessionSample& s2, Double w2, FullTimestamp timestamp);
+	};
+
+	/// \~English @brief General sample element
 	/// \~Chinese @brief 通用样本元素
 	struct GeneralElement
 	{
@@ -6421,14 +6479,11 @@ namespace spadas
 		String toString() { return valid ? (isText ? text : String(value)) : "(invalid)"; }
 	};
 
-	/// \~English @brief General sample
-	/// \~Chinese @brief 通用样本
-	struct SessionGeneralSample
+	/// \~English @brief Variables of general sample
+	/// \~Chinese @brief 通用样本的变量数据
+	class SPADAS_API SessionGeneralSampleVars : public SessionSampleVars
 	{
-		/// \~English @brief Timestamp
-		/// \~Chinese @brief 时间戳
-		FullTimestamp timestamp;
-
+	public:
 		/// \~English @brief Sample element array
 		/// \~Chinese @brief 样本数据数组
 		Array<GeneralElement> values;
@@ -6437,25 +6492,109 @@ namespace spadas
 		/// \~Chinese @brief 关键元素个数，表示样本数据数组中前若干个为关键数据，默认为0
 		UInt significantCount;
 
+	protected:
+		virtual String getTypeName() override;
+		virtual Bool isType(ULong id) override;
+		virtual Bool isType(String name) override;
+	};
+
+	/// \~English @brief General sample
+	/// \~Chinese @brief 通用样本
+	class SPADAS_API SessionGeneralSample : public Object<SessionGeneralSampleVars>
+	{
+	public:
+		SPADAS_TYPE("spadas.SessionGeneralSample")
+
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SessionGeneralSample() : significantCount(0) {}
+		SessionGeneralSample();
 
 		/// \~English @brief Initialize based on timestamp and data
 		/// \~Chinese @brief 基于时间戳和数据初始化
-		SessionGeneralSample(FullTimestamp timestamp, Array<GeneralElement> values) : timestamp(timestamp), values(values), significantCount(0) {}
+		SessionGeneralSample(FullTimestamp timestamp, Array<GeneralElement> values);
 
 		/// \~English @brief Initialize based on timestamp, data, and number of key elements
 		/// \~Chinese @brief 基于时间戳、数据、关键元素个数初始化
-		SessionGeneralSample(FullTimestamp timestamp, Array<GeneralElement> values, UInt significantCount) : timestamp(timestamp), values(values), significantCount(significantCount) {}
+		SessionGeneralSample(FullTimestamp timestamp, Array<GeneralElement> values, UInt significantCount);
+
+		/// \~English @brief Get the reference of the timestamp
+		/// \~Chinese @brief 取得时间戳的引用
+		FullTimestamp& timestamp();
+
+		/// \~English @brief Get the reference of the element array
+		/// \~Chinese @brief 取得样本数据数组的引用
+		Array<GeneralElement>& values();
+
+		/// \~English @brief Get the reference of the key element number
+		/// \~Chinese @brief 取得关键元素个数的引用
+		UInt& significantCount();
+	};
+
+	/// \~English @brief Variables of matrix sample
+	/// \~Chinese @brief 矩阵样本的变量数据
+	class SPADAS_API SessionMatrixSampleVars : public SessionSampleVars
+	{
+	public:
+		/// \~English @brief Matrix data, stored in the order of rows and columns. For example, the first element is the first row and the first column, the second element is the first row and the second column,...
+		/// \~Chinese @brief 矩阵数据，按行、列的顺序存储，如第0元素为第一行第一列，第1元素为第一行第二列，...
+		Array<Float> matData;
+
+		/// \~English @brief Number of rows
+		/// \~Chinese @brief 行数
+		UInt rows;
+
+		/// \~English @brief Number of columns
+		/// \~Chinese @brief 列数
+		UInt cols;
+
+	protected:
+		virtual String getTypeName() override;
+		virtual Bool isType(ULong id) override;
+		virtual Bool isType(String name) override;
+	};
+
+	/// \~English @brief Matrix sample
+	/// \~Chinese @brief 矩阵样本
+	class SPADAS_API SessionMatrixSample : public Object<SessionMatrixSampleVars>
+	{
+	public:
+		SPADAS_TYPE("spadas.SessionMatrixSample")
+
+		/// \~English @brief Default constructor
+		/// \~Chinese @brief 默认构造函数
+		SessionMatrixSample();
+
+		/// \~English @brief Initialize based on matrix size
+		/// \~Chinese @brief 基于矩阵尺寸初始化
+		SessionMatrixSample(Size2D size);
+
+		/// \~English @brief Get the reference of the timestamp
+		/// \~Chinese @brief 取得时间戳的引用
+		FullTimestamp& timestamp();
+
+		/// \~English @brief Get the reference of the matrix data
+		/// \~Chinese @brief 取得矩阵数据的引用
+		Array<Float>& matData();
+
+		/// \~English @brief Get the reference of the row number
+		/// \~Chinese @brief 取得行数的引用
+		UInt& rows();
+
+		/// \~English @brief Get the reference of the column number
+		/// \~Chinese @brief 取得列数的引用
+		UInt& cols();
 	};
 
 	/// \~English @brief General sample data table, the key is the sample protocol ID whose format is "xxx-v?" or "xxx-v?@?", "xxx" indicates the sample type, "v?" indicates the version, "@?" indicates the channel index that starts from 0
 	/// \~Chinese @brief 通用样本表，key为样本协议ID，一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始
 	typedef Dictionary<Array<SessionGeneralSample> > SessionGeneralSampleTable;
 
-	/// \~English @brief General sample interpolation result
-	/// \~Chinese @brief 通用样本插值结果
+	/// \~English @brief Matrix sample data table, the key is the sample protocol ID whose format is "xxx-v?" or "xxx-v?@?", "xxx" indicates the sample type, "v?" indicates the version, "@?" indicates the channel index that starts from 0
+	/// \~Chinese @brief 矩阵样本表，key为样本协议ID，一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始
+	typedef Dictionary<Array<SessionMatrixSample> > SessionMatrixSampleTable;
+
+	/// \~English @brief Sample interpolation result
+	/// \~Chinese @brief 样本插值结果
 	class SPADAS_API SampleInterpolationResult
 	{
 	public:
@@ -6479,19 +6618,23 @@ namespace spadas
 			/// \~Chinese @brief 样本范围整体早于插值时间戳，但在阈值earlyThresh范围内，需等待新样本再进行插值
 			TooEarly = 3,
 
-			/// \~English @brief General sample parsing error
-			/// \~Chinese @brief 通用样本解析错误
+			/// \~English @brief Sample parsing error
+			/// \~Chinese @brief 样本解析错误
 			ParseError = 4,
 
 			/// \~English @brief The protocol of the sample buffer is not set. See spadas::SessionSampleBuffer::setProtocol
 			/// \~Chinese @brief 未设置样本缓存的协议，详见 spadas::SessionSampleBuffer::setProtocol
 			NoProtocol = 5,
+
+			/// \~English @brief The output Type is not sub class of SessionSample
+			/// \~Chinese @brief 输出Type类型非SessionSample子类
+			InvalidType = 6,
 		};
-		SPADAS_ENUM_VALUES(OK, OutOfRange, NearestInstead, TooEarly, ParseError, NoProtocol);
+		SPADAS_ENUM_VALUES(OK, OutOfRange, NearestInstead, TooEarly, ParseError, NoProtocol, InvalidType);
 	};
 
-	/// \~English @brief [Multithread safe] General sample buffer
-	/// \~Chinese @brief [多线程安全] 通用样本缓存
+	/// \~English @brief [Multithread safe] Sample buffer
+	/// \~Chinese @brief [多线程安全] 样本缓存
 	class SPADAS_API SessionSampleBuffer : public Object<class SessionSampleBufferVars>
 	{
 	public:
@@ -6507,25 +6650,25 @@ namespace spadas
 		/// \~Chinese @param length 最大时长，单位秒，范围1~60秒，默认3秒
 		void setBufferLength(Double length);
 
-		/// \~English @brief Set the corresponding general sample protocol
-		/// \~Chinese @brief 设置对应的通用样本协议
-		/// \~English @param protocol General sample protocol ID
-		/// \~Chinese @param protocol 通用样本协议ID
+		/// \~English @brief Set the corresponding sample protocol
+		/// \~Chinese @brief 设置对应的样本协议
+		/// \~English @param protocol Sample protocol ID
+		/// \~Chinese @param protocol 样本协议ID
 		void setProtocol(String protocol);
 
-		/// \~English @brief Get the corresponding general sample protocol ID
-		/// \~Chinese @brief 获取对应的通用样本协议ID
+		/// \~English @brief Get the corresponding sample protocol ID
+		/// \~Chinese @brief 获取对应的样本协议ID
 		/// \~English @param withChannel Whether to carry channel information, that is, "@?" at the end of the protocol ID
 		/// \~Chinese @param withChannel 是否带通道信息，即协议ID末尾的"@?"
-		/// \~English @returns General sample protocol ID
-		/// \~Chinese @returns 通用样本协议ID
+		/// \~English @returns Sample protocol ID
+		/// \~Chinese @returns 样本协议ID
 		String getProtocol(Bool withChannel);
 
 		/// \~English @brief Add a new sample
 		/// \~Chinese @brief 添加新样本
-		/// \~English @param sample New general sample
-		/// \~Chinese @param sample 新通用样本
-		void addSample(SessionGeneralSample sample);
+		/// \~English @param sample New sample, should be general sample or matrix sample
+		/// \~Chinese @param sample 新样本，必须为通用样本或矩阵样本
+		void addSample(SessionSample sample);
 
 		/// \~English @brief Whether the buffer is empty
 		/// \~Chinese @brief 缓存是否为空
@@ -6545,7 +6688,7 @@ namespace spadas
 		/// \~Chinese @param sampleEarliest 输出最早样本
 		/// \~English @returns FALSE if the sample buffer is empty
 		/// \~Chinese @returns 若样本缓存为空则返回FALSE
-		Bool getEarliest(SessionGeneralSample& sampleEarliest);
+		Bool getEarliest(SessionSample& sampleEarliest);
 
 		/// \~English @brief Get the latest sample
 		/// \~Chinese @brief 获取最新样本
@@ -6553,7 +6696,7 @@ namespace spadas
 		/// \~Chinese @param sampleEarliest 输出最新样本
 		/// \~English @returns FALSE if the sample buffer is empty
 		/// \~Chinese @returns 若样本缓存为空则返回FALSE
-		Bool getLatest(SessionGeneralSample& sampleLatest);
+		Bool getLatest(SessionSample& sampleLatest);
 
 		/// \~English @brief Find the nearest sample according to the time offset
 		/// \~Chinese @brief 根据时间偏置寻找最近样本
@@ -6563,7 +6706,7 @@ namespace spadas
 		/// \~Chinese @param sampleNearest 输出离目标最近样本
 		/// \~English @returns FALSE if the sample buffer is empty
 		/// \~Chinese @returns 若样本缓存为空，则返回FALSE
-		Bool getNearest(Double offset, SessionGeneralSample& sampleNearest);
+		Bool getNearest(Double offset, SessionSample& sampleNearest);
 
 		/// \~English @brief Find the nearest sample according to the timestamp
 		/// \~Chinese @brief 根据时间戳寻找最近样本
@@ -6575,7 +6718,7 @@ namespace spadas
 		/// \~Chinese @param sampleNearest 输出离目标最近样本
 		/// \~English @returns FALSE if the sample buffer is empty
 		/// \~Chinese @returns 若样本缓存为空，则返回FALSE
-		Bool getNearest(Enum<TimeType> timeType, ULong time, SessionGeneralSample& sampleNearest);
+		Bool getNearest(Enum<TimeType> timeType, ULong time, SessionSample& sampleNearest);
 
 		/// \~English @brief Find the two samples just before and after the time offset
 		/// \~Chinese @brief 根据时间偏置寻找前后两个样本
@@ -6587,7 +6730,7 @@ namespace spadas
 		/// \~Chinese @param sampleAfter 输出比时间戳晚的最近样本
 		/// \~English @returns FALSE if none
 		/// \~Chinese @returns 若无则返回FALSE
-		Bool search(Double offset, SessionGeneralSample& sampleBefore, SessionGeneralSample& sampleAfter);
+		Bool search(Double offset, SessionSample& sampleBefore, SessionSample& sampleAfter);
 
 		/// \~English @brief Find the two samples just before and after the timestamp
 		/// \~Chinese @brief 根据时间戳寻找前后两个样本
@@ -6601,21 +6744,16 @@ namespace spadas
 		/// \~Chinese @param sampleAfter 输出比时间戳晚的最近样本
 		/// \~English @returns FALSE if none
 		/// \~Chinese @returns 若无则返回FALSE
-		Bool search(Enum<TimeType> timeType, ULong time, SessionGeneralSample& sampleBefore, SessionGeneralSample& sampleAfter);
+		Bool search(Enum<TimeType> timeType, ULong time, SessionSample& sampleBefore, SessionSample& sampleAfter);
 
 		/// \~English @brief Find the two samples just before and after the time offset, then perform interpolation
 		/// \~Chinese @brief 根据时间偏置寻找前后两个样本并插值
 		/// \~English @param offset Target time offset
 		/// \~Chinese @param offset 目标时间偏置
-		/// \~English @param interpolatedSample Output interpolated samples
-		/// \~Chinese @param interpolatedSample 输出插值完成的样本
+		/// \~English @param interpolatedSample Output interpolated samples, while Type must be sub class of SessionSample
+		/// \~Chinese @param interpolatedSample 输出插值完成的样本，Type必须为SessionSample的子类
 		/// \~English @param earlyThresh The threshold used to determine whether the buffer range is too early, refer to spadas::SampleInterpolationResult::Value::TooEarly
 		/// \~Chinese @param earlyThresh 用于判断缓存范围是否过早的阈值，参考 spadas::SampleInterpolationResult::Value::TooEarly
-		/// \~English @details The template type must implement the following functions: \n
-		/// \~Chinese @details 该模板类型必须实现以下函数： \n
-		/// \~ - Bool fromGeneralSample(String protocol, SessionGeneralSample); \n
-		/// \~ - static Bool supportInterpolation(); \n
-		/// \~ - static Type interpolate(Type& s1, Double w1, Type& s2, Double w2, FullTimestamp timestamp);
 		template <typename Type>
 		Enum<SampleInterpolationResult> interpolate(Double offset, Type& interpolatedSample, UInt earlyThresh = 1000/* ms */);
 
@@ -6624,42 +6762,9 @@ namespace spadas
 		Bool isValid() { return FALSE; }
 	};
 
-	/// \~English @brief General sample buffer table, the key is the sample protocol ID whose format is "xxx-v?" or "xxx-v?@?", "xxx" indicates the sample type, "v?" indicates the version, "@?" indicates the channel number that starts from 0
-	/// \~Chinese @brief 通用样本缓存表，key为样本协议ID，一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始
+	/// \~English @brief Sample buffer table, the key is the sample protocol ID whose format is "xxx-v?" or "xxx-v?@?", "xxx" indicates the sample type, "v?" indicates the version, "@?" indicates the channel number that starts from 0
+	/// \~Chinese @brief 样本缓存表，key为样本协议ID，一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始
 	typedef Dictionary<SessionSampleBuffer> SessionSampleBufferTable;
-
-	/// \~English @brief Matrix sample
-	/// \~Chinese @brief 矩阵样本
-	struct SessionMatrixSample
-	{
-		/// \~English @brief Timestamp
-		/// \~Chinese @brief 时间戳
-		FullTimestamp timestamp;
-
-		/// \~English @brief Matrix data, stored in the order of rows and columns. For example, the first element is the first row and the first column, the second element is the first row and the second column,...
-		/// \~Chinese @brief 矩阵数据，按行、列的顺序存储，如第0元素为第一行第一列，第1元素为第一行第二列，...
-		Array<Float> matData;
-
-		/// \~English @brief Number of rows
-		/// \~Chinese @brief 行数
-		UInt rows;
-
-		/// \~English @brief Number of columns
-		/// \~Chinese @brief 列数
-		UInt cols;
-
-		/// \~English @brief Default constructor
-		/// \~Chinese @brief 默认构造函数
-		SessionMatrixSample() : rows(0), cols(0) {}
-
-		/// \~English @brief Initialize based on matrix size
-		/// \~Chinese @brief 基于矩阵尺寸初始化
-		SessionMatrixSample(Size2D size) { matData = Array<Float>(size.dim0 * size.dim1, 0); rows = size.dim0; cols = size.dim1; }
-	};
-
-	/// \~English @brief Matrix sample data table, the key is the sample protocol ID whose format is "xxx-v?" or "xxx-v?@?", "xxx" indicates the sample type, "v?" indicates the version, "@?" indicates the channel number that starts from 0
-	/// \~Chinese @brief 矩阵样本表，key为样本协议ID，一般格式为"xxx-v?"或"xxx-v?@?"，xxx表示样本类型，v?表示版本，@?表示通道序号，序号从0开始
-	typedef Dictionary<Array<SessionMatrixSample> > SessionMatrixSampleTable;
 
 	/// \~English @brief General device status
 	/// \~Chinese @brief 一般设备状态
@@ -7444,11 +7549,11 @@ namespace spadas
 		SessionSignalTable signals;
 
 		/// \~English @brief General sample data table
-		/// \~Chinese @brief 样本数据表
+		/// \~Chinese @brief 通用样本数据表
 		SessionGeneralSampleTable samples;
 
 		/// \~English @brief Matrix sample data table
-		/// \~Chinese @brief 矩阵数据表
+		/// \~Chinese @brief 矩阵样本数据表
 		SessionMatrixSampleTable matrices;
 
 		/// \~English @brief Default constructor
@@ -7469,11 +7574,11 @@ namespace spadas
 		SessionSignalTable signals;
 
 		/// \~English @brief General sample data table
-		/// \~Chinese @brief 样本数据表
+		/// \~Chinese @brief 通用样本数据表
 		SessionGeneralSampleTable samples;
 
 		/// \~English @brief Matrix sample data table
-		/// \~Chinese @brief 矩阵数据表
+		/// \~Chinese @brief 矩阵样本数据表
 		SessionMatrixSampleTable matrices;
 
 		/// \~English @brief Default constructor
@@ -7630,12 +7735,12 @@ namespace spadas
 			Signal = 1,
 
 			/// \~English @brief General sample data
-			/// \~Chinese @brief 样本数据
-			Sample = 2,
+			/// \~Chinese @brief 通用样本数据
+			GeneralSample = 2,
 
 			/// \~English @brief Matrix sample data
-			/// \~Chinese @brief 矩阵数据
-			Matrix = 3,
+			/// \~Chinese @brief 矩阵样本数据
+			MatrixSample = 3,
 
 			/// \~English @brief Bus channel 1 data
 			/// \~Chinese @brief 总线通道1数据
@@ -7683,7 +7788,7 @@ namespace spadas
 			VideoChannelW = 222,
 			VideoChannelX = 223,
 		};
-		SPADAS_ENUM_VALUES(Invalid, Signal, Sample, Matrix, BusCH1, BusCH2, BusCH3, BusCH4, BusCH5, BusCH6, BusCH7, BusCH8, BusCH9, BusCH10, BusCH11, BusCH12, BusCH13, BusCH14, BusCH15, BusCH16, VideoChannelA, VideoChannelB, VideoChannelC, VideoChannelD, VideoChannelE, VideoChannelF, VideoChannelG, VideoChannelH, VideoChannelI, VideoChannelJ, VideoChannelK, VideoChannelL, VideoChannelM, VideoChannelN, VideoChannelO, VideoChannelP, VideoChannelQ, VideoChannelR, VideoChannelS, VideoChannelT, VideoChannelU, VideoChannelV, VideoChannelW, VideoChannelX);
+		SPADAS_ENUM_VALUES(Invalid, Signal, GeneralSample, MatrixSample, BusCH1, BusCH2, BusCH3, BusCH4, BusCH5, BusCH6, BusCH7, BusCH8, BusCH9, BusCH10, BusCH11, BusCH12, BusCH13, BusCH14, BusCH15, BusCH16, VideoChannelA, VideoChannelB, VideoChannelC, VideoChannelD, VideoChannelE, VideoChannelF, VideoChannelG, VideoChannelH, VideoChannelI, VideoChannelJ, VideoChannelK, VideoChannelL, VideoChannelM, VideoChannelN, VideoChannelO, VideoChannelP, VideoChannelQ, VideoChannelR, VideoChannelS, VideoChannelT, VideoChannelU, VideoChannelV, VideoChannelW, VideoChannelX);
 	};
 
 	/// \~English @brief File R/W basic information

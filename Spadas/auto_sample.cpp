@@ -9,7 +9,7 @@ namespace spadas
 		SPADAS_VARS(SessionSampleBuffer, Vars)
 
 		String protocol;
-		ListNode<SessionGeneralSample> nodes;
+		ListNode<SessionSample> nodes;
 		UInt nSamples;
 		SessionIdentifier currentSession;
 		Double maxTime; // sec
@@ -40,9 +40,166 @@ namespace spadas
 
 using namespace spadas;
 
-SessionSampleBuffer::SessionSampleBuffer() : Object<SessionSampleBufferVars>(new SessionSampleBufferVars, TRUE)
+// SessionSample
+
+Bool SessionSampleVars::fromSample(String protocol, SessionSample sample)
 {
+	return FALSE;
 }
+
+Bool SessionSampleVars::supportInterpolation()
+{
+	return FALSE;
+}
+
+SessionSample SessionSampleVars::interpolate(SessionSample& s1, Double w1, SessionSample& s2, Double w2, FullTimestamp timestamp)
+{
+	return SessionSample();
+}
+
+String SessionSampleVars::getTypeName()
+{
+	return SessionSample::typeName();
+}
+
+Bool SessionSampleVars::isType(ULong id)
+{
+	return id == SessionSample::typeName().getID() || Vars::isType(id);
+}
+
+Bool SessionSampleVars::isType(String name)
+{
+	return name == SessionSample::typeName() || Vars::isType(name);
+}
+
+SessionSample::SessionSample() : Object<SessionSampleVars>(new SessionSampleVars, TRUE)
+{}
+
+FullTimestamp& SessionSample::timestamp()
+{
+	return vars->timestamp;
+}
+
+Bool SessionSample::fromSample(String protocol, SessionSample sample)
+{
+	return vars->fromSample(protocol, sample);
+}
+
+Bool SessionSample::supportInterpolation()
+{
+	return vars->supportInterpolation();
+}
+
+SessionSample SessionSample::interpolate(SessionSample& s1, Double w1, SessionSample& s2, Double w2, FullTimestamp timestamp)
+{
+	return vars->interpolate(s1, w1, s2, w2, timestamp);
+}
+
+// SessionGeneralSample
+
+String SessionGeneralSampleVars::getTypeName()
+{
+	return SessionGeneralSample::typeName();
+}
+
+Bool SessionGeneralSampleVars::isType(ULong id)
+{
+	return id == SessionGeneralSample::typeName().getID() || SessionSampleVars::isType(id);
+}
+
+Bool SessionGeneralSampleVars::isType(String name)
+{
+	return name == SessionGeneralSample::typeName() || SessionSampleVars::isType(name);
+}
+
+SessionGeneralSample::SessionGeneralSample() : Object<SessionGeneralSampleVars>(new SessionGeneralSampleVars, TRUE)
+{
+	vars->significantCount = 0;
+}
+
+SessionGeneralSample::SessionGeneralSample(FullTimestamp timestamp, Array<GeneralElement> values) : Object<SessionGeneralSampleVars>(new SessionGeneralSampleVars, TRUE)
+{
+	vars->timestamp = timestamp;
+	vars->values = values;
+	vars->significantCount = 0;
+}
+
+SessionGeneralSample::SessionGeneralSample(FullTimestamp timestamp, Array<GeneralElement> values, UInt significantCount) : Object<SessionGeneralSampleVars>(new SessionGeneralSampleVars, TRUE)
+{
+	vars->timestamp = timestamp;
+	vars->values = values;
+	vars->significantCount = significantCount;
+}
+
+FullTimestamp& SessionGeneralSample::timestamp()
+{
+	return vars->timestamp;
+}
+
+Array<GeneralElement>& SessionGeneralSample::values()
+{
+	return vars->values;
+}
+
+UInt& SessionGeneralSample::significantCount()
+{
+	return vars->significantCount;
+}
+
+// SessionMatrixSample
+
+String SessionMatrixSampleVars::getTypeName()
+{
+	return SessionMatrixSample::typeName();
+}
+
+Bool SessionMatrixSampleVars::isType(ULong id)
+{
+	return id == SessionMatrixSample::typeName().getID() || SessionSampleVars::isType(id);
+}
+
+Bool SessionMatrixSampleVars::isType(String name)
+{
+	return name == SessionMatrixSample::typeName() || SessionSampleVars::isType(name);
+}
+
+SessionMatrixSample::SessionMatrixSample() : Object<SessionMatrixSampleVars>(new SessionMatrixSampleVars, TRUE)
+{
+	vars->rows = 0;
+	vars->cols = 0;
+}
+
+SessionMatrixSample::SessionMatrixSample(Size2D size) : Object<SessionMatrixSampleVars>(new SessionMatrixSampleVars, TRUE)
+{
+	vars->matData = Array<Float>(size.dim0 * size.dim1, 0);
+	vars->rows = size.dim0;
+	vars->cols = size.dim1;
+}
+
+FullTimestamp& SessionMatrixSample::timestamp()
+{
+	return vars->timestamp;
+}
+
+Array<Float>& SessionMatrixSample::matData()
+{
+	return vars->matData;
+}
+
+UInt& SessionMatrixSample::rows()
+{
+	return vars->rows;
+}
+
+UInt& SessionMatrixSample::cols()
+{
+	return vars->cols;
+}
+
+// SessionSampleBuffer
+
+SessionSampleBuffer::SessionSampleBuffer() : Object<SessionSampleBufferVars>(new SessionSampleBufferVars, TRUE)
+{}
 
 void SessionSampleBuffer::setBufferLength(Double length)
 {
@@ -73,20 +230,21 @@ String SessionSampleBuffer::getProtocol(Bool withChannel)
 	return protocol;
 }
 
-void SessionSampleBuffer::addSample(SessionGeneralSample sample)
+void SessionSampleBuffer::addSample(SessionSample sample)
 {
-	if (sample.timestamp.offset <= 0) return;
+	SPADAS_ERROR_RETURN(sample.timestamp().offset <= 0);
+	SPADAS_ERROR_RETURN(!sample.is<SessionGeneralSample>() && !sample.is<SessionMatrixSample>());
 
 	vars->spinEnter();
 	{
-		Double timeOffset = sample.timestamp.offset;
-		if (vars->currentSession != sample.timestamp.session)
+		Double timeOffset = sample.timestamp().offset;
+		if (vars->currentSession != sample.timestamp().session)
 		{
 			vars->nodes.collapse();
 			vars->nodes.joinNext(vars->nodes);
 			vars->nodes.insertPrevious(sample);
 			vars->nSamples = 1;
-			vars->currentSession = sample.timestamp.session;
+			vars->currentSession = sample.timestamp().session;
 			vars->maxTime = timeOffset;
 		}
 		else if (timeOffset >= vars->maxTime - vars->bufferLength)
@@ -98,10 +256,10 @@ void SessionSampleBuffer::addSample(SessionGeneralSample sample)
 				vars->nSamples++;
 
 				Double lowerBound = timeOffset - vars->bufferLength;
-				ListNode<SessionGeneralSample> targetNode = vars->nodes.next();
+				ListNode<SessionSample> targetNode = vars->nodes.next();
 				while (targetNode != vars->nodes)
 				{
-					if (targetNode->timestamp.offset >= lowerBound) break;
+					if (targetNode->timestamp().offset >= lowerBound) break;
 					targetNode.goNext();
 					targetNode.removePrevious();
 					vars->nSamples--;
@@ -109,10 +267,10 @@ void SessionSampleBuffer::addSample(SessionGeneralSample sample)
 			}
 			else
 			{
-				ListNode<SessionGeneralSample> targetNode = vars->nodes.previous();
+				ListNode<SessionSample> targetNode = vars->nodes.previous();
 				while (targetNode != vars->nodes)
 				{
-					if (timeOffset >= targetNode->timestamp.offset)
+					if (timeOffset >= targetNode->timestamp().offset)
 					{
 						targetNode.insertNext(sample);
 						break;
@@ -154,7 +312,7 @@ SessionIdentifier SessionSampleBuffer::getCurrentSession()
 	return res;
 }
 
-Bool SessionSampleBuffer::getEarliest(SessionGeneralSample& sampleEarliest)
+Bool SessionSampleBuffer::getEarliest(SessionSample& sampleEarliest)
 {
 	vars->spinEnter();
 	if (vars->nSamples == 0)
@@ -170,7 +328,7 @@ Bool SessionSampleBuffer::getEarliest(SessionGeneralSample& sampleEarliest)
 	}
 }
 
-Bool SessionSampleBuffer::getLatest(SessionGeneralSample& sampleLatest)
+Bool SessionSampleBuffer::getLatest(SessionSample& sampleLatest)
 {
 	vars->spinEnter();
 	if (vars->nSamples == 0)
@@ -186,7 +344,7 @@ Bool SessionSampleBuffer::getLatest(SessionGeneralSample& sampleLatest)
 	}
 }
 
-Bool SessionSampleBuffer::getNearest(Double offset, SessionGeneralSample& sampleNearest)
+Bool SessionSampleBuffer::getNearest(Double offset, SessionSample& sampleNearest)
 {
 	vars->spinEnter();
 
@@ -210,8 +368,8 @@ Bool SessionSampleBuffer::getNearest(Double offset, SessionGeneralSample& sample
 		return TRUE;
 	}
 
-	SessionGeneralSample& firstSample = vars->nodes.next().value();
-	Double firstTime = firstSample.timestamp.offset;
+	SessionSample& firstSample = vars->nodes.next().value();
+	Double firstTime = firstSample.timestamp().offset;
 	if (offset <= firstTime)
 	{
 		sampleNearest = firstSample;
@@ -221,10 +379,10 @@ Bool SessionSampleBuffer::getNearest(Double offset, SessionGeneralSample& sample
 
 	vars->spinLeave();
 
-	SessionGeneralSample sampleBefore, sampleAfter;
+	SessionSample sampleBefore, sampleAfter;
 	if (!search(offset, sampleBefore, sampleAfter)) return FALSE;
 
-	if (sampleAfter.timestamp.offset - offset > offset - sampleBefore.timestamp.offset)
+	if (sampleAfter.timestamp().offset - offset > offset - sampleBefore.timestamp().offset)
 	{
 		sampleNearest = sampleBefore;
 		return TRUE;
@@ -235,7 +393,7 @@ Bool SessionSampleBuffer::getNearest(Double offset, SessionGeneralSample& sample
 		return TRUE;
 	}
 }
-Bool SessionSampleBuffer::getNearest(Enum<TimeType> timeType, ULong time, SessionGeneralSample& sampleNearest)
+Bool SessionSampleBuffer::getNearest(Enum<TimeType> timeType, ULong time, SessionSample& sampleNearest)
 {
 	vars->spinEnter();
 
@@ -249,15 +407,15 @@ Bool SessionSampleBuffer::getNearest(Enum<TimeType> timeType, ULong time, Sessio
 	{
 		sampleNearest = vars->nodes.next().value();
 		vars->spinLeave();
-		return getSampleTypeTime(sampleNearest.timestamp, timeType.value()) != 0;
+		return getSampleTypeTime(sampleNearest.timestamp(), timeType.value()) != 0;
 	}
 
 	vars->spinLeave();
 
-	SessionGeneralSample sampleBefore, sampleAfter;
+	SessionSample sampleBefore, sampleAfter;
 	if (!search(timeType, time, sampleBefore, sampleAfter)) return FALSE;
 
-	if (getSampleTypeTime(sampleAfter.timestamp, timeType.value()) - time > time - getSampleTypeTime(sampleBefore.timestamp, timeType.value()))
+	if (getSampleTypeTime(sampleAfter.timestamp(), timeType.value()) - time > time - getSampleTypeTime(sampleBefore.timestamp(), timeType.value()))
 	{
 		sampleNearest = sampleBefore;
 		return TRUE;
@@ -269,7 +427,7 @@ Bool SessionSampleBuffer::getNearest(Enum<TimeType> timeType, ULong time, Sessio
 	}
 }
 
-Bool SessionSampleBuffer::search(Double offset, SessionGeneralSample& sampleBefore, SessionGeneralSample& sampleAfter)
+Bool SessionSampleBuffer::search(Double offset, SessionSample& sampleBefore, SessionSample& sampleAfter)
 {
 	vars->spinEnter();
 
@@ -279,7 +437,7 @@ Bool SessionSampleBuffer::search(Double offset, SessionGeneralSample& sampleBefo
 		return FALSE;
 	}
 
-	Double firstTime = vars->nodes.next()->timestamp.offset;
+	Double firstTime = vars->nodes.next()->timestamp().offset;
 	if (offset < firstTime)
 	{
 		vars->spinLeave();
@@ -288,10 +446,10 @@ Bool SessionSampleBuffer::search(Double offset, SessionGeneralSample& sampleBefo
 
 	if (vars->maxTime - offset > offset - firstTime) // 从前往后搜
 	{
-		ListNode<SessionGeneralSample> targetNode = vars->nodes.next().next();
+		ListNode<SessionSample> targetNode = vars->nodes.next().next();
 		while (targetNode != vars->nodes)
 		{
-			if (targetNode->timestamp.offset >= offset)
+			if (targetNode->timestamp().offset >= offset)
 			{
 				sampleBefore = targetNode.previous().value();
 				sampleAfter = targetNode.value();
@@ -303,10 +461,10 @@ Bool SessionSampleBuffer::search(Double offset, SessionGeneralSample& sampleBefo
 	}
 	else // 从后往前搜
 	{
-		ListNode<SessionGeneralSample> targetNode = vars->nodes.previous().previous();
+		ListNode<SessionSample> targetNode = vars->nodes.previous().previous();
 		while (targetNode != vars->nodes)
 		{
-			if (targetNode->timestamp.offset <= offset)
+			if (targetNode->timestamp().offset <= offset)
 			{
 				sampleBefore = targetNode.value();
 				sampleAfter = targetNode.next().value();
@@ -320,7 +478,7 @@ Bool SessionSampleBuffer::search(Double offset, SessionGeneralSample& sampleBefo
 	vars->spinLeave();
 	return FALSE;
 }
-Bool SessionSampleBuffer::search(Enum<TimeType> timeType, ULong time, SessionGeneralSample& sampleBefore, SessionGeneralSample& sampleAfter)
+Bool SessionSampleBuffer::search(Enum<TimeType> timeType, ULong time, SessionSample& sampleBefore, SessionSample& sampleAfter)
 {
 	vars->spinEnter();
 
@@ -331,10 +489,10 @@ Bool SessionSampleBuffer::search(Enum<TimeType> timeType, ULong time, SessionGen
 	}
 
 	ULong firstTime = 0;
-	ListNode<SessionGeneralSample> firstNode = vars->nodes.next();
+	ListNode<SessionSample> firstNode = vars->nodes.next();
 	while (firstNode != vars->nodes)
 	{
-		ULong nodeTime = getSampleTypeTime(firstNode->timestamp, timeType.value());
+		ULong nodeTime = getSampleTypeTime(firstNode->timestamp(), timeType.value());
 		if (nodeTime != 0)
 		{
 			firstTime = nodeTime;
@@ -349,10 +507,10 @@ Bool SessionSampleBuffer::search(Enum<TimeType> timeType, ULong time, SessionGen
 	}
 
 	ULong lastTime = 0;
-	ListNode<SessionGeneralSample> lastNode = vars->nodes.previous();
+	ListNode<SessionSample> lastNode = vars->nodes.previous();
 	while (lastNode != vars->nodes)
 	{
-		ULong nodeTime = getSampleTypeTime(lastNode->timestamp, timeType.value());
+		ULong nodeTime = getSampleTypeTime(lastNode->timestamp(), timeType.value());
 		if (nodeTime != 0)
 		{
 			lastTime = nodeTime;
@@ -377,11 +535,11 @@ Bool SessionSampleBuffer::search(Enum<TimeType> timeType, ULong time, SessionGen
 
 	if (lastTime - time > time - firstTime) // 从前往后搜
 	{
-		ListNode<SessionGeneralSample> node1 = firstNode;
-		ListNode<SessionGeneralSample> node2 = firstNode.next();
+		ListNode<SessionSample> node1 = firstNode;
+		ListNode<SessionSample> node2 = firstNode.next();
 		while (node2 != lastNode)
 		{
-			ULong node2Time = getSampleTypeTime(node2->timestamp, timeType.value());
+			ULong node2Time = getSampleTypeTime(node2->timestamp(), timeType.value());
 			if (node2Time != 0)
 			{
 				if (node2Time >= time) break;
@@ -396,11 +554,11 @@ Bool SessionSampleBuffer::search(Enum<TimeType> timeType, ULong time, SessionGen
 	}
 	else // 从后往前搜
 	{
-		ListNode<SessionGeneralSample> node1 = lastNode;
-		ListNode<SessionGeneralSample> node2 = lastNode.previous();
+		ListNode<SessionSample> node1 = lastNode;
+		ListNode<SessionSample> node2 = lastNode.previous();
 		while (node2 != firstNode)
 		{
-			ULong node2Time = getSampleTypeTime(node2->timestamp, timeType.value());
+			ULong node2Time = getSampleTypeTime(node2->timestamp(), timeType.value());
 			if (node2Time != 0)
 			{
 				if (node2Time <= time) break;

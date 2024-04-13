@@ -4491,41 +4491,44 @@ namespace spadas
 	Enum<SampleInterpolationResult> SessionSampleBuffer::interpolate(Double offset, Type& interpolatedSample, UInt earlyThresh)
 	{
 		if (this->isEmpty()) return SampleInterpolationResult::Value::OutOfRange;
+		if (!interpolatedSample.template is<SessionSample>()) return SampleInterpolationResult::Value::InvalidType;
 
 		String protocol = getProtocol(FALSE);
 		if (protocol.isEmpty()) return SampleInterpolationResult::Value::NoProtocol;
 
-		SessionGeneralSample sFirst, sLast;
+		SessionSample sFirst, sLast;
 		this->getEarliest(sFirst);
 		this->getLatest(sLast);
 
-		if (offset > sFirst.timestamp.offset && offset <= sLast.timestamp.offset)
+		if (offset > sFirst.timestamp().offset && offset <= sLast.timestamp().offset)
 		{
-			SessionGeneralSample sgs1, sgs2;
+			SessionSample sgs1, sgs2;
 			if (!this->search(offset, sgs1, sgs2)) return SampleInterpolationResult::Value::OutOfRange;
 
-			Double delta = sgs2.timestamp.offset - sgs1.timestamp.offset;
-			Double w1 = (sgs2.timestamp.offset - offset) / delta;
-			Double w2 = (offset - sgs1.timestamp.offset) / delta;
+			Double delta = sgs2.timestamp().offset - sgs1.timestamp().offset;
+			Double w1 = (sgs2.timestamp().offset - offset) / delta;
+			Double w2 = (offset - sgs1.timestamp().offset) / delta;
+			SessionSample interpolatedSampleBase = interpolatedSample.template as<SessionSample>();
 
-			if (!Type::supportInterpolation())
+			if (!interpolatedSampleBase.supportInterpolation())
 			{
-				Bool parseResult = interpolatedSample.fromGeneralSample(protocol, w1 > w2 ? sgs1 : sgs2);
+				Bool parseResult = interpolatedSampleBase.fromSample(protocol, w1 > w2 ? sgs1 : sgs2);
 				return parseResult ? SampleInterpolationResult::Value::NearestInstead : SampleInterpolationResult::Value::ParseError;
 			}
 
 			Type s1, s2;
-			Bool parseResultS1 = s1.fromGeneralSample(protocol, sgs1);
-			Bool parseResultS2 = s2.fromGeneralSample(protocol, sgs2);
+			SessionSample s1Base = s1.template as<SessionSample>(), s2Base = s2.template as<SessionSample>();
+			Bool parseResultS1 = s1Base.fromSample(protocol, sgs1);
+			Bool parseResultS2 = s2Base.fromSample(protocol, sgs2);
 			if (!parseResultS1 || !parseResultS2) return SampleInterpolationResult::Value::ParseError;
 
 			FullTimestamp timestamp;
 			timestamp.session = this->getCurrentSession();
 			timestamp.offset = offset;
-			timestamp.offsetSync = sgs1.timestamp.offsetSync == sgs2.timestamp.offsetSync ? sgs1.timestamp.offsetSync : TimeOffsetSync::Value::Interpolated;
+			timestamp.offsetSync = sgs1.timestamp().offsetSync == sgs2.timestamp().offsetSync ? sgs1.timestamp().offsetSync : TimeOffsetSync::Value::Interpolated;
 
-			ULong *sgs1Times = (ULong*)&sgs1.timestamp.cpuTick;
-			ULong *sgs2Times = (ULong*)&sgs2.timestamp.cpuTick;
+			ULong *sgs1Times = (ULong*)&sgs1.timestamp().cpuTick;
+			ULong *sgs2Times = (ULong*)&sgs2.timestamp().cpuTick;
 			ULong *dstTimes = (ULong*)&timestamp.cpuTick;
 			for (UInt i = 0; i < 5; i++)
 			{
@@ -4534,10 +4537,10 @@ namespace spadas
 				dstTimes[i] = sgs1Time + (Long)(w2 * diffTime);
 			}
 
-			interpolatedSample = Type::interpolate(s1, w1, s2, w2, timestamp);
+			interpolatedSample = interpolatedSampleBase.interpolate(s1Base, w1, s2Base, w2, timestamp).as<Type>();
 			return SampleInterpolationResult::Value::OK;
 		}
-		else if (offset > sLast.timestamp.offset && offset < sLast.timestamp.offset + 0.001 * earlyThresh)
+		else if (offset > sLast.timestamp().offset && offset < sLast.timestamp().offset + 0.001 * earlyThresh)
 		{
 			return SampleInterpolationResult::Value::TooEarly;
 		}
