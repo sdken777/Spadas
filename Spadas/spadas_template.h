@@ -4522,7 +4522,7 @@ namespace spadas
 			FullTimestamp timestamp;
 			timestamp.session = this->getCurrentSession();
 			timestamp.offset = offset;
-			timestamp.offsetSync = sgs1.timestamp.offsetSync == sgs2.timestamp.offsetSync ? sgs1.timestamp.offsetSync : TimeOffsetSync::Value::None;
+			timestamp.offsetSync = sgs1.timestamp.offsetSync == sgs2.timestamp.offsetSync ? sgs1.timestamp.offsetSync : TimeOffsetSync::Value::Interpolated;
 
 			ULong *sgs1Times = (ULong*)&sgs1.timestamp.cpuTick;
 			ULong *sgs2Times = (ULong*)&sgs2.timestamp.cpuTick;

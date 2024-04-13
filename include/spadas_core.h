@@ -6026,19 +6026,27 @@ namespace spadas
 		{
 			Default = 0,
 
-			/// \~English @brief Not synced or sync source unknown
-			/// \~Chinese @brief 未同步或同步源未知
-			None = 0,
+			/// \~English @brief Host arrival time, not synchronized
+			/// \~Chinese @brief 到达主机的时间，未同步
+			HostArrival = 0,
 
-			/// \~English @brief The time has been synchronized with the time server
-			/// \~Chinese @brief 已与授时服务器时间同步
+			/// \~English @brief Sampling time, synchronized with the time server
+			/// \~Chinese @brief 采样时间，已与授时服务器同步
 			Server = 1,
 
-			/// \~English @brief Synchronized with satellite time
-			/// \~Chinese @brief 已与卫星时间同步
+			/// \~English @brief Sampling time, synchronized with satellite
+			/// \~Chinese @brief 采样时间，已与卫星同步
 			Gnss = 2,
+
+			/// \~English @brief Bus receiver arrival time, synchronized with the time server
+			/// \~Chinese @brief 到达总线设备的时间，已与授时服务器同步
+			BusReceiverArrival = 3,
+
+			/// \~English @brief The time obtained by interpolating two samples with different synchronization status
+			/// \~Chinese @brief 同步状态不同的两个样本插值得到的时间
+			Interpolated = 4,
 		};
-		SPADAS_ENUM_VALUES(None, Server, Gnss);
+		SPADAS_ENUM_VALUES(HostArrival, Server, Gnss, BusReceiverArrival, Interpolated);
 	};
 
 	/// \~English @brief Simple timestamp
@@ -6053,13 +6061,17 @@ namespace spadas
 		/// \~Chinese @brief 时间偏置，单位秒，大于零有效
 		Double offset;
 
+		/// \~English @brief Time offset source
+		/// \~Chinese @brief 时间偏置来源
+		TimeOffsetSync::Value offsetSync;
+
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		ShortTimestamp() : offset(0) {}
+		ShortTimestamp() : offset(0), offsetSync(TimeOffsetSync::Value::HostArrival) {}
 
 		/// \~English @brief Initialize based on session identifier and time offset
 		/// \~Chinese @brief 基于Session标识符和时间偏置初始化
-		ShortTimestamp(SessionIdentifier session, Double offset) : session(session), offset(offset) {}
+		ShortTimestamp(SessionIdentifier session, Double offset, TimeOffsetSync::Value offsetSync = TimeOffsetSync::Value::HostArrival) : session(session), offset(offset), offsetSync(offsetSync) {}
 
 		/// \~English @brief Whether it is equal to
 		/// \~Chinese @brief 是否等于
@@ -6110,21 +6122,17 @@ namespace spadas
 		/// \~Chinese @brief 采样时客机Posix时间，单位纳秒，0表示无效
 		NanoPosix guestPosix;
 
-		/// \~English @brief posix time of the time server at data sampling, in nanoseconds, 0 means invalid
-		/// \~Chinese @brief 采样时授时服务器Posix时间，单位纳秒，0表示无效
-		NanoPosix serverPosix;
-
 		/// \~English @brief Satellite posix time at data sampling, in nanoseconds, 0 means invalid
 		/// \~Chinese @brief 采样时卫星Posix时间，单位纳秒，0表示无效
 		NanoPosix gnssPosix;
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		FullTimestamp() : offset(0), offsetSync(TimeOffsetSync::Value::None), cpuTick(0), hostPosix(0), guestPosix(0), serverPosix(0), gnssPosix(0) {}
+		FullTimestamp() : offset(0), offsetSync(TimeOffsetSync::Value::HostArrival), cpuTick(0), hostPosix(0), guestPosix(0), gnssPosix(0) {}
 
 		/// \~English @brief Create from a simple timestamp, no synchronization information or session-irrelevant time information
 		/// \~Chinese @brief 从简单时间戳构造，无同步信息或Session无关时间信息
-		FullTimestamp(ShortTimestamp timestamp) : session(timestamp.session), offset(timestamp.offset), offsetSync(TimeOffsetSync::Value::None), cpuTick(0), hostPosix(0), guestPosix(0), serverPosix(0), gnssPosix(0) {}
+		FullTimestamp(ShortTimestamp timestamp) : session(timestamp.session), offset(timestamp.offset), offsetSync(timestamp.offsetSync), cpuTick(0), hostPosix(0), guestPosix(0), gnssPosix(0) {}
 
 		/// \~English @brief Whether it is equal to (only compare session identifier and time offset)
 		/// \~Chinese @brief 是否等于（仅比较Session标识符和时间偏置）
@@ -6144,7 +6152,7 @@ namespace spadas
 
 		/// \~English @brief Convert to simple timestamp
 		/// \~Chinese @brief 转为简单时间戳
-		ShortTimestamp toShort() { return ShortTimestamp(session, offset); }
+		ShortTimestamp toShort() { return ShortTimestamp(session, offset, offsetSync); }
 
 		/// \~English @brief Convert to a string, the format is "SessionYear-Month-Day-Hour-Minute-Second-Offset", such as 2019-01-01-12-30-45-123.456789
 		/// \~Chinese @brief 转为字符串显示，格式为"Session年-月-日-时-分-秒-偏置"，如2019-01-01-12-30-45-123.456789
@@ -6172,15 +6180,11 @@ namespace spadas
 			/// \~Chinese @brief 采样时客机Posix时间，单位纳秒
 			GuestPosix = 2,
 
-			/// \~English @brief posix time of the time server at data sampling, in nanoseconds
-			/// \~Chinese @brief 采样时授时服务器Posix时间，单位纳秒
-			ServerPosix = 3,
-
 			/// \~English @brief Satellite posix time at data sampling, in nanoseconds
 			/// \~Chinese @brief 采样时卫星Posix时间，单位纳秒
-			GnssPosix = 4,
+			GnssPosix = 3,
 		};
-		SPADAS_ENUM_VALUES(CPUTick, HostPosix, GuestPosix, ServerPosix, GnssPosix);
+		SPADAS_ENUM_VALUES(CPUTick, HostPosix, GuestPosix, GnssPosix);
 	};
 
 	/// \~English @brief Signal
@@ -7837,15 +7841,13 @@ namespace spadas
 		/// \~Chinese @returns 输出的时间戳
 		virtual FullTimestamp resyncTimestamp(FullTimestamp srcTimestamp, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, String guestSyncID = String());
 
-		/// \~English @brief Recalculate session-irrelevant time such as CPU tick, host posix time, time server posix time, satellite posix time, based on the input time offset and related session
-		/// \~Chinese @brief 根据基准时间戳的时间偏置反算CPU计数、主机Posix时间、授时服务器Posix时间、卫星Posix时间等
-		/// \~English @param srcTimestamp Input simple timestamp
-		/// \~Chinese @param srcTimestamp 基准时间戳
-		/// \~English @param timeType Time type of output. spadas::TimeType::Value::GuestPosix is unsupported
-		/// \~Chinese @param timeType 输出的时间类型，不支持 spadas::TimeType::Value::GuestPosix
+		/// \~English @brief Recalculate session-irrelevant time based on the input time offset and synchronization status
+		/// \~Chinese @brief 根据输入时间戳的时间偏置和同步状态反算对应的Session无关时间等
+		/// \~English @param srcTimestamp Input timestamp
+		/// \~Chinese @param srcTimestamp 输入时间戳
 		/// \~English @returns The session-irrelevant time, 0 means failure
 		/// \~Chinese @returns 输出的Session无关时间，0表示失败
-		virtual ULong calcTime(ShortTimestamp srcTimestamp, Enum<TimeType> timeType);
+		virtual NanoPosix calcTime(ShortTimestamp srcTimestamp);
 	};
 
 	// Plugin related utility functions / 插件相关实用功能 //////////////////////////////////////////////////////////////
