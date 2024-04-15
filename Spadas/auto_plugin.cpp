@@ -251,7 +251,7 @@ Bool IDevicePluginV300::transmitGeneralData(String protocol, Array<Double> vecto
 	return FALSE;
 }
 
-Bool IDevicePluginV300::transmitGeneralDataScheduled(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance)
+Bool IDevicePluginV300::transmitGeneralDataScheduled(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix)
 {
 	return FALSE;
 }
@@ -280,7 +280,7 @@ Bool IBusPluginV300::transmitBusMessage(UInt channel, UInt id, Binary binary)
 	return FALSE;
 }
 
-Bool IBusPluginV300::transmitBusMessageScheduled(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance)
+Bool IBusPluginV300::transmitBusMessageScheduled(UInt channel, UInt id, Binary binary, NanoPosix serverPosix)
 {
 	return FALSE;
 }
@@ -317,7 +317,7 @@ Bool IVideoPluginV500::transmitVideoFrame(UInt channel, Enum<VideoDataCodec> cod
 	return FALSE;
 }
 
-Bool IVideoPluginV500::transmitVideoFrameScheduled(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance)
+Bool IVideoPluginV500::transmitVideoFrameScheduled(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix)
 {
 	return FALSE;
 }

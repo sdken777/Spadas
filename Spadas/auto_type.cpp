@@ -214,7 +214,7 @@ TransmitResult::Value IGeneralDataTransmitter::transmitNow(String protocol, Arra
 	return TransmitResult::Value::Unknown;
 }
 
-TransmitResult::Value IGeneralDataTransmitter::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance, String guestSyncID)
+TransmitResult::Value IGeneralDataTransmitter::transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, String guestSyncID)
 {
 	return TransmitResult::Value::Unknown;
 }
@@ -230,7 +230,7 @@ TransmitResult::Value IBusMessageTransmitter::transmitRepeatedly(UInt channel, U
 	return TransmitResult::Value::Unknown;
 }
 
-TransmitResult::Value IBusMessageTransmitter::transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance)
+TransmitResult::Value IBusMessageTransmitter::transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix)
 {
 	return TransmitResult::Value::Unknown;
 }
@@ -241,7 +241,7 @@ TransmitResult::Value IVideoFrameTransmitter::transmitNow(UInt channel, Enum<Vid
 	return TransmitResult::Value::Unknown;
 }
 
-TransmitResult::Value IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance, Optional<VideoExtraData> extraData)
+TransmitResult::Value IVideoFrameTransmitter::transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, Optional<VideoExtraData> extraData)
 {
 	return TransmitResult::Value::Unknown;
 }

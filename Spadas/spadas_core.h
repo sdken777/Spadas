@@ -6366,13 +6366,11 @@ namespace spadas
 		/// \~Chinese @param binary 二进制数据
 		/// \~English @param serverPosix posix time of the time server, in nanoseconds
 		/// \~Chinese @param serverPosix 授时服务器Posix时间，单位纳秒
-		/// \~English @param tolerance The maximum delayed transmit time allowed, in nanoseconds
-		/// \~Chinese @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// \~English @param guestSyncID Guest synchronization ID, based on which it is determined whether the guest device has synchronized with the time server (The format is "xxx.yyy", "xxx" is the plugin type ID, and "yyy" is the guest synchronization channel name)
 		/// \~Chinese @param guestSyncID 客机同步ID，将据此确定客机是否已与授时服务器同步（格式为"xxx.yyy"，xxx为插件类型ID，yyy为客机同步通道名称）
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual TransmitResult::Value transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance, String guestSyncID);
+		virtual TransmitResult::Value transmitAtServerPosix(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, String guestSyncID);
 	};
 
 	/// \~English @brief Variables of sample
@@ -6948,11 +6946,9 @@ namespace spadas
 		/// \~Chinese @param binary 报文数据
 		/// \~English @param serverPosix posix time of the time server, in nanoseconds
 		/// \~Chinese @param serverPosix 授时服务器Posix时间，单位纳秒
-		/// \~English @param tolerance The maximum delayed transmit time allowed, in nanoseconds
-		/// \~Chinese @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual TransmitResult::Value transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance);
+		virtual TransmitResult::Value transmitAtServerPosix(UInt channel, UInt id, Binary binary, NanoPosix serverPosix);
 	};
 
 	/// \~English @brief Bus device ID
@@ -7469,13 +7465,11 @@ namespace spadas
 		/// \~Chinese @param data 视频帧数据
 		/// \~English @param serverPosix posix time of the time server, in nanoseconds
 		/// \~Chinese @param serverPosix 授时服务器Posix时间，单位纳秒
-		/// \~English @param tolerance The maximum delayed transmit time allowed, in nanoseconds
-		/// \~Chinese @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// \~English @param extraData Optional extra data
 		/// \~Chinese @param extraData 可选的额外数据
 		/// \~English @returns Transmit result
 		/// \~Chinese @returns 发送结果
-		virtual TransmitResult::Value transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance = UINF, Optional<VideoExtraData> extraData = Optional<VideoExtraData>());
+		virtual TransmitResult::Value transmitAtServerPosix(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, Optional<VideoExtraData> extraData = Optional<VideoExtraData>());
 	};
 
 	/// \~English @brief All input data tables
@@ -7484,7 +7478,7 @@ namespace spadas
 	{
 		/// \~English @brief Generic raw data table
 		/// \~Chinese @brief 通用原始数据表
-		SessionGeneralRawDataTable rawDatas;
+		SessionGeneralRawDataTable generalRawDatas;
 
 		/// \~English @brief Bus raw data table
 		/// \~Chinese @brief 总线原始数据表
@@ -7508,11 +7502,11 @@ namespace spadas
 
 		/// \~English @brief General sample data table
 		/// \~Chinese @brief 通用样本数据表
-		SessionGeneralSampleTable samples;
+		SessionGeneralSampleTable generalSamples;
 
 		/// \~English @brief Matrix sample data table
 		/// \~Chinese @brief 矩阵样本数据表
-		SessionMatrixSampleTable matrices;
+		SessionMatrixSampleTable matrixSamples;
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
@@ -7520,7 +7514,7 @@ namespace spadas
 
 		/// \~English @brief Clear all data
 		/// \~Chinese @brief 清空所有数据
-		void clear() { rawDatas.clear(); busMessages.clear(); signals.clear(); samples.clear(); matrices.clear(); busRawDatas = SessionBusRawDataTable(BC_NUM); videoRawDatas = SessionVideoRawDataTable(VC_NUM); videoProcDatas = SessionVideoProcDataTable(VC_NUM); }
+		void clear() { generalRawDatas.clear(); busMessages.clear(); signals.clear(); generalSamples.clear(); matrixSamples.clear(); busRawDatas = SessionBusRawDataTable(BC_NUM); videoRawDatas = SessionVideoRawDataTable(VC_NUM); videoProcDatas = SessionVideoProcDataTable(VC_NUM); }
 	};
 
 	/// \~English @brief All output data tables
@@ -7533,11 +7527,11 @@ namespace spadas
 
 		/// \~English @brief General sample data table
 		/// \~Chinese @brief 通用样本数据表
-		SessionGeneralSampleTable samples;
+		SessionGeneralSampleTable generalSamples;
 
 		/// \~English @brief Matrix sample data table
 		/// \~Chinese @brief 矩阵样本数据表
-		SessionMatrixSampleTable matrices;
+		SessionMatrixSampleTable matrixSamples;
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
@@ -7545,7 +7539,7 @@ namespace spadas
 
 		/// \~English @brief Clear all data
 		/// \~Chinese @brief 清空所有数据
-		void clear() { signals.clear(); samples.clear(); matrices.clear(); }
+		void clear() { signals.clear(); generalSamples.clear(); matrixSamples.clear(); }
 	};
 
 	/// \~English @brief The state of standalone task
@@ -8379,11 +8373,9 @@ namespace spadas
 		/// \~Chinese @param binary 二进制数据
 		/// \~English @param serverPosix Posix time of the time server for scheduled transmitting, in nanoseconds
 		/// \~Chinese @param serverPosix 预约发送的授时服务器Posix时间，单位纳秒
-		/// \~English @param tolerance The maximum delayed transmit time allowed, in nanoseconds
-		/// \~Chinese @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// \~English @returns Whether the scheduled transmitting is successful, FALSE if the protocol is not in the list
 		/// \~Chinese @returns 返回是否成功预约发送一帧数据，若协议未在可发送的协议列表内则返回FALSE
-		virtual Bool transmitGeneralDataScheduled(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix, UInt tolerance);
+		virtual Bool transmitGeneralDataScheduled(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix);
 	};
 
 	/// \~English @brief Function definition of getting the general device plugin interface, the function name should be get_device_plugin_v300
@@ -8443,11 +8435,9 @@ namespace spadas
 		/// \~Chinese @param binary 报文数据
 		/// \~English @param serverPosix Posix time of the time server for scheduled transmitting, in nanoseconds
 		/// \~Chinese @param serverPosix 预约发送的授时服务器Posix时间，单位纳秒
-		/// \~English @param tolerance The maximum delayed transmit time allowed, in nanoseconds
-		/// \~Chinese @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// \~English @returns Whether the scheduled transmitting is successful
 		/// \~Chinese @returns 返回是否成功预约发送一帧数据
-		virtual Bool transmitBusMessageScheduled(UInt channel, UInt id, Binary binary, NanoPosix serverPosix, UInt tolerance);
+		virtual Bool transmitBusMessageScheduled(UInt channel, UInt id, Binary binary, NanoPosix serverPosix);
 
 		/// \~English @brief [Optional] Additional settings for the bus device (called before openBusDevice)
 		/// \~Chinese @brief [可选] 对总线设备进行额外设置（在openBusDevice前被调用）
@@ -8523,11 +8513,9 @@ namespace spadas
 		/// \~Chinese @param data 视频帧数据
 		/// \~English @param serverPosix Posix time of the time server for scheduled transmitting, in nanoseconds
 		/// \~Chinese @param serverPosix 预约发送的授时服务器Posix时间，单位纳秒
-		/// \~English @param tolerance The maximum delayed transmit time allowed, in nanoseconds
-		/// \~Chinese @param tolerance 允许的最大延迟发送时间，单位纳秒
 		/// \~English @returns Whether the scheduled transmitting is successful
 		/// \~Chinese @returns 返回是否成功预约发送一帧数据
-		virtual Bool transmitVideoFrameScheduled(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, UInt tolerance);
+		virtual Bool transmitVideoFrameScheduled(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix);
 
 		/// \~English @brief [Optional] Additional settings for the video device (called before openVideoDevice)
 		/// \~Chinese @brief [可选] 对视频设备进行额外设置（在openVideoDevice前被调用）
