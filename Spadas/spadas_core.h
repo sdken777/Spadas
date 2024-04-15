@@ -3336,7 +3336,7 @@ namespace spadas
 
 	/// \~English @brief Convenience for l-value to concatenate string, see macro "cat"
 	/// ~\Chinese @brief 方便左值拼接字符串，详见宏"cat"
-	template<typename Type>
+	template <typename Type>
 	StringAppender operator +(Type obj, String str);
 
 	// Enumeration object / 枚举对象 //////////////////////////////////////////////////////////////
@@ -8179,6 +8179,68 @@ namespace spadas
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
 	};
+
+	/// \~English @brief Variables of spadas::SampleParser template class
+	/// \~Chinese @brief spadas::SampleParser 模板类的变量数据
+    template <typename Type> class SampleParserVars;
+
+	/// \~English @brief Convenience for sample parsing
+	/// \~Chinese @brief 方便解析样本
+    template <typename Type>
+    class SampleParser : Object<SampleParserVars<Type> >
+    {
+    public:
+        static String typeName();
+
+		/// \~English @brief Create invalid object
+		/// \~Chinese @brief 创建无效对象
+        SampleParser();
+
+		/// \~English @brief Create sample parser, bound to the list of protocol IDs
+		/// \~Chinese @brief 创建样本解析器，绑定至指定协议ID列表
+        SampleParser(Array<String> protocols);
+
+		/// \~English @brief You should call this method to reset when a session starts
+		/// \~Chinese @brief 开始Session时应调用此方法重置
+        void reset();
+
+		/// \~English @brief All specialized samples are parsed from the newly input general sample table
+		/// \~Chinese @brief 从新输入的通用样本表解析出所有特化样本
+        Array<Type> parse(SessionGeneralSampleTable table);
+
+		/// \~English @brief All specialized samples are parsed from the newly input matrix sample table
+		/// \~Chinese @brief 从新输入的矩阵样本表解析出所有特化样本
+        Array<Type> parse(SessionMatrixSampleTable table);
+    };
+
+	/// \~English @brief Variables of spadas::SampleSync template class
+	/// \~Chinese @brief spadas::SampleSync 模板类的变量数据
+    template <typename Type> class SampleSyncVars;
+
+	/// \~English @brief Convenience for sample synchronization
+	/// \~Chinese @brief 方便同步样本
+    template <typename Type>
+    class SampleSync : Object<SampleSyncVars<Type> >
+    {
+    public:
+        static String typeName();
+
+		/// \~English @brief Create invalid object
+		/// \~Chinese @brief 创建无效对象
+        SampleSync();
+
+		/// \~English @brief Create sample synchronizer, bound to the list of protocol IDs
+		/// \~Chinese @brief 创建样本同步器，绑定至指定协议ID列表
+        SampleSync(Array<String> protocols);
+
+		/// \~English @brief You should call this method to reset when a session starts
+		/// \~Chinese @brief 开始Session时应调用此方法重置
+        void reset();
+
+		/// \~English @brief Find the two samples just before and after the timestamp in the sample buffer, then perform interpolation. See spadas::SessionSampleBuffer::interpolate for arguments' description
+		/// \~Chinese @brief 根据时间戳在输入的样本缓存中寻找前后两个样本并插值，参数详见 spadas::SessionSampleBuffer::interpolate
+        Enum<SampleInterpolationResult> interpolate(SessionSampleBufferTable table, SessionIdentifier session, Double timeOffset, Type& interpolatedSample, UInt earlyThresh = 1000/* ms */);
+    };
 
 	// Plugin API / 插件API //////////////////////////////////////////////////////////////
 

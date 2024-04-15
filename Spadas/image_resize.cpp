@@ -7,7 +7,7 @@ using namespace spadas::utility;
 
 ///////////////////////////////////////////////
 // resize(Size2D) in ResizeMode::Area
-template<typename Type>
+template <typename Type>
 void areaResizeColor(Image src, Image& dst, Float widthRatio, Float heightRatio, UInt nChannels)
 {
 	UInt srcWidth = src.width(), srcHeight = src.height();
@@ -92,7 +92,7 @@ void areaResizeColor(Image src, Image& dst, Float widthRatio, Float heightRatio,
     delete[] intensitySum;
 }
 
-template<typename Type>
+template <typename Type>
 void areaResizeGray(Image src, Image& dst, Float widthRatio, Float heightRatio)
 {
 	UInt srcWidth = src.width(), srcHeight = src.height();
