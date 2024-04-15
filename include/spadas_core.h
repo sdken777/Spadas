@@ -6396,7 +6396,7 @@ namespace spadas
 		/// \~Chinese @brief 特化样本插值
 		virtual SessionSample interpolate(SessionSample& s1, Double w1, SessionSample& s2, Double w2, FullTimestamp timestamp);
 
-	protected:
+		// SPADAS_VARS
 		virtual String getTypeName() override;
 		virtual Bool isType(ULong id) override;
 		virtual Bool isType(String name) override;
@@ -6479,28 +6479,9 @@ namespace spadas
 		String toString() { return valid ? (isText ? text : String(value)) : "(invalid)"; }
 	};
 
-	/// \~English @brief Variables of general sample
-	/// \~Chinese @brief 通用样本的变量数据
-	class SPADAS_API SessionGeneralSampleVars : public SessionSampleVars
-	{
-	public:
-		/// \~English @brief Sample element array
-		/// \~Chinese @brief 样本数据数组
-		Array<GeneralElement> values;
-
-		/// \~English @brief The number of key elements, indicating that the first few in the sample element array are key data, the default is 0
-		/// \~Chinese @brief 关键元素个数，表示样本数据数组中前若干个为关键数据，默认为0
-		UInt significantCount;
-
-	protected:
-		virtual String getTypeName() override;
-		virtual Bool isType(ULong id) override;
-		virtual Bool isType(String name) override;
-	};
-
 	/// \~English @brief General sample
 	/// \~Chinese @brief 通用样本
-	class SPADAS_API SessionGeneralSample : public Object<SessionGeneralSampleVars>
+	class SPADAS_API SessionGeneralSample : public Object<class SessionGeneralSampleVars>
 	{
 	public:
 		SPADAS_TYPE("spadas.SessionGeneralSample")
@@ -6525,37 +6506,14 @@ namespace spadas
 		/// \~Chinese @brief 取得样本数据数组的引用
 		Array<GeneralElement>& values();
 
-		/// \~English @brief Get the reference of the key element number
-		/// \~Chinese @brief 取得关键元素个数的引用
+		/// \~English @brief Get the reference of the key element number, indicating that the first few in the sample element array are key data, the default is 0
+		/// \~Chinese @brief 取得关键元素个数的引用，表示样本数据数组中前若干个为关键数据，默认为0
 		UInt& significantCount();
-	};
-
-	/// \~English @brief Variables of matrix sample
-	/// \~Chinese @brief 矩阵样本的变量数据
-	class SPADAS_API SessionMatrixSampleVars : public SessionSampleVars
-	{
-	public:
-		/// \~English @brief Matrix data, stored in the order of rows and columns. For example, the first element is the first row and the first column, the second element is the first row and the second column,...
-		/// \~Chinese @brief 矩阵数据，按行、列的顺序存储，如第0元素为第一行第一列，第1元素为第一行第二列，...
-		Array<Float> matData;
-
-		/// \~English @brief Number of rows
-		/// \~Chinese @brief 行数
-		UInt rows;
-
-		/// \~English @brief Number of columns
-		/// \~Chinese @brief 列数
-		UInt cols;
-
-	protected:
-		virtual String getTypeName() override;
-		virtual Bool isType(ULong id) override;
-		virtual Bool isType(String name) override;
 	};
 
 	/// \~English @brief Matrix sample
 	/// \~Chinese @brief 矩阵样本
-	class SPADAS_API SessionMatrixSample : public Object<SessionMatrixSampleVars>
+	class SPADAS_API SessionMatrixSample : public Object<class SessionMatrixSampleVars>
 	{
 	public:
 		SPADAS_TYPE("spadas.SessionMatrixSample")
@@ -6572,8 +6530,8 @@ namespace spadas
 		/// \~Chinese @brief 取得时间戳的引用
 		FullTimestamp& timestamp();
 
-		/// \~English @brief Get the reference of the matrix data
-		/// \~Chinese @brief 取得矩阵数据的引用
+		/// \~English @brief Get the reference of the matrix data, stored in the order of rows and columns. For example, the first element is the first row and the first column, the second element is the first row and the second column,...
+		/// \~Chinese @brief 取得矩阵数据的引用，按行、列的顺序存储，如第0元素为第一行第一列，第1元素为第一行第二列，...
 		Array<Float>& matData();
 
 		/// \~English @brief Get the reference of the row number

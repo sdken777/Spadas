@@ -3,6 +3,25 @@
 
 namespace spadas
 {
+	class SessionGeneralSampleVars : public SessionSampleVars
+	{
+	public:
+		SPADAS_VARS(SessionGeneralSample, SessionSampleVars)
+
+		Array<GeneralElement> values;
+		UInt significantCount;
+	};
+
+	class SessionMatrixSampleVars : public SessionSampleVars
+	{
+	public:
+		SPADAS_VARS(SessionMatrixSample, SessionSampleVars)
+		
+		Array<Float> matData;
+		UInt rows;
+		UInt cols;
+	};
+
 	class SessionSampleBufferVars : public Vars
 	{
 	public:
@@ -97,21 +116,6 @@ SessionSample SessionSample::interpolate(SessionSample& s1, Double w1, SessionSa
 
 // SessionGeneralSample
 
-String SessionGeneralSampleVars::getTypeName()
-{
-	return SessionGeneralSample::typeName();
-}
-
-Bool SessionGeneralSampleVars::isType(ULong id)
-{
-	return id == SessionGeneralSample::typeName().getID() || SessionSampleVars::isType(id);
-}
-
-Bool SessionGeneralSampleVars::isType(String name)
-{
-	return name == SessionGeneralSample::typeName() || SessionSampleVars::isType(name);
-}
-
 SessionGeneralSample::SessionGeneralSample() : Object<SessionGeneralSampleVars>(new SessionGeneralSampleVars, TRUE)
 {
 	vars->significantCount = 0;
@@ -147,21 +151,6 @@ UInt& SessionGeneralSample::significantCount()
 }
 
 // SessionMatrixSample
-
-String SessionMatrixSampleVars::getTypeName()
-{
-	return SessionMatrixSample::typeName();
-}
-
-Bool SessionMatrixSampleVars::isType(ULong id)
-{
-	return id == SessionMatrixSample::typeName().getID() || SessionSampleVars::isType(id);
-}
-
-Bool SessionMatrixSampleVars::isType(String name)
-{
-	return name == SessionMatrixSample::typeName() || SessionSampleVars::isType(name);
-}
 
 SessionMatrixSample::SessionMatrixSample() : Object<SessionMatrixSampleVars>(new SessionMatrixSampleVars, TRUE)
 {
