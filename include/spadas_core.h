@@ -7898,13 +7898,23 @@ namespace spadas
 		/// \~Chinese @returns 输出的时间戳
 		virtual FullTimestamp resyncTimestamp(FullTimestamp srcTimestamp, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, String guestSyncID = String());
 
-		/// \~English @brief Recalculate session-irrelevant time based on the input time offset and synchronization status
-		/// \~Chinese @brief 根据输入时间戳的时间偏置和同步状态反算对应的Session无关时间等
+		/// \~English @brief Recalculate session-irrelevant posix time based on the input time offset and synchronization status
+		/// \~Chinese @brief 根据输入时间戳的时间偏置和同步状态反算对应的Session无关Posix时间
 		/// \~English @param srcTimestamp Input timestamp
 		/// \~Chinese @param srcTimestamp 输入时间戳
-		/// \~English @returns The session-irrelevant time, 0 means failure
-		/// \~Chinese @returns 输出的Session无关时间，0表示失败
-		virtual NanoPosix calcTime(ShortTimestamp srcTimestamp);
+		/// \~English @returns The session-irrelevant posix time, in nanoseconds, 0 means failure
+		/// \~Chinese @returns 输出的Session无关Posix时间，单位纳秒，0表示失败
+		virtual NanoPosix calcPosixTime(ShortTimestamp srcTimestamp);
+
+		/// \~English @brief Recalculate CPU tick based on the input time offset
+		/// \~Chinese @brief 根据输入时间偏置反算对应的CPU计数
+		/// \~English @param session Related session
+		/// \~Chinese @param session 对应的session
+		/// \~English @param timeOffset Input time offset
+		/// \~Chinese @param timeOffset 输入的时间偏置
+		/// \~English @returns The CPU tick, 0 means failure
+		/// \~Chinese @returns 输出的CPU计数，0表示失败
+		virtual ULong calcCPUTick(SessionIdentifier session, Double timeOffset);
 	};
 
 	// Plugin related utility functions / 插件相关实用功能 //////////////////////////////////////////////////////////////
