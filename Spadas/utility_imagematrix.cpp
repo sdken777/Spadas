@@ -19,7 +19,7 @@ namespace utility_internal
 		}
 	}
 
-	template<typename Type>
+	template <typename Type>
 	Image matrixRToImage(Type *matData, Type lower, Type upper, UInt matDimAt0, UInt matDimAt1)
 	{
 		UInt width = matDimAt1;

@@ -13,7 +13,12 @@ FullTimestamp ITimeServer::resyncTimestamp(FullTimestamp srcTimestamp, NanoPosix
     return srcTimestamp;
 }
 
-ULong ITimeServer::calcTime(ShortTimestamp srcTimestamp, Enum<TimeType> timeType)
+NanoPosix ITimeServer::calcPosixTime(ShortTimestamp srcTimestamp)
+{
+    return 0;
+}
+
+ULong ITimeServer::calcCPUTick(SessionIdentifier session, Double timeOffset)
 {
     return 0;
 }

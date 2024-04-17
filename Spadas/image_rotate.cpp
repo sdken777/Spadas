@@ -3,7 +3,7 @@
 
 namespace image_internal
 {
-	template<typename Type>
+	template <typename Type>
 	void rotateSingleUnit(Image src, Image& dst, Enum<ImageRotation> rotation)
 	{
 		UInt width = src.width(), height = src.height();
@@ -60,7 +60,7 @@ namespace image_internal
 		}
 	}
 	
-	template<typename Type>
+	template <typename Type>
 	void rotateMultipleUnits(Image src, Image& dst, Enum<ImageRotation> rotation, UInt nChannels)
 	{
 		UInt width = src.width(), height = src.height();
