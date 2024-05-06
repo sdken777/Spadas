@@ -1,5 +1,6 @@
 ﻿
 #include "spadas.h"
+#include "oscillator.h"
 
 namespace spadas
 {
@@ -25,9 +26,28 @@ namespace spadas
 		Binary input;
 		Binary output;
 	};
+
+	const UInt GENERAL_RAW_OBJECT_LIFE = 9; // seconds
+
+	class GeneralRawObjectVars : public Vars
+	{
+	public:
+		SPADAS_VARS_DEF(GeneralRawObject, Vars)
+
+		BaseObject obj;
+		ULong startTick;
+		ULong endTick;
+		MilliPosix startPosix;
+		MilliPosix endPosix;
+
+		GeneralRawObjectVars(BaseObject obj) : obj(obj)
+		{}
+	};
 }
 
-using namespace spadas;
+using namespace spadas_internal;
+
+// TriggerFilter ///////////////////////////////////////////////////////////////////////////
 
 const String spadas::TriggerFilter::TypeName = "spadas.TriggerFilter";
 
@@ -71,6 +91,8 @@ Bool TriggerFilter::update(Bool state, GlobalTimestamp ts)
 
 	return trigger;
 }
+
+// ITimestampSearch ///////////////////////////////////////////////////////////////////////////
 
 Bool ITimestampSearch::readNextTimestamp(File file, Double& time, ULong& pos)
 {
@@ -316,12 +338,16 @@ Optional<Range> TimestampSearch::getTimeRange(Path path, Interface<ITimestampSea
 	}
 }
 
+// IFlexHandler ///////////////////////////////////////////////////////////////////////////
+
 void IFlexHandler::createData(Pointer data)
 {
 }
 void IFlexHandler::destroyData(Pointer data)
 {
 }
+
+// GeneralIOObject ///////////////////////////////////////////////////////////////////////////
 
 const String spadas::GeneralIOObject::TypeName = "spadas.GeneralIOObject";
 
@@ -347,4 +373,89 @@ Binary GeneralIOObject::getOutput()
 void GeneralIOObject::setOutput(Binary data)
 {
 	vars->output = data;
+}
+
+// GeneralRawObject ///////////////////////////////////////////////////////////////////////////
+
+const String spadas::GeneralRawObject::TypeName = "spadas.GeneralRawObject";
+
+GeneralRawObject::GeneralRawObject()
+{}
+
+GeneralRawObject::GeneralRawObject(BaseObject obj)
+{
+	SPADAS_ERROR_RETURN(obj.isNull());
+
+	GeneralRawObjectVars *newVars = new GeneralRawObjectVars(obj);
+	newVars->startTick = Timer::cpuTick();
+	newVars->startPosix = system::getTimeWithMS().localTimeToPosix();
+	newVars->endTick = newVars->startTick + Timer::cpuTicksPerSecond() * GENERAL_RAW_OBJECT_LIFE;
+	newVars->endPosix = newVars->startPosix + 1000 * GENERAL_RAW_OBJECT_LIFE;
+	setVars(newVars, TRUE);
+
+	om.obj()->delayDelete(obj, DelayDeleteTimeout::TenSeconds);
+}
+
+GeneralRawObject::GeneralRawObject(SessionGeneralRawData data)
+{
+	if (data.binary.size() != 40) return;
+
+	Vars *objVars = (Vars*)(*(ULong*)&data.binary[0]);
+	if (!objVars) return;
+
+	ULong startTick = *(ULong*)&data.binary[8];
+	ULong endTick = *(ULong*)&data.binary[16];
+	MilliPosix startPosix = *(MilliPosix*)&data.binary[24];
+	MilliPosix endPosix = *(MilliPosix*)&data.binary[32];
+	ULong curTick = Timer::cpuTick();
+	MilliPosix curPosix = system::getTimeWithMS().localTimeToPosix();
+	if (curTick < startTick || curTick > endTick || curPosix < startPosix || curPosix > endPosix) return;
+
+	Object<Vars> obj = BaseObject::castCreate(objVars);
+	GeneralRawObjectVars *newVars = new GeneralRawObjectVars(*(BaseObject*)(&obj));
+	newVars->startTick = startTick;
+	newVars->startPosix = startPosix;
+	newVars->endTick = endTick;
+	newVars->endPosix = endPosix;
+	setVars(newVars, TRUE);
+}
+
+BaseObject GeneralRawObject::getObject()
+{
+	return vars ? vars->obj : BaseObject();
+}
+
+GeneralDeviceData GeneralRawObject::toGeneralDeviceData(ULong cpuTick, String protocol)
+{
+	SPADAS_ERROR_RETURNVAL(!vars, GeneralDeviceData());
+
+	GeneralDeviceData output;
+	output.protocol = protocol;
+	output.cpuTick = cpuTick;
+	output.binary = Binary(40);
+
+	*(ULong*)&output.binary[0] = (ULong)vars->obj.getVars();
+	*(ULong*)&output.binary[8] = vars->startTick;
+	*(ULong*)&output.binary[16] = vars->endTick;
+	*(ULong*)&output.binary[24] = vars->startPosix;
+	*(ULong*)&output.binary[32] = vars->endPosix;
+
+	return output;
+}
+
+SessionGeneralRawData GeneralRawObject::toSessionGeneralRawData(FullTimestamp timestamp)
+{
+	SPADAS_ERROR_RETURNVAL(!vars, SessionGeneralRawData());
+
+	SessionGeneralRawData output;
+	output.timestamp = timestamp;
+	output.binary = Binary(40);
+
+	*(ULong*)&output.binary[0] = (ULong)vars->obj.getVars();
+	*(ULong*)&output.binary[8] = vars->startTick;
+	*(ULong*)&output.binary[16] = vars->endTick;
+	*(ULong*)&output.binary[24] = vars->startPosix;
+	*(ULong*)&output.binary[32] = vars->endPosix;
+
+	return output;
 }
