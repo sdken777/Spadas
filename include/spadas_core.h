@@ -6884,7 +6884,11 @@ namespace spadas
 
 		/// \~English @brief Bus channel, 1~16
 		/// \~Chinese @brief 总线通道，1~16
-		UInt channel;
+		Word channel;
+
+		/// \~English @brief Whether it's TX message
+		/// \~Chinese @brief 是否为发送报文
+		Bool txFlag;
 
 		/// \~English @brief Message ID in this channel
 		/// \~Chinese @brief 该通道内的报文ID
@@ -6896,7 +6900,7 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SessionBusRawData() : channel(0), id(0) {}
+		SessionBusRawData() : channel(0), txFlag(FALSE), id(0) {}
 	};
 
 	/// \~English @brief Bus raw data table (The length is 16, representing bus channels 1~16 respectively)
@@ -7261,9 +7265,13 @@ namespace spadas
 		/// \~Chinese @brief 可选的额外数据
 		Optional<VideoExtraData> extraData;
 
+		/// \~English @brief Frame index in the session, which starts from 0, while -1 means invalid
+		/// \~Chinese @brief 在Session内的帧序号，从0起算，-1表示无效
+		Int frameIndex;
+
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SessionVideoRawData() : channel(0) {}
+		SessionVideoRawData() : channel(0), frameIndex(-1) {}
 	};
 
 	/// \~English @brief Video raw data table (The length is 24, representing video channels A~X respectively)
@@ -7397,9 +7405,13 @@ namespace spadas
 		/// \~Chinese @brief 额外数据
 		Optional<VideoExtraData> extraData;
 
+		/// \~English @brief Frame index in the session, which starts from 0, while -1 means invalid
+		/// \~Chinese @brief 在Session内的帧序号，从0起算，-1表示无效
+		Int frameIndex;
+
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SessionVideoProcData() : channel(0) {}
+		SessionVideoProcData() : channel(0), frameIndex(-1) {}
 	};
 
 	/// \~English @brief Video data table for image processing (The length is 24, representing video channels A~X respectively)
