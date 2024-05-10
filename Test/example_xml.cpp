@@ -47,7 +47,7 @@ void exampleXML()
 		attribCount += e->value().attributes.size();
 	}
 	console::print("Attribute count: " cat attribCount);
-	console::print("Binary size: " cat xmlBinary.size() cat "=" cat parsedXML.toBinary().size());
+	console::print(catAll("Binary size: ", xmlBinary.size(), "=", parsedXML.toBinary().size()));
 
 	// Efficiency test of XML releasing / XML析构效率测试
 	timer.start();

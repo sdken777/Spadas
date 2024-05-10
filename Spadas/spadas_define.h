@@ -2,18 +2,18 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 新增SessionBusRawData::txFlag。新增SessionVideoRaw/ProcData::frameIndex
+// Update log / 更新记录: 新增catAll
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 57
+#define SPADAS_VERSION_BUILD 58
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.0.57 \n
-* \~Chinese 本文档对应Spadas版本：9.0.57 \n
+* \~English This document corresponds to Spadas version: 9.0.58 \n
+* \~Chinese 本文档对应Spadas版本：9.0.58 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -328,9 +328,6 @@
 #define NULL 0
 #endif
 
-// Convenience for string concatenation / 方便字符串拼接
-#define cat +(spadas::String)
-
 // Recursive macro / 可递归宏
 #define EVAL0(...) __VA_ARGS__
 #define EVAL1(...) EVAL0(EVAL0(EVAL0(__VA_ARGS__)))
@@ -354,12 +351,17 @@
 
 // Convenience for converting enumeration value to string / 方便实现枚举值转字符串
 #define MACRO_ENUM_VALUE(val) case Value::val: return #val;
-#define SPADAS_ENUM_VALUES(...) static const Char* toString(Value val) { switch (val) { MAP(MACRO_ENUM_VALUE, __VA_ARGS__) default: return 0; } }
+#define SPADAS_ENUM_VALUES(...) static const spadas::Char* toString(Value val) { switch (val) { MAP(MACRO_ENUM_VALUE, __VA_ARGS__) default: return 0; } }
 
 // Convenience for debugging / 方便调试
-#define MACRO_SEE(var) seeVarStringList.append((spadas::String) #var + " = " + var);
-#define see(...) ArrayX<String> seeVarStringList; MAP(MACRO_SEE, __VA_ARGS__) spadas::console::print(String::merge(seeVarStringList.toArray()));
+#define MACRO_SEE(var) seeVarStringList.append((spadas::String) #var + " = " + (var));
+#define see(...) { spadas::ArrayX<spadas::String> seeVarStringList; MAP(MACRO_SEE, __VA_ARGS__) spadas::console::print(spadas::String::merge(seeVarStringList.toArray())); }
 #define seeArray(arr) spadas::console::print((spadas::String) #arr + " = [ " + spadas::String::merge(arr) + " ]")
+
+// Convenience for string concatenation / 方便字符串拼接
+#define cat +(spadas::String)
+#define MACRO_CAT_ALL(var) (var) +
+#define catAll(...) (spadas::String) MAP(MACRO_CAT_ALL, __VA_ARGS__) ""
 
 // Definitions of infinity / 无限值定义
 #define FINF spadas::math::finf()
@@ -368,7 +370,7 @@
 #define NDINF spadas::math::ndinf()
 
 // Convenience for type conversion definitions / 方便用于类型转换的定义
-#define SPADAS_TYPE(typeNameString) static String typeName() { static String name = typeNameString; return name; }
+#define SPADAS_TYPE(typeNameString) static spadas::String typeName() { static spadas::String name = typeNameString; return name; }
 #define SPADAS_VARS(classType, baseVarsType) virtual spadas::String getTypeName() override { return classType::typeName(); } \
 virtual spadas::Bool isType(spadas::ULong id) override { return id == classType::typeName().getID() || baseVarsType::isType(id); } \
 virtual spadas::Bool isType(spadas::String name) override { return name == classType::typeName() || baseVarsType::isType(name); }

@@ -3341,7 +3341,7 @@ namespace spadas
 	}
 
 	template <typename KeyType, typename ValueType>
-	String Map<KeyType, ValueType>::typeName() { static String name = "spadas.Map<" cat typeid(KeyType).name() cat "," cat typeid(ValueType).name() cat ">"; return name; }
+	String Map<KeyType, ValueType>::typeName() { static String name = catAll("spadas.Map<", typeid(KeyType).name(), ",", typeid(ValueType).name(), ">"); return name; }
 
 	template <typename KeyType, typename ValueType> class MapVars : public Vars
 	{

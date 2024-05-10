@@ -12,10 +12,10 @@ void exampleEqual()
 	String string1, string2, string3 = string1;
 	Timer timer1, timer2, timer3 = timer1;
 
-	console::print("string1==string2 : " cat (string1 == string2));
-	console::print("string1==string3 : " cat (string1 == string3));
-	console::print("timer1==timer2 : " cat (timer1 == timer2));
-	console::print("timer1==timer3 : " cat (timer1 == timer3));
+	see(string1 == string2);
+	see(string1 == string3);
+	see(timer1 == timer2);
+	see(timer1 == timer3);
 
 	// Always use "contain" to get whether an array contains a value or object / 统一使用contain判断数组是否包含某个值或对象
 	console::print("- 2 -");
