@@ -7,6 +7,12 @@ namespace oscillator_internal
 
 	void sleepTime(UInt time);
 	
+	enum class DelayDeleteTimeout
+	{
+		TenSeconds = 0,
+		Count = 1,
+	};
+
 	class Oscillator : public Object<class OscillatorVars>
 	{
 	public:
@@ -14,6 +20,7 @@ namespace oscillator_internal
 		void add(Flag trigger, UInt period, Bool disposable, Bool toSet);
 		void remove(Flag trigger);
 		void pulse();
+		void delayDelete(BaseObject obj, DelayDeleteTimeout timeout);
 	};
 
 	class OscillatorManager
