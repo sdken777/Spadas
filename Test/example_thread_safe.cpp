@@ -24,7 +24,7 @@ public:
 	void printResult()
 	{
 		UInt counterSum = vars->counters[0] + vars->counters[1];
-		console::print(vars->forWrite.get().length() cat "=" cat counterSum cat " (" cat String::merge(vars->counters) cat ")"); // The string length of "forWrite" must be the same as the number of write operations / forWrite字符串长度应与写操作次数一致
+		console::print(catAll(vars->forWrite.get().length(), "=", counterSum, " (", String::merge(vars->counters), ")")); // The string length of "forWrite" must be the same as the number of write operations / forWrite字符串长度应与写操作次数一致
 	}
 
 private:

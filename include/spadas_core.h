@@ -6884,7 +6884,11 @@ namespace spadas
 
 		/// \~English @brief Bus channel, 1~16
 		/// \~Chinese @brief 总线通道，1~16
-		UInt channel;
+		Word channel;
+
+		/// \~English @brief Whether it's TX message
+		/// \~Chinese @brief 是否为发送报文
+		Bool txFlag;
 
 		/// \~English @brief Message ID in this channel
 		/// \~Chinese @brief 该通道内的报文ID
@@ -6896,7 +6900,7 @@ namespace spadas
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SessionBusRawData() : channel(0), id(0) {}
+		SessionBusRawData() : channel(0), txFlag(FALSE), id(0) {}
 	};
 
 	/// \~English @brief Bus raw data table (The length is 16, representing bus channels 1~16 respectively)
@@ -7261,9 +7265,13 @@ namespace spadas
 		/// \~Chinese @brief 可选的额外数据
 		Optional<VideoExtraData> extraData;
 
+		/// \~English @brief Frame index in the session, which starts from 0, while -1 means invalid
+		/// \~Chinese @brief 在Session内的帧序号，从0起算，-1表示无效
+		Int frameIndex;
+
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SessionVideoRawData() : channel(0) {}
+		SessionVideoRawData() : channel(0), frameIndex(-1) {}
 	};
 
 	/// \~English @brief Video raw data table (The length is 24, representing video channels A~X respectively)
@@ -7397,9 +7405,13 @@ namespace spadas
 		/// \~Chinese @brief 额外数据
 		Optional<VideoExtraData> extraData;
 
+		/// \~English @brief Frame index in the session, which starts from 0, while -1 means invalid
+		/// \~Chinese @brief 在Session内的帧序号，从0起算，-1表示无效
+		Int frameIndex;
+
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		SessionVideoProcData() : channel(0) {}
+		SessionVideoProcData() : channel(0), frameIndex(-1) {}
 	};
 
 	/// \~English @brief Video data table for image processing (The length is 24, representing video channels A~X respectively)
@@ -8251,6 +8263,38 @@ namespace spadas
 		/// \~Chinese @brief 根据时间戳在输入的样本缓存中寻找前后两个样本并插值，参数详见 spadas::SessionSampleBuffer::interpolate
         Enum<SampleInterpolationResult> interpolate(SessionSampleBufferTable table, SessionIdentifier session, Double timeOffset, Type& interpolatedSample, UInt earlyThresh = 1000/* ms */);
     };
+
+	/// \~English @brief Object container for raw data exchange
+	/// \~Chinese @brief 用于原始数据交换的对象容器
+	class SPADAS_API GeneralRawObject : public Object<class GeneralRawObjectVars>
+	{
+	public:
+		SPADAS_TYPE("spadas.GeneralRawObject")
+
+		/// \~English @brief Invalid object
+		/// \~Chinese @brief 无效对象
+		GeneralRawObject();
+
+		/// \~English @brief Create by object
+		/// \~Chinese @brief 基于对象创建
+		GeneralRawObject(BaseObject obj);
+
+		/// \~English @brief Create by general raw data
+		/// \~Chinese @brief 基于通用原始数据创建
+		GeneralRawObject(SessionGeneralRawData data);
+
+		/// \~English @brief Get the object inside
+		/// \~Chinese @brief 获取内部的对象
+		BaseObject getObject();
+
+		/// \~English @brief Convert to general device data
+		/// \~Chinese @brief 转换为一般设备原始数据
+		GeneralDeviceData toGeneralDeviceData(ULong cpuTick, String protocol);
+
+		/// \~English @brief Convert to general raw data
+		/// \~Chinese @brief 转换为通用原始数据
+		SessionGeneralRawData toSessionGeneralRawData(FullTimestamp timestamp);
+	};
 
 	// Plugin API / 插件API //////////////////////////////////////////////////////////////
 

@@ -70,6 +70,6 @@ void exampleLock()
     threads.stop();
 
     // Print result / 打印测试结果
-    console::print("Normal lock interval: " cat normalLockTest.getAverageInterval() cat "us");
-    console::print("Spin lock interval: " cat spinLockTest.getAverageInterval() cat "us");
+    console::print(catAll("Normal lock interval: ", normalLockTest.getAverageInterval(), "us"));
+    console::print(catAll("Spin lock interval: ", spinLockTest.getAverageInterval(), "us"));
 }

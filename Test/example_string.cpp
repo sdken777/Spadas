@@ -42,12 +42,12 @@ void exampleString()
 	points[1] = Point2D(5, 6);
 	console::print(String::merge(points, " | "));
 
-	// Use "cat" macro to concatenate / 用cat连接字符串
+	// Use "cat" and "catAll" macro to concatenate / 用cat和catAll连接字符串
 	console::print("- 4 -");
 
 	console::print("Number: " cat 123);
-	console::print(1 cat "+" cat 2 cat "=" cat 3);
+	console::print(catAll(1, "+", 2, "=", 3));
 
 	Point2D pt1(1, 2), pt2(3, 5);
-	console::print(pt1 cat "+" cat pt2 cat "=" cat (pt1 + pt2));
+	console::print(catAll(pt1, "+", pt2, "=", pt1 + pt2));
 }

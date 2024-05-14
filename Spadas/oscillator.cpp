@@ -23,31 +23,55 @@ namespace oscillator_internal
 		}
 	};
 	
+	struct DelayDelete
+	{
+		BaseObject obj;
+		ULong timeoutTick;
+		DelayDelete *next;
+		DelayDelete() : timeoutTick(0), next(NULL)
+		{
+		}
+	};
+
 	class OscillatorVars : public Vars
 	{
 	public:
-		OscillatorEvent *head, *tail;
+		Lock lock;
+		OscillatorEvent *evHead, *evTail;
+		DelayDelete *ddHead[(UInt)DelayDeleteTimeout::Count];
+		DelayDelete *ddTail[(UInt)DelayDeleteTimeout::Count];
 		Timer timer;
 		OscillatorVars()
 		{
-			head = new OscillatorEvent();
-			tail = new OscillatorEvent();
-			head->next = tail;
-			tail->prev = head;
+			evHead = new OscillatorEvent();
+			evTail = new OscillatorEvent();
+			evHead->next = evTail;
+			evTail->prev = evHead;
+			for (UInt i = 0; i < (UInt)DelayDeleteTimeout::Count; i++) ddHead[i] = ddTail[i] = NULL;
 			oscillatorID = startOscillator();
 		}
 		~OscillatorVars()
 		{
 			stopOscillator(oscillatorID);
-			OscillatorEvent *ptr = head->next;
-			while (ptr != tail)
+			OscillatorEvent *ptr = evHead->next;
+			while (ptr != evTail)
 			{
-				OscillatorEvent * nextPtr = ptr->next;
+				OscillatorEvent *nextPtr = ptr->next;
 				delete ptr;
 				ptr = nextPtr;
 			}
-			delete head;
-			delete tail;
+			delete evHead;
+			delete evTail;
+			for (UInt i = 0; i < (UInt)DelayDeleteTimeout::Count; i++)
+			{
+				DelayDelete *node = ddHead[i];
+				while (node)
+				{
+					DelayDelete *next = node->next;
+					delete node;
+					node = next;
+				}
+			}
 		}
 	private:
 		UInt oscillatorID;
@@ -85,7 +109,7 @@ void Oscillator::add(Flag trigger, UInt period, Bool disposable, Bool toSet)
 {
 	vars->spinEnter();
 	{
-		OscillatorEvent* newEvent = new OscillatorEvent(disposable, toSet, (ULong)period, trigger, vars->head, vars->head->next);
+		OscillatorEvent* newEvent = new OscillatorEvent(disposable, toSet, (ULong)period, trigger, vars->evHead, vars->evHead->next);
 		newEvent->prev->next = newEvent;
 		newEvent->next->prev = newEvent;
 	}
@@ -96,8 +120,8 @@ void Oscillator::remove(Flag trigger)
 {
 	vars->spinEnter();
 	{
-		OscillatorEvent *ptr = vars->head->next;
-		while (ptr != vars->tail)
+		OscillatorEvent *ptr = vars->evHead->next;
+		while (ptr != vars->evTail)
 		{
 			if (ptr->trigger == trigger)
 			{
@@ -119,8 +143,8 @@ void Oscillator::pulse()
 	vars->spinEnter();
 	{
 		ULong count = (ULong)vars->timer.check();
-		OscillatorEvent *ptr = vars->head->next;
-		while (ptr != vars->tail)
+		OscillatorEvent *ptr = vars->evHead->next;
+		while (ptr != vars->evTail)
 		{
 			if (ptr->passed == ULINF)
 			{
@@ -146,6 +170,55 @@ void Oscillator::pulse()
 				}
 			}
 			ptr = ptr->next;
+		}
+
+		ULong curTick = Timer::cpuTick();
+		for (UInt i = 0; i < (UInt)DelayDeleteTimeout::Count; i++)
+		{
+			while (vars->ddHead[i])
+			{
+				if (vars->ddHead[i]->timeoutTick > curTick) break;
+				DelayDelete *node = vars->ddHead[i];
+				vars->ddHead[i] = vars->ddHead[i]->next;
+				delete node;
+			}
+			if (!vars->ddHead[i])
+			{
+				vars->ddTail[i] = NULL;
+			}
+		}
+	}
+	vars->lock.leave();
+}
+
+void Oscillator::delayDelete(BaseObject obj, DelayDeleteTimeout timeout)
+{
+	if (obj.isNull()) return;
+
+	ULong timeoutTicks = 0;
+	switch (timeout)
+	{
+	case DelayDeleteTimeout::TenSeconds:
+		timeoutTicks = Timer::cpuTicksPerSecond() * 10;
+		break;
+	default:
+		return;
+	}
+
+	DelayDelete *newNode = new DelayDelete();
+	newNode->obj = obj;
+	newNode->timeoutTick = Timer::cpuTick() + timeoutTicks;
+
+	vars->lock.enter();
+	{
+		if (vars->ddHead[(UInt)timeout])
+		{
+			vars->ddTail[(UInt)timeout]->next = newNode;
+			vars->ddTail[(UInt)timeout] = newNode;
+		}
+		else
+		{
+			vars->ddHead[(UInt)timeout] = vars->ddTail[(UInt)timeout] = newNode;
 		}
 	}
 	vars->spinLeave();

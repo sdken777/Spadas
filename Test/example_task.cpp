@@ -27,7 +27,7 @@ void exampleTask()
 		tm.start(task);
 		tm.stop(task);
 		tm.start(TestThreads());
-		console::print(count++ cat ":" cat tm.getTasks().size());
+		console::print(catAll(count++, ":", tm.getTasks().size()));
 	}
 
 	tm.stopAll();
