@@ -8264,6 +8264,38 @@ namespace spadas
         Enum<SampleInterpolationResult> interpolate(SessionSampleBufferTable table, SessionIdentifier session, Double timeOffset, Type& interpolatedSample, UInt earlyThresh = 1000/* ms */);
     };
 
+	/// \~English @brief Object container for raw data exchange
+	/// \~Chinese @brief 用于原始数据交换的对象容器
+	class SPADAS_API GeneralRawObject : public Object<class GeneralRawObjectVars>
+	{
+	public:
+		SPADAS_TYPE("spadas.GeneralRawObject")
+
+		/// \~English @brief Invalid object
+		/// \~Chinese @brief 无效对象
+		GeneralRawObject();
+
+		/// \~English @brief Create by object
+		/// \~Chinese @brief 基于对象创建
+		GeneralRawObject(BaseObject obj);
+
+		/// \~English @brief Create by general raw data
+		/// \~Chinese @brief 基于通用原始数据创建
+		GeneralRawObject(SessionGeneralRawData data);
+
+		/// \~English @brief Get the object inside
+		/// \~Chinese @brief 获取内部的对象
+		BaseObject getObject();
+
+		/// \~English @brief Convert to general device data
+		/// \~Chinese @brief 转换为一般设备原始数据
+		GeneralDeviceData toGeneralDeviceData(ULong cpuTick, String protocol);
+
+		/// \~English @brief Convert to general raw data
+		/// \~Chinese @brief 转换为通用原始数据
+		SessionGeneralRawData toSessionGeneralRawData(FullTimestamp timestamp);
+	};
+
 	// Plugin API / 插件API //////////////////////////////////////////////////////////////
 
 	/// \~English @brief General function plugin interface 2.0

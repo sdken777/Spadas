@@ -18,7 +18,7 @@ namespace spadas
 	class GeneralRawObjectVars : public Vars
 	{
 	public:
-		SPADAS_VARS_DEF(GeneralRawObject, Vars)
+		SPADAS_VARS(GeneralRawObject, Vars)
 
 		BaseObject obj;
 		ULong startTick;
@@ -31,7 +31,7 @@ namespace spadas
 	};
 }
 
-using namespace spadas_internal;
+using namespace oscillator_internal;
 
 // ITimestampSearch ///////////////////////////////////////////////////////////////////////////
 
@@ -315,8 +315,6 @@ void GeneralIOObject::setOutput(Binary data)
 }
 
 // GeneralRawObject ///////////////////////////////////////////////////////////////////////////
-
-const String spadas::GeneralRawObject::TypeName = "spadas.GeneralRawObject";
 
 GeneralRawObject::GeneralRawObject()
 {}

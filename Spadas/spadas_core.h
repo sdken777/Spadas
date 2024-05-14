@@ -8269,9 +8269,7 @@ namespace spadas
 	class SPADAS_API GeneralRawObject : public Object<class GeneralRawObjectVars>
 	{
 	public:
-		/// \~English @brief Class name
-		/// \~Chinese @brief 类名称
-		static const String TypeName;
+		SPADAS_TYPE("spadas.GeneralRawObject")
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
