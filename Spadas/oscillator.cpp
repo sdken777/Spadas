@@ -36,7 +36,6 @@ namespace oscillator_internal
 	class OscillatorVars : public Vars
 	{
 	public:
-		Lock lock;
 		OscillatorEvent *evHead, *evTail;
 		DelayDelete *ddHead[(UInt)DelayDeleteTimeout::Count];
 		DelayDelete *ddTail[(UInt)DelayDeleteTimeout::Count];
@@ -188,7 +187,7 @@ void Oscillator::pulse()
 			}
 		}
 	}
-	vars->lock.leave();
+	vars->spinLeave();
 }
 
 void Oscillator::delayDelete(BaseObject obj, DelayDeleteTimeout timeout)
@@ -209,7 +208,7 @@ void Oscillator::delayDelete(BaseObject obj, DelayDeleteTimeout timeout)
 	newNode->obj = obj;
 	newNode->timeoutTick = Timer::cpuTick() + timeoutTicks;
 
-	vars->lock.enter();
+	vars->spinEnter();
 	{
 		if (vars->ddHead[(UInt)timeout])
 		{
