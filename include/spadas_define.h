@@ -2,18 +2,18 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 修正oscillator锁问题
+// Update log / 更新记录: 新增VideoDeviceData.frameIndex，且所有frameIndex都定义为原始帧序号(由设备提供)
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 60
+#define SPADAS_VERSION_BUILD 61
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.0.60 \n
-* \~Chinese 本文档对应Spadas版本：9.0.60 \n
+* \~English This document corresponds to Spadas version: 9.0.61 \n
+* \~Chinese 本文档对应Spadas版本：9.0.61 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *

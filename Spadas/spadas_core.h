@@ -7232,9 +7232,13 @@ namespace spadas
 		/// \~Chinese @brief 可选的额外数据
 		Optional<VideoExtraData> extraData;
 
+		/// \~English @brief Raw frame index, -1 means invalid
+		/// \~Chinese @brief 原始帧序号，-1表示无效
+		Long frameIndex;
+
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
-		VideoDeviceData() : cpuTick(0), guestPosix(0), gnssPosix(0), channel(0) {}
+		VideoDeviceData() : cpuTick(0), guestPosix(0), gnssPosix(0), channel(0), frameIndex(-1) {}
 	};
 
 	/// \~English @brief Video raw data
@@ -7265,9 +7269,9 @@ namespace spadas
 		/// \~Chinese @brief 可选的额外数据
 		Optional<VideoExtraData> extraData;
 
-		/// \~English @brief Frame index in the session, which starts from 0, while -1 means invalid
-		/// \~Chinese @brief 在Session内的帧序号，从0起算，-1表示无效
-		Int frameIndex;
+		/// \~English @brief Raw frame index, -1 means invalid
+		/// \~Chinese @brief 原始帧序号，-1表示无效
+		Long frameIndex;
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
@@ -7405,9 +7409,9 @@ namespace spadas
 		/// \~Chinese @brief 额外数据
 		Optional<VideoExtraData> extraData;
 
-		/// \~English @brief Frame index in the session, which starts from 0, while -1 means invalid
-		/// \~Chinese @brief 在Session内的帧序号，从0起算，-1表示无效
-		Int frameIndex;
+		/// \~English @brief Raw frame index, -1 means invalid
+		/// \~Chinese @brief 原始帧序号，-1表示无效
+		Long frameIndex;
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
