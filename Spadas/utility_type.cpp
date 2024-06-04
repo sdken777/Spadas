@@ -158,6 +158,7 @@ MilliPosix TimeWithMS::localTimeToPosix()
 	t.tm_hour = dateTime.hour;
 	t.tm_min = dateTime.minute;
 	t.tm_sec = dateTime.second;
+	t.tm_isdst = -1;
 	time_t t1 = mktime(&t);
 	return (ULong)t1 * 1000 + milliseconds;
 }
@@ -186,6 +187,7 @@ MilliPosix TimeWithMS::utcTimeToPosix()
 	t.tm_hour = dateTime.hour;
 	t.tm_min = dateTime.minute;
 	t.tm_sec = dateTime.second;
+	t.tm_isdst = -1;
 	time_t t1 = mktime(&t);
 	return (ULong)t1 * 1000 + milliseconds + time_ms_internal::diff;
 }
