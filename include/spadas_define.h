@@ -2,18 +2,18 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 修正部分时区夏令时问题
+// Update log / 更新记录: catAll外加括号
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 62
+#define SPADAS_VERSION_BUILD 63
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.0.62 \n
-* \~Chinese 本文档对应Spadas版本：9.0.62 \n
+* \~English This document corresponds to Spadas version: 9.0.63 \n
+* \~Chinese 本文档对应Spadas版本：9.0.63 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -361,7 +361,7 @@
 // Convenience for string concatenation / 方便字符串拼接
 #define cat +(spadas::String)
 #define MACRO_CAT_ALL(var) (var) +
-#define catAll(...) (spadas::String) MAP(MACRO_CAT_ALL, __VA_ARGS__) ""
+#define catAll(...) ((spadas::String) MAP(MACRO_CAT_ALL, __VA_ARGS__) "")
 
 // Definitions of infinity / 无限值定义
 #define FINF spadas::math::finf()
