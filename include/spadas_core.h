@@ -7443,7 +7443,9 @@ namespace spadas
 		/// \~Chinese @param gnssPosix 视频帧的采样时卫星Posix时间，单位纳秒，0表示无效
 		/// \~English @param extraData Optional extra data
 		/// \~Chinese @param extraData 可选的额外数据
-		virtual void outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, Optional<VideoExtraData> extraData = Optional<VideoExtraData>());
+		/// \~English @param frameIndex Raw frame index, -1 means invalid
+		/// \~Chinese @param frameIndex 原始帧序号，-1表示无效
+		virtual void outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, Optional<VideoExtraData> extraData = Optional<VideoExtraData>(), Long frameIndex = -1);
 	};
 
 	/// \~English @brief Video raw data transmit interface
@@ -8617,9 +8619,11 @@ namespace spadas
 		/// \~Chinese @param size 视频帧大小，像素单位
 		/// \~English @param data Video frame data
 		/// \~Chinese @param data 视频帧数据
+		/// \~English @param extraData Optional extra data
+		/// \~Chinese @param extraData 可选的额外数据
 		/// \~English @returns Whether the frame of data is transmitted successfully
 		/// \~Chinese @returns 返回是否成功发送一帧数据
-		virtual Bool transmitVideoFrame(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data);
+		virtual Bool transmitVideoFrame(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, Optional<VideoExtraData> extraData);
 
 		/// \~English @brief [Optional] Schedule to transmit a frame of data (the timestamps of the same channel are guaranteed to be monotonically increasing)
 		/// \~Chinese @brief [可选] 预约发送一帧数据（相同通道的预约发送时间已确保递增）
@@ -8633,9 +8637,11 @@ namespace spadas
 		/// \~Chinese @param data 视频帧数据
 		/// \~English @param serverPosix Posix time of the time server for scheduled transmitting, in nanoseconds
 		/// \~Chinese @param serverPosix 预约发送的授时服务器Posix时间，单位纳秒
+		/// \~English @param extraData Optional extra data
+		/// \~Chinese @param extraData 可选的额外数据
 		/// \~English @returns Whether the scheduled transmitting is successful
 		/// \~Chinese @returns 返回是否成功预约发送一帧数据
-		virtual Bool transmitVideoFrameScheduled(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix);
+		virtual Bool transmitVideoFrameScheduled(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, Optional<VideoExtraData> extraData);
 
 		/// \~English @brief [Optional] Additional settings for the video device (called before openVideoDevice)
 		/// \~Chinese @brief [可选] 对视频设备进行额外设置（在openVideoDevice前被调用）
