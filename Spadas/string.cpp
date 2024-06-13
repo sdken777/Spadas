@@ -1373,6 +1373,11 @@ StringAppender String::operator +(String string)
 	return StringCommon::operatorPlus(bytes(), length(), string);
 }
 
+StringAppender String::operator +(StringSpan span)
+{
+	return StringCommon::operatorPlusSpan(bytes(), length(), span);
+}
+
 Optional<Int> String::toInt()
 {
 	if (vars) return StringCommon::toInt(vars->data, vars->length);

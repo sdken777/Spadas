@@ -2826,6 +2826,14 @@ namespace spadas
 		/// \~Chinese @returns 字符串拼接器
 		StringAppender operator +(String string);
 
+		/// \~English @brief Concatenate a string span after this string (The data of this object will not be changed, and multiple strings can be added in succession)
+		/// \~Chinese @brief 在本字符串后拼接字符串片段（不会更改本对象数据，且可多个字符串连加）
+		/// \~English @param span String span to be concatenated
+		/// \~Chinese @param span 将拼接的字符串片段
+		/// \~English @returns String appender object
+		/// \~Chinese @returns 字符串拼接器
+		StringAppender operator +(StringSpan span);
+
 		/// \~English @brief Convert to spadas::Int number and return it
 		/// \~Chinese @brief 转换并返回 spadas::Int 数字
 		Optional<Int> toInt();
@@ -3215,6 +3223,14 @@ namespace spadas
 		/// \~English @returns String appender object
 		/// \~Chinese @returns 字符串拼接器
 		StringAppender operator +(String string);
+
+		/// \~English @brief Concatenate another string span after this string span (The data of this object will not be changed, and multiple strings can be added in succession)
+		/// \~Chinese @brief 在本字符串片段后拼接另一个字符串片段（不会更改本对象数据，且可多个字符串连加）
+		/// \~English @param span Another string span to be concatenated
+		/// \~Chinese @param span 将拼接的另一个字符串片段
+		/// \~English @returns String appender object
+		/// \~Chinese @returns 字符串拼接器
+		StringAppender operator +(StringSpan span);
 
 		/// \~English @brief Convert to spadas::Int number and return it
 		/// \~Chinese @brief 转换并返回 spadas::Int 数字

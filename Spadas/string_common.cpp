@@ -105,6 +105,19 @@ StringAppender StringCommon::operatorPlus(const Byte* bytes, UInt originLength, 
 	return out;
 }
 
+StringAppender StringCommon::operatorPlusSpan(const Byte* bytes, UInt originLength, StringSpan& append)
+{
+	UInt appendLength = append.length();
+	UInt totalLength = originLength + appendLength;
+	if (totalLength == 0) return String();
+
+	String out = String::createWithSize(totalLength * 2);
+	if (originLength != 0) utility::memoryCopy(bytes, out.getVars()->data, originLength);
+	if (appendLength != 0) utility::memoryCopy(append.bytes(), &out.getVars()->data[originLength], appendLength);
+	out.getVars()->length = totalLength;
+	return out;
+}
+
 Optional<Int> StringCommon::toInt(const Byte* bytes, UInt len)
 {
 	if (len == 0 || len >= 12) return Optional<Int>();

@@ -64,6 +64,7 @@ namespace string_internal
 		static Array<Char> chars(const Byte* bytes, UInt len);
 		static Array<WChar> wchars(const Byte* bytes, UInt len);
 		static StringAppender operatorPlus(const Byte* bytes, UInt originLength, String& append);
+		static StringAppender operatorPlusSpan(const Byte* bytes, UInt originLength, StringSpan& append);
 		static Optional<Int> toInt(const Byte* bytes, UInt len);
 		static Bool toNumber(const Byte* bytes, UInt len, Int& number);
 		static Optional<Long> toLong(const Byte* bytes, UInt len);
