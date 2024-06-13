@@ -794,6 +794,11 @@ XMLNode XMLNode::addLeaf(XMLElement val)
 	return XMLNode(xml, newCell);
 }
 
+XMLNode XMLNode::addLeaf(String tagName)
+{
+	return addLeaf(XMLElement(tagName));
+}
+
 // XML ///////////////////////////////////////////////////////////////////////////
 
 XML::XML()
@@ -901,4 +906,40 @@ Binary XML::toBinary()
 		if (writeXMLNodeToStream(rootNode, 0, esBuffer, stream)) return stream.dequeue();
 		else return emptyXmlStringBinary.clone();
 	}
+}
+
+Array<XMLNode> XML::nodeLeavesWithTagName(XMLNode node, String tagName)
+{
+	return node.leavesWithTagName(tagName);
+}
+
+Bool XML::firstNodeLeafWithTagName(XMLNode node, String tagName, XMLNode& output)
+{
+	return node.firstLeafWithTagName(tagName, output);
+}
+
+Dictionary<String> XML::attributesToDictionary(Array<XMLAttribute> attributes)
+{
+	UInt nAttribs = attributes.size();
+	Dictionary<String> out;
+
+	XMLAttribute *attribsData = attributes.data();
+	for (UInt i = 0; i < nAttribs; i++)
+	{
+		out[attribsData[i].name] = attribsData[i].value;
+	}
+	return out;
+}
+
+Array<XMLAttribute> XML::dictionaryToAttributes(Dictionary<String> dict)
+{
+	Array<String> keys = dict.keys();
+	ArrayX<XMLAttribute> buf;
+
+	UInt nKeys = keys.size();
+	for (UInt i = 0; i < nKeys; i++)
+	{
+		if (!keys[i].isEmpty()) buf[buf.size()] = XMLAttribute(keys[i], dict[keys[i]]);
+	}
+	return buf.toArray(Region(0, buf.size()));
 }

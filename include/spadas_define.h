@@ -2,18 +2,18 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 新增String/Span::operator +(StringSpan)
+// Update log / 更新记录: 方便从旧版本移植：String::merge不带默认参数；恢复与spadas8一致的XML静态方法；增加String::splitToStringArray
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 65
+#define SPADAS_VERSION_BUILD 66
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.0.65 \n
-* \~Chinese 本文档对应Spadas版本：9.0.65 \n
+* \~English This document corresponds to Spadas version: 9.0.66 \n
+* \~Chinese 本文档对应Spadas版本：9.0.66 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -355,8 +355,8 @@
 
 // Convenience for debugging / 方便调试
 #define MACRO_SEE(var) seeVarStringList.append((spadas::String) #var + " = " + (var));
-#define see(...) { spadas::ArrayX<spadas::String> seeVarStringList; MAP(MACRO_SEE, __VA_ARGS__) spadas::console::print(spadas::String::merge(seeVarStringList.toArray())); }
-#define seeArray(arr) spadas::console::print((spadas::String) #arr + " = [ " + spadas::String::merge(arr) + " ]")
+#define see(...) { spadas::ArrayX<spadas::String> seeVarStringList; MAP(MACRO_SEE, __VA_ARGS__) spadas::console::print(spadas::String::merge(seeVarStringList.toArray(), ", ")); }
+#define seeArray(arr) spadas::console::print((spadas::String) #arr + " = [ " + spadas::String::merge(arr, ", ") + " ]")
 
 // Convenience for string concatenation / 方便字符串拼接
 #define cat +(spadas::String)

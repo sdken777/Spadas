@@ -1486,6 +1486,11 @@ Array<StringSpan> String::split(String target)
 	else return Array<StringSpan>();
 }
 
+Array<String> String::splitToStringArray(String target)
+{
+	return split(target).convert<String>([](auto& s){ return s.clone(); });
+}
+
 String String::replace(String oldString, String newString)
 {
 	return StringCommon::replace(bytes(), length(), oldString, newString);

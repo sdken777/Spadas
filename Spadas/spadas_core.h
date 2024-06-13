@@ -2906,6 +2906,10 @@ namespace spadas
 		/// \~Chinese @brief 用指定字符串对本字符串进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串不含target时，若本字符串为空则返回空数组，非空则返回标量数组
 		Array<StringSpan> split(String target);
 
+		/// \~English @brief Split this string with the specified string. For example, "12 34 56" is separated by spaces, and returns {"12", "34", "56"}. Note that when the string does not contain target, an empty array will be returned if the string is empty, and a scalar array will be returned if it is not empty
+		/// \~Chinese @brief 用指定字符串对本字符串进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串不含target时，若本字符串为空则返回空数组，非空则返回标量数组
+		Array<String> splitToStringArray(String target);
+
 		/// \~English @brief Replace the oldString part of this string with newString, and return the replaced string
 		/// \~Chinese @brief 将本字符串中oldString部分替换为newString，并返回替换后的字符串
 		String replace(String oldString, String newString);
@@ -3106,7 +3110,7 @@ namespace spadas
 		/// \~Chinese @param separator 分隔符
 		/// \~English @returns The string concatenated by the specified separator
 		/// \~Chinese @returns 按指定分隔符拼接的字符串
-		static String merge(Array<StringSpan> spans, String separator = ", ");
+		static String merge(Array<StringSpan> spans, String separator);
 
 		/// \~English @brief Merge multiple strings created by spadas::String constructor with the specified separator
 		/// \~Chinese @brief 以String构造函数拼接数组，字符串间以指定分割符分割
@@ -3117,7 +3121,7 @@ namespace spadas
 		/// \~English @returns The string concatenated by the specified separator
 		/// \~Chinese @returns 按指定分隔符拼接的字符串
 		template <typename Type>
-		static String merge(Array<Type> arr, String separator = ", ");
+		static String merge(Array<Type> arr, String separator);
 
 	private:
 		Bool isNull() { return FALSE; }
@@ -3946,6 +3950,22 @@ namespace spadas
 		/// \~Chinese @brief 由UTF-8编码的二进制数据创建XML文档
 		static Optional<XML> createFromBinary(Binary xmlBinary);
 
+		/// \~English @brief Get all child nodes with the specified tag name
+		/// \~Chinese @brief 获得输入节点的所有具有指定标签名字的子节点
+		static Array<XMLNode> nodeLeavesWithTagName(XMLNode node, String tagName);
+
+		/// \~English @brief Get the first child node with the specified tag name, if it does not exist, return FALSE
+		/// \~Chinese @brief 获得输入节点的首个具有指定标签名字的子节点，若不存在返回FALSE
+		static Bool firstNodeLeafWithTagName(XMLNode node, String tagName, XMLNode& output);
+
+		/// \~English @brief Convert the XML attribute array to a spadas::String dictionary
+		/// \~Chinese @brief XML属性数组转换为字符串型字典
+		static Dictionary<String> attributesToDictionary(Array<XMLAttribute> attributes);
+
+		/// \~English @brief Convert the spadas::String dictionary to a XML attribute array
+		/// \~Chinese @brief 字符串型字典转换为XML属性数组
+		static Array<XMLAttribute> dictionaryToAttributes(Dictionary<String> dict);
+
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
@@ -4007,6 +4027,10 @@ namespace spadas
 		/// \~English @brief Add child node with the specified XML element data, and return the node
 		/// \~Chinese @brief 按指定XML元素数据添加子节点，并返回该节点
 		XMLNode addLeaf(XMLElement val);
+
+		/// \~English @brief Add child node with the specified tag name, and return the node
+		/// \~Chinese @brief 按指定标签名字添加子节点，并返回该节点
+		XMLNode addLeaf(String tagName);
 
 	private:
 		XML xml;
