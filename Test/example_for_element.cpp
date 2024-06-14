@@ -29,5 +29,5 @@ void exampleForElement()
 		if (e.value() == 123) e.remove();
 	}
 
-	console::print("Result: " cat String::merge(list.toArray()));
+	console::print("Result: " cat String::merge(list.toArray(), ", "));
 }

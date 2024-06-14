@@ -46,7 +46,7 @@ void exampleBaseObject()
 	objs[1] = Timer().as<BaseObject>();
 	objs[2] = MyObject(100).as<BaseObject>();
 
-	console::print(String::merge(objs));
+	console::print(String::merge(objs, ", "));
 
 	// Convert to MyObject / 转换回MyObject
 	console::print("- 2 -");
