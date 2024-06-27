@@ -57,7 +57,7 @@ Bool spadas::system::ping(String ip, UInt timeout)
 	Array<StringSpan> comps = String(result).split("\n");
 	for (UInt i = 0; i < comps.size(); i++)
 	{
-		if (!comps[i].search("bytes from").isEmpty()) return TRUE;
+		if (!comps[i].search("icmp_seq=").isEmpty()) return TRUE;
 	}
 
 	return FALSE;
