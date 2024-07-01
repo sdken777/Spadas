@@ -898,7 +898,7 @@ String::String(UInt val)
 
 String::String(UInt val, UInt nDigits)
 {
-	SPADAS_ERROR_RETURN(nDigits == 0 || nDigits > 10);
+	nDigits = math::clamp(nDigits, 1u, 10u);
 
 	UInt validDigits = 1;
 	if (val >= 100000)
@@ -951,7 +951,7 @@ String::String(ULong val)
 
 String::String(ULong val, UInt nDigits)
 {
-	SPADAS_ERROR_RETURN(nDigits == 0 || nDigits > 20);
+	nDigits = math::clamp(nDigits, 1u, 20u);
 
 	UInt validDigits = 1;
 	if (val >= 10000000000ull)
@@ -1082,7 +1082,7 @@ String::String(Double val)
 
 String::String(Float val, UInt nDigits)
 {
-	SPADAS_ERROR_RETURN(nDigits == 0 || nDigits > 9);
+	nDigits = math::clamp(nDigits, 1u, 9u);
 
 	Float valPos = math::abs(val);
 	if (valPos >= 1000000.0f)
@@ -1151,7 +1151,7 @@ String::String(Float val, UInt nDigits)
 
 String::String(Double val, UInt nDigits)
 {
-	SPADAS_ERROR_RETURN(nDigits == 0 || nDigits > 18);
+	nDigits = math::clamp(nDigits, 1u, 18u);
 
 	Double valPos = math::abs(val);
 	if (valPos >= 1000000000000000.0)
