@@ -128,6 +128,16 @@ Optional<Int> StringCommon::toInt(const Byte* bytes, UInt len)
 	return ok ? val : Optional<Int>();
 }
 
+Int StringCommon::toInt(const Byte* bytes, UInt len, Int defaultValue)
+{
+	if (len == 0 || len >= 12) return defaultValue;
+
+	Byte buffer[12];
+	Int val;
+	Bool ok = stringToInt(bytes, len, buffer, val);
+	return ok ? val : defaultValue;
+}
+
 Bool StringCommon::toNumber(const Byte* bytes, UInt len, Int& number)
 {
 	if (len == 0 || len >= 12) return FALSE;
@@ -147,6 +157,16 @@ Optional<Long> StringCommon::toLong(const Byte* bytes, UInt len)
 	Long val;
 	Bool ok = stringToLong(bytes, len, buffer, val);
 	return ok ? val : Optional<Long>();
+}
+
+Long StringCommon::toLong(const Byte* bytes, UInt len, Long defaultValue)
+{
+	if (len == 0 || len >= 22) return defaultValue;
+
+	Byte buffer[22];
+	Long val;
+	Bool ok = stringToLong(bytes, len, buffer, val);
+	return ok ? val : defaultValue;
 }
 
 Bool StringCommon::toNumber(const Byte* bytes, UInt len, Long& number)
@@ -177,6 +197,25 @@ Optional<Float> StringCommon::toFloat(const Byte* bytes, UInt len)
 		ok = stringToFloat(bytes, len, buffer.data(), val);
 	}
 	return ok ? val : Optional<Float>();
+}
+
+Float StringCommon::toFloat(const Byte* bytes, UInt len, Float defaultValue)
+{
+	if (len == 0) return defaultValue;
+
+	Float val = 0;
+	Bool ok = FALSE;
+	if (len < 16)
+	{
+		Byte buffer[16];
+		ok = stringToFloat(bytes, len, buffer, val);
+	}
+	else
+	{
+		Binary buffer(len + 1);
+		ok = stringToFloat(bytes, len, buffer.data(), val);
+	}
+	return ok ? val : defaultValue;
 }
 
 Bool StringCommon::toNumber(const Byte* bytes, UInt len, Float& number)
@@ -216,6 +255,25 @@ Optional<Double> StringCommon::toDouble(const Byte* bytes, UInt len)
 		ok = stringToDouble(bytes, len, buffer.data(), val);
 	}
 	return ok ? val : Optional<Double>();
+}
+
+Double StringCommon::toDouble(const Byte* bytes, UInt len, Double defaultValue)
+{
+	if (len == 0) return defaultValue;
+
+	Double val = 0;
+	Bool ok = FALSE;
+	if (len < 24)
+	{
+		Byte buffer[24];
+		ok = stringToDouble(bytes, len, buffer, val);
+	}
+	else
+	{
+		Binary buffer(len + 1);
+		ok = stringToDouble(bytes, len, buffer.data(), val);
+	}
+	return ok ? val : defaultValue;
 }
 
 Bool StringCommon::toNumber(const Byte* bytes, UInt len, Double& number)

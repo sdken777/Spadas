@@ -1384,10 +1384,22 @@ Optional<Int> String::toInt()
 	else return Optional<Int>();
 }
 
+Int String::toInt(Int defaultValue)
+{
+	if (vars) return StringCommon::toInt(vars->data, vars->length, defaultValue);
+	else return defaultValue;
+}
+
 Optional<Long> String::toLong()
 {
 	if (vars) return StringCommon::toLong(vars->data, vars->length);
 	else return Optional<Long>();
+}
+
+Long String::toLong(Long defaultValue)
+{
+	if (vars) return StringCommon::toLong(vars->data, vars->length, defaultValue);
+	else return defaultValue;
 }
 
 Optional<Float> String::toFloat()
@@ -1396,10 +1408,22 @@ Optional<Float> String::toFloat()
 	else return Optional<Float>();
 }
 
+Float String::toFloat(Float defaultValue)
+{
+	if (vars) return StringCommon::toFloat(vars->data, vars->length, defaultValue);
+	else return defaultValue;
+}
+
 Optional<Double> String::toDouble()
 {
 	if (vars) return StringCommon::toDouble(vars->data, vars->length);
 	else return Optional<Double>();
+}
+
+Double String::toDouble(Double defaultValue)
+{
+	if (vars) return StringCommon::toDouble(vars->data, vars->length, defaultValue);
+	else return defaultValue;
 }
 
 Bool String::toNumber(Int& number)

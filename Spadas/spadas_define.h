@@ -2,18 +2,18 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: String(num, nDigits)输入nDigits无效时通过clamp限定在有效范围内
+// Update log / 更新记录: 新增String/Span::toXXX(default)。新增comma, dot, spacebar, quot, newline, tab宏定义。9.0版本fix
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 69
+#define SPADAS_VERSION_BUILD 70
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.0.69 \n
-* \~Chinese 本文档对应Spadas版本：9.0.69 \n
+* \~English This document corresponds to Spadas version: 9.0.70 \n
+* \~Chinese 本文档对应Spadas版本：9.0.70 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -362,6 +362,14 @@
 #define cat +(spadas::String)
 #define MACRO_CAT_ALL(var) (var) +
 #define catAll(...) ((spadas::String) MAP(MACRO_CAT_ALL, __VA_ARGS__) "")
+
+// Useful strings / 常用字符串
+#define comma ","
+#define dot "."
+#define spacebar " "
+#define quot "\""
+#define newline "\n"
+#define tab "\t"
 
 // Definitions of infinity / 无限值定义
 #define FINF spadas::math::finf()

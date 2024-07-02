@@ -2838,17 +2838,33 @@ namespace spadas
 		/// \~Chinese @brief 转换并返回 spadas::Int 数字
 		Optional<Int> toInt();
 
+		/// \~English @brief Convert and return spadas::Int number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Int 数字，若失败则返回默认值
+		Int toInt(Int defaultValue);
+
 		/// \~English @brief Convert to spadas::Long number and return it
 		/// \~Chinese @brief 转换并返回 spadas::Long 数字
 		Optional<Long> toLong();
+
+		/// \~English @brief Convert and return spadas::Long number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Long 数字，若失败则返回默认值
+		Long toLong(Long defaultValue);
 
 		/// \~English @brief Convert to spadas::Float value and return it
 		/// \~Chinese @brief 转换并返回 spadas::Float 数值
 		Optional<Float> toFloat();
 
+		/// \~English @brief Convert and return spadas::Float number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Float 数字，若失败则返回默认值
+		Float toFloat(Float defaultValue);
+
 		/// \~English @brief Convert to spadas::Double value and return it
 		/// \~Chinese @brief 转换并返回 spadas::Double 数值
 		Optional<Double> toDouble();
+
+		/// \~English @brief Convert and return spadas::Double number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Double 数字，若失败则返回默认值
+		Double toDouble(Double defaultValue);
 
 		/// \~English @brief Convert and output spadas::Int number, return whether the conversion is successful
 		/// \~Chinese @brief 转换并输出 spadas::Int 数字，返回是否转换成功
@@ -3240,17 +3256,33 @@ namespace spadas
 		/// \~Chinese @brief 转换并返回 spadas::Int 数字
 		Optional<Int> toInt();
 
+		/// \~English @brief Convert and return spadas::Int number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Int 数字，若失败则返回默认值
+		Int toInt(Int defaultValue);
+
 		/// \~English @brief Convert to spadas::Long number and return it
 		/// \~Chinese @brief 转换并返回 spadas::Long 数字
 		Optional<Long> toLong();
+
+		/// \~English @brief Convert and return spadas::Long number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Long 数字，若失败则返回默认值
+		Long toLong(Long defaultValue);
 
 		/// \~English @brief Convert to spadas::Float value and return it
 		/// \~Chinese @brief 转换并返回 spadas::Float 数值
 		Optional<Float> toFloat();
 
+		/// \~English @brief Convert and return spadas::Float number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Float 数字，若失败则返回默认值
+		Float toFloat(Float defaultValue);
+
 		/// \~English @brief Convert to spadas::Double value and return it
 		/// \~Chinese @brief 转换并返回 spadas::Double 数值
 		Optional<Double> toDouble();
+
+		/// \~English @brief Convert and return spadas::Double number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Double 数字，若失败则返回默认值
+		Double toDouble(Double defaultValue);
 
 		/// \~English @brief Convert and output spadas::Int number, return whether the conversion is successful
 		/// \~Chinese @brief 转换并输出 spadas::Int 数字，返回是否转换成功

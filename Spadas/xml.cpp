@@ -56,8 +56,6 @@ namespace xml_internal
 
 	const UInt STRING_STREAM_BUFFER_SIZE = 256;
 
-	String quot = "\"";
-	String space = " ";
 	Binary emptyXmlStringBinary = String("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root/>\n").toBinary();
 
 	class XmlCharsValidator

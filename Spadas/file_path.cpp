@@ -3,7 +3,6 @@
 
 namespace file_internal
 {
-	String dot = ".";
 	String doubleDot = "..";
 
 	Bool/* isValid */ parsePathString(String pathString, Bool absoluteLimited, Array<StringSpan>& components, Bool& isFolder)

@@ -187,10 +187,22 @@ Optional<Int> StringSpan::toInt()
 	else return Optional<Int>();
 }
 
+Int StringSpan::toInt(Int defaultValue)
+{
+	if (source) return StringCommon::toInt(bytes(), len, defaultValue);
+	else return defaultValue;
+}
+
 Optional<Long> StringSpan::toLong()
 {
 	if (source) return StringCommon::toLong(bytes(), len);
 	else return Optional<Long>();
+}
+
+Long StringSpan::toLong(Long defaultValue)
+{
+	if (source) return StringCommon::toLong(bytes(), len, defaultValue);
+	else return defaultValue;
 }
 
 Optional<Float> StringSpan::toFloat()
@@ -199,10 +211,22 @@ Optional<Float> StringSpan::toFloat()
 	else return Optional<Float>();
 }
 
+Float StringSpan::toFloat(Float defaultValue)
+{
+	if (source) return StringCommon::toFloat(bytes(), len, defaultValue);
+	else return defaultValue;
+}
+
 Optional<Double> StringSpan::toDouble()
 {
 	if (source) return StringCommon::toDouble(bytes(), len);
 	else return Optional<Double>();
+}
+
+Double StringSpan::toDouble(Double defaultValue)
+{
+	if (source) return StringCommon::toDouble(bytes(), len, defaultValue);
+	else return defaultValue;
 }
 
 Bool StringSpan::toNumber(Int& number)
