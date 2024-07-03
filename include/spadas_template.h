@@ -2755,7 +2755,7 @@ namespace spadas
 	{
 		SPADAS_ERROR_PASS(!this->prevCell);
 		internal::ListCell<Type> *targetCell = (internal::ListCell<Type>*)this->prevCell;
-		return &targetCell->val;
+		return targetCell->val;
 	}
 
 	template <typename Type>
@@ -2763,7 +2763,7 @@ namespace spadas
 	{
 		SPADAS_ERROR_PASS(!this->nextCell);
 		internal::ListCell<Type> *targetCell = (internal::ListCell<Type>*)this->nextCell;
-		return &targetCell->val;
+		return targetCell->val;
 	}
 
 	template <typename Type>
