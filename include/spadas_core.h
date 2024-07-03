@@ -1952,13 +1952,21 @@ namespace spadas
 		/// \~Chinese @brief 取得元素个数
 		UInt size();
 
+		/// \~English @brief Get a reference to the first element in the linked list
+		/// \~Chinese @brief 取得链表中第一个元素的引用
+		Type& head();
+
+		/// \~English @brief Get a reference to the last element in the linked list
+		/// \~Chinese @brief 取得链表中最后一个元素的引用
+		Type& tail();
+
 		/// \~English @brief Obtain the iterator starting from the first element (when using this object, you may not call methods such as add/remove/clear of the linked list, or create other ListElem)
 		/// \~Chinese @brief 取得从首个元素开始的遍历器（使用该对象时，不可调用链表的add/remove/clear等方法，或再创建其他ListElem）
-		ListElem<Type> head();
+		ListElem<Type> headElem();
 
 		/// \~English @brief Obtain the iterator starting from the end element (when using this object, you may not call methods such as add/remove/clear of the linked list, or create other ListElem)
 		/// \~Chinese @brief 取得从末尾元素开始的遍历器（使用该对象时，不可调用链表的add/remove/clear等方法，或再创建其他ListElem）
-		ListElem<Type> tail();
+		ListElem<Type> tailElem();
 
 		/// \~English @brief Add as the first, and return reference of the new element
 		/// \~Chinese @brief 添加为首个元素，并返回链表中该元素的引用

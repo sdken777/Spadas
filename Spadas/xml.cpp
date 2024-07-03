@@ -162,7 +162,7 @@ namespace xml_internal
 		Binary dequeue()
 		{
 			UInt totalSize = 0;
-			for (auto e = bufferList.head(); e.valid(); ++e)
+			for (auto e = bufferList.headElem(); e.valid(); ++e)
 			{
 				totalSize += e->size;
 			}
@@ -170,7 +170,7 @@ namespace xml_internal
 			Binary output(totalSize);
 			Byte *outputData = output.data();
 			UInt index = 0;
-			for (auto e = bufferList.head(); e.valid(); ++e)
+			for (auto e = bufferList.headElem(); e.valid(); ++e)
 			{
 				utility::memoryCopy(e->size > STRING_STREAM_BUFFER_SIZE ? e->extBuffer : e->buffer, &outputData[index], e->size);
 				index += e->size;
@@ -718,7 +718,7 @@ Array<XMLNode> XMLNode::leaves()
 	if (leafCount == 0) return Array<XMLNode>();
 
 	Array<XMLNode> output = Array<XMLNode>::createUninitialized(leafCount);
-	for (auto e = ((XMLCell*)cell)->leaves.head(); e.valid(); ++e)
+	for (auto e = ((XMLCell*)cell)->leaves.headElem(); e.valid(); ++e)
 	{
 		output.initialize(e.index(), XMLNode(xml, e.value()));
 	}
@@ -731,7 +731,7 @@ Array<XMLNode> XMLNode::leavesWithTagName(String tagName)
 	SPADAS_ERROR_RETURNVAL(tagName.isEmpty(), Array<XMLNode>());
 
 	ArrayX<XMLNode> output;
-	for (auto e = ((XMLCell*)cell)->leaves.head(); e.valid(); ++e)
+	for (auto e = ((XMLCell*)cell)->leaves.headElem(); e.valid(); ++e)
 	{
 		if (e.value()->elem.tag == tagName) output.append(XMLNode(xml, e.value()));
 	}
@@ -743,7 +743,7 @@ Bool XMLNode::firstLeafWithTagName(String tagName, XMLNode& output)
 	SPADAS_ERROR_RETURNVAL(!cell, FALSE);
 	SPADAS_ERROR_RETURNVAL(tagName.isEmpty(), FALSE);
 
-	for (auto e = ((XMLCell*)cell)->leaves.head(); e.valid(); ++e)
+	for (auto e = ((XMLCell*)cell)->leaves.headElem(); e.valid(); ++e)
 	{
 		if (e.value()->elem.tag == tagName)
 		{

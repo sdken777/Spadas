@@ -2470,7 +2470,21 @@ namespace spadas
 	}
 
 	template <typename Type>
-	ListElem<Type> List<Type>::head()
+	Type& List<Type>::head()
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars->head, *(new Type));
+		return this->vars->head->val;
+	}
+
+	template <typename Type>
+	Type& List<Type>::tail()
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars->tail, *(new Type));
+		return this->vars->tail->val;
+	}
+
+	template <typename Type>
+	ListElem<Type> List<Type>::headElem()
 	{
 		if (this->vars && this->vars->size > 0)
 		{
@@ -2481,7 +2495,7 @@ namespace spadas
 	}
 
 	template <typename Type>
-	ListElem<Type> List<Type>::tail()
+	ListElem<Type> List<Type>::tailElem()
 	{
 		if (this->vars && this->vars->size > 0)
 		{
@@ -2737,7 +2751,7 @@ namespace spadas
 	template <typename Type>
 	Type& ListElem<Type>::value()
 	{
-		SPADAS_ERROR_PASS(!this->cell);
+		SPADAS_ERROR_RETURNVAL(!this->cell, *(new Type));
 		internal::ListCell<Type> *curCell = (internal::ListCell<Type>*)this->cell;
 		return curCell->val;
 	}
@@ -2745,7 +2759,7 @@ namespace spadas
 	template <typename Type>
 	Type* ListElem<Type>::operator ->()
 	{
-		SPADAS_ERROR_PASS(!this->cell);
+		SPADAS_ERROR_RETURNVAL(!this->cell, new Type());
 		internal::ListCell<Type> *curCell = (internal::ListCell<Type>*)this->cell;
 		return &curCell->val;
 	}
@@ -2753,7 +2767,7 @@ namespace spadas
 	template <typename Type>
 	Type& ListElem<Type>::previous()
 	{
-		SPADAS_ERROR_PASS(!this->prevCell);
+		SPADAS_ERROR_RETURNVAL(!this->prevCell, *(new Type));
 		internal::ListCell<Type> *targetCell = (internal::ListCell<Type>*)this->prevCell;
 		return targetCell->val;
 	}
@@ -2761,7 +2775,7 @@ namespace spadas
 	template <typename Type>
 	Type& ListElem<Type>::next()
 	{
-		SPADAS_ERROR_PASS(!this->nextCell);
+		SPADAS_ERROR_RETURNVAL(!this->nextCell, *(new Type));
 		internal::ListCell<Type> *targetCell = (internal::ListCell<Type>*)this->nextCell;
 		return targetCell->val;
 	}

@@ -23,7 +23,7 @@ void exampleForElement()
 	console::print("- 2 -");
 
 	auto list = List<UInt>(arr);
-	for (auto e = list.head(); e.valid(); ++e)
+	for (auto e = list.headElem(); e.valid(); ++e)
 	{
 		console::print(catAll(e.index(), ": ", e.value()));
 		if (e.value() == 123) e.remove();
