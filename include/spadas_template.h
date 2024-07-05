@@ -4594,7 +4594,7 @@ namespace spadas
     template <typename Type>
     void SampleParser<Type>::reset()
     {
-		SPADAS_ERROR_RETURN(!this->vars);
+		if (!this->vars) return;
         this->vars->targetProtocolIndex = -1;
         this->vars->lastTimestamp = FullTimestamp();
     }
@@ -4688,7 +4688,7 @@ namespace spadas
     template <typename Type>
     void SampleSync<Type>::reset()
     {
-		SPADAS_ERROR_RETURN(!this->vars);
+		if (!this->vars) return;
         this->vars->targetProtocolIndex = -1;
     }
 
