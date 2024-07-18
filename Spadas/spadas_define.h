@@ -2,18 +2,18 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: SampleParser/SampleSync无效时reset无需报错
+// Update log / 更新记录: 所有源文件先include非spadas库。尽量避免宏定义导致的冲突。常用字符串宏定义改为字符
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 0
-#define SPADAS_VERSION_BUILD 73
+#define SPADAS_VERSION_BUILD 74
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.0.73 \n
-* \~Chinese 本文档对应Spadas版本：9.0.73 \n
+* \~English This document corresponds to Spadas version: 9.0.74 \n
+* \~Chinese 本文档对应Spadas版本：9.0.74 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -304,7 +304,7 @@
 #endif
 
 // For comma in macro / 在宏定义中使用逗号
-#define COMMA ,
+#define SPADAS_MACRO_COMMA ,
 
 // Spadas symbol I/O / Spadas类库I/O
 #if defined(SPADAS_ENV_WINDOWS) && !defined(SPADAS_EXPORTS)
@@ -329,47 +329,53 @@
 #endif
 
 // Recursive macro / 可递归宏
-#define EVAL0(...) __VA_ARGS__
-#define EVAL1(...) EVAL0(EVAL0(EVAL0(__VA_ARGS__)))
-#define EVAL2(...) EVAL1(EVAL1(EVAL1(__VA_ARGS__)))
-#define EVAL3(...) EVAL2(EVAL2(EVAL2(__VA_ARGS__)))
-#define EVAL4(...) EVAL3(EVAL3(EVAL3(__VA_ARGS__)))
-#define EVAL(...)  EVAL4(EVAL4(EVAL4(__VA_ARGS__)))
+#define RM_EVAL0(...) __VA_ARGS__
+#define RM_EVAL1(...) RM_EVAL0(RM_EVAL0(RM_EVAL0(__VA_ARGS__)))
+#define RM_EVAL2(...) RM_EVAL1(RM_EVAL1(RM_EVAL1(__VA_ARGS__)))
+#define RM_EVAL3(...) RM_EVAL2(RM_EVAL2(RM_EVAL2(__VA_ARGS__)))
+#define RM_EVAL4(...) RM_EVAL3(RM_EVAL3(RM_EVAL3(__VA_ARGS__)))
+#define RM_EVAL(...)  RM_EVAL4(RM_EVAL4(RM_EVAL4(__VA_ARGS__)))
 
-#define MAP_END(...)
-#define MAP_OUT
-#define MAP_GET_END2() 0, MAP_END
-#define MAP_GET_END1(...) MAP_GET_END2
-#define MAP_GET_END(...) MAP_GET_END1
-#define MAP_NEXT0(test, next, ...) next MAP_OUT
-#define MAP_NEXT1(test, next) MAP_NEXT0(test, next, 0)
-#define MAP_NEXT(test, next)  MAP_NEXT1(MAP_GET_END test, next)
+#define RM_MAP_END(...)
+#define RM_MAP_OUT
+#define RM_MAP_GET_END2() 0, RM_MAP_END
+#define RM_MAP_GET_END1(...) RM_MAP_GET_END2
+#define RM_MAP_GET_END(...) RM_MAP_GET_END1
+#define RM_MAP_NEXT0(test, next, ...) next RM_MAP_OUT
+#define RM_MAP_NEXT1(test, next) RM_MAP_NEXT0(test, next, 0)
+#define RM_MAP_NEXT(test, next)  RM_MAP_NEXT1(RM_MAP_GET_END test, next)
 
-#define MAP0(f, x, peek, ...) f(x) MAP_NEXT(peek, MAP1)(f, peek, __VA_ARGS__)
-#define MAP1(f, x, peek, ...) f(x) MAP_NEXT(peek, MAP0)(f, peek, __VA_ARGS__)
-#define MAP(f, ...) EVAL(MAP1(f, __VA_ARGS__, ()()(), ()()(), ()()(), 0))
+#define RM_MAP0(f, x, peek, ...) f(x) RM_MAP_NEXT(peek, RM_MAP1)(f, peek, __VA_ARGS__)
+#define RM_MAP1(f, x, peek, ...) f(x) RM_MAP_NEXT(peek, RM_MAP0)(f, peek, __VA_ARGS__)
+#define RM_MAP(f, ...) RM_EVAL(RM_MAP1(f, __VA_ARGS__, ()()(), ()()(), ()()(), 0))
 
 // Convenience for converting enumeration value to string / 方便实现枚举值转字符串
 #define MACRO_ENUM_VALUE(val) case Value::val: return #val;
-#define SPADAS_ENUM_VALUES(...) static const spadas::Char* toString(Value val) { switch (val) { MAP(MACRO_ENUM_VALUE, __VA_ARGS__) default: return 0; } }
+#define SPADAS_ENUM_VALUES(...) static const spadas::Char* toString(Value val) { switch (val) { RM_MAP(MACRO_ENUM_VALUE, __VA_ARGS__) default: return 0; } }
 
 // Convenience for debugging / 方便调试
+#if !defined(SPADAS_DISABLE_MACRO_SEE)
 #define MACRO_SEE(var) seeVarStringList.append((spadas::String) #var + " = " + (var));
-#define see(...) { spadas::ArrayX<spadas::String> seeVarStringList; MAP(MACRO_SEE, __VA_ARGS__) spadas::console::print(spadas::String::merge(seeVarStringList.toArray(), ", ")); }
+#define see(...) { spadas::ArrayX<spadas::String> seeVarStringList; RM_MAP(MACRO_SEE, __VA_ARGS__) spadas::console::print(spadas::String::merge(seeVarStringList.toArray(), ", ")); }
 #define seeArray(arr) spadas::console::print((spadas::String) #arr + " = [ " + spadas::String::merge(arr, ", ") + " ]")
+#endif
 
 // Convenience for string concatenation / 方便字符串拼接
+#if !defined(SPADAS_DISABLE_MACRO_CAT)
 #define cat +(spadas::String)
 #define MACRO_CAT_ALL(var) (var) +
-#define catAll(...) ((spadas::String) MAP(MACRO_CAT_ALL, __VA_ARGS__) "")
+#define catAll(...) ((spadas::String) RM_MAP(MACRO_CAT_ALL, __VA_ARGS__) "")
+#endif
 
-// Useful strings / 常用字符串
-#define comma ","
-#define dot "."
-#define spacebar " "
-#define quot "\""
-#define newline "\n"
-#define tab "\t"
+// Useful strings / 常用字符
+#if !defined(SPADAS_DISABLE_MACRO_CHARS)
+#define comma ','
+#define dot '.'
+#define spacebar ' '
+#define quot '\"'
+#define newline '\n'
+#define tab '\t'
+#endif
 
 // Definitions of infinity / 无限值定义
 #define FINF spadas::math::finf()

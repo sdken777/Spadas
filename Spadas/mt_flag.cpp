@@ -1,9 +1,8 @@
 ﻿
-#include "oscillator.h"
-
 #if defined(SPADAS_ENV_WINDOWS)
 
 #include <windows.h>
+#include "oscillator.h"
 
 namespace spadas
 {
@@ -12,7 +11,7 @@ namespace spadas
     public:
 		HANDLE hEventSet;
 		HANDLE hEventReset;
-        FlagVars() : hEventSet(FALSE), hEventReset(FALSE)
+        FlagVars() : hEventSet(0), hEventReset(0)
         {
 			hEventSet = CreateEvent(0, 1, 0, 0);
 			hEventReset = CreateEvent(0, 1, 1, 0);
@@ -63,7 +62,8 @@ Bool Flag::waitReset(UInt waitTime)
 #include <pthread.h>
 #include <sys/time.h>
 #undef NULL
-#define NULL 0
+
+#include "oscillator.h"
 
 namespace spadas
 {

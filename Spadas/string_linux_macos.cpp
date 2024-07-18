@@ -1,9 +1,9 @@
 ﻿
 #if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
-#include "string_spadas.h"
 #include "3party/ConvertUTF.h"
 #include <stdio.h>
+#include "string_spadas.h"
 
 using namespace spadas;
 using namespace spadas::math;

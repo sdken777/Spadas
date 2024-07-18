@@ -1,6 +1,6 @@
 ﻿
-#include "spadas.h"
 #include <time.h>
+#include "spadas.h"
 
 using namespace spadas;
 using namespace spadas::math;

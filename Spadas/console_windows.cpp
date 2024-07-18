@@ -1,8 +1,6 @@
 ﻿
 #if defined(SPADAS_ENV_WINDOWS)
 
-#include "console.h"
-#include "string_spadas.h"
 #include <stdio.h>
 #include <conio.h>
 #include <wchar.h>
@@ -10,6 +8,8 @@
 #include <fcntl.h>
 #include <io.h>
 #include <windows.h>
+#include "console.h"
+#include "string_spadas.h"
 
 namespace console_internal
 {

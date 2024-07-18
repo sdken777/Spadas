@@ -1,9 +1,13 @@
 ﻿
-#include "spadas.h"
-
+#if defined(SPADAS_ENV_WINDOWS)
+#include <windows.h>
+#endif
 #if defined(SPADAS_ENV_MACOS)
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#include <libkern/OSAtomic.h>
 #endif
+
+#include "spadas.h"
 
 namespace spadas
 {
@@ -31,8 +35,6 @@ void Atom::set(Int val0) const
 }
 
 #if defined(SPADAS_ENV_WINDOWS)
-
-#include <windows.h>
 
 Int Atom::increase() const
 {
@@ -81,8 +83,6 @@ Bool Atom::cas(Int oldVal, Int newVal) const
 #endif
 
 #if defined(SPADAS_ENV_MACOS)
-
-#include <libkern/OSAtomic.h>
 
 Int Atom::increase() const
 {

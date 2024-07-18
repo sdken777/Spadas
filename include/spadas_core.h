@@ -4620,7 +4620,7 @@ namespace spadas
 	template <typename Type> class Matrix : public Object<class MatrixVars<Type> >
 	{
 	public:
-		SPADAS_TYPE("spadas.Matrix<" cat typeid(Type).name() cat ">")
+		SPADAS_TYPE((String)"spadas.Matrix<" + typeid(Type).name() + ">")
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象

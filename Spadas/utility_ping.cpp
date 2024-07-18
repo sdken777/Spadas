@@ -1,10 +1,10 @@
 
 #if defined(SPADAS_ENV_WINDOWS)
 
-#include "spadas.h"
 #include <windows.h>
 #include <iphlpapi.h>
 #include <icmpapi.h>
+#include "spadas.h"
 
 using namespace spadas;
 
@@ -26,11 +26,11 @@ Bool spadas::system::ping(String ip, UInt timeout)
 
 #elif defined(SPADAS_ENV_LINUX)
 
-#include "spadas.h"
 #include <stdio.h>
 #include <string.h>
 #undef NULL
-#define NULL 0
+
+#include "spadas.h"
 
 using namespace spadas;
 
@@ -65,9 +65,9 @@ Bool spadas::system::ping(String ip, UInt timeout)
 
 #elif defined(SPADAS_ENV_MACOS)
 
-#include "spadas.h"
 #include <stdio.h>
 #include <string.h>
+#include "spadas.h"
 
 using namespace spadas;
 

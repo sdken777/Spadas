@@ -1,5 +1,4 @@
 ﻿
-#define SPADAS_DEPRECATED_HIDE
 #include "spadas.h"
 #include "resource.h"
 

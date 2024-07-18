@@ -1,16 +1,11 @@
 ﻿
 #if defined(SPADAS_ENV_WINDOWS)
 
-#include "file.h"
-#include "string_spadas.h"
 #include <stdio.h>
 #include <wchar.h>
 #include <windows.h>
-
-#undef TRUE
-#undef FALSE
-#undef min
-#undef max
+#include "file.h"
+#include "string_spadas.h"
 
 namespace file_internal
 {

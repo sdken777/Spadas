@@ -1,5 +1,4 @@
 
-#define SPADAS_DEPRECATED_HIDE
 #include "spadas.h"
 
 using namespace spadas;

@@ -1,6 +1,6 @@
 ﻿
-#include "binary.h"
 #include "3party/base64.h"
+#include "binary.h"
 
 using namespace binary_internal;
 

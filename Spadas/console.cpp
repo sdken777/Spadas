@@ -1,7 +1,7 @@
 ﻿
-#include "console.h"
 #include <stdio.h>
 #include <wchar.h>
+#include "console.h"
 
 namespace console_internal
 {

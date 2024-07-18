@@ -1,13 +1,10 @@
 ﻿
-#include "spadas.h"
-
 // MemoryMap //////////////////////////////////////////////////
 
 #if defined(SPADAS_ENV_WINDOWS)
 
 #include <windows.h>
-#undef max
-#undef min
+#include "spadas.h"
 
 namespace spadas
 {
@@ -113,7 +110,8 @@ Pointer MemoryMap::getPointer()
 #include <fcntl.h>
 #include <sys/mman.h>
 #undef NULL
-#define NULL 0
+
+#include "spadas.h"
 
 namespace spadas
 {

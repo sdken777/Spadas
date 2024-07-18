@@ -1,7 +1,6 @@
 ﻿
 #if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
-#include "console.h"
 #include <stdio.h>
 #include <wchar.h>
 #include <string.h>
@@ -9,11 +8,12 @@
 #include <unistd.h>
 #include <termios.h>
 #undef NULL
-#define NULL 0
 
 #if defined(SPADAS_ENV_MACOS)
 #include <CoreFoundation/CoreFoundation.h>
 #endif
+
+#include "console.h"
 
 namespace console_internal
 {

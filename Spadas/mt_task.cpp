@@ -1,4 +1,15 @@
 ﻿
+#if defined(SPADAS_ENV_WINDOWS)
+#include <process.h>
+#include <windows.h>
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#include <pthread.h>
+#include <unistd.h>
+#if defined(SPADAS_ENV_LINUX)
+#include <linux/unistd.h>
+#endif
+#endif
+
 #include "spadas.h"
 #include "console.h"
 
@@ -44,11 +55,6 @@ using namespace console_internal;
 
 #if defined(SPADAS_ENV_WINDOWS)
 
-#include <process.h>
-#include <windows.h>
-#undef max
-#undef min
-
 UInt __stdcall taskThreadFunc(Pointer param);
 void taskThreadCreate(TaskManagerVars *vars)
 {
@@ -60,13 +66,6 @@ void taskThreadCreate(TaskManagerVars *vars)
 UInt __stdcall taskThreadFunc(Pointer param)
 
 #elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
-
-#include <pthread.h>
-#include <unistd.h>
-
-#if defined(SPADAS_ENV_LINUX)
-#include <linux/unistd.h>
-#endif
 
 Pointer taskThreadFunc(Pointer param);
 void taskThreadCreate(TaskManagerVars *vars)

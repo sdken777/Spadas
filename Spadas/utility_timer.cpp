@@ -1,9 +1,8 @@
 ﻿
-#include "spadas.h"
-
 #if defined(SPADAS_ENV_WINDOWS)
 
 #include <windows.h>
+#include "spadas.h"
 
 namespace timer_interval
 {
@@ -29,6 +28,7 @@ namespace timer_interval
 #if defined(SPADAS_ENV_LINUX)
 
 #include <time.h>
+#include "spadas.h"
 
 namespace timer_interval
 {
@@ -52,6 +52,7 @@ namespace timer_interval
 #if defined(SPADAS_ENV_MACOS)
 
 #include <mach/mach_time.h>
+#include "spadas.h"
 
 namespace timer_interval
 {

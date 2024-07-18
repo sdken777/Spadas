@@ -1,8 +1,8 @@
 
 #if defined(SPADAS_ENV_WINDOWS)
 
-#include "image.h"
 #include <wincodec.h>
+#include "image.h"
 
 namespace image_internal
 {

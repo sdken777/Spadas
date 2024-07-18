@@ -1,8 +1,8 @@
 ﻿
-#include "string_spadas.h"
 #include <stdlib.h>
 #undef NULL
-#define NULL 0
+
+#include "string_spadas.h"
 
 namespace string_internal
 {

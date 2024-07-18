@@ -1,4 +1,12 @@
 ﻿
+#if defined(SPADAS_ENV_WINDOWS)
+#include <windows.h>
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#include <pthread.h>
+#include <sys/time.h>
+#undef NULL
+#endif
+
 #include "oscillator.h"
 
 namespace oscillator_internal
@@ -225,8 +233,6 @@ void Oscillator::delayDelete(BaseObject obj, DelayDeleteTimeout timeout)
 
 #if defined(SPADAS_ENV_WINDOWS)
 
-#include <windows.h>
-
 void oscillator_internal::sleepTime(spadas::UInt time)
 {
 	Sleep((DWORD)time);
@@ -260,11 +266,6 @@ void OscillatorVars::stopOscillator(UInt id)
 }
 
 #elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
-
-#include <pthread.h>
-#include <sys/time.h>
-#undef NULL
-#define NULL 0
 
 void oscillator_internal::sleepTime(spadas::UInt time)
 {

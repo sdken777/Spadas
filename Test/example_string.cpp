@@ -1,9 +1,7 @@
 ﻿
-#define SPADAS_DEPRECATED_HIDE
-#include "spadas.h"
-
 #include <stdio.h>
 #include <wchar.h>
+#include "spadas.h"
 
 using namespace spadas;
 

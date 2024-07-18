@@ -1,10 +1,8 @@
 ﻿
-
-#include "spadas.h"
-
 #if defined(SPADAS_ENV_WINDOWS)
 
 #include <windows.h>
+#include "spadas.h"
 
 typedef CRITICAL_SECTION LockContext;
 void initLock(CRITICAL_SECTION *context)
@@ -28,7 +26,8 @@ void leaveLock(CRITICAL_SECTION *context)
 
 #include <pthread.h>
 #undef NULL
-#define NULL 0
+
+#include "spadas.h"
 
 typedef pthread_mutex_t LockContext;
 void initLock(pthread_mutex_t *context)
