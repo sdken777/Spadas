@@ -10,7 +10,7 @@
 #define SPADAS_VERSION_BUILD 0
 
 // Latest plugin version / 最新插件接口版本
-#define PLUGIN_VERSION_LATEST 200
+#define PLUGIN_VERSION_LATEST 201
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
