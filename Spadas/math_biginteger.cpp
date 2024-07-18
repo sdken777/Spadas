@@ -1,6 +1,6 @@
 ﻿
-#include "spadas.h"
 #include "3party/BigIntegerWrapper.h"
+#include "spadas.h"
 
 namespace spadas
 {

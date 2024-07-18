@@ -312,12 +312,12 @@ Bool IVideoPluginV500::queryVideoFrame(VideoDeviceData& frame)
 	return FALSE;
 }
 
-Bool IVideoPluginV500::transmitVideoFrame(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data)
+Bool IVideoPluginV500::transmitVideoFrame(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, Optional<VideoExtraData> extraData)
 {
 	return FALSE;
 }
 
-Bool IVideoPluginV500::transmitVideoFrameScheduled(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix)
+Bool IVideoPluginV500::transmitVideoFrameScheduled(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, Optional<VideoExtraData> extraData)
 {
 	return FALSE;
 }

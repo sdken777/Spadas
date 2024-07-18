@@ -1,10 +1,10 @@
 
 #if defined(SPADAS_ENV_MACOS)
 
-#include "image.h"
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreGraphics/CoreGraphics.h>
 #include <ImageIO/ImageIO.h>
+#include "image.h"
 
 namespace image_internal
 {

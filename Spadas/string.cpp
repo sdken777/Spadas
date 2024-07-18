@@ -898,7 +898,7 @@ String::String(UInt val)
 
 String::String(UInt val, UInt nDigits)
 {
-	SPADAS_ERROR_RETURN(nDigits == 0 || nDigits > 10);
+	nDigits = math::clamp(nDigits, 1u, 10u);
 
 	UInt validDigits = 1;
 	if (val >= 100000)
@@ -951,7 +951,7 @@ String::String(ULong val)
 
 String::String(ULong val, UInt nDigits)
 {
-	SPADAS_ERROR_RETURN(nDigits == 0 || nDigits > 20);
+	nDigits = math::clamp(nDigits, 1u, 20u);
 
 	UInt validDigits = 1;
 	if (val >= 10000000000ull)
@@ -1082,7 +1082,7 @@ String::String(Double val)
 
 String::String(Float val, UInt nDigits)
 {
-	SPADAS_ERROR_RETURN(nDigits == 0 || nDigits > 9);
+	nDigits = math::clamp(nDigits, 1u, 9u);
 
 	Float valPos = math::abs(val);
 	if (valPos >= 1000000.0f)
@@ -1151,7 +1151,7 @@ String::String(Float val, UInt nDigits)
 
 String::String(Double val, UInt nDigits)
 {
-	SPADAS_ERROR_RETURN(nDigits == 0 || nDigits > 18);
+	nDigits = math::clamp(nDigits, 1u, 18u);
 
 	Double valPos = math::abs(val);
 	if (valPos >= 1000000000000000.0)
@@ -1373,10 +1373,21 @@ StringAppender String::operator +(String string)
 	return StringCommon::operatorPlus(bytes(), length(), string);
 }
 
+StringAppender String::operator +(StringSpan span)
+{
+	return StringCommon::operatorPlusSpan(bytes(), length(), span);
+}
+
 Optional<Int> String::toInt()
 {
 	if (vars) return StringCommon::toInt(vars->data, vars->length);
 	else return Optional<Int>();
+}
+
+Int String::toInt(Int defaultValue)
+{
+	if (vars) return StringCommon::toInt(vars->data, vars->length, defaultValue);
+	else return defaultValue;
 }
 
 Optional<Long> String::toLong()
@@ -1385,16 +1396,34 @@ Optional<Long> String::toLong()
 	else return Optional<Long>();
 }
 
+Long String::toLong(Long defaultValue)
+{
+	if (vars) return StringCommon::toLong(vars->data, vars->length, defaultValue);
+	else return defaultValue;
+}
+
 Optional<Float> String::toFloat()
 {
 	if (vars) return StringCommon::toFloat(vars->data, vars->length);
 	else return Optional<Float>();
 }
 
+Float String::toFloat(Float defaultValue)
+{
+	if (vars) return StringCommon::toFloat(vars->data, vars->length, defaultValue);
+	else return defaultValue;
+}
+
 Optional<Double> String::toDouble()
 {
 	if (vars) return StringCommon::toDouble(vars->data, vars->length);
 	else return Optional<Double>();
+}
+
+Double String::toDouble(Double defaultValue)
+{
+	if (vars) return StringCommon::toDouble(vars->data, vars->length, defaultValue);
+	else return defaultValue;
 }
 
 Bool String::toNumber(Int& number)
@@ -1479,6 +1508,11 @@ Array<StringSpan> String::split(String target)
 {
 	if (vars) return StringCommon::split(vars->data, vars->length, target, vars);
 	else return Array<StringSpan>();
+}
+
+Array<String> String::splitToStringArray(String target)
+{
+	return split(target).convert<String>([](StringSpan& s){ return s.clone(); });
 }
 
 String String::replace(String oldString, String newString)

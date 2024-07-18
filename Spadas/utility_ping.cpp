@@ -1,10 +1,10 @@
 
 #if defined(SPADAS_ENV_WINDOWS)
 
-#include "spadas.h"
 #include <windows.h>
 #include <iphlpapi.h>
 #include <icmpapi.h>
+#include "spadas.h"
 
 using namespace spadas;
 
@@ -26,11 +26,11 @@ Bool spadas::system::ping(String ip, UInt timeout)
 
 #elif defined(SPADAS_ENV_LINUX)
 
-#include "spadas.h"
 #include <stdio.h>
 #include <string.h>
 #undef NULL
-#define NULL 0
+
+#include "spadas.h"
 
 using namespace spadas;
 
@@ -57,7 +57,7 @@ Bool spadas::system::ping(String ip, UInt timeout)
 	Array<StringSpan> comps = String(result).split("\n");
 	for (UInt i = 0; i < comps.size(); i++)
 	{
-		if (!comps[i].search("bytes from").isEmpty()) return TRUE;
+		if (!comps[i].search("icmp_seq=").isEmpty()) return TRUE;
 	}
 
 	return FALSE;
@@ -65,9 +65,9 @@ Bool spadas::system::ping(String ip, UInt timeout)
 
 #elif defined(SPADAS_ENV_MACOS)
 
-#include "spadas.h"
 #include <stdio.h>
 #include <string.h>
+#include "spadas.h"
 
 using namespace spadas;
 

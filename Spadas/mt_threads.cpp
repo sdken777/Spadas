@@ -1,4 +1,15 @@
 ﻿
+#if defined(SPADAS_ENV_WINDOWS)
+#include <process.h>
+#include <windows.h>
+#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#include <pthread.h>
+#include <unistd.h>
+#if defined(SPADAS_ENV_LINUX)
+#include <linux/unistd.h>
+#endif
+#endif
+
 #include "oscillator.h"
 #include "console.h"
 
@@ -176,11 +187,6 @@ using namespace console_internal;
 
 #if defined(SPADAS_ENV_WINDOWS)
 
-#include <process.h>
-#include <windows.h>
-#undef max
-#undef min
-
 UInt Threads::getCurrentThreadID()
 {
 	return (UInt)GetCurrentThreadId();
@@ -201,11 +207,7 @@ UInt __stdcall threadFunc(Pointer param)
 
 #elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
-#include <pthread.h>
-#include <unistd.h>
-
 #if defined(SPADAS_ENV_LINUX)
-#include <linux/unistd.h>
 UInt Threads::getCurrentThreadID()
 {
 	return syscall(__NR_gettid);

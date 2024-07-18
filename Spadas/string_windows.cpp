@@ -1,13 +1,12 @@
 ﻿
 #if defined(SPADAS_ENV_WINDOWS)
 
-#include "string_spadas.h"
 #include <string.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <windows.h>
-#undef min
-#undef max
+
+#include "string_spadas.h"
 
 using namespace spadas;
 

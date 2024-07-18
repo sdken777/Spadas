@@ -1,9 +1,7 @@
 ﻿
-#define SPADAS_DEPRECATED_HIDE
-#include "spadas.h"
-
 #include <stdio.h>
 #include <wchar.h>
+#include "spadas.h"
 
 using namespace spadas;
 
@@ -16,11 +14,11 @@ void exampleString()
 	console::print("console::print: " cat str);
 
 	Array<Char> strChars = str.chars(); // Always UTF8 characters / UTF8字符
-	console::print("chars字符: " cat String::merge(Array<Byte>((Byte*)strChars.data(), strChars.size())));
+	console::print("chars字符: " cat String::merge(Array<Byte>((Byte*)strChars.data(), strChars.size()), ", "));
 
 	Array<WChar> strWChars = str.wchars(); // It is UTF16 for Windows and UTF32 for other OS / Windows下为UTF16字符，其他操作系统都为UTF32字符
-	if (sizeof(WChar) == 4) console::print("wchars字符: " cat String::merge(Array<UInt>((UInt*)strWChars.data(), strWChars.size())));
-	else if (sizeof(WChar) == 2) console::print("wchars字符: " cat String::merge(Array<Word>((Word*)strWChars.data(), strWChars.size())));
+	if (sizeof(WChar) == 4) console::print("wchars字符: " cat String::merge(Array<UInt>((UInt*)strWChars.data(), strWChars.size()), ", "));
+	else if (sizeof(WChar) == 2) console::print("wchars字符: " cat String::merge(Array<Word>((Word*)strWChars.data(), strWChars.size()), ", "));
 
 	// Some structures and all classes implemented the "toString" method / 部分结构体和所有类实现toString函数
 	console::print("- 2 -");
@@ -35,7 +33,7 @@ void exampleString()
 	Array<Double> numbers(2);
 	numbers[0] = 3.4;
 	numbers[1] = 5.6;
-	console::print(String::merge(numbers));
+	console::print(String::merge(numbers, ", "));
 
 	Array<Point2D> points(2);
 	points[0] = Point2D(3, 4);

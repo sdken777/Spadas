@@ -56,8 +56,6 @@ namespace xml_internal
 
 	const UInt STRING_STREAM_BUFFER_SIZE = 256;
 
-	String quot = "\"";
-	String space = " ";
 	Binary emptyXmlStringBinary = String("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root/>\n").toBinary();
 
 	class XmlCharsValidator
@@ -164,7 +162,7 @@ namespace xml_internal
 		Binary dequeue()
 		{
 			UInt totalSize = 0;
-			for (auto e = bufferList.head(); e.valid(); ++e)
+			for (auto e = bufferList.headElem(); e.valid(); ++e)
 			{
 				totalSize += e->size;
 			}
@@ -172,7 +170,7 @@ namespace xml_internal
 			Binary output(totalSize);
 			Byte *outputData = output.data();
 			UInt index = 0;
-			for (auto e = bufferList.head(); e.valid(); ++e)
+			for (auto e = bufferList.headElem(); e.valid(); ++e)
 			{
 				utility::memoryCopy(e->size > STRING_STREAM_BUFFER_SIZE ? e->extBuffer : e->buffer, &outputData[index], e->size);
 				index += e->size;
@@ -720,7 +718,7 @@ Array<XMLNode> XMLNode::leaves()
 	if (leafCount == 0) return Array<XMLNode>();
 
 	Array<XMLNode> output = Array<XMLNode>::createUninitialized(leafCount);
-	for (auto e = ((XMLCell*)cell)->leaves.head(); e.valid(); ++e)
+	for (auto e = ((XMLCell*)cell)->leaves.headElem(); e.valid(); ++e)
 	{
 		output.initialize(e.index(), XMLNode(xml, e.value()));
 	}
@@ -733,7 +731,7 @@ Array<XMLNode> XMLNode::leavesWithTagName(String tagName)
 	SPADAS_ERROR_RETURNVAL(tagName.isEmpty(), Array<XMLNode>());
 
 	ArrayX<XMLNode> output;
-	for (auto e = ((XMLCell*)cell)->leaves.head(); e.valid(); ++e)
+	for (auto e = ((XMLCell*)cell)->leaves.headElem(); e.valid(); ++e)
 	{
 		if (e.value()->elem.tag == tagName) output.append(XMLNode(xml, e.value()));
 	}
@@ -745,7 +743,7 @@ Bool XMLNode::firstLeafWithTagName(String tagName, XMLNode& output)
 	SPADAS_ERROR_RETURNVAL(!cell, FALSE);
 	SPADAS_ERROR_RETURNVAL(tagName.isEmpty(), FALSE);
 
-	for (auto e = ((XMLCell*)cell)->leaves.head(); e.valid(); ++e)
+	for (auto e = ((XMLCell*)cell)->leaves.headElem(); e.valid(); ++e)
 	{
 		if (e.value()->elem.tag == tagName)
 		{
@@ -792,6 +790,11 @@ XMLNode XMLNode::addLeaf(XMLElement val)
 	newCell->root = (XMLCell*)cell;
 	((XMLCell*)cell)->leaves.addToTail(newCell);
 	return XMLNode(xml, newCell);
+}
+
+XMLNode XMLNode::addLeaf(String tagName)
+{
+	return addLeaf(XMLElement(tagName));
 }
 
 // XML ///////////////////////////////////////////////////////////////////////////
@@ -901,4 +904,40 @@ Binary XML::toBinary()
 		if (writeXMLNodeToStream(rootNode, 0, esBuffer, stream)) return stream.dequeue();
 		else return emptyXmlStringBinary.clone();
 	}
+}
+
+Array<XMLNode> XML::nodeLeavesWithTagName(XMLNode node, String tagName)
+{
+	return node.leavesWithTagName(tagName);
+}
+
+Bool XML::firstNodeLeafWithTagName(XMLNode node, String tagName, XMLNode& output)
+{
+	return node.firstLeafWithTagName(tagName, output);
+}
+
+Dictionary<String> XML::attributesToDictionary(Array<XMLAttribute> attributes)
+{
+	UInt nAttribs = attributes.size();
+	Dictionary<String> out;
+
+	XMLAttribute *attribsData = attributes.data();
+	for (UInt i = 0; i < nAttribs; i++)
+	{
+		out[attribsData[i].name] = attribsData[i].value;
+	}
+	return out;
+}
+
+Array<XMLAttribute> XML::dictionaryToAttributes(Dictionary<String> dict)
+{
+	Array<String> keys = dict.keys();
+	ArrayX<XMLAttribute> buf;
+
+	UInt nKeys = keys.size();
+	for (UInt i = 0; i < nKeys; i++)
+	{
+		if (!keys[i].isEmpty()) buf[buf.size()] = XMLAttribute(keys[i], dict[keys[i]]);
+	}
+	return buf.toArray(Region(0, buf.size()));
 }

@@ -1952,13 +1952,21 @@ namespace spadas
 		/// \~Chinese @brief 取得元素个数
 		UInt size();
 
+		/// \~English @brief Get a reference to the first element in the linked list
+		/// \~Chinese @brief 取得链表中第一个元素的引用
+		Type& head();
+
+		/// \~English @brief Get a reference to the last element in the linked list
+		/// \~Chinese @brief 取得链表中最后一个元素的引用
+		Type& tail();
+
 		/// \~English @brief Obtain the iterator starting from the first element (when using this object, you may not call methods such as add/remove/clear of the linked list, or create other ListElem)
 		/// \~Chinese @brief 取得从首个元素开始的遍历器（使用该对象时，不可调用链表的add/remove/clear等方法，或再创建其他ListElem）
-		ListElem<Type> head();
+		ListElem<Type> headElem();
 
 		/// \~English @brief Obtain the iterator starting from the end element (when using this object, you may not call methods such as add/remove/clear of the linked list, or create other ListElem)
 		/// \~Chinese @brief 取得从末尾元素开始的遍历器（使用该对象时，不可调用链表的add/remove/clear等方法，或再创建其他ListElem）
-		ListElem<Type> tail();
+		ListElem<Type> tailElem();
 
 		/// \~English @brief Add as the first, and return reference of the new element
 		/// \~Chinese @brief 添加为首个元素，并返回链表中该元素的引用
@@ -2826,21 +2834,45 @@ namespace spadas
 		/// \~Chinese @returns 字符串拼接器
 		StringAppender operator +(String string);
 
+		/// \~English @brief Concatenate a string span after this string (The data of this object will not be changed, and multiple strings can be added in succession)
+		/// \~Chinese @brief 在本字符串后拼接字符串片段（不会更改本对象数据，且可多个字符串连加）
+		/// \~English @param span String span to be concatenated
+		/// \~Chinese @param span 将拼接的字符串片段
+		/// \~English @returns String appender object
+		/// \~Chinese @returns 字符串拼接器
+		StringAppender operator +(StringSpan span);
+
 		/// \~English @brief Convert to spadas::Int number and return it
 		/// \~Chinese @brief 转换并返回 spadas::Int 数字
 		Optional<Int> toInt();
+
+		/// \~English @brief Convert and return spadas::Int number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Int 数字，若失败则返回默认值
+		Int toInt(Int defaultValue);
 
 		/// \~English @brief Convert to spadas::Long number and return it
 		/// \~Chinese @brief 转换并返回 spadas::Long 数字
 		Optional<Long> toLong();
 
+		/// \~English @brief Convert and return spadas::Long number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Long 数字，若失败则返回默认值
+		Long toLong(Long defaultValue);
+
 		/// \~English @brief Convert to spadas::Float value and return it
 		/// \~Chinese @brief 转换并返回 spadas::Float 数值
 		Optional<Float> toFloat();
 
+		/// \~English @brief Convert and return spadas::Float number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Float 数字，若失败则返回默认值
+		Float toFloat(Float defaultValue);
+
 		/// \~English @brief Convert to spadas::Double value and return it
 		/// \~Chinese @brief 转换并返回 spadas::Double 数值
 		Optional<Double> toDouble();
+
+		/// \~English @brief Convert and return spadas::Double number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Double 数字，若失败则返回默认值
+		Double toDouble(Double defaultValue);
 
 		/// \~English @brief Convert and output spadas::Int number, return whether the conversion is successful
 		/// \~Chinese @brief 转换并输出 spadas::Int 数字，返回是否转换成功
@@ -2897,6 +2929,10 @@ namespace spadas
 		/// \~English @brief Split this string with the specified string. For example, "12 34 56" is separated by spaces, and returns {"12", "34", "56"}. Note that when the string does not contain target, an empty array will be returned if the string is empty, and a scalar array will be returned if it is not empty
 		/// \~Chinese @brief 用指定字符串对本字符串进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串不含target时，若本字符串为空则返回空数组，非空则返回标量数组
 		Array<StringSpan> split(String target);
+
+		/// \~English @brief Split this string with the specified string. For example, "12 34 56" is separated by spaces, and returns {"12", "34", "56"}. Note that when the string does not contain target, an empty array will be returned if the string is empty, and a scalar array will be returned if it is not empty
+		/// \~Chinese @brief 用指定字符串对本字符串进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串不含target时，若本字符串为空则返回空数组，非空则返回标量数组
+		Array<String> splitToStringArray(String target);
 
 		/// \~English @brief Replace the oldString part of this string with newString, and return the replaced string
 		/// \~Chinese @brief 将本字符串中oldString部分替换为newString，并返回替换后的字符串
@@ -3098,7 +3134,7 @@ namespace spadas
 		/// \~Chinese @param separator 分隔符
 		/// \~English @returns The string concatenated by the specified separator
 		/// \~Chinese @returns 按指定分隔符拼接的字符串
-		static String merge(Array<StringSpan> spans, String separator = ", ");
+		static String merge(Array<StringSpan> spans, String separator);
 
 		/// \~English @brief Merge multiple strings created by spadas::String constructor with the specified separator
 		/// \~Chinese @brief 以String构造函数拼接数组，字符串间以指定分割符分割
@@ -3109,7 +3145,7 @@ namespace spadas
 		/// \~English @returns The string concatenated by the specified separator
 		/// \~Chinese @returns 按指定分隔符拼接的字符串
 		template <typename Type>
-		static String merge(Array<Type> arr, String separator = ", ");
+		static String merge(Array<Type> arr, String separator);
 
 	private:
 		Bool isNull() { return FALSE; }
@@ -3216,21 +3252,45 @@ namespace spadas
 		/// \~Chinese @returns 字符串拼接器
 		StringAppender operator +(String string);
 
+		/// \~English @brief Concatenate another string span after this string span (The data of this object will not be changed, and multiple strings can be added in succession)
+		/// \~Chinese @brief 在本字符串片段后拼接另一个字符串片段（不会更改本对象数据，且可多个字符串连加）
+		/// \~English @param span Another string span to be concatenated
+		/// \~Chinese @param span 将拼接的另一个字符串片段
+		/// \~English @returns String appender object
+		/// \~Chinese @returns 字符串拼接器
+		StringAppender operator +(StringSpan span);
+
 		/// \~English @brief Convert to spadas::Int number and return it
 		/// \~Chinese @brief 转换并返回 spadas::Int 数字
 		Optional<Int> toInt();
+
+		/// \~English @brief Convert and return spadas::Int number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Int 数字，若失败则返回默认值
+		Int toInt(Int defaultValue);
 
 		/// \~English @brief Convert to spadas::Long number and return it
 		/// \~Chinese @brief 转换并返回 spadas::Long 数字
 		Optional<Long> toLong();
 
+		/// \~English @brief Convert and return spadas::Long number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Long 数字，若失败则返回默认值
+		Long toLong(Long defaultValue);
+
 		/// \~English @brief Convert to spadas::Float value and return it
 		/// \~Chinese @brief 转换并返回 spadas::Float 数值
 		Optional<Float> toFloat();
 
+		/// \~English @brief Convert and return spadas::Float number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Float 数字，若失败则返回默认值
+		Float toFloat(Float defaultValue);
+
 		/// \~English @brief Convert to spadas::Double value and return it
 		/// \~Chinese @brief 转换并返回 spadas::Double 数值
 		Optional<Double> toDouble();
+
+		/// \~English @brief Convert and return spadas::Double number, return the default value if failed
+		/// \~Chinese @brief 转换并返回 spadas::Double 数字，若失败则返回默认值
+		Double toDouble(Double defaultValue);
 
 		/// \~English @brief Convert and output spadas::Int number, return whether the conversion is successful
 		/// \~Chinese @brief 转换并输出 spadas::Int 数字，返回是否转换成功
@@ -3930,6 +3990,22 @@ namespace spadas
 		/// \~Chinese @brief 由UTF-8编码的二进制数据创建XML文档
 		static Optional<XML> createFromBinary(Binary xmlBinary);
 
+		/// \~English @brief Get all child nodes with the specified tag name
+		/// \~Chinese @brief 获得输入节点的所有具有指定标签名字的子节点
+		static Array<XMLNode> nodeLeavesWithTagName(XMLNode node, String tagName);
+
+		/// \~English @brief Get the first child node with the specified tag name, if it does not exist, return FALSE
+		/// \~Chinese @brief 获得输入节点的首个具有指定标签名字的子节点，若不存在返回FALSE
+		static Bool firstNodeLeafWithTagName(XMLNode node, String tagName, XMLNode& output);
+
+		/// \~English @brief Convert the XML attribute array to a spadas::String dictionary
+		/// \~Chinese @brief XML属性数组转换为字符串型字典
+		static Dictionary<String> attributesToDictionary(Array<XMLAttribute> attributes);
+
+		/// \~English @brief Convert the spadas::String dictionary to a XML attribute array
+		/// \~Chinese @brief 字符串型字典转换为XML属性数组
+		static Array<XMLAttribute> dictionaryToAttributes(Dictionary<String> dict);
+
 	private:
 		Bool isNull() { return FALSE; }
 		Bool isValid() { return FALSE; }
@@ -3991,6 +4067,10 @@ namespace spadas
 		/// \~English @brief Add child node with the specified XML element data, and return the node
 		/// \~Chinese @brief 按指定XML元素数据添加子节点，并返回该节点
 		XMLNode addLeaf(XMLElement val);
+
+		/// \~English @brief Add child node with the specified tag name, and return the node
+		/// \~Chinese @brief 按指定标签名字添加子节点，并返回该节点
+		XMLNode addLeaf(String tagName);
 
 	private:
 		XML xml;
@@ -4540,7 +4620,7 @@ namespace spadas
 	template <typename Type> class Matrix : public Object<class MatrixVars<Type> >
 	{
 	public:
-		SPADAS_TYPE("spadas.Matrix<" cat typeid(Type).name() cat ">")
+		SPADAS_TYPE((String)"spadas.Matrix<" + typeid(Type).name() + ">")
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -7443,7 +7523,9 @@ namespace spadas
 		/// \~Chinese @param gnssPosix 视频帧的采样时卫星Posix时间，单位纳秒，0表示无效
 		/// \~English @param extraData Optional extra data
 		/// \~Chinese @param extraData 可选的额外数据
-		virtual void outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, Optional<VideoExtraData> extraData = Optional<VideoExtraData>());
+		/// \~English @param frameIndex Raw frame index, -1 means invalid
+		/// \~Chinese @param frameIndex 原始帧序号，-1表示无效
+		virtual void outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix = 0, NanoPosix gnssPosix = 0, Optional<VideoExtraData> extraData = Optional<VideoExtraData>(), Long frameIndex = -1);
 	};
 
 	/// \~English @brief Video raw data transmit interface
@@ -8617,9 +8699,11 @@ namespace spadas
 		/// \~Chinese @param size 视频帧大小，像素单位
 		/// \~English @param data Video frame data
 		/// \~Chinese @param data 视频帧数据
+		/// \~English @param extraData Optional extra data
+		/// \~Chinese @param extraData 可选的额外数据
 		/// \~English @returns Whether the frame of data is transmitted successfully
 		/// \~Chinese @returns 返回是否成功发送一帧数据
-		virtual Bool transmitVideoFrame(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data);
+		virtual Bool transmitVideoFrame(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, Optional<VideoExtraData> extraData);
 
 		/// \~English @brief [Optional] Schedule to transmit a frame of data (the timestamps of the same channel are guaranteed to be monotonically increasing)
 		/// \~Chinese @brief [可选] 预约发送一帧数据（相同通道的预约发送时间已确保递增）
@@ -8633,9 +8717,11 @@ namespace spadas
 		/// \~Chinese @param data 视频帧数据
 		/// \~English @param serverPosix Posix time of the time server for scheduled transmitting, in nanoseconds
 		/// \~Chinese @param serverPosix 预约发送的授时服务器Posix时间，单位纳秒
+		/// \~English @param extraData Optional extra data
+		/// \~Chinese @param extraData 可选的额外数据
 		/// \~English @returns Whether the scheduled transmitting is successful
 		/// \~Chinese @returns 返回是否成功预约发送一帧数据
-		virtual Bool transmitVideoFrameScheduled(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix);
+		virtual Bool transmitVideoFrameScheduled(UInt channel, Enum<VideoDataCodec> codec, Size2D size, Binary data, NanoPosix serverPosix, Optional<VideoExtraData> extraData);
 
 		/// \~English @brief [Optional] Additional settings for the video device (called before openVideoDevice)
 		/// \~Chinese @brief [可选] 对视频设备进行额外设置（在openVideoDevice前被调用）

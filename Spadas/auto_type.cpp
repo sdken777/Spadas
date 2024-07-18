@@ -199,7 +199,7 @@ Time SessionIdentifier::toTime()
 }
 
 // IVideoPreviewExpress
-void IVideoPreviewExpress::outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix, NanoPosix gnssPosix, Optional<VideoExtraData> extraData)
+void IVideoPreviewExpress::outputPreview(ULong cpuTick, UInt channel, ImagePointer preview, NanoPosix guestPosix, NanoPosix gnssPosix, Optional<VideoExtraData> extraData, Long frameIndex)
 {
 }
 

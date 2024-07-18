@@ -1,7 +1,7 @@
 ﻿
-#include "spadas.h"
 #include <stdlib.h>
 #include <math.h>
+#include "spadas.h"
 
 namespace math_internal
 {

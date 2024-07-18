@@ -1,11 +1,7 @@
 ﻿
-#if defined(SPADAS_DEBUG)
-#undef SPADAS_DEBUG
-#endif
-
+#include <bitset>
 #include "spadas.h"
 #include "binary.h"
-#include <bitset>
 
 std::bitset<64> encrypt(std::bitset<64>& plain, std::bitset<48> subKey[16]);
 std::bitset<64> decrypt(std::bitset<64>& cipher, std::bitset<48> subKey[16]);

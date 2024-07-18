@@ -2,9 +2,9 @@
 #if defined(SPADAS_ENV_LINUX)
 
 #include <stdio.h>
-#include "image.h"
 #include "jpeglib.h"
 #include "png.h"
+#include "image.h"
 
 namespace image_internal
 {

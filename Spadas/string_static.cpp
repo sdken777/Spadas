@@ -159,7 +159,6 @@ String String::createHexString(Binary bin, UInt nBytesPerRow)
 	nBytesPerRow = math::clamp(nBytesPerRow, 1u, bin.size());
 	UInt nRows = (binSize + nBytesPerRow - 1) / nBytesPerRow;
 
-	String space = " ";
 	String enter = "\n";
 	String out = String::createWithSize(3 * binSize + nRows);
 	for (UInt i = 0; i < nRows - 1; i++)
@@ -167,14 +166,14 @@ String String::createHexString(Binary bin, UInt nBytesPerRow)
 		for (UInt j = 0; j < nBytesPerRow; j++)
 		{
 			out += String::createHexString(binData[i * nBytesPerRow + j]);
-			out += space;
+			out += spacebar;
 		}
 		out += enter;
 	}
 	for (UInt i = (nRows-1) * nBytesPerRow; i < binSize; i++)
 	{
 		out += String::createHexString(binData[i]);
-		out += space;
+		out += spacebar;
 	}
 	return out;
 }

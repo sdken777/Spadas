@@ -1,5 +1,4 @@
 ﻿
-#define SPADAS_DEPRECATED_HIDE
 #include "spadas.h"
 
 using namespace spadas;
@@ -8,7 +7,7 @@ void exampleCreate()
 {
 	// Create array / 创建数组
 	auto arr = Array<UInt>::create(3, 1, 2, 3);
-	console::print(String::merge(arr));
+	console::print(String::merge(arr, ", "));
 
 	// Create binary data / 创建二进制数据
 	auto bin = Binary::create(3, 1, 255, 128);
@@ -16,5 +15,5 @@ void exampleCreate()
 
 	// Create dictionary / 创建字典
 	auto dict = Dictionary<String>::create(3, "Name", "Jack", "Age", "25", "Weight", "70");
-	console::print(String::merge(dict.keysSorted()));
+	console::print(String::merge(dict.keysSorted(), ", "));
 }

@@ -209,7 +209,7 @@ namespace spadas
 	}
 
 	template <typename Type>
-	String Interface<Type>::typeName() { static String name = "spadas.Interface<" cat typeid(Type).name() cat ">"; return name; }
+	String Interface<Type>::typeName() { static String name = (String)"spadas.Interface<" + typeid(Type).name() + ">"; return name; }
 
 	template <typename Type> class InterfaceVars : public Vars
 	{
@@ -278,7 +278,7 @@ namespace spadas
 	}
 
 	template <typename Type>
-	String Optional<Type>::typeName() { static String name = "spadas.Optional<" cat typeid(Type).name() cat ">"; return name; }
+	String Optional<Type>::typeName() { static String name = (String)"spadas.Optional<" + typeid(Type).name() + ">"; return name; }
 
 	template <typename Type> class OptionalVars : public Vars
 	{
@@ -484,7 +484,7 @@ namespace spadas
 	}
 
 	template <typename Type>
-	String Array<Type>::typeName() { static String name = "spadas.Array<" cat typeid(Type).name() cat ">"; return name; }
+	String Array<Type>::typeName() { static String name = (String)"spadas.Array<" + typeid(Type).name() + ">"; return name; }
 
 	template <typename Type> class ArrayVars : public Vars
 	{
@@ -2034,7 +2034,7 @@ namespace spadas
 	}
 
 	template <typename Type>
-	String ArrayX<Type>::typeName() { static String name = "spadas.ArrayX<" cat typeid(Type).name() cat ">"; return name; }
+	String ArrayX<Type>::typeName() { static String name = (String)"spadas.ArrayX<" + typeid(Type).name() + ">"; return name; }
 
 	template <typename Type> class ArrayXVars : public Vars
 	{
@@ -2377,7 +2377,7 @@ namespace spadas
 	}
 
 	template <typename Type>
-	String List<Type>::typeName() { static String name = "spadas.List<" cat typeid(Type).name() cat ">"; return name; }
+	String List<Type>::typeName() { static String name = (String)"spadas.List<" + typeid(Type).name() + ">"; return name; }
  
 	template <typename Type> class ListVars : public Vars
 	{
@@ -2470,7 +2470,21 @@ namespace spadas
 	}
 
 	template <typename Type>
-	ListElem<Type> List<Type>::head()
+	Type& List<Type>::head()
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars->head, *(new Type));
+		return this->vars->head->val;
+	}
+
+	template <typename Type>
+	Type& List<Type>::tail()
+	{
+		SPADAS_ERROR_RETURNVAL(!this->vars->tail, *(new Type));
+		return this->vars->tail->val;
+	}
+
+	template <typename Type>
+	ListElem<Type> List<Type>::headElem()
 	{
 		if (this->vars && this->vars->size > 0)
 		{
@@ -2481,7 +2495,7 @@ namespace spadas
 	}
 
 	template <typename Type>
-	ListElem<Type> List<Type>::tail()
+	ListElem<Type> List<Type>::tailElem()
 	{
 		if (this->vars && this->vars->size > 0)
 		{
@@ -2737,7 +2751,7 @@ namespace spadas
 	template <typename Type>
 	Type& ListElem<Type>::value()
 	{
-		SPADAS_ERROR_PASS(!this->cell);
+		SPADAS_ERROR_RETURNVAL(!this->cell, *(new Type));
 		internal::ListCell<Type> *curCell = (internal::ListCell<Type>*)this->cell;
 		return curCell->val;
 	}
@@ -2745,7 +2759,7 @@ namespace spadas
 	template <typename Type>
 	Type* ListElem<Type>::operator ->()
 	{
-		SPADAS_ERROR_PASS(!this->cell);
+		SPADAS_ERROR_RETURNVAL(!this->cell, new Type());
 		internal::ListCell<Type> *curCell = (internal::ListCell<Type>*)this->cell;
 		return &curCell->val;
 	}
@@ -2753,17 +2767,17 @@ namespace spadas
 	template <typename Type>
 	Type& ListElem<Type>::previous()
 	{
-		SPADAS_ERROR_PASS(!this->prevCell);
+		SPADAS_ERROR_RETURNVAL(!this->prevCell, *(new Type));
 		internal::ListCell<Type> *targetCell = (internal::ListCell<Type>*)this->prevCell;
-		return &targetCell->val;
+		return targetCell->val;
 	}
 
 	template <typename Type>
 	Type& ListElem<Type>::next()
 	{
-		SPADAS_ERROR_PASS(!this->nextCell);
+		SPADAS_ERROR_RETURNVAL(!this->nextCell, *(new Type));
 		internal::ListCell<Type> *targetCell = (internal::ListCell<Type>*)this->nextCell;
-		return &targetCell->val;
+		return targetCell->val;
 	}
 
 	template <typename Type>
@@ -2883,7 +2897,7 @@ namespace spadas
 
 	// Implementation of data stream / 数据流实现 ///////////////////////////////////////////////////////
 	template <typename Type>
-	String Stream<Type>::typeName() { static String name = "spadas.Stream<" cat typeid(Type).name() cat ">"; return name; }
+	String Stream<Type>::typeName() { static String name = (String)"spadas.Stream<" + typeid(Type).name() + ">"; return name; }
 
 	template <typename Type> class StreamVars : public Vars
 	{
@@ -3341,12 +3355,12 @@ namespace spadas
 	}
 
 	template <typename KeyType, typename ValueType>
-	String Map<KeyType, ValueType>::typeName() { static String name = catAll("spadas.Map<", typeid(KeyType).name(), ",", typeid(ValueType).name(), ">"); return name; }
+	String Map<KeyType, ValueType>::typeName() { static String name = (String)"spadas.Map<" + typeid(KeyType).name() + "," + typeid(ValueType).name() + ">"; return name; }
 
 	template <typename KeyType, typename ValueType> class MapVars : public Vars
 	{
 	public:
-		SPADAS_VARS(Map<KeyType COMMA ValueType>, Vars)
+		SPADAS_VARS(Map<KeyType SPADAS_MACRO_COMMA ValueType>, Vars)
 		Word mask;
 		UInt size;
 		Array<ListNode<KeyValue<KeyType, ValueType> >* > table;
@@ -4564,7 +4578,7 @@ namespace spadas
     };
 
     template <typename Type>
-	String SampleParser<Type>::typeName() { static String name = "spadas.SampleParser<" cat typeid(Type).name() cat ">"; return name; }
+	String SampleParser<Type>::typeName() { static String name = (String)"spadas.SampleParser<" + typeid(Type).name() + ">"; return name; }
 
     template <typename Type>
     SampleParser<Type>::SampleParser()
@@ -4580,7 +4594,7 @@ namespace spadas
     template <typename Type>
     void SampleParser<Type>::reset()
     {
-		SPADAS_ERROR_RETURN(!this->vars);
+		if (!this->vars) return;
         this->vars->targetProtocolIndex = -1;
         this->vars->lastTimestamp = FullTimestamp();
     }
@@ -4658,7 +4672,7 @@ namespace spadas
     };
 
     template <typename Type>
-	String SampleSync<Type>::typeName() { static String name = "spadas.SampleSync<" cat typeid(Type).name() cat ">"; return name; }
+	String SampleSync<Type>::typeName() { static String name = (String)"spadas.SampleSync<" + typeid(Type).name() + ">"; return name; }
 
     template <typename Type>
     SampleSync<Type>::SampleSync()
@@ -4674,7 +4688,7 @@ namespace spadas
     template <typename Type>
     void SampleSync<Type>::reset()
     {
-		SPADAS_ERROR_RETURN(!this->vars);
+		if (!this->vars) return;
         this->vars->targetProtocolIndex = -1;
     }
 

@@ -1,7 +1,7 @@
 ﻿
 #if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
-#include "file.h"
+
 #include <memory.h>
 #include <sys/stat.h>
 #include <wchar.h>
@@ -12,11 +12,12 @@
 #include <stdlib.h>
 #include <pwd.h>
 #undef NULL
-#define NULL 0
 
 #if defined(SPADAS_ENV_MACOS)
 #include <CoreFoundation/CoreFoundation.h>
 #endif
+
+#include "file.h"
 
 namespace file_internal
 {

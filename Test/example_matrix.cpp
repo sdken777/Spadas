@@ -1,5 +1,4 @@
 ﻿
-#define SPADAS_DEPRECATED_HIDE
 #include "spadas.h"
 
 using namespace spadas;
@@ -39,5 +38,5 @@ void exampleMatrix()
 	for (UInt i = 0; i < b.dimAt(0); i++) bArr[i] = b(i, 0);
 
 	Array<Double> x2 = math::solve(a, bArr);
-	console::print("Solution of a*x=b: " cat String::merge(x2));
+	console::print("Solution of a*x=b: " cat String::merge(x2, ", "));
 }

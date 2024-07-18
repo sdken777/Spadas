@@ -1,5 +1,4 @@
 ﻿
-#include "oscillator.h"
 #include <time.h>
 #include <stdlib.h>
 #include <sys/timeb.h>
@@ -11,6 +10,8 @@
 #if defined(SPADAS_ENV_WINDOWS)
 #include <windows.h>
 #endif
+
+#include "oscillator.h"
 
 namespace utility_internal
 {
@@ -212,7 +213,6 @@ void spadas::system::waitSpin(UInt timeUS)
 
 // addEnvironmentPath
 #if defined(SPADAS_ENV_WINDOWS)
-#include <windows.h>
 void spadas::system::addEnvironmentPath(Path path)
 {
 	SPADAS_ERROR_RETURN(path.isNull() || !path.isFolder());

@@ -1,7 +1,6 @@
 ﻿
 #if defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
 
-#include "console.h"
 #include <stdio.h>
 #include <wchar.h>
 #include <string.h>
@@ -9,11 +8,12 @@
 #include <unistd.h>
 #include <termios.h>
 #undef NULL
-#define NULL 0
 
 #if defined(SPADAS_ENV_MACOS)
 #include <CoreFoundation/CoreFoundation.h>
 #endif
+
+#include "console.h"
 
 namespace console_internal
 {
@@ -192,10 +192,72 @@ using namespace spadas;
 using namespace console_internal;
 
 #if defined(SPADAS_ENV_LINUX)
+enum class PopupSolution
+{
+	NotInitialized,
+	GtkMessageDialog,
+	ConsolePrint,
+};
+PopupSolution popupSolution = PopupSolution::NotInitialized;
+
+typedef Int (*func_gtk_init)(Pointer argc, Pointer argv);
+typedef Pointer (*func_gtk_message_dialog_new)(Pointer parent, UInt flags, UInt type, UInt buttons, Char *msg);
+typedef Int (*func_gtk_dialog_run)(Pointer dialog);
+typedef void (*func_gtk_widget_destroy)(Pointer widget);
+typedef Bool (*func_gtk_events_pending)();
+typedef Bool (*func_gtk_main_iteration_do)(Bool blocking);
+
+func_gtk_init gtk_init = NULL;
+func_gtk_message_dialog_new gtk_message_dialog_new = NULL;
+func_gtk_dialog_run gtk_dialog_run = NULL;
+func_gtk_widget_destroy gtk_widget_destroy = NULL;
+func_gtk_events_pending gtk_events_pending = NULL;
+func_gtk_main_iteration_do gtk_main_iteration_do = NULL;
+
 void console::popup(String text)
 {
-	String cmd = (String)"xmessage -center \"" + text + "\"";
-	if (::system(cmd.chars().data())) {}
+	if (popupSolution == PopupSolution::NotInitialized)
+	{
+#if defined(SPADAS_ARCH_X86)
+		Path gtkLibPath = "/usr/lib/x86_64-linux-gnu/libgtk-3.so.0";
+#else // SPADAS_ARCH_ARM
+		Path gtkLibPath = "/usr/lib/aarch64-linux-gnu/libgtk-3.so.0";
+#endif
+		if (gtkLibPath.exist())
+		{
+			LibraryLoader loader;
+			if (loader.openWithPath(gtkLibPath))
+			{
+				gtk_init = (func_gtk_init)loader.getSymbol("gtk_init");
+				if (gtk_init)
+				{
+					gtk_init(NULL, NULL);
+					gtk_message_dialog_new = (func_gtk_message_dialog_new)loader.getSymbol("gtk_message_dialog_new");
+					gtk_dialog_run = (func_gtk_dialog_run)loader.getSymbol("gtk_dialog_run");
+					gtk_widget_destroy = (func_gtk_widget_destroy)loader.getSymbol("gtk_widget_destroy");
+					gtk_events_pending = (func_gtk_events_pending)loader.getSymbol("gtk_events_pending");
+					gtk_main_iteration_do = (func_gtk_main_iteration_do)loader.getSymbol("gtk_main_iteration_do");
+					popupSolution = PopupSolution::GtkMessageDialog;
+				}
+			}
+		}
+		if (popupSolution == PopupSolution::NotInitialized)
+		{
+			popupSolution = PopupSolution::ConsolePrint;
+		}
+	}
+	if (popupSolution == PopupSolution::GtkMessageDialog)
+	{
+		Pointer dialog = gtk_message_dialog_new(NULL, 0, 0, 1, text.chars().data());
+		gtk_dialog_run(dialog);
+		gtk_widget_destroy(dialog);
+		while (gtk_events_pending()) gtk_main_iteration_do(FALSE);
+	}
+	else // popupSolution == PopupSolution::ConsolePrint
+	{
+		String popupText = catAll("================== popup ==================\n", text, "\n===========================================");
+		print(popupText, MessageLevel::Value::Debug);
+	}
 }
 #endif
 #if defined(SPADAS_ENV_MACOS)

@@ -1,10 +1,10 @@
 ﻿
-#include "spadas.h"
-
 extern "C"
 {
 #include "3party/svd.h"
 }
+
+#include "spadas.h"
 
 using namespace spadas;
 

@@ -1,16 +1,13 @@
 ﻿
-#include "spadas.h"
-
 #if defined(SPADAS_ENV_WINDOWS)
 #include <windows.h>
-#undef max
-#undef min
 #else
 #include <dlfcn.h>
 #include <unistd.h>
 #undef NULL
-#define NULL 0
 #endif
+
+#include "spadas.h"
 
 namespace spadas
 {

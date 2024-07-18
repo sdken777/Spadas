@@ -1,11 +1,7 @@
 ﻿
-#if defined(SPADAS_DEBUG)
-#undef SPADAS_DEBUG
-#endif
-
+#include "3party/SHA1.h"
 #include "spadas.h"
 #include "binary.h"
-#include "3party/SHA1.h"
 
 using namespace binary_internal;
 
