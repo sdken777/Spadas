@@ -48,4 +48,14 @@ void exampleString()
 
 	Point2D pt1(1, 2), pt2(3, 5);
 	console::print(catAll(pt1, "+", pt2, "=", pt1 + pt2));
+
+	// Use StringViewer to parse large string / 用StringViewer解析大字符串
+	console::print("- 5 -");
+
+	String source = "1,2,3,4,5";
+	StringViewer viewer(source);
+	while (viewer.hasNext())
+	{
+		console::print(viewer.next(',').toInt(0) + 1);
+	}
 }

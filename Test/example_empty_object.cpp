@@ -1,10 +1,7 @@
 ﻿
-#define SPADAS_DEPRECATED_HIDE
 #include "spadas.h"
 
 using namespace spadas;
-
-typedef IPluginV200 IPluginLatest;
 
 class NoVarsObject : public EmptyObject, public IPluginLatest
 {

@@ -82,6 +82,7 @@ namespace string_internal
 		static Bool startsWith(const Byte* srcData, UInt srcLength, String& target);
 		static Bool endsWith(const Byte* srcData, UInt srcLength, String& target);
 		static Binary toBinary(const Byte* bytes, UInt len);
+		static UInt count(const Byte* srcData, UInt srcLength, String& string);
 		static Array<UInt> search(const Byte* srcData, UInt srcLength, String& string);
 		static UInt searchFirst(const Byte* srcData, UInt srcLength, String& string);
 		static UInt searchLast(const Byte* srcData, UInt srcLength, String& string);

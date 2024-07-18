@@ -7,7 +7,7 @@ using namespace spadas;
 SPADAS_DEFAULT_API void get_native_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 2;
-	minor = 0;
+	minor = 1;
 }
 
 SPADAS_DEFAULT_API void get_bus_plugin_api_version(UInt& major, UInt& minor)
@@ -41,81 +41,55 @@ SPADAS_DEFAULT_API void get_file_plugin_api_version(UInt& major, UInt& minor)
 }
 
 // 一般原生插件接口兼容性
-// class CompatiblePluginVars : public Vars
-// {
-// public:
-// 	UInt version;
-// 	Interface<IPluginV101> i101;
-// 	Interface<IPluginV102> i102;
-// 	Interface<IPluginV103> i103;
-// };
+class CompatiblePluginVars : public Vars
+{
+public:
+	UInt version;
+	Interface<IPluginV201> i201;
+};
 
-// class CompatiblePlugin : public Object<CompatiblePluginVars>, public IPlugin
-// {
-// public:
-// 	CompatiblePlugin()
-// 	{}
-// 	CompatiblePlugin(Interface<IPluginV101> i) : Object<CompatiblePluginVars>(new CompatiblePluginVars, TRUE)
-// 	{
-// 		vars->version = 101;
-// 		vars->i101 = i;
-// 	}
-// 	CompatiblePlugin(Interface<IPluginV102> i) : Object<CompatiblePluginVars>(new CompatiblePluginVars, TRUE)
-// 	{
-// 		vars->version = 102;
-// 		vars->i102 = i;
-// 	}
-// 	CompatiblePlugin(Interface<IPluginV103> i) : Object<CompatiblePluginVars>(new CompatiblePluginVars, TRUE)
-// 	{
-// 		vars->version = 103;
-// 		vars->i103 = i;
-// 	}
-// 	String getPluginType() override
-// 	{
-// 		switch (vars->version)
-// 		{
-// 		case 101:
-// 			return vars->i101->getPluginType();
-// 		case 102:
-// 			return vars->i102->getPluginType();
-// 		case 103:
-// 			return vars->i103->getPluginType();
-// 		default:
-// 			return String();
-// 		}
-// 	}
-// 	String getPluginVersion() override
-// 	{
-// 		switch (vars->version)
-// 		{
-// 		case 101:
-// 			return vars->i101->getPluginVersion();
-// 		case 102:
-// 			return vars->i102->getPluginVersion();
-// 		case 103:
-// 			return vars->i103->getPluginVersion();
-// 		default:
-// 			return String();
-// 		}
-// 	}
-// 	void closePlugin() override
-// 	{
-// 		switch (vars->version)
-// 		{
-// 		case 101:
-// 			vars->i101->closePlugin();
-// 			break;
-// 		case 102:
-// 			vars->i102->closePlugin();
-// 			break;
-// 		case 103:
-// 			vars->i103->closePlugin();
-// 			break;
-// 		default:
-// 			break;
-// 		}
-// 	}
-// };
+class CompatiblePlugin : public Object<CompatiblePluginVars>, public IPluginV200
+{
+public:
+	CompatiblePlugin()
+	{}
+	CompatiblePlugin(Interface<IPluginV201> i) : Object<CompatiblePluginVars>(new CompatiblePluginVars, TRUE)
+	{
+		vars->version = 201;
+		vars->i201 = i;
+	}
+	String getPluginType() override
+	{
+		switch (vars->version)
+		{
+		case 201:
+			return vars->i201->getPluginType();
+		default:
+			return String();
+		}
+	}
+	String getPluginVersion() override
+	{
+		switch (vars->version)
+		{
+		case 201:
+			return vars->i201->getPluginVersion();
+		default:
+			return String();
+		}
+	}
+	void closePlugin() override
+	{
+		switch (vars->version)
+		{
+		case 201:
+			vars->i201->closePlugin();
+			break;
+		default:
+			break;
+		}
+	}
+};
 
 SPADAS_DEFAULT_API Interface<IPluginV200> get_compatible_plugin(Pointer func, UInt minor)
 {
@@ -127,13 +101,13 @@ SPADAS_DEFAULT_API Interface<IPluginV200> get_compatible_plugin(Pointer func, UI
 		GetPluginV200 getPlugin = (GetPluginV200)func;
 		return getPlugin();
 	}
-	// case 1:
-	// {
-	// 	GetPluginV101 getPlugin = (GetPluginV101)func;
-	// 	auto i = getPlugin();
-	// 	if (i.isValid()) return CompatiblePlugin(i);
-	// 	else return Interface<IPlugin>();
-	// }
+	case 1:
+	{
+		GetPluginV201 getPlugin = (GetPluginV201)func;
+		auto i = getPlugin();
+		if (i.isValid()) return CompatiblePlugin(i);
+		else return Interface<IPluginV200>();
+	}
 	// case 2:
 	// {
 	// 	GetPluginV102 getPlugin = (GetPluginV102)func;
@@ -210,6 +184,72 @@ void IPluginV200::runStandaloneTask(String taskName, String config, Flag shouldE
 {}
 
 Array<String> IPluginV200::getGuestSyncChannelNames()
+{
+	return Array<String>();
+}
+
+// 通用功能插件接口 2.1
+String IPluginV201::getPluginType()
+{
+	return String();
+}
+
+String IPluginV201::getPluginVersion()
+{
+	return String();
+}
+
+void IPluginV201::closePlugin()
+{}
+
+UInt IPluginV201::getDebugID()
+{
+	return 0;
+}
+
+Dictionary<String> IPluginV201::getThirdPartyNotices()
+{
+	return Dictionary<String>();
+}
+
+void IPluginV201::initLocaleInfo(String languageCode, Bool preferPRCWeb)
+{}
+
+void IPluginV201::useLogger(Interface<ILogger> logger)
+{}
+
+void IPluginV201::setAppFilesPath(Path path)
+{}
+
+void IPluginV201::onCrossData(String id, Binary data)
+{}
+
+void IPluginV201::useCrossTransmitter(Interface<ICrossTransmitter> transmitter)
+{}
+
+Bool IPluginV201::onCrossCall(String id, BaseObject context)
+{
+	return FALSE;
+}
+
+void IPluginV201::useCrossCaller(Interface<ICrossCaller> caller)
+{}
+
+void IPluginV201::onStartOnlineSession(SessionIdentifier session, ULong startCPUTick)
+{}
+
+void IPluginV201::onStopOnlineSession()
+{}
+
+Array<String> IPluginV201::getStandaloneTaskNames()
+{
+	return Array<String>();
+}
+
+void IPluginV201::runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback)
+{}
+
+Array<String> IPluginV201::getGuestSyncChannelNames()
 {
 	return Array<String>();
 }

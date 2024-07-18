@@ -12,6 +12,8 @@
     "files.associations": {
         "typeinfo": "cpp",
         "algorithm": "cpp",
-        "cstring": "cpp"
+        "cstring": "cpp",
+        "memory": "cpp",
+        "functional": "cpp"
     }
 }

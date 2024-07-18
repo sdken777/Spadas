@@ -1480,6 +1480,12 @@ Bool String::endsWith(String target)
 	else return FALSE;
 }
 
+UInt String::count(String target)
+{
+	if (vars) return StringCommon::count(vars->data, vars->length, target);
+	else return 0;
+}
+
 Array<UInt> String::search(String target)
 {
 	if (vars) return StringCommon::search(vars->data, vars->length, target);
@@ -1512,7 +1518,7 @@ Array<StringSpan> String::split(String target)
 
 Array<String> String::splitToStringArray(String target)
 {
-	return split(target).convert<String>([](auto& s){ return s.clone(); });
+	return split(target).convert<String>([](StringSpan& s){ return s.clone(); });
 }
 
 String String::replace(String oldString, String newString)

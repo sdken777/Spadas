@@ -357,6 +357,45 @@ Binary StringCommon::toBinary(const Byte* bytes, UInt len)
 	else return Binary(bytes, len);
 }
 
+UInt StringCommon::count(const Byte* srcData, UInt srcLength, String& string)
+{
+	if (srcLength == 0) return 0;
+
+	UInt subLength = string.length();
+	SPADAS_ERROR_RETURNVAL(subLength == 0, 0);
+	if (subLength > srcLength) return 0;
+
+	Byte *subData = string.getVars()->data;
+	const UInt forCount = srcLength - subLength;
+
+    UInt nMatches = 0;
+    if (subLength == 1)
+    {
+        Byte targetByte = subData[0];
+        for (UInt i = 0; i <= forCount; i++)
+        {
+            if (srcData[i] == targetByte) nMatches++;
+        }
+    }
+    else
+    {
+        for (UInt i = 0; i <= forCount; i++)
+        {
+            Bool match = TRUE;
+            for (UInt n = 0, j = i; n < subLength; n++, j++)
+            {
+                if (srcData[j] != subData[n])
+                {
+                    match = FALSE;
+                    break;
+                }
+            }
+            if (match) nMatches++;
+        }
+    }
+    return nMatches;
+}
+
 Array<UInt> StringCommon::search(const Byte* srcData, UInt srcLength, String& string)
 {
 	if (srcLength == 0) return Array<UInt>();
