@@ -8504,6 +8504,10 @@ namespace spadas
 	/// \~Chinese @brief 获取通用功能插件接口的全局函数定义，函数名应为get_plugin_v200
 	typedef Interface<IPluginV200>(*GetPluginV200)();
 
+	/// \~English @brief Latest version of general function plugin interface
+	/// \~Chinese @brief 最新版本通用功能插件接口
+	typedef IPluginV200 IPluginLatest;
+
 	/// \~English @brief General device plugin interface 3.0
 	/// \~Chinese @brief 一般设备插件接口 3.0
 	class SPADAS_API IDevicePluginV300
@@ -8584,6 +8588,10 @@ namespace spadas
 	/// \~Chinese @brief 获取一般设备插件接口的全局函数定义，函数名应为get_device_plugin_v300
 	typedef Interface<IDevicePluginV300>(*GetDevicePluginV300)();
 
+	/// \~English @brief Latest version of general device plugin interface
+	/// \~Chinese @brief 最新版本一般设备插件接口
+	typedef IDevicePluginV300 IDevicePluginLatest;
+
 	/// \~English @brief Bus device plugin interface 3.0
 	/// \~Chinese @brief 总线设备插件接口 3.0
 	class SPADAS_API IBusPluginV300
@@ -8657,6 +8665,10 @@ namespace spadas
 	/// \~English @brief Function definition of getting the bus device plugin interface, the function name should be get_bus_plugin_v300
 	/// \~Chinese @brief 获取总线设备插件接口的全局函数定义，函数名应为get_bus_plugin_v300
 	typedef Interface<IBusPluginV300>(*GetBusPluginV300)();
+
+	/// \~English @brief Latest version of bus device plugin interface
+	/// \~Chinese @brief 最新版本总线设备插件接口
+	typedef IBusPluginV300 IBusPluginLatest;
 
 	/// \~English @brief Video device plugin interface 5.0
 	/// \~Chinese @brief 视频设备插件接口 5.0
@@ -8752,6 +8764,10 @@ namespace spadas
 	/// \~Chinese @brief 获取视频设备插件接口的全局函数定义，函数名应为get_video_plugin_v500
 	typedef Interface<IVideoPluginV500>(*GetVideoPluginV500)();
 
+	/// \~English @brief Latest version of video device plugin interface
+	/// \~Chinese @brief 最新版本视频设备插件接口
+	typedef IVideoPluginV500 IVideoPluginLatest;
+
 	/// \~English @brief Native data processing plugin interface 7.0
 	/// \~Chinese @brief 原生数据处理插件接口 7.0
 	class SPADAS_API IProcessorPluginV700
@@ -8817,6 +8833,10 @@ namespace spadas
 	/// \~English @brief Function definition of getting the native data processing plugin interface, the function name should be get_processor_plugin_v700
 	/// \~Chinese @brief 获取原生数据处理插件接口的全局函数定义，函数名应为get_processor_plugin_v700
 	typedef Interface<IProcessorPluginV700>(*GetProcessorPluginV700)();
+
+	/// \~English @brief Latest version of native data processing plugin interface
+	/// \~Chinese @brief 最新版本原生数据处理插件接口
+	typedef IProcessorPluginV700 IProcessorPluginLatest;
 
 	/// \~English @brief File R/W plugin interface 2.0
 	/// \~Chinese @brief 文件读写插件接口 2.0
@@ -8971,6 +8991,10 @@ namespace spadas
 	/// \~English @brief Function definition of getting the file R/W plugin interface, the function name should be get_file_plugin_v200
 	/// \~Chinese @brief 获取文件读写插件接口的全局函数定义，函数名应为get_file_plugin_v200
 	typedef Interface<IFilePluginV200>(*GetFilePluginV200)();
+
+	/// \~English @brief Latest version of file R/W plugin interface
+	/// \~Chinese @brief 最新版本文件读写插件接口
+	typedef IFilePluginV200 IFilePluginLatest;
 }
 
 #endif
