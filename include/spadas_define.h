@@ -2,15 +2,20 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 新增IXXXPluginLatest
+// Update log / 更新记录: 新增插件接口函数名的宏
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 8
 #define SPADAS_VERSION_MINOR 11
-#define SPADAS_VERSION_BUILD 3
+#define SPADAS_VERSION_BUILD 4
 
-// Latest plugin version / 最新插件接口版本
-#define PLUGIN_VERSION_LATEST 106
+// Latest plugin getter name / 最新插件接口函数名
+#define getPluginLatest get_plugin_v106
+#define getDevicePluginLatest get_device_plugin_v202
+#define getBusPluginLatest get_bus_plugin_v201
+#define getVideoPluginLatest get_video_plugin_v403
+#define getProcessorPluginLatest get_processor_plugin_v603
+#define getFilePluginLatest get_file_plugin_v103
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
@@ -382,6 +387,14 @@
 
 // Convenience for Vars definition / 方便变量数据定义
 #define SPADAS_VARS_DEF(classType, baseVarsType) virtual String getTypeName() override { return classType::TypeName; } virtual ListNode<String> getBaseChain() override { return genBaseChain(baseVarsType::getTypeName(), baseVarsType::getBaseChain()); }
+
+// Convenience for plugin getter definition / 方便定义插件接口函数
+#define getPlugin(version) get_plugin_v ## version
+#define getDevicePlugin(version) get_device_plugin_v ## version
+#define getBusPlugin(version) get_bus_plugin_v ## version
+#define getVideoPlugin(version) get_video_plugin_v ## version
+#define getProcessorPlugin(version) get_processor_plugin_v ## version
+#define getFilePlugin(version) get_file_plugin_v ## version
 
 // For debug / 调试用
 #if defined(SPADAS_DEBUG)

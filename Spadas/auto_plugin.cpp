@@ -163,48 +163,48 @@ SPADAS_DEFAULT_API Interface<IPlugin> get_compatible_plugin(Pointer func, UInt m
 	{
 	case 0:
 	{
-		GetPlugin getPlugin = (GetPlugin)func;
-		return getPlugin();
+		GetPlugin getPluginFunc = (GetPlugin)func;
+		return getPluginFunc();
 	}
 	case 1:
 	{
-		GetPluginV101 getPlugin = (GetPluginV101)func;
-		auto i = getPlugin();
+		GetPluginV101 getPluginFunc = (GetPluginV101)func;
+		auto i = getPluginFunc();
 		if (i.isValid()) return CompatiblePlugin(i);
 		else return Interface<IPlugin>();
 	}
 	case 2:
 	{
-		GetPluginV102 getPlugin = (GetPluginV102)func;
-		auto i = getPlugin();
+		GetPluginV102 getPluginFunc = (GetPluginV102)func;
+		auto i = getPluginFunc();
 		if (i.isValid()) return CompatiblePlugin(i);
 		else return Interface<IPlugin>();
 	}
 	case 3:
 	{
-		GetPluginV103 getPlugin = (GetPluginV103)func;
-		auto i = getPlugin();
+		GetPluginV103 getPluginFunc = (GetPluginV103)func;
+		auto i = getPluginFunc();
 		if (i.isValid()) return CompatiblePlugin(i);
 		else return Interface<IPlugin>();
 	}
 	case 4:
 	{
-		GetPluginV104 getPlugin = (GetPluginV104)func;
-		auto i = getPlugin();
+		GetPluginV104 getPluginFunc = (GetPluginV104)func;
+		auto i = getPluginFunc();
 		if (i.isValid()) return CompatiblePlugin(i);
 		else return Interface<IPlugin>();
 	}
 	case 5:
 	{
-		GetPluginV105 getPlugin = (GetPluginV105)func;
-		auto i = getPlugin();
+		GetPluginV105 getPluginFunc = (GetPluginV105)func;
+		auto i = getPluginFunc();
 		if (i.isValid()) return CompatiblePlugin(i);
 		else return Interface<IPlugin>();
 	}
 	case 6:
 	{
-		GetPluginV106 getPlugin = (GetPluginV106)func;
-		auto i = getPlugin();
+		GetPluginV106 getPluginFunc = (GetPluginV106)func;
+		auto i = getPluginFunc();
 		if (i.isValid()) return CompatiblePlugin(i);
 		else return Interface<IPlugin>();
 	}
