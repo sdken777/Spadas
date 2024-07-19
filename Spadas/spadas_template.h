@@ -3773,6 +3773,13 @@ namespace spadas
 	}
 
 	// Implementation of String template functions / 字符串模板函数实现 ///////////////////////////////////////////////////////
+	class StringBufferVars : public Vars
+	{
+	public:
+		SPADAS_VARS(StringBuffer, Vars)
+		String target;
+	};
+
 	template <typename Type>
 	String::String(Type obj)
 	{
@@ -3801,6 +3808,12 @@ namespace spadas
 	StringAppender operator +(Type obj, String str)
 	{
 		return String(obj) + str;
+	}
+
+	template <typename Type>
+	void StringBuffer::append(Type obj)
+	{
+		this->vars->target += obj;
 	}
 
 	// Implementation of enumeration class / 枚举类实现 ///////////////////////////////////////////////////////

@@ -3402,6 +3402,39 @@ namespace spadas
 		String str;
 	};
 
+	/// \~English @brief String buffer, used to parse large string
+	/// \~Chinese @brief 字符串缓存，用于连续的生成大字符串
+	class SPADAS_API StringBuffer : public Object<class StringBufferVars>
+	{
+	public:
+		SPADAS_TYPE("spadas.StringBuffer")
+
+		/// \~English @brief Create string buffer, default size is 1024 bytes
+		/// \~Chinese @brief 创建字符串缓存，默认大小1024字节
+		StringBuffer();
+
+		/// \~English @brief Create string buffer with the specified size, which is at least 1024 bytes
+		/// \~Chinese @brief 创建指定大小的字符串缓存，至少1024字节
+		StringBuffer(UInt bufferSize);
+		
+		/// \~English @brief Reset buffer, the length of string becomes 0
+		/// \~Chinese @brief 重置缓存，字符串长度回0
+		void reset();
+
+		/// \~English @brief Append a character to the string
+		/// \~Chinese @brief 字符串尾部拼接一个字符
+		void append(Char c);
+
+		/// \~English @brief Append any object's string to the string
+		/// \~Chinese @brief 字符串尾部拼接任意对象的字符串
+		template <typename Type>
+		void append(Type obj);
+
+		/// \~English @brief Output the string and specify whether to copy it (if not copied, later reset or append operations will modify this string)
+		/// \~Chinese @brief 输出字符串，并指定是否拷贝（若不拷贝，后续的重置或拼接操作将修改此字符串）
+		String output(Bool clone);
+	};
+
 	/// \~English @brief String viewer, used to parse large string
 	/// \~Chinese @brief 字符串浏览，用于解析大字符串
 	class SPADAS_API StringViewer : Object<class StringViewerVars>
