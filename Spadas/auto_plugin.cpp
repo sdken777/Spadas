@@ -91,6 +91,9 @@ public:
 	}
 };
 
+typedef Interface<IPluginV200>(*GetPluginV200)();
+typedef Interface<IPluginV201>(*GetPluginV201)();
+
 SPADAS_DEFAULT_API Interface<IPluginV200> get_compatible_plugin(Pointer func, UInt minor)
 {
 	if (!func) return Interface<IPluginV200>();
@@ -98,30 +101,16 @@ SPADAS_DEFAULT_API Interface<IPluginV200> get_compatible_plugin(Pointer func, UI
 	{
 	case 0:
 	{
-		GetPluginV200 getPlugin = (GetPluginV200)func;
-		return getPlugin();
+		GetPluginV200 getPluginFunc = (GetPluginV200)func;
+		return getPluginFunc();
 	}
 	case 1:
 	{
-		GetPluginV201 getPlugin = (GetPluginV201)func;
-		auto i = getPlugin();
+		GetPluginV201 getPluginFunc = (GetPluginV201)func;
+		auto i = getPluginFunc();
 		if (i.isValid()) return CompatiblePlugin(i);
 		else return Interface<IPluginV200>();
 	}
-	// case 2:
-	// {
-	// 	GetPluginV102 getPlugin = (GetPluginV102)func;
-	// 	auto i = getPlugin();
-	// 	if (i.isValid()) return CompatiblePlugin(i);
-	// 	else return Interface<IPlugin>();
-	// }
-	// case 3:
-	// {
-	// 	GetPluginV103 getPlugin = (GetPluginV103)func;
-	// 	auto i = getPlugin();
-	// 	if (i.isValid()) return CompatiblePlugin(i);
-	// 	else return Interface<IPlugin>();
-	// }
 	default:
 		return Interface<IPluginV200>();
 	}

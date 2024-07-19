@@ -8548,10 +8548,6 @@ namespace spadas
 		virtual Array<String> getGuestSyncChannelNames();
 	};
 
-	/// \~English @brief Function definition of getting the general function plugin interface, the function name should be get_plugin_v201
-	/// \~Chinese @brief 获取通用功能插件接口的全局函数定义，函数名应为get_plugin_v201
-	typedef Interface<IPluginV201>(*GetPluginV201)();
-
 	/// \~English @brief Latest version of general function plugin interface
 	/// \~Chinese @brief 最新版本通用功能插件接口
 	typedef IPluginV201 IPluginLatest;
@@ -8632,10 +8628,6 @@ namespace spadas
 		virtual Bool transmitGeneralDataScheduled(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix);
 	};
 
-	/// \~English @brief Function definition of getting the general device plugin interface, the function name should be get_device_plugin_v300
-	/// \~Chinese @brief 获取一般设备插件接口的全局函数定义，函数名应为get_device_plugin_v300
-	typedef Interface<IDevicePluginV300>(*GetDevicePluginV300)();
-
 	/// \~English @brief Latest version of general device plugin interface
 	/// \~Chinese @brief 最新版本一般设备插件接口
 	typedef IDevicePluginV300 IDevicePluginLatest;
@@ -8709,10 +8701,6 @@ namespace spadas
 		/// \~Chinese @returns 返回各总线通道的数据负载百分比
 		virtual Array<BusChannelPayload> getBusPayload();
 	};
-
-	/// \~English @brief Function definition of getting the bus device plugin interface, the function name should be get_bus_plugin_v300
-	/// \~Chinese @brief 获取总线设备插件接口的全局函数定义，函数名应为get_bus_plugin_v300
-	typedef Interface<IBusPluginV300>(*GetBusPluginV300)();
 
 	/// \~English @brief Latest version of bus device plugin interface
 	/// \~Chinese @brief 最新版本总线设备插件接口
@@ -8808,10 +8796,6 @@ namespace spadas
 		virtual Array<String> getExclusiveKeywords();
 	};
 
-	/// \~English @brief Function definition of getting the video device plugin interface, the function name should be get_video_plugin_v500
-	/// \~Chinese @brief 获取视频设备插件接口的全局函数定义，函数名应为get_video_plugin_v500
-	typedef Interface<IVideoPluginV500>(*GetVideoPluginV500)();
-
 	/// \~English @brief Latest version of video device plugin interface
 	/// \~Chinese @brief 最新版本视频设备插件接口
 	typedef IVideoPluginV500 IVideoPluginLatest;
@@ -8877,10 +8861,6 @@ namespace spadas
 		/// \~Chinese @param videoTransmitter 视频帧回注接口
 		virtual void useVideoTransmitter(Interface<IVideoFrameTransmitter> videoTransmitter);
 	};
-
-	/// \~English @brief Function definition of getting the native data processing plugin interface, the function name should be get_processor_plugin_v700
-	/// \~Chinese @brief 获取原生数据处理插件接口的全局函数定义，函数名应为get_processor_plugin_v700
-	typedef Interface<IProcessorPluginV700>(*GetProcessorPluginV700)();
 
 	/// \~English @brief Latest version of native data processing plugin interface
 	/// \~Chinese @brief 最新版本原生数据处理插件接口
@@ -9035,10 +9015,6 @@ namespace spadas
 		/// \~Chinese @param extra 配置信息
 		virtual void setFileExtraConfig(String extra);
 	};
-
-	/// \~English @brief Function definition of getting the file R/W plugin interface, the function name should be get_file_plugin_v200
-	/// \~Chinese @brief 获取文件读写插件接口的全局函数定义，函数名应为get_file_plugin_v200
-	typedef Interface<IFilePluginV200>(*GetFilePluginV200)();
 
 	/// \~English @brief Latest version of file R/W plugin interface
 	/// \~Chinese @brief 最新版本文件读写插件接口

@@ -2,21 +2,26 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 新增StringViewer。新增IPluginV201，增加getDebugID方法。新增IXXXPluginLatest。新增String/Span::count
+// Update log / 更新记录: 新增插件接口函数名的宏。移除GetXXXPluginVXXX
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 1
-#define SPADAS_VERSION_BUILD 0
+#define SPADAS_VERSION_BUILD 1
 
-// Latest plugin version / 最新插件接口版本
-#define PLUGIN_VERSION_LATEST 201
+// Latest plugin getter name / 最新插件接口函数名
+#define getPluginLatest get_plugin_v201
+#define getDevicePluginLatest get_device_plugin_v300
+#define getBusPluginLatest get_bus_plugin_v300
+#define getVideoPluginLatest get_video_plugin_v500
+#define getProcessorPluginLatest get_processor_plugin_v700
+#define getFilePluginLatest get_file_plugin_v200
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.1.0 \n
-* \~Chinese 本文档对应Spadas版本：9.1.0 \n
+* \~English This document corresponds to Spadas version: 9.1.1 \n
+* \~Chinese 本文档对应Spadas版本：9.1.1 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -391,6 +396,14 @@
 #define SPADAS_VARS(classType, baseVarsType) virtual spadas::String getTypeName() override { return classType::typeName(); } \
 virtual spadas::Bool isType(spadas::ULong id) override { return id == classType::typeName().getID() || baseVarsType::isType(id); } \
 virtual spadas::Bool isType(spadas::String name) override { return name == classType::typeName() || baseVarsType::isType(name); }
+
+// Convenience for plugin getter definition / 方便定义插件接口函数
+#define getPlugin(version) get_plugin_v ## version
+#define getDevicePlugin(version) get_device_plugin_v ## version
+#define getBusPlugin(version) get_bus_plugin_v ## version
+#define getVideoPlugin(version) get_video_plugin_v ## version
+#define getProcessorPlugin(version) get_processor_plugin_v ## version
+#define getFilePlugin(version) get_file_plugin_v ## version
 
 // Definition of channel numbers / 通道数量定义
 #define BC_NUM 16 // Bus / 总线

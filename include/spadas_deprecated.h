@@ -30,7 +30,6 @@ namespace spadas
 		virtual void runStandaloneTask(String taskName, String config, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback);
 		virtual Array<String> getGuestSyncChannelNames();
 	};
-	typedef Interface<IPluginV200>(*GetPluginV200)();
 }
 
 #endif
