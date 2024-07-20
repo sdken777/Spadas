@@ -1,0 +1,14 @@
+bin/
+raw/
+netcoreapp3.1/
+net6.0/
+net6.0-windows/
+net8.0/
+net8.0-windows/
+debug/bin/
+debug/raw/
+debug/netcoreapp3.1/
+debug/net6.0/
+debug/net6.0-windows/
+debug/net8.0/
+debug/net8.0-windows/
