@@ -850,8 +850,8 @@ namespace spadas
 	template <typename Type>
 	ArraySpan<Type>::ArraySpan(const Type *ptr, UInt size) : source(0), idx(0), siz(0)
 	{
+		if (size == 0) return;
 		SPADAS_ERROR_RETURN(ptr == NULL);
-		SPADAS_ERROR_RETURN(size == 0);
 		this->source = (ULong)ptr;
 		this->siz = size;
 	}
@@ -859,8 +859,8 @@ namespace spadas
 	template <typename Type>
 	ArraySpan<Type>::ArraySpan(Array<Type>& sourceArray, UInt offset, UInt size) : source(0), idx(0), siz(0)
 	{
+		if (size == 0) return;
 		ArrayVars<Type> *vars = sourceArray.getVars();
-		SPADAS_ERROR_RETURN(size == 0);
 		SPADAS_ERROR_RETURN(!vars);
 		SPADAS_ERROR_RETURN(offset >= vars->size);
 		vars->retain();
@@ -872,7 +872,7 @@ namespace spadas
 	template <typename Type>
 	ArraySpan<Type>::ArraySpan(ArraySpan<Type>& sourceSpan, UInt offset, UInt size) : source(0), idx(0), siz(0)
 	{
-		SPADAS_ERROR_RETURN(size == 0);
+		if (size == 0) return;
 		SPADAS_ERROR_RETURN(sourceSpan.source == 0);
 		SPADAS_ERROR_RETURN(offset >= sourceSpan.siz);
 		if (sourceSpan.idx)
