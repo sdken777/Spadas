@@ -7,16 +7,18 @@ BinarySpan::BinarySpan() : source(0), idx(0), siz(0)
 
 BinarySpan::BinarySpan(const Byte *ptr, UInt size) : source(0), idx(0), siz(0)
 {
+    if (size == 0) return;
+
     SPADAS_ERROR_RETURN(ptr == NULL);
-    SPADAS_ERROR_RETURN(size == 0);
     source = (ULong)ptr;
     siz = size;
 }
 
 BinarySpan::BinarySpan(Binary& sourceBinary, UInt offset, UInt size) : source(0), idx(0), siz(0)
 {
+    if (size == 0) return;
+
     BinaryVars *vars = sourceBinary.getVars();
-    SPADAS_ERROR_RETURN(size == 0);
     SPADAS_ERROR_RETURN(!vars);
     SPADAS_ERROR_RETURN(offset >= vars->size);
     vars->retain();
@@ -27,7 +29,8 @@ BinarySpan::BinarySpan(Binary& sourceBinary, UInt offset, UInt size) : source(0)
 
 BinarySpan::BinarySpan(BinarySpan& sourceSpan, UInt offset, UInt size) : source(0), idx(0), siz(0)
 {
-    SPADAS_ERROR_RETURN(size == 0);
+    if (size == 0) return;
+
     SPADAS_ERROR_RETURN(sourceSpan.source == 0);
     SPADAS_ERROR_RETURN(offset >= sourceSpan.siz);
     if (sourceSpan.idx)

@@ -36,7 +36,7 @@ extern "C"
                 format = Enum<ImageFileFormat>(ImageFileFormat::Value::BMP);
                 break;
             }
-            if (binary[i] == 'J' && binary[i + 1] == 'F' && binary[i + 2] == 'I' && binary[i + 3] == 'F')
+            if (binary[i] == 0xff && binary[i + 1] == 0xd8)
             {
                 format = Enum<ImageFileFormat>(ImageFileFormat::Value::JPG);
                 break;
