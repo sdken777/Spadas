@@ -97,14 +97,26 @@ extern "C"
         if (context) delete (DecodeImageContext*)context;
 	}
 
-	SPADAS_DEFAULT_API Pointer createEncodeImageContext(Byte *imageDataPtr, Int type/* 1: jpg, 2: png */, Int imageWidth, Int imageHeight, Int rowBytes, Bool withAlpha, Int *encodedSize)
+    SPADAS_DEFAULT_API Pointer createEncodeImageContextV2(Byte *imageDataPtr, Int type/* 1: jpg, 2: png */, Int imageWidth, Int imageHeight, Int rowBytes, Bool withAlpha, Bool bgrInverted, Int *encodedSize)
 	{
 		if (!imageDataPtr) return NULL;
         if (type <= 0 || type > 2) return NULL;
         if (imageWidth <= 0 || imageHeight <= 0 || rowBytes <= 0) return NULL;
         if (!encodedSize) return NULL;
 
-        Image image(Size2D::wh(imageWidth, imageHeight), withAlpha ? PixelFormat::Value::ByteBGRA : PixelFormat::Value::ByteBGR, FALSE);
+        Enum<PixelFormat> format;
+        if (withAlpha)
+        {
+            if (bgrInverted) format = PixelFormat::Value::ByteRGBA;
+            else format = PixelFormat::Value::ByteBGRA;
+        }
+        else
+        {
+            if (bgrInverted) format = PixelFormat::Value::ByteRGB;
+            else format = PixelFormat::Value::ByteBGR;
+        }
+
+        Image image(Size2D::wh(imageWidth, imageHeight), format, FALSE);
         for (Int v = 0; v < imageHeight; v++)
         {
             utility::memoryCopy(imageDataPtr + v * rowBytes, image[v].b, image.rowBytesValid());
@@ -119,6 +131,11 @@ extern "C"
         ctx->encoded = encoded;
         return ctx;
 	}
+
+    SPADAS_DEFAULT_API Pointer createEncodeImageContext(Byte *imageDataPtr, Int type/* 1: jpg, 2: png */, Int imageWidth, Int imageHeight, Int rowBytes, Bool withAlpha, Int *encodedSize)
+    {
+        return createEncodeImageContextV2(imageDataPtr, type, imageWidth, imageHeight, rowBytes, withAlpha, FALSE, encodedSize);
+    }
 
 	SPADAS_DEFAULT_API void copyEncodedPacket(Pointer context, Byte* dstData)
 	{
