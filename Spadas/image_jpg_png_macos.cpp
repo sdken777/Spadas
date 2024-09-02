@@ -58,9 +58,26 @@ namespace image_internal
         UInt imageWidth = (UInt)CGImageGetWidth(cgImage);
         UInt imageHeight = (UInt)CGImageGetHeight(cgImage);
         UInt bytesPerRow = (UInt)CGImageGetBytesPerRow(cgImage);
-        Bool mono = bitsPerPixel == 8;
-        Bool withAlpha = !mono && (bitmapInfo == kCGImageAlphaLast || bitmapInfo == kCGImageAlphaPremultipliedLast);
+        Bool indexed = bitsPerPixel == 8;
+        Bool withAlpha = !indexed && (bitmapInfo == kCGImageAlphaLast || bitmapInfo == kCGImageAlphaPremultipliedLast);
         Bool premultiplied = withAlpha && bitmapInfo == kCGImageAlphaPremultipliedLast;
+
+        CGColorSpaceRef colorSpace = CGImageGetColorSpace(cgImage);
+        Binary indexTable;
+        if (indexed)
+        {
+            CGColorSpaceModel colorSpaceModel = CGColorSpaceGetModel(colorSpace);
+            ULong indexCount = (ULong)CGColorSpaceGetColorTableCount(colorSpace);
+            if (colorSpaceModel != kCGColorSpaceModelIndexed || indexCount == 0)
+            {
+                CFRelease(cgImage);
+                SPADAS_ERROR_MSG("indexed && (colorSpaceModel != kCGColorSpaceModelIndexed || indexCount == 0)");
+                return Image();
+            }
+
+            indexTable = Binary(indexCount * 3);
+            CGColorSpaceGetColorTable(colorSpace, indexTable.data());
+        }
 
         CFDataRef cfDecodedData = CGDataProviderCopyData(CGImageGetDataProvider(cgImage));
         CFRelease(cgImage);
@@ -106,15 +123,16 @@ namespace image_internal
             else
             {
                 Byte *dstRow = output[v].b;
-                if (mono)
+                if (indexed)
                 {
                     const Byte *srcBytes = (const Byte*)srcRow;
+                    const Byte *tableData = indexTable.data();
                     for (UInt u = 0; u < imageWidth; u++)
                     {
-                        Byte srcVal = srcBytes[u];
-                        dstRow[3 * u] = srcVal;
-                        dstRow[3 * u + 1] = srcVal;
-                        dstRow[3 * u + 2] = srcVal;
+                        Byte index = srcBytes[u];
+                        dstRow[3 * u] = tableData[3 * index + 2];
+                        dstRow[3 * u + 1] = tableData[3 * index + 1];
+                        dstRow[3 * u + 2] = tableData[3 * index];
                     }
                 }
                 else

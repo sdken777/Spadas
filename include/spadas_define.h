@@ -2,12 +2,12 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: MacOS decodeImage支持premultiplied和mono格式
+// Update log / 更新记录: mono改为indexed模式
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 1
-#define SPADAS_VERSION_BUILD 5
+#define SPADAS_VERSION_BUILD 6
 
 // Latest plugin getter name / 最新插件接口函数名
 #define getPluginLatest get_plugin_v201
@@ -20,8 +20,8 @@
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.1.5 \n
-* \~Chinese 本文档对应Spadas版本：9.1.5 \n
+* \~English This document corresponds to Spadas version: 9.1.6 \n
+* \~Chinese 本文档对应Spadas版本：9.1.6 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
