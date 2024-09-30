@@ -62,21 +62,21 @@ if [ "$EXPORT_RUNTIME_DEBUG" = "y" ]; then
     cp -vf "$CUR_DIR"/3party/windows/* $TARGET_DIR/bin64/debug/
 
     mkdir -vp $TARGET_DIR/binx/debug
-    cp -vf "$CUR_DIR"/binx/libspadas.so.$SPADAS_VERSION $TARGET_DIR/binx/debug/
+    ln -svf ../libspadas.so.$SPADAS_VERSION $TARGET_DIR/binx/debug/libspadas.so.$SPADAS_VERSION
 
     mkdir -vp $TARGET_DIR/binxa/debug
-    cp -vf "$CUR_DIR"/binxa/libspadas.so.$SPADAS_VERSION $TARGET_DIR/binxa/debug/
+    ln -svf ../libspadas.so.$SPADAS_VERSION $TARGET_DIR/binxa/debug/libspadas.so.$SPADAS_VERSION
 
     mkdir -vp $TARGET_DIR/binm/debug
-    cp -vf "$CUR_DIR"/binm/libspadas.$SPADAS_VERSION.dylib $TARGET_DIR/binm/debug/
+    ln -svf ../libspadas.$SPADAS_VERSION.dylib $TARGET_DIR/binm/debug/libspadas.$SPADAS_VERSION.dylib
 
     mkdir -vp $TARGET_DIR/binma/debug
-    cp -vf "$CUR_DIR"/binma/libspadas.$SPADAS_VERSION.dylib $TARGET_DIR/binma/debug/
+    ln -svf ../libspadas.$SPADAS_VERSION.dylib $TARGET_DIR/binma/debug/libspadas.$SPADAS_VERSION.dylib
 fi
 
 if [ "$GEN_DESKTOP_ZIP" = "y" ]; then
     cd ~/Desktop
-    zip -r $CUR_DATE-$TARGET_NAME.zip ./$CUR_DATE-$TARGET_NAME/
+    zip -ry $CUR_DATE-$TARGET_NAME.zip ./$CUR_DATE-$TARGET_NAME/
     rm -r ./$CUR_DATE-$TARGET_NAME/
 fi
 

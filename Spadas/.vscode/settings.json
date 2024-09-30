@@ -7,11 +7,14 @@
         ".settings": true,
         "*.vcxproj": true,
         "*.vcxproj.user": true,
-        "*.vcxproj.filters": true
+        "*.vcxproj.filters": true,
+        ".gitignore": true
     },
     "files.associations": {
         "typeinfo": "cpp",
         "algorithm": "cpp",
-        "cstring": "cpp"
+        "cstring": "cpp",
+        "memory": "cpp",
+        "functional": "cpp"
     }
 }

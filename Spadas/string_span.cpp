@@ -283,6 +283,12 @@ Bool StringSpan::endsWith(String target)
 	else return FALSE;
 }
 
+UInt StringSpan::count(String target)
+{
+	if (source) return StringCommon::count(bytes(), len, target);
+	else return 0;
+}
+
 Array<UInt> StringSpan::search(String target)
 {
 	if (source) return StringCommon::search(bytes(), len, target);
@@ -311,6 +317,11 @@ Array<StringSpan> StringSpan::split(String target)
 {
 	if (source) return StringCommon::split(bytes(), len, target, idx ? (Vars*)source : NULL);
 	else return Array<StringSpan>();
+}
+
+Array<String> StringSpan::splitToStringArray(String target)
+{
+	return split(target).convert<String>([](StringSpan& s){ return s.clone(); });
 }
 
 String StringSpan::replace(String oldString, String newString)

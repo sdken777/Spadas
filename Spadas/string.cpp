@@ -1480,6 +1480,12 @@ Bool String::endsWith(String target)
 	else return FALSE;
 }
 
+UInt String::count(String target)
+{
+	if (vars) return StringCommon::count(vars->data, vars->length, target);
+	else return 0;
+}
+
 Array<UInt> String::search(String target)
 {
 	if (vars) return StringCommon::search(vars->data, vars->length, target);

@@ -34,44 +34,116 @@ namespace image_internal
         UInt bitsPerComponent = (UInt)CGImageGetBitsPerComponent(cgImage);
         UInt bitsPerPixel = (UInt)CGImageGetBitsPerPixel(cgImage);
         CGBitmapInfo bitmapInfo = CGImageGetBitmapInfo(cgImage);
-        if (bitsPerComponent != 8 || bitsPerPixel != 32 || (bitmapInfo != kCGImageAlphaLast && bitmapInfo != kCGImageAlphaNoneSkipLast))
+        if (bitsPerComponent != 8)
         {
             CFRelease(cgImage);
-            SPADAS_ERROR_MSG("bitsPerComponent != 8 || bitsPerPixel != 32 || (bitmapInfo != kCGImageAlphaLast && bitmapInfo != kCGImageAlphaNoneSkipLast)");
+            SPADAS_ERROR_MSG("bitsPerComponent != 8");
+            see(bitsPerComponent, bitsPerPixel);
+            return Image();
+        }
+        if (bitsPerPixel != 8 && bitsPerPixel != 32)
+        {
+            CFRelease(cgImage);
+            SPADAS_ERROR_MSG("bitsPerPixel != 8 && bitsPerPixel != 32");
+            see(bitsPerComponent, bitsPerPixel);
+            return Image();
+        }
+        if (bitsPerPixel == 32 && bitmapInfo != kCGImageAlphaLast && bitmapInfo != kCGImageAlphaPremultipliedLast && bitmapInfo != kCGImageAlphaNoneSkipLast)
+        {
+            CFRelease(cgImage);
+            SPADAS_ERROR_MSG("bitsPerPixel == 32 && bitmapInfo != kCGImageAlphaLast && bitmapInfo != kCGImageAlphaPremultipliedLast && bitmapInfo != kCGImageAlphaNoneSkipLast");
             return Image();
         }
 
         UInt imageWidth = (UInt)CGImageGetWidth(cgImage);
         UInt imageHeight = (UInt)CGImageGetHeight(cgImage);
         UInt bytesPerRow = (UInt)CGImageGetBytesPerRow(cgImage);
+        Bool indexed = bitsPerPixel == 8;
+        Bool withAlpha = !indexed && (bitmapInfo == kCGImageAlphaLast || bitmapInfo == kCGImageAlphaPremultipliedLast);
+        Bool premultiplied = withAlpha && bitmapInfo == kCGImageAlphaPremultipliedLast;
+
+        CGColorSpaceRef colorSpace = CGImageGetColorSpace(cgImage);
+        Binary indexTable;
+        if (indexed)
+        {
+            CGColorSpaceModel colorSpaceModel = CGColorSpaceGetModel(colorSpace);
+            ULong indexCount = (ULong)CGColorSpaceGetColorTableCount(colorSpace);
+            if (colorSpaceModel != kCGColorSpaceModelIndexed || indexCount == 0)
+            {
+                CFRelease(cgImage);
+                SPADAS_ERROR_MSG("indexed && (colorSpaceModel != kCGColorSpaceModelIndexed || indexCount == 0)");
+                return Image();
+            }
+
+            indexTable = Binary(indexCount * 3);
+            CGColorSpaceGetColorTable(colorSpace, indexTable.data());
+        }
 
         CFDataRef cfDecodedData = CGDataProviderCopyData(CGImageGetDataProvider(cgImage));
         CFRelease(cgImage);
         SPADAS_ERROR_RETURNVAL(!cfDecodedData, Image());
 
-        Image output(Size2D::wh(imageWidth, imageHeight), bitmapInfo == kCGImageAlphaLast ? PixelFormat::Value::ByteBGRA : PixelFormat::Value::ByteBGR, FALSE);
+        Image output(Size2D::wh(imageWidth, imageHeight), withAlpha ? PixelFormat::Value::ByteBGRA : PixelFormat::Value::ByteBGR, FALSE);
         const Byte *srcData = CFDataGetBytePtr(cfDecodedData);
         for (UInt v = 0; v < imageHeight; v++)
         {
             const UInt *srcRow = (const UInt*)(srcData + v * bytesPerRow);
-            if (bitmapInfo == kCGImageAlphaLast)
+            if (withAlpha)
             {
-                UInt *dstRow = (UInt*)output[v].ptr;
-                for (UInt u = 0; u < imageWidth; u++)
+                if (premultiplied)
                 {
-                    UInt srcCell = srcRow[u];
-                    dstRow[u] = ((srcCell & 0x00ff0000) >> 16) | ((srcCell & 0x000000ff) << 16) | (srcCell & 0xff00ff00);
+                    UInt *dstRow = (UInt*)output[v].ptr;
+                    for (UInt u = 0; u < imageWidth; u++)
+                    {
+                        UInt srcCell = srcRow[u];
+                        UInt a = (srcCell & 0xff000000) >> 24;
+                        if (a == 0) dstRow[u] = 0;
+                        else
+                        {
+                            UInt r = srcCell & 0x000000ff;
+                            UInt g = (srcCell & 0x0000ff00) >> 8;
+                            UInt b = (srcCell & 0x00ff0000) >> 16;
+                            r = r * 255 / a;
+                            g = g * 255 / a;
+                            b = b * 255 / a;
+                            dstRow[u] = b | (g << 8) | (r << 16) | (a << 24);
+                        }
+                    }
+                }
+                else
+                {
+                    UInt *dstRow = (UInt*)output[v].ptr;
+                    for (UInt u = 0; u < imageWidth; u++)
+                    {
+                        UInt srcCell = srcRow[u];
+                        dstRow[u] = ((srcCell & 0x00ff0000) >> 16) | ((srcCell & 0x000000ff) << 16) | (srcCell & 0xff00ff00);
+                    }
                 }
             }
             else
             {
                 Byte *dstRow = output[v].b;
-                for (UInt u = 0; u < imageWidth; u++)
+                if (indexed)
                 {
-                    UInt srcCell = srcRow[u];
-                    dstRow[3 * u] = (srcCell & 0x00ff0000) >> 16;
-                    dstRow[3 * u + 1] = (srcCell & 0x0000ff00) >> 8;
-                    dstRow[3 * u + 2] = srcCell & 0x000000ff;
+                    const Byte *srcBytes = (const Byte*)srcRow;
+                    const Byte *tableData = indexTable.data();
+                    for (UInt u = 0; u < imageWidth; u++)
+                    {
+                        Byte index = srcBytes[u];
+                        dstRow[3 * u] = tableData[3 * index + 2];
+                        dstRow[3 * u + 1] = tableData[3 * index + 1];
+                        dstRow[3 * u + 2] = tableData[3 * index];
+                    }
+                }
+                else
+                {
+                    for (UInt u = 0; u < imageWidth; u++)
+                    {
+                        UInt srcCell = srcRow[u];
+                        dstRow[3 * u] = (srcCell & 0x00ff0000) >> 16;
+                        dstRow[3 * u + 1] = (srcCell & 0x0000ff00) >> 8;
+                        dstRow[3 * u + 2] = srcCell & 0x000000ff;
+                    }
                 }
             }
         }

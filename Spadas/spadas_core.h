@@ -2790,12 +2790,12 @@ namespace spadas
 		/// \~Chinese @brief 是否不等于
 		Bool operator !=(String string);
 
-		/// \~English @brief Whether it is greater than, according to the system default string sorting order
-		/// \~Chinese @brief 是否大于，按照系统默认字符串排序顺序
+		/// \~English @brief Whether it is greater than, according to the UTF-8 string sorting order
+		/// \~Chinese @brief 是否大于，按照UTF-8默认字符串排序顺序
 		Bool operator >(String string);
 
-		/// \~English @brief Whether it is less than, according to the system default string sorting order
-		/// \~Chinese @brief 是否小于，按照系统默认字符串排序顺序
+		/// \~English @brief Whether it is less than, according to the UTF-8 string sorting order
+		/// \~Chinese @brief 是否小于，按照UTF-8字符串排序顺序
 		Bool operator <(String string);
 
 		/// \~English @brief [Unsafe] Obtain the head pointer of the string UTF-8 data (read-only and NOT terminated by 0)
@@ -2909,6 +2909,10 @@ namespace spadas
 		/// \~English @brief Whether it ends with the specified string
 		/// \~Chinese @brief 是否以指定字符串结尾
 		Bool endsWith(String target);
+
+		/// \~English @brief Search the target string and return the count. For example, searching "nana" in "bananana", returns 2
+		/// \~Chinese @brief 搜索目标字符串出现的次数。如"bananana"搜"nana"，返回2
+		UInt count(String target);
 
 		/// \~English @brief Search the target string and return the first character position of all found targets. For example, searching "nana" in "bananana", returns {2, 4}
 		/// \~Chinese @brief 搜索目标字符串，返回所有发现目标的首字符位置。如"bananana"搜"nana"，返回{2, 4}
@@ -3328,6 +3332,10 @@ namespace spadas
 		/// \~Chinese @brief 是否以指定字符串结尾
 		Bool endsWith(String target);
 
+		/// \~English @brief Search the target string and return the count. For example, searching "nana" in "bananana", returns 2
+		/// \~Chinese @brief 搜索目标字符串出现的次数。如"bananana"搜"nana"，返回2
+		UInt count(String target);
+
 		/// \~English @brief Search the target string and return the first character position of all found targets. For example, searching "nana" in "bananana", returns {2, 4}
 		/// \~Chinese @brief 搜索目标字符串，返回所有发现目标的首字符位置。如"bananana"搜"nana"，返回{2, 4}
 		Array<UInt> search(String target);
@@ -3347,6 +3355,10 @@ namespace spadas
 		/// \~English @brief Split this string span with the specified string. For example, "12 34 56" is separated by spaces, and returns {"12", "34", "56"}. Note that when the string span does not contain target, an empty array will be returned if the string span is empty, and a scalar array will be returned if it is not empty
 		/// \~Chinese @brief 用指定字符串对本字符串片段进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串片段不含target时，若本字符串片段为空则返回空数组，非空则返回标量数组
 		Array<StringSpan> split(String target);
+
+		/// \~English @brief Split this string span with the specified string. For example, "12 34 56" is separated by spaces, and returns {"12", "34", "56"}. Note that when the string does not contain target, an empty array will be returned if the string is empty, and a scalar array will be returned if it is not empty
+		/// \~Chinese @brief 用指定字符串对本字符串片段进行分割。如"12 34 56"按空格符分割，返回{"12", "34", "56"}。注意，本字符串不含target时，若本字符串为空则返回空数组，非空则返回标量数组
+		Array<String> splitToStringArray(String target);
 
 		/// \~English @brief Replace the oldString part of this string span with newString, and return the replaced string
 		/// \~Chinese @brief 将本字符串片段中oldString部分替换为newString，并返回替换后的字符串
@@ -3388,6 +3400,71 @@ namespace spadas
 
 	private:
 		String str;
+	};
+
+	/// \~English @brief String buffer, used to parse large string
+	/// \~Chinese @brief 字符串缓存，用于连续的生成大字符串
+	class SPADAS_API StringBuffer : public Object<class StringBufferVars>
+	{
+	public:
+		SPADAS_TYPE("spadas.StringBuffer")
+
+		/// \~English @brief Create string buffer, default size is 1024 bytes
+		/// \~Chinese @brief 创建字符串缓存，默认大小1024字节
+		StringBuffer();
+
+		/// \~English @brief Create string buffer with the specified size, which is at least 1024 bytes
+		/// \~Chinese @brief 创建指定大小的字符串缓存，至少1024字节
+		StringBuffer(UInt bufferSize);
+		
+		/// \~English @brief Reset buffer, the length of string becomes 0
+		/// \~Chinese @brief 重置缓存，字符串长度回0
+		void reset();
+
+		/// \~English @brief Append a character to the string
+		/// \~Chinese @brief 字符串尾部拼接一个字符
+		void append(Char c);
+
+		/// \~English @brief Append any object's string to the string
+		/// \~Chinese @brief 字符串尾部拼接任意对象的字符串
+		template <typename Type>
+		void append(Type obj);
+
+		/// \~English @brief Output the string and specify whether to copy it (if not copied, later reset or append operations will modify this string)
+		/// \~Chinese @brief 输出字符串，并指定是否拷贝（若不拷贝，后续的重置或拼接操作将修改此字符串）
+		String output(Bool clone);
+	};
+
+	/// \~English @brief String viewer, used to parse large string
+	/// \~Chinese @brief 字符串浏览，用于解析大字符串
+	class SPADAS_API StringViewer : Object<class StringViewerVars>
+	{
+	public:
+		SPADAS_TYPE("spadas.StringViewer")
+
+		/// \~English @brief View empty string
+		/// \~Chinese @brief 浏览空字符串
+		StringViewer();
+
+		/// \~English @brief View the specified string
+		/// \~Chinese @brief 浏览指定的字符串
+		StringViewer(String source);
+
+		/// \~English @brief Reset to view the new string
+		/// \~Chinese @brief 重新指定浏览的字符串
+		void reset(String source);
+
+		/// \~English @brief Whether there are spans later
+		/// \~Chinese @brief 是否还有后续片段
+		Bool hasNext();
+
+		/// \~English @brief Get the span ending with the specified separator (not including the separator)
+		/// \~Chinese @brief 获取到指定分割符的下一个片段（不含分割符）
+		StringSpan& next(Char target);
+
+		/// \~English @brief Get the span ending with the specified separator (not including the separator)
+		/// \~Chinese @brief 获取到指定分割符的下一个片段（不含分割符）
+		StringSpan& next(String target);
 	};
 
 	/// \~English @brief Convenience for l-value to concatenate string, see macro "cat"
@@ -8384,12 +8461,12 @@ namespace spadas
 
 	// Plugin API / 插件API //////////////////////////////////////////////////////////////
 
-	/// \~English @brief General function plugin interface 2.0
-	/// \~Chinese @brief 通用功能插件接口 2.0
-	class SPADAS_API IPluginV200
+	/// \~English @brief General function plugin interface 2.1
+	/// \~Chinese @brief 通用功能插件接口 2.1
+	class SPADAS_API IPluginV201
 	{
 	public:
-		virtual ~IPluginV200() {};
+		virtual ~IPluginV201() {};
 
 		/// \~English @brief Get the plugin type ID
 		/// \~Chinese @brief 获取插件类型ID
@@ -8406,6 +8483,10 @@ namespace spadas
 		/// \~English @brief [Optional] Called before exiting the application, used to stop the background thread, etc.
 		/// \~Chinese @brief [可选] 在程序结束前被调用，用于停止背景线程等
 		virtual void closePlugin();
+
+		/// \~English @brief [Optional] Get debug ID, for telling the difference of debugging versions while not changing the plugin' version
+		/// \~Chinese @brief [可选] 获取调试用ID号，方便在不更新版本号的情况下区分不同调试版本
+		virtual UInt getDebugID();
 
 		/// \~English @brief [Optional] Get copyright notices of the third party softwares the plugin uses
 		/// \~Chinese @brief [可选] 取得插件使用的第三方软件的版权声明
@@ -8500,9 +8581,9 @@ namespace spadas
 		virtual Array<String> getGuestSyncChannelNames();
 	};
 
-	/// \~English @brief Function definition of getting the general function plugin interface, the function name should be get_plugin_v200
-	/// \~Chinese @brief 获取通用功能插件接口的全局函数定义，函数名应为get_plugin_v200
-	typedef Interface<IPluginV200>(*GetPluginV200)();
+	/// \~English @brief Latest version of general function plugin interface
+	/// \~Chinese @brief 最新版本通用功能插件接口
+	typedef IPluginV201 IPluginLatest;
 
 	/// \~English @brief General device plugin interface 3.0
 	/// \~Chinese @brief 一般设备插件接口 3.0
@@ -8580,9 +8661,9 @@ namespace spadas
 		virtual Bool transmitGeneralDataScheduled(String protocol, Array<Double> vector, Binary binary, NanoPosix serverPosix);
 	};
 
-	/// \~English @brief Function definition of getting the general device plugin interface, the function name should be get_device_plugin_v300
-	/// \~Chinese @brief 获取一般设备插件接口的全局函数定义，函数名应为get_device_plugin_v300
-	typedef Interface<IDevicePluginV300>(*GetDevicePluginV300)();
+	/// \~English @brief Latest version of general device plugin interface
+	/// \~Chinese @brief 最新版本一般设备插件接口
+	typedef IDevicePluginV300 IDevicePluginLatest;
 
 	/// \~English @brief Bus device plugin interface 3.0
 	/// \~Chinese @brief 总线设备插件接口 3.0
@@ -8654,9 +8735,9 @@ namespace spadas
 		virtual Array<BusChannelPayload> getBusPayload();
 	};
 
-	/// \~English @brief Function definition of getting the bus device plugin interface, the function name should be get_bus_plugin_v300
-	/// \~Chinese @brief 获取总线设备插件接口的全局函数定义，函数名应为get_bus_plugin_v300
-	typedef Interface<IBusPluginV300>(*GetBusPluginV300)();
+	/// \~English @brief Latest version of bus device plugin interface
+	/// \~Chinese @brief 最新版本总线设备插件接口
+	typedef IBusPluginV300 IBusPluginLatest;
 
 	/// \~English @brief Video device plugin interface 5.0
 	/// \~Chinese @brief 视频设备插件接口 5.0
@@ -8748,9 +8829,9 @@ namespace spadas
 		virtual Array<String> getExclusiveKeywords();
 	};
 
-	/// \~English @brief Function definition of getting the video device plugin interface, the function name should be get_video_plugin_v500
-	/// \~Chinese @brief 获取视频设备插件接口的全局函数定义，函数名应为get_video_plugin_v500
-	typedef Interface<IVideoPluginV500>(*GetVideoPluginV500)();
+	/// \~English @brief Latest version of video device plugin interface
+	/// \~Chinese @brief 最新版本视频设备插件接口
+	typedef IVideoPluginV500 IVideoPluginLatest;
 
 	/// \~English @brief Native data processing plugin interface 7.0
 	/// \~Chinese @brief 原生数据处理插件接口 7.0
@@ -8814,9 +8895,9 @@ namespace spadas
 		virtual void useVideoTransmitter(Interface<IVideoFrameTransmitter> videoTransmitter);
 	};
 
-	/// \~English @brief Function definition of getting the native data processing plugin interface, the function name should be get_processor_plugin_v700
-	/// \~Chinese @brief 获取原生数据处理插件接口的全局函数定义，函数名应为get_processor_plugin_v700
-	typedef Interface<IProcessorPluginV700>(*GetProcessorPluginV700)();
+	/// \~English @brief Latest version of native data processing plugin interface
+	/// \~Chinese @brief 最新版本原生数据处理插件接口
+	typedef IProcessorPluginV700 IProcessorPluginLatest;
 
 	/// \~English @brief File R/W plugin interface 2.0
 	/// \~Chinese @brief 文件读写插件接口 2.0
@@ -8968,9 +9049,9 @@ namespace spadas
 		virtual void setFileExtraConfig(String extra);
 	};
 
-	/// \~English @brief Function definition of getting the file R/W plugin interface, the function name should be get_file_plugin_v200
-	/// \~Chinese @brief 获取文件读写插件接口的全局函数定义，函数名应为get_file_plugin_v200
-	typedef Interface<IFilePluginV200>(*GetFilePluginV200)();
+	/// \~English @brief Latest version of file R/W plugin interface
+	/// \~Chinese @brief 最新版本文件读写插件接口
+	typedef IFilePluginV200 IFilePluginLatest;
 }
 
 #endif
