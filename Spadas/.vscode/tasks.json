@@ -8,6 +8,8 @@
             "DEPENDS_X86_WINDOWS": "winmm ws2_32 ole32 oleaut32 iphlpapi windowscodecs",
             "DEPENDS_X86_LINUX": "pthread dl jpeg png",
             "DEPENDS_ARM_LINUX": "pthread dl jpeg png",
+            "DEPENDS_X86_MACOS": "pthread dl",
+            "FRAMEWORKS_X86_MACOS": "CoreFoundation CoreServices CoreGraphics ImageIO",
             "DEPENDS_ARM_MACOS": "pthread dl",
             "FRAMEWORKS_ARM_MACOS": "CoreFoundation CoreServices CoreGraphics ImageIO",
         }
@@ -116,6 +118,7 @@
                 "Subtask: Build for X86-Windows10 target (Release)",
                 "Subtask: Build for X86-Ubuntu2204 target (Release)",
                 "Subtask: Build for Arm-Ubuntu2204 target (Release)",
+                "Subtask: Build for X86-MacOS1013 target (Release)",
                 "Subtask: Build for Arm-MacOS1203 target (Release)",
                 "Subtask: Create 'include' folder",
             ],
@@ -127,7 +130,7 @@
             "args": [
                 "clean",
             ],
-            "problemMatcher":[],
+            "problemMatcher": []
         },
 
         // Subtasks:
@@ -184,6 +187,20 @@
         },
         {
             "type": "process",
+            "label": "Subtask: Build for X86-MacOS1013 target (Release)",
+            "hide": true,
+            "command": "make",
+            "args": [
+                "-j${input:helper_thread_count}",
+                "MODE=release",
+                "PLATFORM=macos",
+                "DEPENDS=$(DEPENDS_X86_MACOS)",
+                "FRAMEWORKS=$(FRAMEWORKS_X86_MACOS)",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
             "label": "Subtask: Build for Arm-MacOS1203 target (Release)",
             "hide": true,
             "command": "make",
@@ -205,7 +222,7 @@
                 "-p",
                 "../include",
             ],
-            "problemMatcher":[],
+            "problemMatcher": []
         },
     ],
     "version": "2.0.0"

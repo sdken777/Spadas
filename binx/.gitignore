@@ -12,3 +12,8 @@ debug/net6.0/
 debug/net6.0-windows/
 debug/net8.0/
 debug/net8.0-windows/
+version.xml
+release.xml
+release.png
+eula_english.txt
+eula_chinese.txt

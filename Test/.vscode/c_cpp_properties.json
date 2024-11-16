@@ -59,6 +59,25 @@
             "cppStandard": "c++17"
         },
         {
+            "name": "Windows Host / X86-MacOS1013 Target",
+            "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
+            "compilerArgs": [
+                "--sysroot=C:\\msys64\\opt\\xtools-uni\\x86-macos1013",
+                "--target=x86_64-apple-darwin17"
+            ],
+            "includePath": [
+                "${workspaceFolder}",
+                // "${workspaceFolder}\\..\\includem",
+                "${workspaceFolder}\\..\\include"
+            ],
+            "defines": [
+                "SPADAS_ENV_MACOS",
+                "SPADAS_ARCH_X86"
+            ],
+            "intelliSenseMode": "clang-x64",
+            "cppStandard": "c++17"
+        },
+        {
             "name": "Windows Host / Arm-MacOS1203 Target",
             "compilerPath": "C:\\msys64\\opt\\clang-15\\bin\\clang++.exe",
             "compilerArgs": [
@@ -133,6 +152,25 @@
                 "SPADAS_ARCH_ARM"
             ],
             "intelliSenseMode": "clang-arm64",
+            "cppStandard": "c++17"
+        },
+        {
+            "name": "General Host / X86-MacOS1013 Target",
+            "compilerPath": "/opt/clang-15/bin/clang++",
+            "compilerArgs": [
+                "--sysroot=/opt/xtools-uni/x86-macos1013",
+                "--target=x86_64-apple-darwin17"
+            ],
+            "includePath": [
+                "${workspaceFolder}",
+                // "${workspaceFolder}/../includem",
+                "${workspaceFolder}/../include"
+            ],
+            "defines": [
+                "SPADAS_ENV_MACOS",
+                "SPADAS_ARCH_X86"
+            ],
+            "intelliSenseMode": "clang-x64",
             "cppStandard": "c++17"
         },
         {

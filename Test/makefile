@@ -2,7 +2,7 @@
 # Parameter Description
 # [Required] TYPE: Output target type (lib: library file, exe: executable file)
 # [Required] MODE: Compile mode (debug, release)
-# [Required] PLATFORM: Target running platform (linux: Linux 64bit X86, linuxarm: Linux 64bit Arm, windows: Windows 64bit X86, macosarm: MacOS 64bit Arm)
+# [Required] PLATFORM: Target running platform (linux: Linux 64bit X86, linuxarm: Linux 64bit Arm, windows: Windows 64bit X86, macos：MacOS 64bit X86, macosarm: MacOS 64bit Arm)
 # [Required] COMPILE: Compile toolchain (local: native compile, cross: cross-compile)
 # [Required] TARGET: The target name. Prefix and suffix are not required
 # [Optional] TARGET_VERSION: Target version number. Only for.so and .dylib library files
@@ -19,11 +19,12 @@
 # [Optional] FILTEROUT_MM: The .mm files not to compile, which must be suffified and separated by Spaces
 # [Optional] FILTEROUT_H: The .h files not to scan, which must be suffified and separated by Spaces
 # [Optional] FILTEROUT_HPP: The .hpp files not to scan, which must be suffified and separated by Spaces
+# [Optional] FILTEROUT_HH: The .hh files not to scan, which must be suffified and separated by Spaces
 # [Optional] WINDOWS_GUI: Windows target only, yes for GUI program, no for console program
 
 .DEFAULT:all
 .PHONY:clean
-.SUFFIXES:.c .cpp .cc .o .h .hpp
+.SUFFIXES:.c .cpp .cc .o .h .hpp .hh
 
 # Query source files
 SRCS_C=$(filter-out $(FILTEROUT_C), $(wildcard *.c **/*.c **/**/*.c **/**/**/*.c))
@@ -42,6 +43,9 @@ ifeq ($(HOST_NAME), linux-aarch64)
 endif
 ifeq ($(HOST_NAME), msys_nt-x86_64)
 	HOST=windows
+endif
+ifeq ($(HOST_NAME), darwin-x86_64)
+	HOST=macos
 endif
 ifeq ($(HOST_NAME), darwin-arm64)
 	HOST=macosarm
@@ -92,6 +96,23 @@ ifeq ($(PLATFORM), windows)
 	ARCH_DEFINE=SPADAS_ARCH_X86
 	OBJS=$(SRCS_CPP:.cpp=.o) $(SRCS_CC:.cc=.o) $(SRCS_C:.c=.o)
 endif
+ifeq ($(PLATFORM), macos)
+	INCLUDE_DIR=includem
+	LIB_DIR=libm
+	BIN_DIR=binm
+	LIB_PREFIX=lib
+	LIB_EXT=.dylib
+	ifdef TARGET_VERSION
+		BIN_EXT=.$(TARGET_VERSION).dylib
+	else
+		BIN_EXT=.dylib
+	endif
+	EXE_EXT=
+	ENV_DEFINE=SPADAS_ENV_MACOS
+	ARCH_DEFINE=SPADAS_ARCH_X86
+	SRCS_MM=$(filter-out $(FILTEROUT_MM), $(wildcard *.mm **/*.mm **/**/*.mm **/**/**/*.mm))
+	OBJS=$(SRCS_CPP:.cpp=.o) $(SRCS_CC:.cc=.o) $(SRCS_C:.c=.o) $(SRCS_MM:.mm=.o)
+endif
 ifeq ($(PLATFORM), macosarm)
 	INCLUDE_DIR=includema
 	LIB_DIR=libma
@@ -113,6 +134,7 @@ endif
 # Query header files
 HEADERS_H=$(filter-out $(FILTEROUT_H), $(wildcard *.h **/*.h **/**/*.h **/**/**/*.h ../include/*.h ../$(INCLUDE_DIR)/*.h))
 HEADERS_HPP=$(filter-out $(FILTEROUT_HPP), $(wildcard *.hpp **/*.hpp **/**/*.hpp **/**/**/*.hpp ../include/*.hpp ../$(INCLUDE_DIR)/*.hpp))
+HEADERS_HH=$(filter-out $(FILTEROUT_HH), $(wildcard *.hh **/*.hh **/**/*.hh **/**/**/*.hh ../include/*.hh ../$(INCLUDE_DIR)/*.hh))
 
 # Output target type related
 ifeq ($(TYPE), lib)
@@ -166,6 +188,9 @@ ifeq ($(COMPILE), cross)
 	ifeq ($(PLATFORM), windows)
 		SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/x86-windows10 --target=x86_64-w64-mingw32
 	endif
+	ifeq ($(PLATFORM), macos)
+		SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/x86-macos1013 --target=x86_64-apple-darwin17
+	endif
 	ifeq ($(PLATFORM), macosarm)
 		SYSROOT_OPTION=--sysroot=$(XTOOLS_PATH)/arm-macos1203 --target=arm64-apple-darwin21.4.0
 	endif
@@ -190,6 +215,9 @@ ifeq ($(PLATFORM), linuxarm)
 endif
 ifeq ($(PLATFORM), windows)
 	WL_OPTION=-Wl
+endif
+ifeq ($(PLATFORM), macos)
+	WL_OPTION=-Wl,-rpath,./
 endif
 ifeq ($(PLATFORM), macosarm)
 	WL_OPTION=-Wl,-rpath,./
@@ -219,6 +247,12 @@ ifeq ($(TYPE), lib)
 	ifeq ($(PLATFORM), windows)
 		ifeq ($(MODE), release)
 			WL_OPTION:=$(WL_OPTION),--out-implib,$(LIB_PATH)/$(LIB_NAME)
+		endif
+	endif
+	ifeq ($(PLATFORM), macos)
+		WL_OPTION:=$(WL_OPTION),-install_name,$(OUT_NAME)
+		ifeq ($(MODE), release)
+			POSTLIB_COMMAND=cp -vf $(OUT_PATH)/$(OUT_NAME) $(LIB_PATH)/$(LIB_NAME)
 		endif
 	endif
 	ifeq ($(PLATFORM), macosarm)
@@ -254,19 +288,19 @@ all:pre $(OBJS)
 	$(POSTBUILD_COMMAND)
 	@echo '---------------OK---------------'
 
-$(OBJ_PATH)/%.o:%.c $(HEADERS_H) $(HEADERS_HPP)
+$(OBJ_PATH)/%.o:%.c $(HEADERS_H) $(HEADERS_HPP) $(HEADERS_HH)
 	mkdir -p `dirname $@`
 	$(COMPILER_C_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 
-$(OBJ_PATH)/%.o:%.cpp $(HEADERS_H) $(HEADERS_HPP)
+$(OBJ_PATH)/%.o:%.cpp $(HEADERS_H) $(HEADERS_HPP) $(HEADERS_HH)
 	mkdir -p `dirname $@`
 	$(COMPILER_CPP_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) $(COMPILE_OPTION_CPP) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 
-$(OBJ_PATH)/%.o:%.cc $(HEADERS_H) $(HEADERS_HPP)
+$(OBJ_PATH)/%.o:%.cc $(HEADERS_H) $(HEADERS_HPP) $(HEADERS_HH)
 	mkdir -p `dirname $@`
 	$(COMPILER_CPP_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) $(COMPILE_OPTION_CPP) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 
-$(OBJ_PATH)/%.o:%.mm $(HEADERS_H) $(HEADERS_HPP)
+$(OBJ_PATH)/%.o:%.mm $(HEADERS_H) $(HEADERS_HPP) $(HEADERS_HH)
 	mkdir -p `dirname $@`
 	$(COMPILER_OBJC_EXE) $(SYSROOT_OPTION) $(COMPILE_OPTION) $(COMPILE_OPTION_CPP) -I. -I../include -I../$(INCLUDE_DIR) $(addprefix -I, $(SEARCH_INCLUDE)) -D$(ENV_DEFINE) -D$(ARCH_DEFINE) $(addprefix -D, $(MACRO_DEFINE)) -o $@ -c $<
 

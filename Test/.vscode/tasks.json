@@ -7,6 +7,8 @@
             "DEPENDS_X86_WINDOWS": "spadas",
             "DEPENDS_X86_LINUX": "spadas",
             "DEPENDS_ARM_LINUX": "spadas",
+            "DEPENDS_X86_MACOS": "spadas",
+            "FRAMEWORKS_X86_MACOS": "",
             "DEPENDS_ARM_MACOS": "spadas",
             "FRAMEWORKS_ARM_MACOS": "",
         }
@@ -106,6 +108,7 @@
                 "Subtask: Build for X86-Windows10 target (Release)",
                 "Subtask: Build for X86-Ubuntu2204 target (Release)",
                 "Subtask: Build for Arm-Ubuntu2204 target (Release)",
+                "Subtask: Build for X86-MacOS1013 target (Release)",
                 "Subtask: Build for Arm-MacOS1203 target (Release)",
             ],
         },
@@ -116,7 +119,7 @@
             "args": [
                 "clean",
             ],
-            "problemMatcher":[],
+            "problemMatcher": []
         },
 
         // Subtasks:
@@ -167,6 +170,20 @@
                 "MODE=release",
                 "PLATFORM=linuxarm",
                 "DEPENDS=$(DEPENDS_ARM_LINUX)",
+            ],
+            "problemMatcher":"$gcc",
+        },
+        {
+            "type": "process",
+            "label": "Subtask: Build for X86-MacOS1013 target (Release)",
+            "hide": true,
+            "command": "make",
+            "args": [
+                "-j${input:helper_thread_count}",
+                "MODE=release",
+                "PLATFORM=macos",
+                "DEPENDS=$(DEPENDS_X86_MACOS)",
+                "FRAMEWORKS=$(FRAMEWORKS_X86_MACOS)",
             ],
             "problemMatcher":"$gcc",
         },
