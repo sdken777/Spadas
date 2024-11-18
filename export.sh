@@ -30,6 +30,9 @@ cp -vf "$CUR_DIR"/binx/libspadas.so.$SPADAS_VERSION $TARGET_DIR/binx/
 mkdir -vp $TARGET_DIR/binxa
 cp -vf "$CUR_DIR"/binxa/libspadas.so.$SPADAS_VERSION $TARGET_DIR/binxa/
 
+mkdir -vp $TARGET_DIR/binm
+cp -vf "$CUR_DIR"/binm/libspadas.$SPADAS_VERSION.dylib $TARGET_DIR/binm/
+
 mkdir -vp $TARGET_DIR/binma
 cp -vf "$CUR_DIR"/binma/libspadas.$SPADAS_VERSION.dylib $TARGET_DIR/binma/
 
@@ -46,6 +49,9 @@ if [ "$EXPORT_DEVELOPER" = "y" ]; then
     mkdir -vp $TARGET_DIR/libxa
     cp -vf "$CUR_DIR"/libxa/libspadas.so $TARGET_DIR/libxa/
 
+    mkdir -vp $TARGET_DIR/libm
+    cp -vf "$CUR_DIR"/libm/libspadas.dylib $TARGET_DIR/libm/
+
     mkdir -vp $TARGET_DIR/libma
     cp -vf "$CUR_DIR"/libma/libspadas.dylib $TARGET_DIR/libma/
 fi
@@ -60,6 +66,9 @@ if [ "$EXPORT_RUNTIME_DEBUG" = "y" ]; then
 
     mkdir -vp $TARGET_DIR/binxa/debug
     ln -svf ../libspadas.so.$SPADAS_VERSION $TARGET_DIR/binxa/debug/libspadas.so.$SPADAS_VERSION
+
+    mkdir -vp $TARGET_DIR/binm/debug
+    ln -svf ../libspadas.$SPADAS_VERSION.dylib $TARGET_DIR/binm/debug/libspadas.$SPADAS_VERSION.dylib
 
     mkdir -vp $TARGET_DIR/binma/debug
     ln -svf ../libspadas.$SPADAS_VERSION.dylib $TARGET_DIR/binma/debug/libspadas.$SPADAS_VERSION.dylib
