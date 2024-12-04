@@ -397,29 +397,47 @@ namespace spadas
 		{
 			const Int n = (Int)size;
 			if (n < 2) return;
-			Array<UInt> indexArr(n);
-			UInt* indices = indexArr.data();
-			for (Int i = 0; i < n; i++)
+			if (__is_trivial(Type) && sizeof(Type) <= 8)
 			{
-				indices[i] = i;
-			}
-			for (Int i = 0; i < n - 1; i++)
-			{
-				for (Int j = 0; j < n - i - 1; j++)
+				for (Int i = 0; i < n - 1; i++)
 				{
-					if (func(data[indices[j]], data[indices[j + 1]]))
+					for (Int j = 0; j < n - i - 1; j++)
 					{
-						UInt tmp = indices[j];
-						indices[j] = indices[j + 1];
-						indices[j + 1] = tmp;
+						if (func(data[j], data[j + 1]))
+						{
+							Type tmp = data[j];
+							data[j] = data[j + 1];
+							data[j + 1] = tmp;
+						}
 					}
 				}
 			}
-			Array<Type> buffer(data, n);
-			Type* bufferData = buffer.data();
-			for (Int i = 0; i < n; i++)
+			else
 			{
-				data[i] = bufferData[indices[i]];
+				Array<UInt> indexArr(n);
+				UInt* indices = indexArr.data();
+				for (Int i = 0; i < n; i++)
+				{
+					indices[i] = i;
+				}
+				for (Int i = 0; i < n - 1; i++)
+				{
+					for (Int j = 0; j < n - i - 1; j++)
+					{
+						if (func(data[indices[j]], data[indices[j + 1]]))
+						{
+							UInt tmp = indices[j];
+							indices[j] = indices[j + 1];
+							indices[j + 1] = tmp;
+						}
+					}
+				}
+				Array<Type> buffer(data, n);
+				Type* bufferData = buffer.data();
+				for (Int i = 0; i < n; i++)
+				{
+					data[i] = bufferData[indices[i]];
+				}
 			}
 		}
 
