@@ -4606,6 +4606,19 @@ namespace spadas
         Array<String> protocols;
         Int targetProtocolIndex;
         FullTimestamp lastTimestamp;
+
+		String getProtocol(String fullProtocol)
+		{
+			Array<UInt> atIndices = fullProtocol.search("@");
+			String protocol;
+			if (atIndices.isEmpty()) protocol = fullProtocol;
+			else
+			{
+				if (atIndices.size() != 1 || atIndices[0] == 0) {}
+				else protocol = fullProtocol.span(0, atIndices[0]).clone();
+			}
+			return protocol;
+		}
     };
 
     template <typename Type>
@@ -4643,6 +4656,7 @@ namespace spadas
         if (this->vars->targetProtocolIndex == -1) return Array<Type>();
         String targetProtocol = this->vars->protocols[this->vars->targetProtocolIndex];
         if (!table.contain(targetProtocol)) return Array<Type>();
+		String protocol = this->vars->getProtocol(targetProtocol);
         ArrayX<Type> buffer;
         for (auto e = table[targetProtocol].firstElem(); e.valid(); ++e)
         {
@@ -4651,7 +4665,7 @@ namespace spadas
             {
                 Type outputSpecialSample;
                 SessionSample outputSample = outputSpecialSample.template as<SessionSample>();
-                if (outputSample.fromSample(targetProtocol, inputSample))
+                if (outputSample.fromSample(protocol, inputSample))
                 {
                     buffer.append(outputSpecialSample);
                     this->vars->lastTimestamp = inputSample.timestamp();
@@ -4674,6 +4688,7 @@ namespace spadas
         if (this->vars->targetProtocolIndex == -1) return Array<Type>();
         String targetProtocol = this->vars->protocols[this->vars->targetProtocolIndex];
         if (!table.contain(targetProtocol)) return Array<Type>();
+		String protocol = this->vars->getProtocol(targetProtocol);
         ArrayX<Type> buffer;
         for (auto e = table[targetProtocol].firstElem(); e.valid(); ++e)
         {
@@ -4682,7 +4697,7 @@ namespace spadas
             {
                 Type outputSpecialSample;
                 SessionSample outputSample = outputSpecialSample.template as<SessionSample>();
-                if (outputSample.fromSample(targetProtocol, inputSample))
+                if (outputSample.fromSample(protocol, inputSample))
                 {
                     buffer.append(outputSpecialSample);
                     this->vars->lastTimestamp = inputSample.timestamp();
