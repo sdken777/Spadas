@@ -2,12 +2,12 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 修正SampleParser.parse
+// Update log / 更新记录: 恢复SS宏
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 1
-#define SPADAS_VERSION_BUILD 9
+#define SPADAS_VERSION_BUILD 10
 
 // Latest plugin getter name / 最新插件接口函数名
 #define getPluginLatest get_plugin_v201
@@ -335,6 +335,9 @@
 #ifndef NULL
 #define NULL 0
 #endif
+
+// Convenience for string conversion / 字符串转换
+#define SS (spadas::String)
 
 // Recursive macro / 可递归宏
 #define RM_EVAL0(...) __VA_ARGS__

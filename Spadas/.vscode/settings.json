@@ -18,6 +18,11 @@
         "functional": "cpp",
         "array": "cpp",
         "string": "cpp",
-        "string_view": "cpp"
-    }
+        "string_view": "cpp",
+        "*.tcc": "cpp",
+        "chrono": "cpp",
+        "random": "cpp",
+        "limits": "cpp"
+    },
+    "Codegeex.RepoIndex": true
 }
