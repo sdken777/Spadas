@@ -403,7 +403,7 @@ namespace string_internal
 
 	inline UInt writeInt(Int val, Byte *data)
 	{
-		Int valPos = (Int)math::abs(val);
+		UInt valPos = (UInt)math::abs(val);
 
 		Int lastIndex = 0;
 		if (valPos >= 100000)

@@ -22,7 +22,8 @@
         "*.tcc": "cpp",
         "chrono": "cpp",
         "random": "cpp",
-        "limits": "cpp"
+        "limits": "cpp",
+        "bitset": "cpp"
     },
     "Codegeex.RepoIndex": true
 }
