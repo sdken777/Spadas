@@ -17,25 +17,13 @@
     ],
     "configurations": [
         {
-            "name": "Run (Debug)",
+            "name": "Debug",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/test",
             "args": [],
             "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/",
             "preLaunchTask": "Build (Debug)",
-            "windows": {
-                "env": { "_NO_DEBUG_HEAP": "1" },
-            },
-        },
-        {
-            "name": "Run (Release)",
-            "type": "lldb",
-            "request": "launch",
-            "program": "${workspaceFolder}/../${input:helper_platform_bin_name}/test",
-            "args": [],
-            "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/",
-            "preLaunchTask": "Build (Release)",
             "windows": {
                 "env": { "_NO_DEBUG_HEAP": "1" },
             },

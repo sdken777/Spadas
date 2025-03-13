@@ -1,6 +1,6 @@
 {
     "version": "0.2.0",
-"inputs": [
+    "inputs": [
         {
             "id": "helper_platform_bin_name",
             "type": "command",
@@ -16,8 +16,8 @@
         }
     ],
     "configurations": [
-{
-            "name": "Run (Debug)",
+    {
+            "name": "Debug",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/test",

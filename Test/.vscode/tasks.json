@@ -15,6 +15,19 @@
     },
     "inputs": [
         {
+            "id": "helper_platform_bin_name",
+            "type": "command",
+            "command": "shell-command.run",
+            "args": {
+                "cmd": "dotnet",
+                "args": [
+                    "../bin/VSCodeHelper.dll",
+                    "shell_command",
+                    "platform_bin_name"
+                ]
+            }
+        },
+        {
             "id": "helper_platform_code",
             "type": "command",
             "command": "shell-command.run",
@@ -111,6 +124,34 @@
                 "Subtask: Build for X86-MacOS1013 target (Release)",
                 "Subtask: Build for Arm-MacOS1203 target (Release)",
             ],
+        },
+        {
+            "type": "process",
+            "label": "Run (Debug)",
+            "command": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/test",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/",
+            },
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Build (Debug)",
+            ],
+            "problemMatcher": []
+        },
+        {
+            "type": "process",
+            "label": "Run (Release)",
+            "command": "${workspaceFolder}/../${input:helper_platform_bin_name}/test",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/",
+            },
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Build (Release)",
+            ],
+            "problemMatcher": []
         },
         {
             "type": "process",
