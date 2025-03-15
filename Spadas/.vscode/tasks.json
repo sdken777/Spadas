@@ -11,7 +11,7 @@
             "DEPENDS_X86_MACOS": "pthread dl",
             "FRAMEWORKS_X86_MACOS": "CoreFoundation CoreServices CoreGraphics ImageIO",
             "DEPENDS_ARM_MACOS": "pthread dl",
-            "FRAMEWORKS_ARM_MACOS": "CoreFoundation CoreServices CoreGraphics ImageIO",
+            "FRAMEWORKS_ARM_MACOS": "CoreFoundation CoreServices CoreGraphics ImageIO"
         }
     },
     "inputs": [
@@ -51,7 +51,7 @@
                     "../bin/VSCodeHelper.dll",
                     "shell_command",
                     "platform_env_var",
-                    "DEPENDS",
+                    "DEPENDS"
                 ]
             }
         },
@@ -65,7 +65,7 @@
                     "../bin/VSCodeHelper.dll",
                     "shell_command",
                     "platform_env_var",
-                    "FRAMEWORKS",
+                    "FRAMEWORKS"
                 ]
             }
         },
@@ -79,10 +79,24 @@
                     "../bin/VSCodeHelper.dll",
                     "shell_command",
                     "thread_count",
-                    "0.8",
+                    "0.8"
                 ]
             }
         },
+        {
+            "id": "helper_platform_exe",
+            "type": "command",
+            "command": "shell-command.run",
+            "args": {
+                "cmd": "dotnet",
+                "args": [
+                    "../bin/VSCodeHelper.dll",
+                    "shell_command",
+                    "platform_console_exe",
+                    "test"
+                ]
+            }
+        }
     ],
     "presentation": {
         "echo": true,
@@ -104,12 +118,12 @@
                 "PLATFORM=${input:helper_platform_code}",
                 "DEPENDS=${input:helper_platform_env_var_depends}",
                 "FRAMEWORKS=${input:helper_platform_env_var_frameworks}",
-                "MACRO_DEFINE=SPADAS_EXPORTS",
+                "MACRO_DEFINE=SPADAS_EXPORTS"
             ],
             "dependsOn": [
-                "Subtask: Generate resource code",
+                "Subtask: Generate resource code"
             ],
-            "problemMatcher":"$gcc",
+            "problemMatcher": "$gcc"
         },
         {
             "type": "process",
@@ -123,7 +137,7 @@
                 "./spadas_define.h",
                 "./spadas_template.h",
                 "./spadas_deprecated.h",
-                "../include/",
+                "../include/"
             ],
             "dependsOrder": "sequence",
             "dependsOn": [
@@ -133,34 +147,34 @@
                 "Subtask: Build for Arm-Ubuntu2204 target (Release)",
                 "Subtask: Build for X86-MacOS1013 target (Release)",
                 "Subtask: Build for Arm-MacOS1203 target (Release)",
-                "Subtask: Create 'include' folder",
-            ],
+                "Subtask: Create 'include' folder"
+            ]
         },
         {
             "type": "process",
             "label": "Run (Debug)",
-            "command": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/test",
+            "command": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/${input:helper_platform_exe}",
             "args": [],
             "options": {
-                "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/",
+                "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/debug/"
             },
             "dependsOrder": "sequence",
             "dependsOn": [
-                "Build (Debug)",
+                "Build (Debug)"
             ],
             "problemMatcher": []
         },
         {
             "type": "process",
             "label": "Run (Release)",
-            "command": "${workspaceFolder}/../${input:helper_platform_bin_name}/test",
+            "command": "${workspaceFolder}/../${input:helper_platform_bin_name}/${input:helper_platform_exe}",
             "args": [],
             "options": {
-                "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/",
+                "cwd": "${workspaceFolder}/../${input:helper_platform_bin_name}/"
             },
             "dependsOrder": "sequence",
             "dependsOn": [
-                "Build (Release)",
+                "Build (Release)"
             ],
             "problemMatcher": []
         },
@@ -169,7 +183,7 @@
             "label": "Clean",
             "command": "make",
             "args": [
-                "clean",
+                "clean"
             ],
             "problemMatcher": []
         },
@@ -183,8 +197,8 @@
             "command": "dotnet",
             "args": [
                 "../bin/VSCodeHelper.dll",
-                "gen_resource_code",
-            ],
+                "gen_resource_code"
+            ]
         },
         {
             "type": "process",
@@ -196,9 +210,9 @@
                 "MODE=release",
                 "PLATFORM=windows",
                 "DEPENDS=$(DEPENDS_X86_WINDOWS)",
-                "MACRO_DEFINE=SPADAS_EXPORTS",
+                "MACRO_DEFINE=SPADAS_EXPORTS"
             ],
-            "problemMatcher":"$gcc",
+            "problemMatcher": "$gcc"
         },
         {
             "type": "process",
@@ -209,9 +223,9 @@
                 "-j${input:helper_thread_count}",
                 "MODE=release",
                 "PLATFORM=linux",
-                "DEPENDS=$(DEPENDS_X86_LINUX)",
+                "DEPENDS=$(DEPENDS_X86_LINUX)"
             ],
-            "problemMatcher":"$gcc",
+            "problemMatcher": "$gcc"
         },
         {
             "type": "process",
@@ -222,9 +236,9 @@
                 "-j${input:helper_thread_count}",
                 "MODE=release",
                 "PLATFORM=linuxarm",
-                "DEPENDS=$(DEPENDS_ARM_LINUX)",
+                "DEPENDS=$(DEPENDS_ARM_LINUX)"
             ],
-            "problemMatcher":"$gcc",
+            "problemMatcher": "$gcc"
         },
         {
             "type": "process",
@@ -236,9 +250,9 @@
                 "MODE=release",
                 "PLATFORM=macos",
                 "DEPENDS=$(DEPENDS_X86_MACOS)",
-                "FRAMEWORKS=$(FRAMEWORKS_X86_MACOS)",
+                "FRAMEWORKS=$(FRAMEWORKS_X86_MACOS)"
             ],
-            "problemMatcher":"$gcc",
+            "problemMatcher": "$gcc"
         },
         {
             "type": "process",
@@ -250,9 +264,9 @@
                 "MODE=release",
                 "PLATFORM=macosarm",
                 "DEPENDS=$(DEPENDS_ARM_MACOS)",
-                "FRAMEWORKS=$(FRAMEWORKS_ARM_MACOS)",
+                "FRAMEWORKS=$(FRAMEWORKS_ARM_MACOS)"
             ],
-            "problemMatcher":"$gcc",
+            "problemMatcher": "$gcc"
         },
         {
             "type": "process",
@@ -261,10 +275,10 @@
             "command": "mkdir",
             "args": [
                 "-p",
-                "../include",
+                "../include"
             ],
             "problemMatcher": []
-        },
+        }
     ],
     "version": "2.0.0"
 }
