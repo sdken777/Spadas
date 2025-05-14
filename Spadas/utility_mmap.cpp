@@ -371,7 +371,7 @@ Array<Binary> MemoryMapStream::receive()
                 {
                     buffer.append(packet);
                     output.append(Binary::merge(buffer.toArray()));
-                    buffer = ArrayX<Binary>();
+                    buffer.clear();
                 }
             }
             else buffer.append(packet);

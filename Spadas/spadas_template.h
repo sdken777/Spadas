@@ -668,7 +668,8 @@ namespace spadas
 	Bool Array<Type>::containAs(Func<Bool(Type&)> func)
 	{
 		if (!this->vars) return FALSE;
-		else return internal::arrayCommonContain<Type>(this->vars->data, this->vars->size, func);
+		SPADAS_ERROR_RETURNVAL(!func, FALSE);
+		return internal::arrayCommonContain<Type>(this->vars->data, this->vars->size, func);
 	}
 
 	template <typename Type>
@@ -686,7 +687,8 @@ namespace spadas
 	Array<UInt> Array<Type>::searchAs(Func<Bool(Type&)> func)
 	{
 		if (!this->vars) return Array<UInt>();
-		else return internal::arrayCommonSearch<Type>(this->vars->data, this->vars->size, func);
+		SPADAS_ERROR_RETURNVAL(!func, Array<UInt>());
+		return internal::arrayCommonSearch<Type>(this->vars->data, this->vars->size, func);
 	}
 
 	template <typename Type>
@@ -704,7 +706,8 @@ namespace spadas
 	void Array<Type>::sortAs(Func<Bool(Type&, Type&)> func)
 	{
 		if (!this->vars) return;
-		else internal::arrayCommonSort<Type>(this->vars->data, this->vars->size, func);
+		SPADAS_ERROR_RETURN(!func);
+		internal::arrayCommonSort<Type>(this->vars->data, this->vars->size, func);
 	}
 
 	template <typename Type>
@@ -712,7 +715,8 @@ namespace spadas
 	Array<TargetType> Array<Type>::convert(Func<TargetType(Type&)> func)
 	{
 		if (!this->vars) return Array<TargetType>();
-		else return internal::arrayCommonConvert<Type, TargetType>(this->vars->data, this->vars->size, func);
+		SPADAS_ERROR_RETURNVAL(!func, Array<TargetType>());
+		return internal::arrayCommonConvert<Type, TargetType>(this->vars->data, this->vars->size, func);
 	}
 
 	template <typename Type>
@@ -1022,7 +1026,11 @@ namespace spadas
 	template <typename Type>
 	Bool ArraySpan<Type>::containAs(Func<Bool(Type&)> func)
 	{
-		if (this->source) return internal::arrayCommonContain<Type>((Type*)(this->source + this->idx), this->siz, func);
+		if (this->source)
+		{
+			SPADAS_ERROR_RETURNVAL(!func, FALSE);
+			return internal::arrayCommonContain<Type>((Type*)(this->source + this->idx), this->siz, func);
+		}
 		else return FALSE;
 	}
 
@@ -1040,7 +1048,11 @@ namespace spadas
 	template <typename Type>
 	Array<UInt> ArraySpan<Type>::searchAs(Func<Bool(Type&)> func)
 	{
-		if (this->source) return internal::arrayCommonSearch<Type>((Type*)(this->source + this->idx), this->siz, func);
+		if (this->source)
+		{
+			SPADAS_ERROR_RETURNVAL(!func, Array<UInt>());
+			return internal::arrayCommonSearch<Type>((Type*)(this->source + this->idx), this->siz, func);
+		}
 		else return Array<UInt>();
 	}
 
@@ -1057,14 +1069,22 @@ namespace spadas
 	template <typename Type>
 	void ArraySpan<Type>::sortAs(Func<Bool(Type&, Type&)> func)
 	{
-		if (this->source) internal::arrayCommonSort<Type>((Type*)(this->source + this->idx), this->siz, func);
+		if (this->source)
+		{
+			SPADAS_ERROR_RETURN(!func);
+			internal::arrayCommonSort<Type>((Type*)(this->source + this->idx), this->siz, func);
+		}
 	}
 
 	template <typename Type>
 	template <typename TargetType>
 	Array<TargetType> ArraySpan<Type>::convert(Func<TargetType(Type&)> func)
 	{
-		if (this->source) return internal::arrayCommonConvert<Type, TargetType>((Type*)(this->source + this->idx), this->siz, func);
+		if (this->source)
+		{
+			SPADAS_ERROR_RETURNVAL(!func, Array<TargetType>());
+			return internal::arrayCommonConvert<Type, TargetType>((Type*)(this->source + this->idx), this->siz, func);
+		}
 		return Array<TargetType>();
 	}
 
@@ -2048,6 +2068,16 @@ namespace spadas
 					for (UInt i = 0; i < initialized; i++) (&buffer[i])->~Type();
 				}
 			}
+			void reset()
+			{
+				if (!__is_trivial(Type))
+				{
+					for (UInt i = 0; i < initialized; i++) (&buffer[i])->~Type();
+					initialized = 0;
+				}
+				children[0] = 0;
+				children[1] = 0;
+			}
 		};
 	}
 
@@ -2242,6 +2272,21 @@ namespace spadas
 		}
 		this->vars->lastNextIndex = localIndex + 1;
 		this->vars->size = size;
+	}
+
+	template <typename Type>
+	void ArrayX<Type>::clear()
+	{
+		if (!this->vars) return;
+		auto thisVars = this->vars;
+		if (thisVars->root.children[0]) thisVars->releaseNode(thisVars->root.children[0]);
+		if (thisVars->root.children[1]) thisVars->releaseNode(thisVars->root.children[1]);
+		thisVars->root.reset();
+		thisVars->size = 0;
+		thisVars->accessingSegment = 1;
+		thisVars->accessingNode = thisVars->lastNode = &thisVars->root;
+		thisVars->lastSegment = 1;
+		thisVars->lastNextIndex = 0;
 	}
 
 	template <typename Type>
@@ -2654,6 +2699,7 @@ namespace spadas
 	{
 		if (!this->vars || this->vars->size == 0) return;
 		SPADAS_ERROR_RETURN(this->vars->elemRefs > 0);
+		SPADAS_ERROR_RETURN(!func);
 		internal::ListCell<Type> *curCell = this->vars->head;
 		while (TRUE)
 		{
@@ -3217,6 +3263,7 @@ namespace spadas
 	template <typename Type>
 	Array<Type> Stream<Type>::dequeueAs(Func<Bool(Type&)> func)
 	{
+		SPADAS_ERROR_RETURNVAL(!func, Array<Type>());
 		this->vars->spinEnter();
 		ArrayX<Type> out;
 		Type *bufferEnd = this->vars->buffer + this->vars->capacity;

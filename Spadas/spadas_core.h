@@ -1810,6 +1810,10 @@ namespace spadas
 		/// \~Chinese @brief 扩展大小至指定值
 		void setSize(UInt size);
 
+		/// \~English @brief Clear the array
+		/// \~Chinese @brief 清空数组
+		void clear();
+
 		/// \~English @brief Expand 1 element at the end of the array, and return reference of the new element
 		/// \~Chinese @brief 在数组末尾扩展1个元素，并返回数组中该元素的引用
 		Type& append(Type val);
@@ -5973,6 +5977,10 @@ namespace spadas
 		/// \~English @brief Use the FloatGray image to express the value of the 2D matrix, you need to specify the data range of the matrix, which corresponds to 0.0~1.0 of the image
 		/// \~Chinese @brief 用FloatGray图像表现2D矩阵的值，需要指定矩阵的数据范围，对应于图像的0.0~1.0
 		SPADAS_API Image matrixRangeToImage(DoubleMat mat, Double lower, Double upper);
+
+		/// \~English @brief Get the global shared object corresponding to the specified key, if it does not exist, call defaultCreator to create it
+		/// \~Chinese @brief 获取指定键对应的全局共享对象，若不存在则调用defaultCreator创建
+		SPADAS_API BaseObject getSharedObject(String key, Func<BaseObject()> defaultCreator);
 	}
 
 	// Plugin related type definition / 插件相关类型定义 //////////////////////////////////////////////////////////////

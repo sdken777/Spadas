@@ -264,6 +264,7 @@ PixelData Image::operator[](UInt v)
 void Image::forPixels(Func<void(UInt, UInt, PixelData)> func)
 {
     SPADAS_ERROR_RETURN(!vars);
+    SPADAS_ERROR_RETURN(!func);
 
     for (UInt v = 0; v < vars->height; v++)
     {

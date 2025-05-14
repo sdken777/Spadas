@@ -178,7 +178,7 @@ namespace xml_internal
 
 			bufferList.clear();
 			lastBuffer = &bufferList.addToTail(StringStreamElem());
-			largeBinaries = ArrayX<Binary>();
+			largeBinaries.clear();
 
 			return output;
 		}

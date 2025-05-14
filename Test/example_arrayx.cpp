@@ -18,6 +18,6 @@ void exampleArrayX()
 
 	// Efficiency test of array releasing / ArrayX析构效率测试
 	timer.start();
-	arrx = ArrayX<UInt>();
+	arrx.clear();
 	console::print("Release: " cat timer.check());
 }

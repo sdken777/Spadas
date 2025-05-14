@@ -2,12 +2,12 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 修正writeInt
+// Update log / 更新记录: 总线通道数扩展至32。新增utility::getSharedObject。新增ArrayX::clear方法。检查Func有效性
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
-#define SPADAS_VERSION_MINOR 1
-#define SPADAS_VERSION_BUILD 11
+#define SPADAS_VERSION_MINOR 2
+#define SPADAS_VERSION_BUILD 0
 
 // Latest plugin getter name / 最新插件接口函数名
 #define getPluginLatest get_plugin_v201
@@ -409,7 +409,7 @@ virtual spadas::Bool isType(spadas::String name) override { return name == class
 #define getFilePlugin(version) get_file_plugin_v ## version
 
 // Definition of channel numbers / 通道数量定义
-#define BC_NUM 16 // Bus / 总线
+#define BC_NUM 32 // Bus / 总线
 #define VC_NUM 24 // Video / 视频
 
 #endif
