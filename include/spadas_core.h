@@ -8907,12 +8907,12 @@ namespace spadas
 	/// \~Chinese @brief 最新版本原生数据处理插件接口
 	typedef IProcessorPluginV700 IProcessorPluginLatest;
 
-	/// \~English @brief File R/W plugin interface 2.0
-	/// \~Chinese @brief 文件读写插件接口 2.0
-	class SPADAS_API IFilePluginV200
+	/// \~English @brief File R/W plugin interface 2.1
+	/// \~Chinese @brief 文件读写插件接口 2.1
+	class SPADAS_API IFilePluginV201
 	{
 	public:
-		virtual ~IFilePluginV200() {};
+		virtual ~IFilePluginV201() {};
 
 		/// \~English @brief [Optional] Get the maximum duration of all files applicable to the specified reader
 		/// \~Chinese @brief [可选] 获取适用于指定读取器的所有文件的最大时长
@@ -8978,6 +8978,8 @@ namespace spadas
 		/// \~Chinese @brief [可选] 初始化写入数据文件
 		/// \~English @param writerName Writer name
 		/// \~Chinese @param writerName 写入器名称
+		/// \~English @param isSideWriter Whether it is a side writer
+		/// \~Chinese @param isSideWriter 是否为旁路写入器
 		/// \~English @param inputRoot Session's "input" folder path
 		/// \~Chinese @param inputRoot Session的input文件夹路径
 		/// \~English @param subInputRoots Session's "input" subfolder paths
@@ -8992,25 +8994,29 @@ namespace spadas
 		/// \~Chinese @param timeServer 时间相关服务接口（仅限当前写入Session）
 		/// \~English @returns Whether the initialization is successful
 		/// \~Chinese @returns 返回是否成功初始化
-		virtual Bool openWriteFiles(String writerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo, Interface<ITimeServer> timeServer);
+		virtual Bool openWriteFiles(String writerName, Bool isSideWriter, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo, Interface<ITimeServer> timeServer);
 
 		/// \~English @brief [Optional] Write file data
 		/// \~Chinese @brief [可选] 写入文件数据
 		/// \~English @param writerName Writer name
 		/// \~Chinese @param writerName 写入器名称
+		/// \~English @param isSideWriter Whether it is a side writer
+		/// \~Chinese @param isSideWriter 是否为旁路写入器
 		/// \~English @param inputs Input data table, get the data from the table and write it to the files (the timestamp of all dependent frames of the first frame of the video is 0)
 		/// \~Chinese @param inputs 输入数据表，从表中获取数据写入文件（其中视频首帧图像的所有依赖帧时间戳为0）
 		/// \~English @param busMessages Bus data of all channels sorted by timestamp
 		/// \~Chinese @param busMessages 按时间戳排序的所有通道总线数据
 		/// \~English @param shouldEnd Whether to stop writing
 		/// \~Chinese @param shouldEnd 是否准备关闭
-		virtual void writeFilesData(String writerName, InputTables inputs, Array<SessionBusRawData> busMessages, Flag shouldEnd);
+		virtual void writeFilesData(String writerName, Bool isSideWriter, InputTables inputs, Array<SessionBusRawData> busMessages, Flag shouldEnd);
 
 		/// \~English @brief Close writing to file
 		/// \~Chinese @brief [可选] 关闭写入文件
 		/// \~English @param writerName Writer name
 		/// \~Chinese @param writerName 写入器名称
-		virtual void closeWriteFiles(String writerName);
+		/// \~English @param isSideWriter Whether it is a side writer
+		/// \~Chinese @param isSideWriter 是否为旁路写入器
+		virtual void closeWriteFiles(String writerName, Bool isSideWriter);
 
 		/// \~English @brief [Optional] Get whether there is any data files capable for data picking
 		/// \~Chinese @brief [可选] 获取是否有适用于数据截取器的数据文件
@@ -9059,7 +9065,7 @@ namespace spadas
 
 	/// \~English @brief Latest version of file R/W plugin interface
 	/// \~Chinese @brief 最新版本文件读写插件接口
-	typedef IFilePluginV200 IFilePluginLatest;
+	typedef IFilePluginV201 IFilePluginLatest;
 }
 
 #endif

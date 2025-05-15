@@ -37,7 +37,7 @@ SPADAS_DEFAULT_API void get_proc_plugin_api_version(UInt& major, UInt& minor)
 SPADAS_DEFAULT_API void get_file_plugin_api_version(UInt& major, UInt& minor)
 {
 	major = 2;
-	minor = 0;
+	minor = 1;
 }
 
 // 一般原生插件接口兼容性
@@ -438,4 +438,45 @@ void IFilePluginV200::pickSession(String pickerName, Path inputRoot, Array<Path>
 {}
 
 void IFilePluginV200::setFileExtraConfig(String extra)
+{}
+
+// 文件读写插件接口 2.1
+Double IFilePluginV201::getFilesDuration(String readerName, Path inputRoot, Array<Path> subInputRoots, Array<Path> generationRoots, FileIOBasicInfo basicInfo, Interface<ITimeServer> timeServer)
+{
+	return 0;
+}
+
+Bool IFilePluginV201::openReadFiles(String readerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, Double jumpOffset, FileIOBasicInfo basicInfo, FileIOExtInfo& extInfo, Interface<ITimeServer> timeServer)
+{
+	return FALSE;
+}
+
+Bool IFilePluginV201::readFilesData(String readerName, InputTables inputs, Double targetOffset, Flag shouldEnd)
+{
+	return FALSE;
+}
+
+void IFilePluginV201::closeReadFiles(String readerName)
+{}
+
+Bool IFilePluginV201::openWriteFiles(String writerName, Bool isSideWriter, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo, FileIOExtInfo extInfo, Interface<ITimeServer> timeServer)
+{
+	return FALSE;
+}
+
+void IFilePluginV201::writeFilesData(String writerName, Bool isSideWriter, InputTables inputs, Array<SessionBusRawData> busMessages, Flag shouldEnd)
+{}
+
+void IFilePluginV201::closeWriteFiles(String writerName, Bool isSideWriter)
+{}
+
+Bool IFilePluginV201::hasDataFiles(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, FileIOBasicInfo basicInfo)
+{
+	return FALSE;
+}
+
+void IFilePluginV201::pickSession(String pickerName, Path inputRoot, Array<Path> subInputRoots, Path generationRoot, PickConfig pick, FileIOBasicInfo basicInfo, Flag shouldEnd, Interface<IStandaloneTaskCallback> callback, Interface<ITimeServer> timeServer)
+{}
+
+void IFilePluginV201::setFileExtraConfig(String extra)
 {}

@@ -2,12 +2,12 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 总线通道数扩展至32。新增utility::getSharedObject。新增ArrayX::clear方法。检查Func有效性
+// Update log / 更新记录: 新增IFilePluginV201。总线通道数继续扩展至48。增加宏定义MTC_NUM和PCC_NUM
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 2
-#define SPADAS_VERSION_BUILD 0
+#define SPADAS_VERSION_BUILD 1
 
 // Latest plugin getter name / 最新插件接口函数名
 #define getPluginLatest get_plugin_v201
@@ -15,13 +15,13 @@
 #define getBusPluginLatest get_bus_plugin_v300
 #define getVideoPluginLatest get_video_plugin_v500
 #define getProcessorPluginLatest get_processor_plugin_v700
-#define getFilePluginLatest get_file_plugin_v200
+#define getFilePluginLatest get_file_plugin_v201
 
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.1.8 \n
-* \~Chinese 本文档对应Spadas版本：9.1.8 \n
+* \~English This document corresponds to Spadas version: 9.2.1 \n
+* \~Chinese 本文档对应Spadas版本：9.2.1 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -409,7 +409,9 @@ virtual spadas::Bool isType(spadas::String name) override { return name == class
 #define getFilePlugin(version) get_file_plugin_v ## version
 
 // Definition of channel numbers / 通道数量定义
-#define BC_NUM 32 // Bus / 总线
+#define BC_NUM 48 // Bus / 总线
 #define VC_NUM 24 // Video / 视频
+#define MTC_NUM 16 // Manual trigger / 手动触发器
+#define PCC_NUM 12 // Point cloud / 点云
 
 #endif
