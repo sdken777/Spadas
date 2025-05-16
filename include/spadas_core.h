@@ -7895,7 +7895,39 @@ namespace spadas
 			BusCH14 = 113,
 			BusCH15 = 114,
 			BusCH16 = 115,
-
+			BusCH17 = 116,
+			BusCH18 = 117,
+			BusCH19 = 118,
+			BusCH20 = 119,
+			BusCH21 = 120,
+			BusCH22 = 121,
+			BusCH23 = 122,
+			BusCH24 = 123,
+			BusCH25 = 124,
+			BusCH26 = 125,
+			BusCH27 = 126,
+			BusCH28 = 127,
+			BusCH29 = 128,
+			BusCH30 = 129,
+			BusCH31 = 130,
+			BusCH32 = 131,
+			BusCH33 = 132,
+			BusCH34 = 133,
+			BusCH35 = 134,
+			BusCH36 = 135,
+			BusCH37 = 136,
+			BusCH38 = 137,
+			BusCH39 = 138,
+			BusCH40 = 139,
+			BusCH41 = 140,
+			BusCH42 = 141,
+			BusCH43 = 142,
+			BusCH44 = 143,
+			BusCH45 = 144,
+			BusCH46 = 145,
+			BusCH47 = 146,
+			BusCH48 = 147,
+			
 			/// \~English @brief Video channel A data
 			/// \~Chinese @brief 视频通道A数据
 			VideoChannelA = 200,
@@ -7923,7 +7955,7 @@ namespace spadas
 			VideoChannelW = 222,
 			VideoChannelX = 223,
 		};
-		SPADAS_ENUM_VALUES(Invalid, Signal, GeneralSample, MatrixSample, BusCH1, BusCH2, BusCH3, BusCH4, BusCH5, BusCH6, BusCH7, BusCH8, BusCH9, BusCH10, BusCH11, BusCH12, BusCH13, BusCH14, BusCH15, BusCH16, VideoChannelA, VideoChannelB, VideoChannelC, VideoChannelD, VideoChannelE, VideoChannelF, VideoChannelG, VideoChannelH, VideoChannelI, VideoChannelJ, VideoChannelK, VideoChannelL, VideoChannelM, VideoChannelN, VideoChannelO, VideoChannelP, VideoChannelQ, VideoChannelR, VideoChannelS, VideoChannelT, VideoChannelU, VideoChannelV, VideoChannelW, VideoChannelX);
+		SPADAS_ENUM_VALUES(Invalid, Signal, GeneralSample, MatrixSample, BusCH1, BusCH2, BusCH3, BusCH4, BusCH5, BusCH6, BusCH7, BusCH8, BusCH9, BusCH10, BusCH11, BusCH12, BusCH13, BusCH14, BusCH15, BusCH16, BusCH17, BusCH18, BusCH19, BusCH20, BusCH21, BusCH22, BusCH23, BusCH24, BusCH25, BusCH26, BusCH27, BusCH28, BusCH29, BusCH30, BusCH31, BusCH32, BusCH33, BusCH34, BusCH35, BusCH36, BusCH37, BusCH38, BusCH39, BusCH40, BusCH41, BusCH42, BusCH43, BusCH44, BusCH45, BusCH46, BusCH47, BusCH48, VideoChannelA, VideoChannelB, VideoChannelC, VideoChannelD, VideoChannelE, VideoChannelF, VideoChannelG, VideoChannelH, VideoChannelI, VideoChannelJ, VideoChannelK, VideoChannelL, VideoChannelM, VideoChannelN, VideoChannelO, VideoChannelP, VideoChannelQ, VideoChannelR, VideoChannelS, VideoChannelT, VideoChannelU, VideoChannelV, VideoChannelW, VideoChannelX);
 	};
 
 	/// \~English @brief File R/W basic information
