@@ -179,8 +179,8 @@
 *
 * \~English \subsection p4 4. General function plugin interface
 * \~Chinese \subsection p4 4. 实现通用功能插件接口
-* \~English Methods that must be implemented in spadas::IPluginV200 include:
-* \~Chinese spadas::IPluginV200 中必须实现的方法包括：
+* \~English Methods that must be implemented in spadas::IPluginV201 include:
+* \~Chinese spadas::IPluginV201 中必须实现的方法包括：
 *   \~ - getPluginType
 *   \~ - getPluginVersion
 *
@@ -218,8 +218,8 @@
 *
 * \~English \subsection p9 9. File R/W plugin interface
 * \~Chinese \subsection p9 9. 实现文件读写插件接口
-* \~English spadas::IFilePluginV200 can realize file reading, file writing, and data picking. \n\n
-* \~Chinese spadas::IFilePluginV200 可实现文件读取、文件写入、以及文件截取。 \n\n
+* \~English spadas::IFilePluginV201 can realize file reading, file writing, and data picking. \n\n
+* \~Chinese spadas::IFilePluginV201 可实现文件读取、文件写入、以及文件截取。 \n\n
 *
 * \~English The methods that need to be implemented for file reading include:
 * \~Chinese 文件读取需要实现的方法包括：
