@@ -2,12 +2,12 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 补全FileIOFilter
+// Update log / 更新记录: 修正Lock未定义SPADAS_VARS问题
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 2
-#define SPADAS_VERSION_BUILD 2
+#define SPADAS_VERSION_BUILD 3
 
 // Latest plugin getter name / 最新插件接口函数名
 #define getPluginLatest get_plugin_v201
@@ -20,8 +20,8 @@
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.2.2 \n
-* \~Chinese 本文档对应Spadas版本：9.2.2 \n
+* \~English This document corresponds to Spadas version: 9.2.3 \n
+* \~Chinese 本文档对应Spadas版本：9.2.3 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -179,8 +179,8 @@
 *
 * \~English \subsection p4 4. General function plugin interface
 * \~Chinese \subsection p4 4. 实现通用功能插件接口
-* \~English Methods that must be implemented in spadas::IPluginV200 include:
-* \~Chinese spadas::IPluginV200 中必须实现的方法包括：
+* \~English Methods that must be implemented in spadas::IPluginV201 include:
+* \~Chinese spadas::IPluginV201 中必须实现的方法包括：
 *   \~ - getPluginType
 *   \~ - getPluginVersion
 *
@@ -218,8 +218,8 @@
 *
 * \~English \subsection p9 9. File R/W plugin interface
 * \~Chinese \subsection p9 9. 实现文件读写插件接口
-* \~English spadas::IFilePluginV200 can realize file reading, file writing, and data picking. \n\n
-* \~Chinese spadas::IFilePluginV200 可实现文件读取、文件写入、以及文件截取。 \n\n
+* \~English spadas::IFilePluginV201 can realize file reading, file writing, and data picking. \n\n
+* \~Chinese spadas::IFilePluginV201 可实现文件读取、文件写入、以及文件截取。 \n\n
 *
 * \~English The methods that need to be implemented for file reading include:
 * \~Chinese 文件读取需要实现的方法包括：
