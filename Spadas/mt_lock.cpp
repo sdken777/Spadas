@@ -54,6 +54,7 @@ namespace spadas
 	class LockVars : public Vars
 	{
 	public:
+		SPADAS_VARS(Lock, Vars)
 		volatile UInt threadID;
 		LockContext context;
 		Bool isSpin;
