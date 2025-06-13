@@ -2,12 +2,12 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 增加工具链检查
+// Update log / 更新记录: 完善宏定义冲突解决
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 2
-#define SPADAS_VERSION_BUILD 4
+#define SPADAS_VERSION_BUILD 5
 
 // Latest plugin getter name / 最新插件接口函数名
 #define getPluginLatest get_plugin_v201
@@ -20,8 +20,8 @@
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.2.4 \n
-* \~Chinese 本文档对应Spadas版本：9.2.4 \n
+* \~English This document corresponds to Spadas version: 9.2.5 \n
+* \~Chinese 本文档对应Spadas版本：9.2.5 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -296,7 +296,7 @@
 #define SPADAS_WARNING_RETURN_MSG(condition, msg) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + SPADAS_LOCATION + "] "#condition + ". " + msg); return; }
 #define SPADAS_WARNING_RETURNVAL_MSG(condition, msg, returnVal) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + SPADAS_LOCATION + "] "#condition + ". " + msg); return (returnVal); }
 
-// Avoid macro conflicting / 避免宏定义冲突
+// Avoid macro conflicting (inside) / 避免宏定义冲突（对内）
 #if defined(TRUE)
 #undef TRUE
 #endif
@@ -314,6 +314,20 @@
 #endif
 #if defined(check)
 #undef check
+#endif
+#if defined(Func)
+#undef Func
+#endif
+#if defined(SS)
+#undef SS
+#endif
+
+// Avoid macro conflicting (outside) / 避免宏定义冲突（对外）
+#if defined(SPADAS_DISABLE_MACROS)
+#define SPADAS_DISABLE_MACRO_SEE
+#define SPADAS_DISABLE_MACRO_CAT
+#define SPADAS_DISABLE_MACRO_CHARS
+#define SPADAS_DISABLE_MACRO_FUNC
 #endif
 
 // For comma in macro / 在宏定义中使用逗号
@@ -337,7 +351,7 @@
 #define Func typename std::function
 
 // Null pointer / 空指针
-#ifndef NULL
+#if !defined(NULL)
 #define NULL 0
 #endif
 
