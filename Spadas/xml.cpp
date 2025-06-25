@@ -71,7 +71,8 @@ namespace xml_internal
 					(c >= 'a' && c <= 'z') ||
 					(c == '_') ||
 					(c == '.') ||
-					(c == '-');
+					(c == '-') ||
+					(c == ':');
 			}
 		}
 		Bool validate(String& text)
