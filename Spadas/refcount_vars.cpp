@@ -36,7 +36,11 @@ void Vars::spinEnter()
 
 void Vars::spinLeave()
 {
+#if defined(SPADAS_ARCH_X86)
 	varSpinLock.set(0);
+#else // SPADAS_ARCH_ARM
+	varSpinLock.casSpin(1, 0);
+#endif
 }
 
 UInt Vars::getObjectCount()

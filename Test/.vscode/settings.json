@@ -9,5 +9,17 @@
         "*.vcxproj.user": true,
         "*.vcxproj.filters": true,
         ".gitignore": true
+    },
+    "files.associations": {
+        "__hash_table": "cpp",
+        "__split_buffer": "cpp",
+        "atomic": "cpp",
+        "ios": "cpp",
+        "istream": "cpp",
+        "locale": "cpp",
+        "string": "cpp",
+        "system_error": "cpp",
+        "unordered_map": "cpp",
+        "vector": "cpp"
     }
 }

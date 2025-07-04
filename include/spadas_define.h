@@ -2,12 +2,12 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 优化system::wait
+// Update log / 更新记录: 修正arm下Vars::spinLeave多线程不安全
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 2
-#define SPADAS_VERSION_BUILD 7
+#define SPADAS_VERSION_BUILD 8
 
 // Latest plugin getter name / 最新插件接口函数名
 #define getPluginLatest get_plugin_v201
@@ -20,8 +20,8 @@
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.2.5 \n
-* \~Chinese 本文档对应Spadas版本：9.2.5 \n
+* \~English This document corresponds to Spadas version: 9.2.8 \n
+* \~Chinese 本文档对应Spadas版本：9.2.8 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
