@@ -2,12 +2,12 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 修正XML字符验证
+// Update log / 更新记录: 优化system::wait
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 2
-#define SPADAS_VERSION_BUILD 6
+#define SPADAS_VERSION_BUILD 7
 
 // Latest plugin getter name / 最新插件接口函数名
 #define getPluginLatest get_plugin_v201

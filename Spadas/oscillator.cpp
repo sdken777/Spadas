@@ -270,8 +270,8 @@ void OscillatorVars::stopOscillator(UInt id)
 void oscillator_internal::sleepTime(spadas::UInt time)
 {
 	timeval interval;
-	interval.tv_sec = 0;
-	interval.tv_usec = time * 1000;
+	interval.tv_sec = time / 1000;
+	interval.tv_usec = (time % 1000) * 1000;
 	select(0, NULL, NULL, NULL, &interval);
 }
 

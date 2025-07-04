@@ -187,18 +187,18 @@ TimeWithMS spadas::system::getTimeWithMS()
 void spadas::system::wait(UInt time)
 {
 	if (time == 0) return;
-#if defined(SPADAS_ENV_WINDOWS)
+#if defined(SPADAS_ENV_WINDOWS) || defined(SPADAS_ENV_MACOS)
 	if (wc.failCount.get() > 1) Flag(time).waitSet();
 	else if (wc.sampleCount.get() >= 100) sleepTime(time);
 	else
 	{
 		Timer timer;
 		sleepTime(1);
-		Bool failed = timer.check() >= 10.0;
+		Bool failed = timer.check() >= 5.0;
 		if (wc.sampleCount.increase() <= 100 && failed) wc.failCount.increase();
 		sleepTime(time);
 	}
-#elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
+#elif defined(SPADAS_ENV_LINUX)
 	sleepTime(time);
 #endif
 }
