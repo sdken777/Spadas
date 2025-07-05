@@ -39,7 +39,7 @@ void Vars::spinLeave()
 #if defined(SPADAS_ARCH_X86)
 	varSpinLock.set(0);
 #else // SPADAS_ARCH_ARM
-	varSpinLock.casSpin(1, 0);
+	varSpinLock.cas(1, 0);
 #endif
 }
 
