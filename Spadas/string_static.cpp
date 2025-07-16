@@ -1,4 +1,4 @@
-﻿
+﻿#define SPADAS_ENABLE_MACROS
 #include "spadas.h"
 #include "string_spadas.h"
 

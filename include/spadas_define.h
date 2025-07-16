@@ -2,12 +2,12 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 修正arm下Vars::spinLeave多线程不安全
+// Update log / 更新记录: 默认不启用可选宏
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 2
-#define SPADAS_VERSION_BUILD 8
+#define SPADAS_VERSION_BUILD 9
 
 // Latest plugin getter name / 最新插件接口函数名
 #define getPluginLatest get_plugin_v201
@@ -296,7 +296,7 @@
 #define SPADAS_WARNING_RETURN_MSG(condition, msg) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + SPADAS_LOCATION + "] "#condition + ". " + msg); return; }
 #define SPADAS_WARNING_RETURNVAL_MSG(condition, msg, returnVal) if (condition) { spadas::console::print((spadas::String)"[SPADAS WARNING @ " + SPADAS_LOCATION + "] "#condition + ". " + msg); return (returnVal); }
 
-// Avoid macro conflicting (inside) / 避免宏定义冲突（对内）
+// Avoid macro conflicting / 避免宏定义冲突
 #if defined(TRUE)
 #undef TRUE
 #endif
@@ -322,12 +322,12 @@
 #undef SS
 #endif
 
-// Avoid macro conflicting (outside) / 避免宏定义冲突（对外）
-#if defined(SPADAS_DISABLE_MACROS)
-#define SPADAS_DISABLE_MACRO_SEE
-#define SPADAS_DISABLE_MACRO_CAT
-#define SPADAS_DISABLE_MACRO_CHARS
-#define SPADAS_DISABLE_MACRO_FUNC
+// Enable optional macros / 启用可选宏
+#if defined(SPADAS_ENABLE_MACROS)
+#define SPADAS_ENABLE_MACRO_SEE
+#define SPADAS_ENABLE_MACRO_CAT
+#define SPADAS_ENABLE_MACRO_CHARS
+#define SPADAS_ENABLE_MACRO_FUNC
 #endif
 
 // For comma in macro / 在宏定义中使用逗号
@@ -384,21 +384,21 @@
 #define SPADAS_ENUM_VALUES(...) static const spadas::Char* toString(Value val) { switch (val) { RM_MAP(MACRO_ENUM_VALUE, __VA_ARGS__) default: return 0; } }
 
 // Convenience for debugging / 方便调试
-#if !defined(SPADAS_DISABLE_MACRO_SEE)
+#if defined(SPADAS_ENABLE_MACRO_SEE)
 #define MACRO_SEE(var) seeVarStringList.append((spadas::String) #var + " = " + (var));
 #define see(...) { spadas::ArrayX<spadas::String> seeVarStringList; RM_MAP(MACRO_SEE, __VA_ARGS__) spadas::console::print(spadas::String::merge(seeVarStringList.toArray(), ", ")); }
 #define seeArray(arr) spadas::console::print((spadas::String) #arr + " = [ " + spadas::String::merge(arr, ", ") + " ]")
 #endif
 
 // Convenience for string concatenation / 方便字符串拼接
-#if !defined(SPADAS_DISABLE_MACRO_CAT)
+#if defined(SPADAS_ENABLE_MACRO_CAT)
 #define cat +(spadas::String)
 #define MACRO_CAT_ALL(var) (var) +
 #define catAll(...) ((spadas::String) RM_MAP(MACRO_CAT_ALL, __VA_ARGS__) "")
 #endif
 
 // Useful strings / 常用字符
-#if !defined(SPADAS_DISABLE_MACRO_CHARS)
+#if defined(SPADAS_ENABLE_MACRO_CHARS)
 #define comma ','
 #define dot '.'
 #define spacebar ' '

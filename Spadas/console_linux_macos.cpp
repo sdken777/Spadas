@@ -13,6 +13,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
+#define SPADAS_ENABLE_MACROS
 #include "console.h"
 
 namespace console_internal

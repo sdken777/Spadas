@@ -4,6 +4,8 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreGraphics/CoreGraphics.h>
 #include <ImageIO/ImageIO.h>
+
+#define SPADAS_ENABLE_MACROS
 #include "image.h"
 
 namespace image_internal

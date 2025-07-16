@@ -1,6 +1,8 @@
 ﻿
 #include <stdio.h>
 #include <wchar.h>
+
+#define SPADAS_ENABLE_MACROS
 #include "spadas.h"
 
 using namespace spadas;

@@ -7,6 +7,7 @@
 #undef NULL
 #endif
 
+#define SPADAS_ENABLE_MACROS
 #include "spadas.h"
 
 namespace spadas

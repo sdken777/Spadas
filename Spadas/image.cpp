@@ -1,4 +1,4 @@
-﻿
+﻿#define SPADAS_ENABLE_MACROS
 #include "image.h"
 
 namespace image_internal

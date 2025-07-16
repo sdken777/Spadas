@@ -1,4 +1,4 @@
-﻿
+﻿#define SPADAS_ENABLE_MACROS
 #include "file.h"
 
 namespace file_internal

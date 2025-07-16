@@ -10,7 +10,7 @@
 #include "spadas_deprecated.h"
 #endif
 
-#if defined(SPADAS_DISABLE_MACRO_FUNC)
+#if !defined(SPADAS_ENABLE_MACRO_FUNC)
 #undef Func
 #endif
 
