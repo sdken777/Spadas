@@ -5836,6 +5836,27 @@ namespace spadas
 		Bool isValid() { return FALSE; }
 	};
 
+	/// \~English @brief Checkpoint time cost statistics
+	/// \~Chinese @brief 检查点耗时统计信息
+	struct CheckpointStat
+	{
+		/// \~English @brief Total time cost, in seconds, 0 means invalid
+		/// \~Chinese @brief 总耗时，单位秒，0表示无效
+		Double totalTime;
+
+		/// \~English @brief Time cost of each checkpoint, in seconds
+		/// \~Chinese @brief 各检查点耗时，单位秒
+		Dictionary<Double> timeCosts;
+
+		/// \~English @brief Default constructor
+		/// \~Chinese @brief 默认构造函数
+		CheckpointStat() : totalTime(0) {}
+
+		/// \~English @brief Convert to string, which is convenient for recording
+		/// \~Chinese @brief 转换为方便记录的字符串
+		SPADAS_API String toString();
+	};
+
 	/// \~English @brief System function namespace
 	/// \~Chinese @brief 系统功能函数命名空间
 	namespace system
@@ -5981,6 +6002,14 @@ namespace spadas
 		/// \~English @brief Get the global shared object corresponding to the specified key, if it does not exist, call defaultCreator to create it
 		/// \~Chinese @brief 获取指定键对应的全局共享对象，若不存在则调用defaultCreator创建
 		SPADAS_API BaseObject getSharedObject(String key, Func<BaseObject()> defaultCreator);
+
+		/// \~English @brief Add a checkpoint
+		/// \~Chinese @brief 添加一个检查点
+		SPADAS_API void addCheckpoint(String statName, String checkpointName);
+
+		/// \~English @brief Clear current checkpoint. If reset is TRUE, output statistics and reset
+		/// \~Chinese @brief 清除当前检查点，若reset为TRUE则输出统计信息并重置
+		SPADAS_API CheckpointStat clearCheckpoint(String statName, Bool reset = FALSE);
 	}
 
 	// Plugin related type definition / 插件相关类型定义 //////////////////////////////////////////////////////////////
