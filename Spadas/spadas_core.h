@@ -8362,6 +8362,20 @@ namespace spadas
 		/// \~Chinese @returns 数据文件对象，若无数据或所有数据的时间戳都小于目标则返回无效对象
 		static File search(Path path, Double time, Interface<ITimestampSearch> searcher);
 
+		/// \~English @brief Search the file according to the timestamp, jump to the location, so that the next frame of data is the earliest frame whose timestamp is not less than the specified timestamp
+		/// \~Chinese @brief 按时间戳搜索数据文件，跳转文件位置，使得下一帧数据为时间戳不小于指定时间戳的最早帧
+		/// \~English @param path Data file path
+		/// \~Chinese @param path 数据文件路径
+		/// \~English @param time Target timestamp
+		/// \~Chinese @param time 目标时间戳
+		/// \~English @param searcher Search interface
+		/// \~Chinese @param searcher 搜索接口
+		/// \~English @param password Password for opening SEF (Spadas encrypted file)
+		/// \~Chinese @param password 用于打开SEF（Spadas加密文件）的密码
+		/// \~English @returns File object, if there is no data or the timestamp of all data is less than the target, an invalid object will be returned
+		/// \~Chinese @returns 数据文件对象，若无数据或所有数据的时间戳都小于目标则返回无效对象
+		static File search(Path path, Double time, Interface<ITimestampSearch> searcher, Optional<String> password);
+
 		/// \~English @brief Get the timestamp range in the data file
 		/// \~Chinese @brief 获取数据文件中的时间戳范围
 		/// \~English @param path Data file path
@@ -8371,6 +8385,18 @@ namespace spadas
 		/// \~English @returns Timestamp range
 		/// \~Chinese @returns 时间戳范围
 		static Optional<Range> getTimeRange(Path path, Interface<ITimestampSearch> searcher);
+
+		/// \~English @brief Get the timestamp range in the data file
+		/// \~Chinese @brief 获取数据文件中的时间戳范围
+		/// \~English @param path Data file path
+		/// \~Chinese @param path 数据文件路径
+		/// \~English @param searcher Search interface
+		/// \~Chinese @param searcher 搜索接口
+		/// \~English @param password Password for opening SEF (Spadas encrypted file)
+		/// \~Chinese @param password 用于打开SEF（Spadas加密文件）的密码
+		/// \~English @returns Timestamp range
+		/// \~Chinese @returns 时间戳范围
+		static Optional<Range> getTimeRange(Path path, Interface<ITimestampSearch> searcher, Optional<String> password);
 	};
 
 	/// \~English @brief Interface for constructing and deconstructing data in spadas::FlexVars

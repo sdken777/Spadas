@@ -47,12 +47,17 @@ Range ITimestampSearch::getTailSearchRange()
 
 File TimestampSearch::search(Path path, Double time, Interface<ITimestampSearch> searcher)
 {
+	return search(path, time, searcher, Optional<String>());
+}
+
+File TimestampSearch::search(Path path, Double time, Interface<ITimestampSearch> searcher, Optional<String> password)
+{
 	SPADAS_ERROR_RETURNVAL(path.isNull() || path.isFolder() || searcher.isNull(), File());
 
 	ULong fileSize = path.fileSize();
 	if (fileSize < 8) return File(); // 小于8字节文件认为是空文件
 
-	File file = File::openText(path);
+	File file = password.isValid() ? File::openEncrypted(path, password.value()) : File::openText(path);
 	if (!file.isValid()) return File();
 
 	// 确定尾部搜索范围
@@ -188,12 +193,17 @@ File TimestampSearch::search(Path path, Double time, Interface<ITimestampSearch>
 
 Optional<Range> TimestampSearch::getTimeRange(Path path, Interface<ITimestampSearch> searcher)
 {
+	return getTimeRange(path, searcher, Optional<String>());
+}
+
+Optional<Range> TimestampSearch::getTimeRange(Path path, Interface<ITimestampSearch> searcher, Optional<String> password)
+{
 	SPADAS_ERROR_RETURNVAL(path.isNull() || path.isFolder() || searcher.isNull(), Optional<Range>());
 
 	ULong fileSize = path.fileSize();
 	if (fileSize < 8) return Optional<Range>(); // 小于8字节文件认为是空文件
 
-	File file = File::openText(path);
+	File file = password.isValid() ? File::openEncrypted(path, password.value()) : File::openText(path);
 	if (!file.isValid()) return Optional<Range>();
 
 	// 确定尾部搜索范围
