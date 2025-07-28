@@ -23,7 +23,8 @@
         "chrono": "cpp",
         "random": "cpp",
         "limits": "cpp",
-        "bitset": "cpp"
+        "bitset": "cpp",
+        "vector": "cpp"
     },
     "Codegeex.RepoIndex": true
 }

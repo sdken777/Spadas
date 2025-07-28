@@ -2,11 +2,11 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 新增utility::addCheckpoint, clearCheckpoint
+// Update log / 更新记录: File支持读写SEF（Spadas加密文件）
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
-#define SPADAS_VERSION_MINOR 3
+#define SPADAS_VERSION_MINOR 4
 #define SPADAS_VERSION_BUILD 0
 
 // Latest plugin getter name / 最新插件接口函数名
@@ -20,8 +20,8 @@
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.3.0 \n
-* \~Chinese 本文档对应Spadas版本：9.3.0 \n
+* \~English This document corresponds to Spadas version: 9.4.0 \n
+* \~Chinese 本文档对应Spadas版本：9.4.0 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *

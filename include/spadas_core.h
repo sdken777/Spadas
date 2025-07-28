@@ -3904,6 +3904,10 @@ namespace spadas
 		/// \~Chinese @brief 以文本输入模式打开文件（将检测UTF-8 BOM头）
 		static File openText(Path filePath);
 
+		/// \~English @brief Open the SEF (Spadas Encrypted File)
+		/// \~Chinese @brief 打开SEF（Spadas加密文件）
+		static File openEncrypted(Path filePath, String password);
+
 		/// \~English @brief Create or recreate the file in binary output mode
 		/// \~Chinese @brief 以二进制输出模式创建或重新创建文件
 		static File createBinary(Path filePath);
@@ -3912,6 +3916,10 @@ namespace spadas
 		/// \~Chinese @brief 以文本输出模式创建或重新创建文件（UTF-8编码，带BOM头，回车符\n）
 		static File createText(Path filePath);
 
+		/// \~English @brief Create or recreate the SEF (Spadas Encrypted File)
+		/// \~Chinese @brief 创建或重新创建SEF（Spadas加密文件）
+		static File createEncrypted(Path filePath, String password);
+
 		/// \~English @brief Open the file in binary output mode (create it if it does not exist) and append the content at the end
 		/// \~Chinese @brief 以二进制输出模式打开文件（若不存在则创建）并在尾部追加内容
 		static File appendBinary(Path filePath);
@@ -3919,6 +3927,10 @@ namespace spadas
 		/// \~English @brief Open the file in text output mode (create it if it does not exist) and append content at the end (UTF-8 BOM header will be detected)
 		/// \~Chinese @brief 以文本输出模式打开文件（若不存在则创建）并在尾部追加内容（将检测UTF-8 BOM头）
 		static File appendText(Path filePath);
+
+		/// \~English @brief Open the SEF (Spadas Encrypted File) and append the content at the end (create it if it does not exist)
+		/// \~Chinese @brief 打开SEF（Spadas加密文件）并在尾部追加内容（若不存在则创建）
+		static File appendEncrypted(Path filePath, String password);
 
 		/// \~English @brief Close file I/O (in output mode, it will write all data in the buffer to disk before closing)
 		/// \~Chinese @brief 关闭文件I/O（在输出模式下，关闭前将缓冲区中所有数据写入磁盘）
