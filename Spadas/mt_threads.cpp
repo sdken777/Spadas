@@ -23,6 +23,7 @@ namespace spadas
     	SPADAS_VARS(Threads, Vars)
 
         Interface<IWorkflow> workflow;
+		Interface<ILogger> logger;
         WorkflowStatus status;
         Array<Timer> timers;
 		Barrier barrier;
@@ -115,8 +116,8 @@ namespace spadas
             ListNode<Threads> currentNode = threadsCircle0.next();
             while (currentNode != threadsCircle0)
             {
-                if (currentNode.value().getWorkflow() == workflow &&
-					currentNode.value().getWorkflowStatus().isActive)
+                if (currentNode->getWorkflow() == workflow &&
+					currentNode->getWorkflowStatus().isActive)
                 {
                     out = currentNode.value();
                     break;
@@ -154,7 +155,7 @@ namespace spadas
 				ListNode<Threads> currentNode = threadsCircle0.next();
 				while (currentNode != threadsCircle0)
 				{
-					if (currentNode.value().getWorkflowStatus().workflowID == workflowID)
+					if (currentNode->getWorkflowStatus().workflowID == workflowID)
 					{
 						currentNode = currentNode.previous();
 						currentNode.removeNext();
@@ -263,6 +264,9 @@ Pointer threadFunc(Pointer param)
 	UInt curThreadID = Threads::getCurrentThreadID();
     status.threadID = curThreadID;
 	vars->spinLeave();
+
+	// set thread logger
+	if (vars->logger.isValid()) lm.useLogger(curThreadID, vars->logger);
 	
 	// thread initialization
 	Bool ret = vars->workflow->onThreadBegin(threadIndex);
@@ -430,7 +434,7 @@ void Threads::useDefaultTimeInterval(UInt threadIndex)
 	vars->spinLeave();
 }
 
-Threads Threads::start(Interface<IWorkflow> workflow, Array<Bool>& threadsRet)
+Threads Threads::start(Interface<IWorkflow> workflow, Interface<ILogger> logger, Array<Bool>& threadsRet)
 {
 	SPADAS_ERROR_RETURNVAL(!workflow.isValid(), Threads());
 
@@ -446,6 +450,7 @@ Threads Threads::start(Interface<IWorkflow> workflow, Array<Bool>& threadsRet)
     Threads out;
 	out.setVars(new ThreadsVars(), TRUE);
     out.vars->workflow = workflow;
+	out.vars->logger = logger;
     out.vars->timers = Array<Timer>(nThreads);
 	out.vars->barrier.setStrength(nThreads);
     out.vars->status.isActive = TRUE;
@@ -469,10 +474,15 @@ Threads Threads::start(Interface<IWorkflow> workflow, Array<Bool>& threadsRet)
 	return out;
 }
 
+Threads Threads::start(Interface<IWorkflow> workflow, Array<Bool>& threadsRet)
+{
+	return start(workflow, Interface<ILogger>(), threadsRet);
+}
+
 Threads Threads::start(Interface<IWorkflow> workflow)
 {
 	Array<Bool> dummy;
-	return start(workflow, dummy);
+	return start(workflow, Interface<ILogger>(), dummy);
 }
 
 void Threads::run(Interface<IWorkflow> workflow, Flag interrupt)

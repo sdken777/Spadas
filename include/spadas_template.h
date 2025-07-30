@@ -3521,7 +3521,7 @@ namespace spadas
 			ListNode<KeyValue<KeyType, ValueType> > node = *tableData[i];
 			while (TRUE)
 			{
-				out.initialize(count++, node.value().key);
+				out.initialize(count++, node->key);
 				if (node.hasNext()) node.goNext();
 				else break;
 			}
@@ -3551,7 +3551,7 @@ namespace spadas
 			ListNode<KeyValue<KeyType, ValueType> > node = *tableData[i];
 			while (TRUE)
 			{
-				out.initialize(count++, node.value().value);
+				out.initialize(count++, node->value);
 				if (node.hasNext()) node.goNext();
 				else break;
 			}
@@ -3609,8 +3609,8 @@ namespace spadas
 			ListNode<KeyValue<KeyType, ValueType> > node = *tableData[i];
 			while (TRUE)
 			{
-				keys.initialize(count, node.value().key);
-				values.initialize(count++, node.value().value);
+				keys.initialize(count, node->key);
+				values.initialize(count++, node->value);
 				if (node.hasNext()) node.goNext();
 				else break;
 			}
@@ -3655,7 +3655,7 @@ namespace spadas
 		ListNode<KeyValue<KeyType, ValueType> > node = *target;
 		while (TRUE)
 		{
-			if (node.value().key == key) return TRUE;
+			if (node->key == key) return TRUE;
 			else if (!node.hasNext()) return FALSE;
 			else node.goNext();
 		}
@@ -3669,7 +3669,7 @@ namespace spadas
 		ListNode<KeyValue<KeyType, ValueType> >** tableData = this->vars->table.data();
 		if (!tableData[index]) return;
 		ListNode<KeyValue<KeyType, ValueType> > node = *tableData[index];
-		if (node.value().key == key)
+		if (node->key == key)
 		{
 			if (node.hasNext())
 			{
@@ -3689,7 +3689,7 @@ namespace spadas
 			while (node.hasNext())
 			{
 				node.goNext();
-				if (node.value().key == key)
+				if (node->key == key)
 				{
 					node.removeSelf();
 					this->vars->size--;
@@ -3803,7 +3803,7 @@ namespace spadas
 					KeyValue<KeyType, ValueType> pair(key, ValueType());
 					ListNode<KeyValue<KeyType, ValueType> > newNode = node.joinNext(pair);
 					this->vars->size++;
-					return newNode.value().value;
+					return newNode->value;
 				}
 				else node.goNext();
 			}

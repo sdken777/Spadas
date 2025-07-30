@@ -155,8 +155,13 @@ namespace spadas
 			if (++curIndex4 >= 499) curIndex4 = 0;
 			return dst;
 		}
+		Binary nextEnter()
+		{
+			enter[0] = next((Byte)'\n');
+			return enter;
+		}
 	private:
-		EncryptionContext() : curIndex1(0), curIndex2(0), curIndex3(0), curIndex4(0)
+		EncryptionContext() : curIndex1(0), curIndex2(0), curIndex3(0), curIndex4(0), enter(1)
 		{
 			utility::memorySet(0, mask1, 479);
 			utility::memorySet(0, mask2, 487);
@@ -218,6 +223,7 @@ namespace spadas
 		UInt curIndex2;
 		UInt curIndex3;
 		UInt curIndex4;
+		Binary enter;
 	};
 
 	class FileVars : public Vars
@@ -584,16 +590,14 @@ void File::print(String text)
 	if (vars->mode == FileMode::OutputEncrypted)
 	{
 		Binary data = text.toBinary();
-		for (UInt i = 0; i < data.size(); i++)
+		const UInt dataSize = data.size();
+		Byte *dataPtr = data.data();
+		for (UInt i = 0; i < dataSize; i++)
 		{
-			data[i] = vars->encCtx->next(data[i]);
+			dataPtr[i] = vars->encCtx->next(dataPtr[i]);
 		}
-
-		Binary enter(1);
-		enter[0] = vars->encCtx->next('\n');
-
 		fileOutput(vars->file, data);
-		fileOutput(vars->file, enter);
+		fileOutput(vars->file, vars->encCtx->nextEnter());
 	}
 	else
 	{
@@ -617,10 +621,13 @@ void File::output(Binary data)
 
 	if (vars->mode == FileMode::OutputEncrypted)
 	{
-		Binary localData(data.size());
-		for (UInt i = 0; i < data.size(); i++)
+		const UInt dataSize = data.size();
+		Binary localData(dataSize);
+		Byte *srcDataPtr = data.data();
+		Byte *dstDataPtr = localData.data();
+		for (UInt i = 0; i < dataSize; i++)
 		{
-			localData[i] = vars->encCtx->next(data[i]);
+			dstDataPtr[i] = vars->encCtx->next(srcDataPtr[i]);
 		}
 		fileOutput(vars->file, localData);
 	}
@@ -663,10 +670,12 @@ String File::scan()
 			if (data.isEmpty()) break;
 
 			Int validLength = -1;
-			for (UInt i = 0; i < data.size(); i++)
+			const UInt dataSize = data.size();
+			Byte *dataPtr = data.data();
+			for (UInt i = 0; i < dataSize; i++)
 			{
-				Char c = (Char)vars->encCtx->next(data[i]);
-				data[i] = (Byte)c;
+				Char c = (Char)vars->encCtx->next(dataPtr[i]);
+				dataPtr[i] = (Byte)c;
 				if (c == 0)
 				{
 					validLength = i;
@@ -686,15 +695,15 @@ String File::scan()
 				}
 			}
 
-			if (validLength == -1 && data.size() < ENCRYPTED_SCAN_SIZE)
+			if (validLength == -1 && dataSize < ENCRYPTED_SCAN_SIZE)
 			{
-				validLength = data.size();
+				validLength = dataSize;
 			}
 
 			if (validLength == -1)
 			{
 				stringBuffer.append(data.span());
-				bufferedLength += data.size();
+				bufferedLength += dataSize;
 			}
 			else
 			{
@@ -739,9 +748,11 @@ Binary File::input(UInt size)
 
 	if (vars->mode == FileMode::InputEncrypted)
 	{
-		for (UInt i = 0; i < output.size(); i++)
+		const UInt outputSize = output.size();
+		Byte *outputPtr = output.data();
+		for (UInt i = 0; i < outputSize; i++)
 		{
-			output[i] = vars->encCtx->next(output[i]);
+			outputPtr[i] = vars->encCtx->next(outputPtr[i]);
 		}
 	}
 

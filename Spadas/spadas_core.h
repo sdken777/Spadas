@@ -5364,14 +5364,18 @@ namespace spadas
 		/// \~Chinese @brief 使用默认的循环间隔，该值通过流程接口的 IWorkflow::getTimeInterval 方法获得
 		void useDefaultTimeInterval(UInt threadIndex);
 		
-		/// \~English @brief Start the child thread to run the specified workflow, and return the container object of the workflow after all threads finished running IWorkflow::onThreadBegin
+		/// \~English @brief Start the child threads to run the specified workflow, and return the container object of the workflow after all threads finished running IWorkflow::onThreadBegin
 		/// \~Chinese @brief 启动子线程运行指定流程，在所有线程运行 IWorkflow::onThreadBegin 完毕后返回该流程的容器对象
 		static Threads start(Interface<IWorkflow> workflow);
 
-		/// \~English @brief Start the child thread to run the specified workflow, and return the container object of the workflow after all threads finished running IWorkflow::onThreadBegin, and output whether each thread starts successfully
+		/// \~English @brief Start the child threads to run the specified workflow, return the container object of the workflow after all threads finished running IWorkflow::onThreadBegin, and output whether each thread starts successfully
 		/// \~Chinese @brief 启动子线程运行指定流程，在所有线程运行 IWorkflow::onThreadBegin 完毕后返回该流程的容器对象，并输出每个线程是否成功开始
 		static Threads start(Interface<IWorkflow> workflow, Array<Bool>& threadsRet);
-		
+
+		/// \~English @brief Start the child threads to run the specified workflow, specify the interface for recording debugging information for the threads, return the container object of the workflow after all threads finished running IWorkflow::onThreadBegin, and output whether each thread starts successfully
+		/// \~Chinese @brief 启动子线程运行指定流程，并指定该线程的记录调试信息接口，在所有线程运行 IWorkflow::onThreadBegin 完毕后返回该流程的容器对象，并输出每个线程是否成功开始
+		static Threads start(Interface<IWorkflow> workflow, Interface<ILogger> logger, Array<Bool>& threadsRet);
+
 		/// \~English @brief Run the specified workflow in this thread (the number of threads required for this workflow should be 1)
 		/// \~Chinese @brief 在本线程中运行指定流程 (该流程所需线程数应为1)
 		static void run(Interface<IWorkflow> workflow, Flag interrupt);
@@ -5419,6 +5423,10 @@ namespace spadas
 		/// \~English @brief Start a thread to execute the task
 		/// \~Chinese @brief 开启线程执行任务
 		void start(Interface<ITask> task);
+
+		/// \~English @brief Start a thread to execute the task, and specify the interface for recording debugging information for this thread
+		/// \~Chinese @brief 开启线程执行任务，并指定该线程的记录调试信息接口
+		void start(Interface<ITask> task, Interface<ILogger> logger);
 
 		/// \~English @brief Stop the thread and wait for the end (if timeout returns FALSE)
 		/// \~Chinese @brief 停止线程，并等待结束 (若超时返回FALSE)

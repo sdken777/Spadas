@@ -60,7 +60,7 @@ Bool Barrier::against(Flag interrupt)
 		ListNode<Flag> thisNode = vars->flagCircle0.next();
 		for (UInt i = 0; i < vars->nJoined; i++)
 		{
-			thisNode.value().set();
+			thisNode->set();
 			thisNode = thisNode.next();
 		}
 		vars->flagCircle0.collapse();
