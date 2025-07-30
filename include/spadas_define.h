@@ -2,12 +2,12 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 新增Threads::start(workflow, logger, threadsRet)和TaskManager::start(task, logger)。优化File加密读写效率。使用"->"简化".value()."的调用
+// Update log / 更新记录: 文件写入时支持seek
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
 #define SPADAS_VERSION_MINOR 5
-#define SPADAS_VERSION_BUILD 0
+#define SPADAS_VERSION_BUILD 1
 
 // Latest plugin getter name / 最新插件接口函数名
 #define getPluginLatest get_plugin_v201

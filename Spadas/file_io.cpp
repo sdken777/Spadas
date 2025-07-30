@@ -604,8 +604,8 @@ void File::print(String text)
 		filePrint(vars->file, text, vars->mode == FileMode::OutputTextUtf8);
 	}
 	
-	ULong curPos = filePos(vars->file);
-	vars->pos = vars->size = curPos;
+	vars->pos = filePos(vars->file);
+	vars->size = math::max(vars->size, vars->pos);
 	
 	if (vars->timer.check() > FILE_FLUSH_PERIOD)
 	{
@@ -636,8 +636,8 @@ void File::output(Binary data)
 		fileOutput(vars->file, data);
 	}
 
-	vars->size += data.size();
-	vars->pos = vars->size;
+	vars->pos += data.size();
+	vars->size = math::max(vars->size, vars->pos);
 	
 	if (vars->timer.check() > FILE_FLUSH_PERIOD)
 	{
@@ -762,13 +762,31 @@ Binary File::input(UInt size)
 
 ULong File::seek(ULong pos)
 {
-	SPADAS_ERROR_RETURNVAL(isClosed() || vars->isOutputMode(), ULINF);
+	SPADAS_ERROR_RETURNVAL(isClosed(), ULINF);
 
-	if (vars->mode == FileMode::InputTextUtf8) pos = math::max(3ull, pos);
-	else if (vars->mode == FileMode::InputEncrypted) pos = math::max(16ull, pos);
+	ULong minPos = 0;
+	switch (vars->mode)
+	{
+	case FileMode::InputTextUtf8:
+	case FileMode::OutputTextUtf8:
+		minPos = 3;
+		break;
+	case FileMode::InputEncrypted:
+	case FileMode::OutputEncrypted:
+		minPos = 16;
+		break;
+	default:
+		minPos = 0;
+		break;
+	}
+	pos = math::max(minPos, pos);
 
 	vars->pos = fileSeek(vars->file, pos);
-	if (vars->mode == FileMode::InputEncrypted) vars->encCtx->moveTo(vars->pos);
+	
+	if (vars->mode == FileMode::InputEncrypted || vars->mode == FileMode::OutputEncrypted)
+	{
+		vars->encCtx->moveTo(vars->pos);
+	}
 
 	return vars->pos;
 }
