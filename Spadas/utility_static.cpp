@@ -280,3 +280,23 @@ void spadas::system::addEnvironmentPath(Path path)
 	}
 }
 #endif
+
+Int spadas::system::busChannelNum()
+{
+	return 48;
+}
+
+Int spadas::system::videoChannelNum()
+{
+	return 24;
+}
+
+Int spadas::system::manualTriggerChannelNum()
+{
+	return 16;
+}
+
+Int spadas::system::pointCloudChannelNum()
+{
+	return 12;
+}

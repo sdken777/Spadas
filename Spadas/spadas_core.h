@@ -5926,6 +5926,22 @@ namespace spadas
 		/// \~English @brief Ping, the timeout unit is milliseconds
 		/// \~Chinese @brief Ping，超时单位为毫秒
 		SPADAS_API Bool ping(String ip, UInt timeout = 1000);
+
+		/// \~English @brief Get the number of bus channels
+		/// \~Chinese @brief 获取总线通道数
+		SPADAS_API Int busChannelNum();
+
+		/// \~English @brief Get the number of video channels
+		/// \~Chinese @brief 获取视频通道数
+		SPADAS_API Int videoChannelNum();
+
+		/// \~English @brief Get the number of manual trigger channels
+		/// \~Chinese @brief 获取手动触发通道数
+		SPADAS_API Int manualTriggerChannelNum();
+
+		/// \~English @brief Get the number of point cloud channels
+		/// \~Chinese @brief 获取点云通道数
+		SPADAS_API Int pointCloudChannelNum();
 	}
 
 	/// \~English @brief Utility function namespace
