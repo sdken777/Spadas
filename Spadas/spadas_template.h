@@ -100,6 +100,24 @@ namespace spadas
 
 	template <typename VarsType>
 	template <typename TargetType>
+	Bool Object<VarsType>::is(TargetType& targetObj)
+	{
+		if (!vars)
+		{
+			targetObj = TargetType();
+			return TRUE;
+		}
+		else if (((Vars*)vars)->isType(TargetType::typeName().getID()) || ((Vars*)vars)->isType(TargetType::typeName()))
+		{
+			auto objBase = TargetType::castCreate((Vars*)vars);
+			targetObj = *(TargetType*)(&objBase);
+			return TRUE;
+		}
+		else return FALSE;
+	}
+
+	template <typename VarsType>
+	template <typename TargetType>
 	TargetType Object<VarsType>::as()
 	{
 		Bool dummy;

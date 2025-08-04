@@ -37,22 +37,35 @@ Double MyObject::getNumber()
 // Main function / 主函数
 void exampleBaseObject()
 {
-	// Put objects of different types into a BaseObject array / 用BaseObject数组装入不同类型对象
+	// Assign different types of objects to BaseObject array, and convert one object back to MyObject / 将不同类型对象赋值至BaseObject数组，并将其中一个转换回MyObject
 	console::print("- 1 -");
 
 	auto objs = Array<BaseObject>(3);
-	objs[0] = String("Hello world").as<BaseObject>();
-	objs[1] = Timer().as<BaseObject>();
-	objs[2] = MyObject(100).as<BaseObject>();
+	objs[0] = String("Hello world");
+	objs[1] = Timer();
+	objs[2] = MyObject(100);
 
 	console::print(String::merge(objs, ", "));
 
-	// Convert to MyObject / 转换回MyObject
-	console::print("- 2 -");
-
-	if (objs[2].is<MyObject>())
+	MyObject myObj;
+	if (objs[2].is<MyObject>(myObj))
 	{
-		MyObject myObj = objs[2].as<MyObject>();
 		console::print("The number is: " cat myObj.getNumber());
 	}
+
+	// Assign different types of new objects to BaseObject pointers in traditional way, and convert one object back to MyObject / 用传统方式将new出来的不同类型对象赋值至BaseObject指针，并将其中一个转换回MyObject
+	console::print("- 2 -");
+
+	BaseObject *obj0 = new String("Hello world");
+	BaseObject *obj1 = new Timer();
+	BaseObject *obj2 = new MyObject(100);
+
+	console::print(catAll(*obj0, ", ", *obj1, ", ", *obj2));
+
+	MyObject *myObjPtr = (MyObject*)obj2;
+	console::print("The number is: " cat myObjPtr->getNumber());
+
+	delete obj0;
+	delete obj1;
+	delete obj2;
 }

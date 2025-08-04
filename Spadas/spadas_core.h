@@ -919,6 +919,11 @@ namespace spadas
 		template <typename TargetType>
 		Bool is();
 
+		/// \~English @brief Whether it is the variables of this class, if the pointer to variables is empty, it also returns TRUE. If it is TRUE, output the target type object
+		/// \~Chinese @brief 是否为该类的变量数据，若变量数据指针为空也返回TRUE，若为TRUE则输出目标类型的对象
+		template <typename TargetType>
+		Bool is(TargetType& targetObj);
+
 		/// \~English @brief Convert to object of base class or derived class, if the pointer to variables is empty or the type does not match, return the default construction object
 		/// \~Chinese @brief 转换为基类或派生类对象，若变量数据指针为空或类型不符合则返回默认构造对象
 		template <typename TargetType>
