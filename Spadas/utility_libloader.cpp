@@ -19,11 +19,11 @@ namespace spadas
 
 #if defined(SPADAS_ENV_WINDOWS)
 		HMODULE module;
-		LibraryLoaderVars() : module(NULL)
+		LibraryLoaderVars() : module(0)
 		{}
 #else
 		Pointer handle;
-		LibraryLoaderVars() : handle(NULL)
+		LibraryLoaderVars() : handle(0)
 		{}
 #endif
 	};
@@ -31,7 +31,7 @@ namespace spadas
 
 using namespace spadas;
 
-LibraryLoader::LibraryLoader() : Object<LibraryLoaderVars>(new LibraryLoaderVars, TRUE)
+LibraryLoader::LibraryLoader() : BaseObject(new LibraryLoaderVars)
 {
 }
 
@@ -79,16 +79,16 @@ Bool LibraryLoader::openWithPath(Path libPath, String& errorMessage)
 	SPADAS_ERROR_RETURNVAL_MSG(!libPath.exist(), libPath.fullPath(), FALSE);
 
 #if defined(SPADAS_ENV_WINDOWS)
-	SPADAS_ERROR_RETURNVAL(vars->module != NULL, FALSE);
+	SPADAS_ERROR_RETURNVAL(var()->module != 0, FALSE);
 
 	system::addEnvironmentPath(libPath.parentFolder());
 
-	vars->module = LoadLibraryW(libPath.fullPath().wchars().data());
-	if (vars->module == NULL)
+	var()->module = LoadLibraryW(libPath.fullPath().wchars().data());
+	if (var()->module == 0)
 	{
         DWORD err = GetLastError();
         WChar buffer[4096];
-        DWORD len = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, buffer, 4096, NULL);
+        DWORD len = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, 0, err, 0, buffer, 4096, 0);
         if (len > 0)
         {
             buffer[len] = 0;
@@ -97,14 +97,14 @@ Bool LibraryLoader::openWithPath(Path libPath, String& errorMessage)
 		return FALSE;
 	}    
 #else
-	SPADAS_ERROR_RETURNVAL(vars->handle != NULL, FALSE);
+	SPADAS_ERROR_RETURNVAL(var()->handle != 0, FALSE);
 
 	Path rootDir = libPath.parentFolder();
 	system::addEnvironmentPath(rootDir);
 	chdir(rootDir.fullPath().chars().data());
 
-	vars->handle = (Pointer)dlopen(libPath.fullPath().chars().data(), RTLD_NOW);
-	if (vars->handle == NULL)
+	var()->handle = (Pointer)dlopen(libPath.fullPath().chars().data(), RTLD_NOW);
+	if (var()->handle == 0)
 	{
 		errorMessage = dlerror();
 		return FALSE;
@@ -117,16 +117,16 @@ Bool LibraryLoader::openWithPath(Path libPath, String& errorMessage)
 void LibraryLoader::close()
 {
 #if defined(SPADAS_ENV_WINDOWS)
-	if (vars->module)
+	if (var()->module)
 	{
-		FreeLibrary(vars->module);
-		vars->module = NULL;
+		FreeLibrary(var()->module);
+		var()->module = 0;
 	}
 #else
-	if (vars->handle)
+	if (var()->handle)
 	{
-		dlclose(vars->handle);
-		vars->handle = NULL;
+		dlclose(var()->handle);
+		var()->handle = 0;
 	}
 #endif
 }
@@ -134,10 +134,10 @@ void LibraryLoader::close()
 Pointer LibraryLoader::getSymbol(String symbol)
 {
 #if defined(SPADAS_ENV_WINDOWS)
-	SPADAS_ERROR_RETURNVAL(vars->module == NULL, NULL);
-	return (Pointer)GetProcAddress(vars->module, symbol.chars().data());
+	SPADAS_ERROR_RETURNVAL(var()->module == 0, 0);
+	return (Pointer)GetProcAddress(var()->module, symbol.chars().data());
 #else
-	SPADAS_ERROR_RETURNVAL(vars->handle == NULL, NULL);
-	return (Pointer)dlsym(vars->handle, symbol.chars().data());
+	SPADAS_ERROR_RETURNVAL(var()->handle == 0, 0);
+	return (Pointer)dlsym(var()->handle, symbol.chars().data());
 #endif
 }

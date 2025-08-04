@@ -61,7 +61,7 @@ namespace console_internal
 		FD_ZERO(&fdSet);
 		FD_SET(0, &fdSet);
 
-		int keyIn = select(1, &fdSet, NULL, NULL, &time);
+		int keyIn = select(1, &fdSet, 0, 0, &time);
 
 		endConioMode(oldTermios);
 		return keyIn == 0 ? FALSE : TRUE;
@@ -208,12 +208,12 @@ typedef void (*func_gtk_widget_destroy)(Pointer widget);
 typedef Bool (*func_gtk_events_pending)();
 typedef Bool (*func_gtk_main_iteration_do)(Bool blocking);
 
-func_gtk_init gtk_init = NULL;
-func_gtk_message_dialog_new gtk_message_dialog_new = NULL;
-func_gtk_dialog_run gtk_dialog_run = NULL;
-func_gtk_widget_destroy gtk_widget_destroy = NULL;
-func_gtk_events_pending gtk_events_pending = NULL;
-func_gtk_main_iteration_do gtk_main_iteration_do = NULL;
+func_gtk_init gtk_init = 0;
+func_gtk_message_dialog_new gtk_message_dialog_new = 0;
+func_gtk_dialog_run gtk_dialog_run = 0;
+func_gtk_widget_destroy gtk_widget_destroy = 0;
+func_gtk_events_pending gtk_events_pending = 0;
+func_gtk_main_iteration_do gtk_main_iteration_do = 0;
 
 void console::popup(String text)
 {
@@ -232,7 +232,7 @@ void console::popup(String text)
 				gtk_init = (func_gtk_init)loader.getSymbol("gtk_init");
 				if (gtk_init)
 				{
-					gtk_init(NULL, NULL);
+					gtk_init(0, 0);
 					gtk_message_dialog_new = (func_gtk_message_dialog_new)loader.getSymbol("gtk_message_dialog_new");
 					gtk_dialog_run = (func_gtk_dialog_run)loader.getSymbol("gtk_dialog_run");
 					gtk_widget_destroy = (func_gtk_widget_destroy)loader.getSymbol("gtk_widget_destroy");
@@ -249,7 +249,7 @@ void console::popup(String text)
 	}
 	if (popupSolution == PopupSolution::GtkMessageDialog)
 	{
-		Pointer dialog = gtk_message_dialog_new(NULL, 0, 0, 1, text.chars().data());
+		Pointer dialog = gtk_message_dialog_new(0, 0, 0, 1, text.chars().data());
 		gtk_dialog_run(dialog);
 		gtk_widget_destroy(dialog);
 		while (gtk_events_pending()) gtk_main_iteration_do(FALSE);
@@ -264,8 +264,8 @@ void console::popup(String text)
 #if defined(SPADAS_ENV_MACOS)
 void console::popup(String text)
 {
-	CFStringRef cfString = CFStringCreateWithBytes(NULL, (UInt8*)text.chars().data(), text.length(), kCFStringEncodingUTF8, false);
-	CFUserNotificationDisplayAlert(0, kCFUserNotificationNoteAlertLevel, NULL, NULL, NULL, CFSTR(""), cfString, NULL, NULL, NULL, NULL);
+	CFStringRef cfString = CFStringCreateWithBytes(0, (UInt8*)text.chars().data(), text.length(), kCFStringEncodingUTF8, false);
+	CFUserNotificationDisplayAlert(0, kCFUserNotificationNoteAlertLevel, 0, 0, 0, CFSTR(""), cfString, 0, 0, 0, 0);
 	CFRelease(cfString);
 }
 #endif
@@ -286,7 +286,7 @@ String DefaultConsole::scan()
 	return buf;
 }
 
-DefaultConsole::DefaultConsole() : Object<Vars>(new Vars(), TRUE)
+DefaultConsole::DefaultConsole()
 {
 #if defined(SPADAS_ENV_MACOS)
 	char *newLocale = setlocale(LC_ALL, "en_US.UTF-8");

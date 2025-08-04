@@ -787,7 +787,7 @@ XMLNode XMLNode::addLeaf(XMLElement val)
 {
 	SPADAS_ERROR_RETURNVAL(!cell, XMLNode());
 
-	XMLCell *newCell = &xml.getVars()->cells.append(XMLCell(val));
+	XMLCell *newCell = &xml.var()->cells.append(XMLCell(val));
 	newCell->root = (XMLCell*)cell;
 	((XMLCell*)cell)->leaves.addToTail(newCell);
 	return XMLNode(xml, newCell);
@@ -804,7 +804,7 @@ XML::XML()
 {
 }
 
-XML::XML(XMLNode xmlRoot) : Object<class XMLVars>(new XMLVars(xmlRoot), TRUE)
+XML::XML(XMLNode xmlRoot) : BaseObject(new XMLVars(xmlRoot))
 {
 }
 
@@ -861,7 +861,7 @@ XML XML::clone()
 XMLNode XML::globalRoot()
 {
 	if (!vars) setVars(new XMLVars(), TRUE);
-	return XMLNode(*this, &vars->cells[0]);
+	return XMLNode(*this, &var()->cells[0]);
 }
 
 void XML::save(Path xmlFilePath)

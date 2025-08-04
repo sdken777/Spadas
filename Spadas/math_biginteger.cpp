@@ -23,13 +23,13 @@ namespace spadas
 
 using namespace spadas;
 
-BigInteger::BigInteger() : Object<BigIntegerVars>(new BigIntegerVars, TRUE)
+BigInteger::BigInteger() : BaseObject(new BigIntegerVars)
 {
-	vars->bigIntNum = std::string("0");
-	vars->sign = TRUE;
+	var()->bigIntNum = std::string("0");
+	var()->sign = TRUE;
 }
 
-BigInteger::BigInteger(Binary integerData, Bool sign) : Object<BigIntegerVars>(new BigIntegerVars, TRUE)
+BigInteger::BigInteger(Binary integerData, Bool sign) : BaseObject(new BigIntegerVars)
 {
 	UInt validIndex = UINF;
 	for (UInt i = 0; i < integerData.size(); i++)
@@ -43,16 +43,16 @@ BigInteger::BigInteger(Binary integerData, Bool sign) : Object<BigIntegerVars>(n
 
 	if (validIndex == UINF)
 	{
-		vars->bigIntNum = std::string("0");
-		vars->sign = TRUE;
+		var()->bigIntNum = std::string("0");
+		var()->sign = TRUE;
 		return;
 	}
 
 	std::vector<uint8_t> vector(integerData.size() - validIndex);
 	for (UInt i = validIndex; i < integerData.size(); i++) vector.push_back(integerData[i]);
-	vars->bigIntNum = vector;
+	var()->bigIntNum = vector;
 
-	vars->sign = vars->bigIntNum.Equals(std::string("0")) ? TRUE : sign;
+	var()->sign = var()->bigIntNum.Equals(std::string("0")) ? TRUE : sign;
 }
 
 Optional<BigInteger> BigInteger::createFromString(String decimalString)
@@ -70,19 +70,19 @@ Optional<BigInteger> BigInteger::createFromString(String decimalString)
 	}
 
 	BigInteger ret;
-	ret.vars->sign = !isNegative;
-	ret.vars->bigIntNum = std::string((Char*)&stringData[isNegative ? 1 : 0]);
+	ret.var()->sign = !isNegative;
+	ret.var()->bigIntNum = std::string((Char*)&stringData[isNegative ? 1 : 0]);
 	return ret;
 }
 
 Bool BigInteger::isPositive()
 {
-	return vars->sign;
+	return var()->sign;
 }
 
 Binary BigInteger::getData()
 {
-	std::vector<uint8_t> vector = vars->bigIntNum.ToByteArrayUnsigned();
+	std::vector<uint8_t> vector = var()->bigIntNum.ToByteArrayUnsigned();
 
 	Binary output(vector.size());
 	for (UInt i = 0; i < output.size(); i++) output[i] = vector[i];
@@ -91,52 +91,52 @@ Binary BigInteger::getData()
 
 Word BigInteger::getHash()
 {
-	return vars->toString().getHash();
+	return var()->toString().getHash();
 }
 
 Bool BigInteger::operator ==(BigInteger num)
 {
-	return vars->sign == num.vars->sign && vars->bigIntNum.Equals(num.vars->bigIntNum);
+	return var()->sign == num.var()->sign && var()->bigIntNum.Equals(num.var()->bigIntNum);
 }
 Bool BigInteger::operator !=(BigInteger num)
 {
-	return vars->sign != num.vars->sign || !vars->bigIntNum.Equals(num.vars->bigIntNum);
+	return var()->sign != num.var()->sign || !var()->bigIntNum.Equals(num.var()->bigIntNum);
 }
 Bool BigInteger::operator <(BigInteger num)
 {
-	if (vars->sign == TRUE && num.vars->sign == FALSE) return FALSE;
-	else if (vars->sign == FALSE && num.vars->sign == TRUE) return TRUE;
-	else if (vars->sign == TRUE) return vars->bigIntNum.CompareTo(num.vars->bigIntNum) < 0;
-	else return vars->bigIntNum.CompareTo(num.vars->bigIntNum) > 0;
+	if (var()->sign == TRUE && num.var()->sign == FALSE) return FALSE;
+	else if (var()->sign == FALSE && num.var()->sign == TRUE) return TRUE;
+	else if (var()->sign == TRUE) return var()->bigIntNum.CompareTo(num.var()->bigIntNum) < 0;
+	else return var()->bigIntNum.CompareTo(num.var()->bigIntNum) > 0;
 }
 Bool BigInteger::operator >(BigInteger num)
 {
-	if (vars->sign == TRUE && num.vars->sign == FALSE) return TRUE;
-	else if (vars->sign == FALSE && num.vars->sign == TRUE) return FALSE;
-	else if (vars->sign == TRUE) return vars->bigIntNum.CompareTo(num.vars->bigIntNum) > 0;
-	else return vars->bigIntNum.CompareTo(num.vars->bigIntNum) < 0;
+	if (var()->sign == TRUE && num.var()->sign == FALSE) return TRUE;
+	else if (var()->sign == FALSE && num.var()->sign == TRUE) return FALSE;
+	else if (var()->sign == TRUE) return var()->bigIntNum.CompareTo(num.var()->bigIntNum) > 0;
+	else return var()->bigIntNum.CompareTo(num.var()->bigIntNum) < 0;
 }
 
 BigInteger BigInteger::operator +(BigInteger num)
 {
 	BigInteger ret;
-	if (vars->sign == num.vars->sign)
+	if (var()->sign == num.var()->sign)
 	{
-		ret.vars->sign = vars->sign;
-		ret.vars->bigIntNum = vars->bigIntNum.Add(num.vars->bigIntNum);
+		ret.var()->sign = var()->sign;
+		ret.var()->bigIntNum = var()->bigIntNum.Add(num.var()->bigIntNum);
 	}
 	else
 	{
-		if (vars->bigIntNum.Equals(num.vars->bigIntNum)) return ret;
-		if (vars->bigIntNum.CompareTo(num.vars->bigIntNum) > 0)
+		if (var()->bigIntNum.Equals(num.var()->bigIntNum)) return ret;
+		if (var()->bigIntNum.CompareTo(num.var()->bigIntNum) > 0)
 		{
-			ret.vars->sign = vars->sign;
-			ret.vars->bigIntNum = vars->bigIntNum.Subtract(num.vars->bigIntNum);
+			ret.var()->sign = var()->sign;
+			ret.var()->bigIntNum = var()->bigIntNum.Subtract(num.var()->bigIntNum);
 		}
 		else
 		{
-			ret.vars->sign = num.vars->sign;
-			ret.vars->bigIntNum = num.vars->bigIntNum.Subtract(vars->bigIntNum);
+			ret.var()->sign = num.var()->sign;
+			ret.var()->bigIntNum = num.var()->bigIntNum.Subtract(var()->bigIntNum);
 		}
 	}
 	return ret;
@@ -144,23 +144,23 @@ BigInteger BigInteger::operator +(BigInteger num)
 BigInteger BigInteger::operator -(BigInteger num)
 {
 	BigInteger ret;
-	if (vars->sign != num.vars->sign)
+	if (var()->sign != num.var()->sign)
 	{
-		ret.vars->sign = vars->sign;
-		ret.vars->bigIntNum = vars->bigIntNum.Add(num.vars->bigIntNum);
+		ret.var()->sign = var()->sign;
+		ret.var()->bigIntNum = var()->bigIntNum.Add(num.var()->bigIntNum);
 	}
 	else
 	{
-		if (vars->bigIntNum.Equals(num.vars->bigIntNum)) return ret;
-		if (vars->bigIntNum.CompareTo(num.vars->bigIntNum) > 0)
+		if (var()->bigIntNum.Equals(num.var()->bigIntNum)) return ret;
+		if (var()->bigIntNum.CompareTo(num.var()->bigIntNum) > 0)
 		{
-			ret.vars->sign = vars->sign;
-			ret.vars->bigIntNum = vars->bigIntNum.Subtract(num.vars->bigIntNum);
+			ret.var()->sign = var()->sign;
+			ret.var()->bigIntNum = var()->bigIntNum.Subtract(num.var()->bigIntNum);
 		}
 		else
 		{
-			ret.vars->sign = !num.vars->sign;
-			ret.vars->bigIntNum = num.vars->bigIntNum.Subtract(vars->bigIntNum);
+			ret.var()->sign = !num.var()->sign;
+			ret.var()->bigIntNum = num.var()->bigIntNum.Subtract(var()->bigIntNum);
 		}
 	}
 	return ret;
@@ -168,37 +168,37 @@ BigInteger BigInteger::operator -(BigInteger num)
 BigInteger BigInteger::operator *(BigInteger num)
 {
 	BigInteger ret;
-	if (vars->bigIntNum.Equals(ret.vars->bigIntNum) || num.vars->bigIntNum.Equals(ret.vars->bigIntNum)) return ret;
-	ret.vars->sign = vars->sign ? num.vars->sign : !num.vars->sign;
-	ret.vars->bigIntNum = vars->bigIntNum.Multiply(num.vars->bigIntNum);
+	if (var()->bigIntNum.Equals(ret.var()->bigIntNum) || num.var()->bigIntNum.Equals(ret.var()->bigIntNum)) return ret;
+	ret.var()->sign = var()->sign ? num.var()->sign : !num.var()->sign;
+	ret.var()->bigIntNum = var()->bigIntNum.Multiply(num.var()->bigIntNum);
 	return ret;
 }
 BigInteger BigInteger::operator /(BigInteger num)
 {
 	BigInteger ret;
-	if(num.vars->bigIntNum.Equals(ret.vars->bigIntNum)) return ret;
-	ret.vars->sign = vars->sign ? num.vars->sign : !num.vars->sign;
-	ret.vars->bigIntNum = vars->bigIntNum.Divide(num.vars->bigIntNum);
+	if(num.var()->bigIntNum.Equals(ret.var()->bigIntNum)) return ret;
+	ret.var()->sign = var()->sign ? num.var()->sign : !num.var()->sign;
+	ret.var()->bigIntNum = var()->bigIntNum.Divide(num.var()->bigIntNum);
 	return ret;
 }
 BigInteger BigInteger::operator %(BigInteger num)
 {
 	BigInteger ret;
-	if (num.vars->bigIntNum.Equals(ret.vars->bigIntNum)) return ret;
-	ret.vars->sign = vars->sign;
-	ret.vars->bigIntNum = vars->bigIntNum.Mod(num.vars->bigIntNum);
+	if (num.var()->bigIntNum.Equals(ret.var()->bigIntNum)) return ret;
+	ret.var()->sign = var()->sign;
+	ret.var()->bigIntNum = var()->bigIntNum.Mod(num.var()->bigIntNum);
 	return ret;
 }
 
 BigInteger BigInteger::modPow(BigInteger exponent, BigInteger modulus)
 {
 	BigInteger ret;
-	if (exponent.vars->bigIntNum.Equals(ret.vars->bigIntNum) || modulus.vars->bigIntNum.Equals(ret.vars->bigIntNum)) return BigInteger();
+	if (exponent.var()->bigIntNum.Equals(ret.var()->bigIntNum) || modulus.var()->bigIntNum.Equals(ret.var()->bigIntNum)) return BigInteger();
 	if (!exponent.isPositive() || !modulus.isPositive()) return BigInteger();
 
-	if (vars->bigIntNum.Equals(ret.vars->bigIntNum)) return BigInteger();
-	if (!vars->sign) return BigInteger();
+	if (var()->bigIntNum.Equals(ret.var()->bigIntNum)) return BigInteger();
+	if (!var()->sign) return BigInteger();
 
-	ret.vars->bigIntNum = vars->bigIntNum.ModPow(exponent.vars->bigIntNum, modulus.vars->bigIntNum);
+	ret.var()->bigIntNum = var()->bigIntNum.ModPow(exponent.var()->bigIntNum, modulus.var()->bigIntNum);
 	return ret;
 }

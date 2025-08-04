@@ -285,12 +285,12 @@ namespace file_internal
 	Array<String> folderGetContents(String targetFolder)
 	{
 		DIR *folder = opendir(targetFolder.chars().data());
-		if (folder == NULL) return Array<String>();
+		if (folder == 0) return Array<String>();
 
 		String separator = getSeparatorChar();
 		ArrayX<String> out;
 		dirent *content;
-		while ((content = readdir(folder)) != NULL)
+		while ((content = readdir(folder)) != 0)
 		{
 			String fileName = content->d_name;
 			if (fileName.isEmpty() || fileName == "." || fileName == "..") continue;

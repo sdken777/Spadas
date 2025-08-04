@@ -3,25 +3,25 @@
 
 using namespace spadas;
 
-StringBuffer::StringBuffer() : Object<StringBufferVars>(new StringBufferVars, TRUE)
+StringBuffer::StringBuffer() : BaseObject(new StringBufferVars)
 {
-	vars->target = String::createWithSize(1024);
+	var()->target = String::createWithSize(1024);
 }
 
-StringBuffer::StringBuffer(UInt bufferSize) : Object<StringBufferVars>(new StringBufferVars, TRUE)
+StringBuffer::StringBuffer(UInt bufferSize) : BaseObject(new StringBufferVars)
 {
-	vars->target = String::createWithSize(math::max(1024u, bufferSize));
+	var()->target = String::createWithSize(math::max(1024u, bufferSize));
 }
 
 void StringBuffer::reset()
 {
-	StringVars *stringVars = vars->target.getVars();
+	StringVars *stringVars = var()->target.var();
 	stringVars->length = 0;
 }
 
 void StringBuffer::append(Char c)
 {
-	StringVars *stringVars = vars->target.getVars();
+	StringVars *stringVars = var()->target.var();
 	if (stringVars->length == stringVars->size)
 	{
 		UInt newBufferSize = stringVars->length * 2;
@@ -36,6 +36,6 @@ void StringBuffer::append(Char c)
 
 String StringBuffer::output(Bool clone)
 {
-    if (clone) return vars->target.clone();
-    else return vars->target;
+    if (clone) return var()->target.clone();
+    else return var()->target;
 }

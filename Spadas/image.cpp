@@ -24,13 +24,13 @@ Image::Image(Size2D size, Enum<PixelFormat> format, Bool setPixels)
     SPADAS_ERROR_RETURN(size.height == 0 || size.height > MAX_HEIGHT);
 
 	setVars(new ImageVars(), TRUE);
-    vars->width = size.width;
-    vars->height = size.height;
-    vars->format = format;
-    vars->span = Binary(calcImageByteSize(size, format)).span();
-    vars->rowBytes = vars->span.size() / vars->height;
-    vars->bytesPerPixel = PixelFormat::bytesPerPixel(vars->format);
-    if (setPixels) vars->span.set(0);
+    var()->width = size.width;
+    var()->height = size.height;
+    var()->format = format;
+    var()->span = Binary(calcImageByteSize(size, format)).span();
+    var()->rowBytes = var()->span.size() / var()->height;
+    var()->bytesPerPixel = PixelFormat::bytesPerPixel(var()->format);
+    if (setPixels) var()->span.set(0);
 }
 
 Image::Image(Enum<ImageResolution> resolution, Enum<PixelFormat> format, Bool setPixels)
@@ -43,12 +43,12 @@ Image::Image(ImagePointer pointer)
     SPADAS_ERROR_RETURN(!pointer.isValid());
 
     setVars(new ImageVars(), TRUE);
-	vars->width = pointer.getWidth();
-	vars->height = pointer.getHeight();
-	vars->format = pointer.isColor() ? PixelFormat::Value::ByteBGR : PixelFormat::Value::ByteGray;
-    vars->span = pointer.getData();
-	vars->rowBytes = pointer.getRowBytes();
-	vars->bytesPerPixel = PixelFormat::bytesPerPixel(vars->format);
+	var()->width = pointer.getWidth();
+	var()->height = pointer.getHeight();
+	var()->format = pointer.isColor() ? PixelFormat::Value::ByteBGR : PixelFormat::Value::ByteGray;
+    var()->span = pointer.getData();
+	var()->rowBytes = pointer.getRowBytes();
+	var()->bytesPerPixel = PixelFormat::bytesPerPixel(var()->format);
 }
 
 Image::Image(Enum<ImageFileFormat> format, Binary fileData)
@@ -98,15 +98,15 @@ Image::Image(Path filePath)
 Bool Image::isRefCounting()
 {
     SPADAS_ERROR_RETURNVAL(!vars, FALSE);
-    return vars->span.isRefCounting();
+    return var()->span.isRefCounting();
 }
 
 Image Image::clone()
 {
 	SPADAS_ERROR_RETURNVAL(!vars, Image());
-    Size2D size = Size2D::wh(vars->width, vars->height);
+    Size2D size = Size2D::wh(var()->width, var()->height);
     CoordInt2D offset = CoordInt2D::uv(0, 0);
-    Image out(size, vars->format, FALSE);
+    Image out(size, var()->format, FALSE);
     out.copy(*this, Region2D(offset, size), offset);
     return out;
 }
@@ -115,20 +115,20 @@ void Image::copy(Image src, Region2D srcRegion, CoordInt2D thisOffset)
 {
 	SPADAS_ERROR_RETURN(!vars);
 	SPADAS_ERROR_RETURN(!src.vars || vars == src.vars);
-	SPADAS_ERROR_RETURN(vars->format != src.format());
+	SPADAS_ERROR_RETURN(var()->format != src.format());
     SPADAS_ERROR_RETURN(srcRegion.width == 0 || srcRegion.width > MAX_WIDTH);
     SPADAS_ERROR_RETURN(srcRegion.height == 0 || srcRegion.height > MAX_HEIGHT);
 	SPADAS_ERROR_RETURN(srcRegion.offsetU < 0 || srcRegion.offsetV < 0 || srcRegion.offsetU + srcRegion.width > src.width() || srcRegion.offsetV + srcRegion.height > src.height());
-	SPADAS_ERROR_RETURN(thisOffset.u < 0 || thisOffset.v < 0 || thisOffset.u + srcRegion.width > vars->width || thisOffset.v + srcRegion.height > vars->height);
+	SPADAS_ERROR_RETURN(thisOffset.u < 0 || thisOffset.v < 0 || thisOffset.u + srcRegion.width > var()->width || thisOffset.v + srcRegion.height > var()->height);
 
     Byte *srcData = src.data().b;
     UInt srcRowBytes = src.rowBytes();
-    Byte *dstData = vars->span.data();
-    UInt rowBytesValid = srcRegion.width * vars->bytesPerPixel;
+    Byte *dstData = var()->span.data();
+    UInt rowBytesValid = srcRegion.width * var()->bytesPerPixel;
     for (UInt vSrc = srcRegion.offsetV, vDst = thisOffset.v; vSrc < srcRegion.offsetV + srcRegion.height; vSrc++, vDst++)
     {
-        Byte *srcRow = &srcData[vSrc * srcRowBytes + srcRegion.offsetU * vars->bytesPerPixel];
-        Byte *dstRow = &dstData[vDst * vars->rowBytes + thisOffset.u * vars->bytesPerPixel];
+        Byte *srcRow = &srcData[vSrc * srcRowBytes + srcRegion.offsetU * var()->bytesPerPixel];
+        Byte *dstRow = &dstData[vDst * var()->rowBytes + thisOffset.u * var()->bytesPerPixel];
         utility::memoryCopy(srcRow, dstRow, rowBytesValid);
     }
 }
@@ -152,15 +152,15 @@ void Image::drawLayer(Image layer, CoordInt2D offset)
             return;
     }
     
-	SPADAS_ERROR_RETURN(vars->format != srcFormat);
+	SPADAS_ERROR_RETURN(var()->format != srcFormat);
     
     Size2D layerSize = layer.size();
-    if (offset.u >= (Int)vars->width || offset.v >= (Int)vars->height || offset.u + (Int)layerSize.width <= 0 || offset.v + (Int)layerSize.height <= 0) return;
+    if (offset.u >= (Int)var()->width || offset.v >= (Int)var()->height || offset.u + (Int)layerSize.width <= 0 || offset.v + (Int)layerSize.height <= 0) return;
     
     UInt uBegin = (UInt)math::max(0, offset.u);
     UInt vBegin = (UInt)math::max(0, offset.v);
-    UInt uEnd = (UInt)math::min((Int)vars->width-1, offset.u + (Int)layerSize.width - 1);
-    UInt vEnd = (UInt)math::min((Int)vars->height-1, offset.v + (Int)layerSize.height - 1);
+    UInt uEnd = (UInt)math::min((Int)var()->width-1, offset.u + (Int)layerSize.width - 1);
+    UInt vEnd = (UInt)math::min((Int)var()->height-1, offset.v + (Int)layerSize.height - 1);
     
     for (UInt v = vBegin; v <= vEnd; v++)
     {
@@ -183,20 +183,20 @@ void Image::drawLayer(Image layer, CoordInt2D offset)
 Image Image::subImage(Region2D region)
 {
 	SPADAS_ERROR_RETURNVAL(!vars, Image());
-	SPADAS_ERROR_RETURNVAL(vars->format == PixelFormat::Value::ByteUYVY && (region.offsetU % 2 == 1 || region.width % 2 == 1), Image());
+	SPADAS_ERROR_RETURNVAL(var()->format == PixelFormat::Value::ByteUYVY && (region.offsetU % 2 == 1 || region.width % 2 == 1), Image());
     SPADAS_ERROR_RETURNVAL(region.width == 0 || region.width > MAX_WIDTH, Image());
     SPADAS_ERROR_RETURNVAL(region.height == 0 || region.height > MAX_HEIGHT, Image());
-	SPADAS_ERROR_RETURNVAL(region.offsetU < 0 || region.offsetV < 0 || region.offsetU + region.width > vars->width || region.offsetV + region.height > vars->height, Image());
+	SPADAS_ERROR_RETURNVAL(region.offsetU < 0 || region.offsetV < 0 || region.offsetU + region.width > var()->width || region.offsetV + region.height > var()->height, Image());
 	
-    BinarySpan subSpan = vars->span.span(region.offsetV * vars->rowBytes + region.offsetU * vars->bytesPerPixel, region.height * vars->rowBytes);
-    SPADAS_ERROR_RETURNVAL(subSpan.size() < (region.height - 1) * vars->rowBytes + region.width * vars->bytesPerPixel, Image());
+    BinarySpan subSpan = var()->span.span(region.offsetV * var()->rowBytes + region.offsetU * var()->bytesPerPixel, region.height * var()->rowBytes);
+    SPADAS_ERROR_RETURNVAL(subSpan.size() < (region.height - 1) * var()->rowBytes + region.width * var()->bytesPerPixel, Image());
 
     ImageVars *newVars = new ImageVars();
     newVars->width = region.width;
     newVars->height = region.height;
-    newVars->format = vars->format;
-    newVars->rowBytes = vars->rowBytes;
-    newVars->bytesPerPixel = vars->bytesPerPixel;
+    newVars->format = var()->format;
+    newVars->rowBytes = var()->rowBytes;
+    newVars->bytesPerPixel = var()->bytesPerPixel;
     newVars->span = subSpan;
 	
 	Image out;
@@ -207,58 +207,58 @@ Image Image::subImage(Region2D region)
 ImagePointer Image::imagePointer()
 {
 	SPADAS_ERROR_RETURNVAL(!vars, ImagePointer());
-    SPADAS_ERROR_RETURNVAL(vars->format != PixelFormat::Value::ByteBGR && vars->format != PixelFormat::Value::ByteGray, ImagePointer());
+    SPADAS_ERROR_RETURNVAL(var()->format != PixelFormat::Value::ByteBGR && var()->format != PixelFormat::Value::ByteGray, ImagePointer());
 
-    return ImagePointer(Size2D::wh(vars->width, vars->height), vars->format == PixelFormat::Value::ByteBGR, vars->rowBytes, vars->span);
+    return ImagePointer(Size2D::wh(var()->width, var()->height), var()->format == PixelFormat::Value::ByteBGR, var()->rowBytes, var()->span);
 }
 
 Size2D Image::size()
 {
 	SPADAS_ERROR_RETURNVAL(!vars, Size2D());
-	return Size2D::wh(vars->width, vars->height);
+	return Size2D::wh(var()->width, var()->height);
 }
 
 UInt Image::width()
 {
     SPADAS_ERROR_RETURNVAL(!vars, 0);
-	return vars->width;
+	return var()->width;
 }
 
 UInt Image::height()
 {
     SPADAS_ERROR_RETURNVAL(!vars, 0);
-	return vars->height;
+	return var()->height;
 }
 
 Enum<PixelFormat> Image::format()
 {
     SPADAS_ERROR_RETURNVAL(!vars, Enum<PixelFormat>());
-	return vars->format;
+	return var()->format;
 }
 
 UInt Image::rowBytes()
 {
     SPADAS_ERROR_RETURNVAL(!vars, 0);
-	return vars->rowBytes;
+	return var()->rowBytes;
 }
 
 UInt Image::rowBytesValid()
 {
     SPADAS_ERROR_RETURNVAL(!vars, 0);
-	return vars->width * vars->bytesPerPixel;
+	return var()->width * var()->bytesPerPixel;
 }
 
 PixelData Image::data()
 {
     SPADAS_ERROR_RETURNVAL(!vars, PixelData());
-	return PixelData(vars->span.data(), vars->bytesPerPixel);
+	return PixelData(var()->span.data(), var()->bytesPerPixel);
 }
 
 PixelData Image::operator[](UInt v)
 {
     SPADAS_ERROR_RETURNVAL(!vars, PixelData());
-    SPADAS_ERROR_RETURNVAL(v >= vars->height, PixelData());
-	return PixelData((Pointer)(vars->span.data() + v * vars->rowBytes), vars->bytesPerPixel);
+    SPADAS_ERROR_RETURNVAL(v >= var()->height, PixelData());
+	return PixelData((Pointer)(var()->span.data() + v * var()->rowBytes), var()->bytesPerPixel);
 }
 
 void Image::forPixels(Func<void(UInt, UInt, PixelData)> func)
@@ -266,12 +266,12 @@ void Image::forPixels(Func<void(UInt, UInt, PixelData)> func)
     SPADAS_ERROR_RETURN(!vars);
     SPADAS_ERROR_RETURN(!func);
 
-    for (UInt v = 0; v < vars->height; v++)
+    for (UInt v = 0; v < var()->height; v++)
     {
-        Byte *rowPtr = vars->span.data() + v * vars->rowBytes;
-        for (UInt u = 0; u < vars->width; u++, rowPtr += vars->bytesPerPixel)
+        Byte *rowPtr = var()->span.data() + v * var()->rowBytes;
+        for (UInt u = 0; u < var()->width; u++, rowPtr += var()->bytesPerPixel)
         {
-            func(v, u, PixelData(rowPtr, vars->bytesPerPixel));
+            func(v, u, PixelData(rowPtr, var()->bytesPerPixel));
         }
     }
 }
@@ -280,16 +280,16 @@ Image Image::resize(Enum<ResizeScale> resizeScale)
 {
     SPADAS_ERROR_RETURNVAL(!vars, Image());
 
-	if (vars->format != PixelFormat::Value::ByteBGR &&
-        vars->format != PixelFormat::Value::ByteGray &&
-        vars->format != PixelFormat::Value::WordBGR &&
-        vars->format != PixelFormat::Value::WordGray &&
-        vars->format != PixelFormat::Value::ByteRGB &&
-        vars->format != PixelFormat::Value::ByteYUV &&
-        vars->format != PixelFormat::Value::ByteBGRA &&
-        vars->format != PixelFormat::Value::ByteRGBA)
+	if (var()->format != PixelFormat::Value::ByteBGR &&
+        var()->format != PixelFormat::Value::ByteGray &&
+        var()->format != PixelFormat::Value::WordBGR &&
+        var()->format != PixelFormat::Value::WordGray &&
+        var()->format != PixelFormat::Value::ByteRGB &&
+        var()->format != PixelFormat::Value::ByteYUV &&
+        var()->format != PixelFormat::Value::ByteBGRA &&
+        var()->format != PixelFormat::Value::ByteRGBA)
 	{
-		SPADAS_ERROR_MSG("Invalid vars->format");
+		SPADAS_ERROR_MSG("Invalid var()->format");
 		return Image();
 	}
 	
@@ -314,19 +314,19 @@ Image Image::resize(Enum<ResizeScale> resizeScale)
             return Image();
 	}
 	
-    SPADAS_ERROR_RETURNVAL(vars->width % scale != 0 || vars->height % scale != 0, Image());
+    SPADAS_ERROR_RETURNVAL(var()->width % scale != 0 || var()->height % scale != 0, Image());
 	
-	Size2D targetSize = Size2D::wh(math::round((Float)vars->width / scaleF), math::round((Float)vars->height / scaleF));
+	Size2D targetSize = Size2D::wh(math::round((Float)var()->width / scaleF), math::round((Float)var()->height / scaleF));
 	
-    Image image(targetSize, vars->format, FALSE);
-	switch (vars->format.value())
+    Image image(targetSize, var()->format, FALSE);
+	switch (var()->format.value())
 	{
 		case PixelFormat::Value::ByteBGR:
 		case PixelFormat::Value::ByteRGB:
 		case PixelFormat::Value::ByteYUV:
         case PixelFormat::Value::ByteBGRA:
         case PixelFormat::Value::ByteRGBA:
-            resizeColorByteWithScale(*this, image, resizeScale, PixelFormat::nChannels(vars->format));
+            resizeColorByteWithScale(*this, image, resizeScale, PixelFormat::nChannels(var()->format));
 			break;
         case PixelFormat::Value::ByteGray:
 			resizeGrayByteWithScale(*this, image, resizeScale);
@@ -453,12 +453,12 @@ Image Image::resize(Size2D outputSize, Bool undistort, Enum<ResizeMode> mode)
 	{
         table.init();
 		
-        Image image(outputSize, vars->format, FALSE);
+        Image image(outputSize, var()->format, FALSE);
 		Image sub(*this);
 		if (undistort)
 		{
-			UInt srcWidth = vars->width;
-			UInt srcHeight = vars->height;
+			UInt srcWidth = var()->width;
+			UInt srcHeight = var()->height;
 			UInt dstWidth = outputSize.width;
 			UInt dstHeight = outputSize.height;
 			
@@ -481,23 +481,23 @@ Image Image::resize(Size2D outputSize, Bool undistort, Enum<ResizeMode> mode)
 	
 	else // RM_Area
 	{
-        if (vars->format != PixelFormat::Value::ByteBGR &&
-            vars->format != PixelFormat::Value::ByteGray &&
-            vars->format != PixelFormat::Value::WordBGR &&
-            vars->format != PixelFormat::Value::WordGray &&
-            vars->format != PixelFormat::Value::FloatBGR &&
-            vars->format != PixelFormat::Value::FloatGray &&
-            vars->format != PixelFormat::Value::ByteRGB &&
-            vars->format != PixelFormat::Value::ByteYUV &&
-            vars->format != PixelFormat::Value::ByteBGRA &&
-            vars->format != PixelFormat::Value::ByteRGBA)
+        if (var()->format != PixelFormat::Value::ByteBGR &&
+            var()->format != PixelFormat::Value::ByteGray &&
+            var()->format != PixelFormat::Value::WordBGR &&
+            var()->format != PixelFormat::Value::WordGray &&
+            var()->format != PixelFormat::Value::FloatBGR &&
+            var()->format != PixelFormat::Value::FloatGray &&
+            var()->format != PixelFormat::Value::ByteRGB &&
+            var()->format != PixelFormat::Value::ByteYUV &&
+            var()->format != PixelFormat::Value::ByteBGRA &&
+            var()->format != PixelFormat::Value::ByteRGBA)
         {
-			SPADAS_ERROR_MSG("Invalid vars->format");
+			SPADAS_ERROR_MSG("Invalid var()->format");
             return Image();
         }
             
-		Float widthRatio = (Float)vars->width / outputSize.width;
-		Float heightRatio = (Float)vars->height / outputSize.height;
+		Float widthRatio = (Float)var()->width / outputSize.width;
+		Float heightRatio = (Float)var()->height / outputSize.height;
 		
 		if (undistort)
 		{
@@ -505,15 +505,15 @@ Image Image::resize(Size2D outputSize, Bool undistort, Enum<ResizeMode> mode)
 			heightRatio = widthRatio;
 		}
 		
-        Image image(outputSize, vars->format, FALSE);
-		switch (vars->format.value())
+        Image image(outputSize, var()->format, FALSE);
+		switch (var()->format.value())
 		{
 			case PixelFormat::Value::ByteBGR:
             case PixelFormat::Value::ByteRGB:
 			case PixelFormat::Value::ByteYUV:
             case PixelFormat::Value::ByteBGRA:
             case PixelFormat::Value::ByteRGBA:
-                areaResizeColorByte(*this, image, widthRatio, heightRatio, PixelFormat::nChannels(vars->format));
+                areaResizeColorByte(*this, image, widthRatio, heightRatio, PixelFormat::nChannels(var()->format));
 				break;
 			case PixelFormat::Value::ByteGray:
 				areaResizeGrayByte(*this, image, widthRatio, heightRatio);
@@ -541,14 +541,14 @@ Image Image::convert(Enum<PixelFormat> outputFormat)
 {
     SPADAS_ERROR_RETURNVAL(!vars, Image());
 
-	if (outputFormat == vars->format) return clone();
+	if (outputFormat == var()->format) return clone();
 
 	table.init();
 	
-    Image image(Size2D::wh(vars->width, vars->height), outputFormat, FALSE);
+    Image image(Size2D::wh(var()->width, var()->height), outputFormat, FALSE);
 
     Bool fastConverted = TRUE;
-    switch (vars->format.value())
+    switch (var()->format.value())
     {
         case PixelFormat::Value::ByteBGR:
             switch (outputFormat.value())
@@ -747,21 +747,21 @@ Image Image::convert(Enum<PixelFormat> outputFormat)
 	
 	if (!fastConverted)
 	{
-        RowIOType srcType = getRowIOType(vars->format);
+        RowIOType srcType = getRowIOType(var()->format);
         RowIOType dstType = getRowIOType(outputFormat);
         
-        IRowIO *rowLoader = createRowLoader(vars->format);
+        IRowIO *rowLoader = createRowLoader(var()->format);
         IRowIO *rowWriter = createRowWriter(outputFormat);
         IRowCvt *rowCvt = dstType == srcType ? NULL : createRowCvt(srcType, dstType);
         
-        Pointer dataIn = createRowData(srcType, vars->width);
-        Pointer dataOut = dstType == srcType ? dataIn : createRowData(dstType, vars->width);
+        Pointer dataIn = createRowData(srcType, var()->width);
+        Pointer dataOut = dstType == srcType ? dataIn : createRowData(dstType, var()->width);
         
-        for (UInt v = 0; v < vars->height; v++)
+        for (UInt v = 0; v < var()->height; v++)
         {
-            rowLoader->io(operator[](v).ptr, dataIn, vars->width);
-            if (dstType != srcType) rowCvt->cvt(dataIn, dataOut, vars->width);
-            rowWriter->io(image[v].ptr, dataOut, vars->width);
+            rowLoader->io(operator[](v).ptr, dataIn, var()->width);
+            if (dstType != srcType) rowCvt->cvt(dataIn, dataOut, var()->width);
+            rowWriter->io(image[v].ptr, dataOut, var()->width);
         }
         
         destroyRowData(dataIn, srcType);
@@ -779,39 +779,39 @@ Image Image::flip(Bool upDownFlip, Bool leftRightFlip)
 {
     SPADAS_ERROR_RETURNVAL(!vars, Image());
 
-    if (leftRightFlip && upDownFlip && vars->format != PixelFormat::Value::ByteUYVY) return rotate(ImageRotation::Value::CW180);
+    if (leftRightFlip && upDownFlip && var()->format != PixelFormat::Value::ByteUYVY) return rotate(ImageRotation::Value::CW180);
 	
 	table.init();
 	
-    Image image(Size2D::wh(vars->width, vars->height), vars->format, FALSE);
+    Image image(Size2D::wh(var()->width, var()->height), var()->format, FALSE);
 	
 	if (leftRightFlip)
 	{
-        RowIOType type = getRowIOType(vars->format);
+        RowIOType type = getRowIOType(var()->format);
         
-        IRowIO *rowLoader = createRowLoader(vars->format);
-        IRowIO *rowWriter = createRowWriter(vars->format);
+        IRowIO *rowLoader = createRowLoader(var()->format);
+        IRowIO *rowWriter = createRowWriter(var()->format);
         IRowCvt *rowFlip = createRowFlip(type);
         
-        Pointer dataIn = createRowData(type, vars->width);
-        Pointer dataOut = createRowData(type, vars->width);
+        Pointer dataIn = createRowData(type, var()->width);
+        Pointer dataOut = createRowData(type, var()->width);
         
         if (upDownFlip)
         {
-            for (UInt vSrc = 0, vDst = vars->height - 1; vSrc < vars->height; vSrc++, vDst--)
+            for (UInt vSrc = 0, vDst = var()->height - 1; vSrc < var()->height; vSrc++, vDst--)
             {
-                rowLoader->io(operator[](vSrc).ptr, dataIn, vars->width);
-                rowFlip->cvt(dataIn, dataOut, vars->width);
-                rowWriter->io(image[vDst].ptr, dataOut, vars->width);
+                rowLoader->io(operator[](vSrc).ptr, dataIn, var()->width);
+                rowFlip->cvt(dataIn, dataOut, var()->width);
+                rowWriter->io(image[vDst].ptr, dataOut, var()->width);
             }
         }
         else
         {
-            for (UInt v = 0; v < vars->height; v++)
+            for (UInt v = 0; v < var()->height; v++)
             {
-                rowLoader->io(operator[](v).ptr, dataIn, vars->width);
-                rowFlip->cvt(dataIn, dataOut, vars->width);
-                rowWriter->io(image[v].ptr, dataOut, vars->width);
+                rowLoader->io(operator[](v).ptr, dataIn, var()->width);
+                rowFlip->cvt(dataIn, dataOut, var()->width);
+                rowWriter->io(image[v].ptr, dataOut, var()->width);
             }
         }
         
@@ -827,14 +827,14 @@ Image Image::flip(Bool upDownFlip, Bool leftRightFlip)
 		UInt rowBytes = min(rowBytesValid(), image.rowBytesValid());
 		if (upDownFlip)
 		{
-			for (UInt vSrc = 0, vDst = vars->height - 1; vSrc < vars->height; vSrc++, vDst--)
+			for (UInt vSrc = 0, vDst = var()->height - 1; vSrc < var()->height; vSrc++, vDst--)
 			{
 				memoryCopy(operator[](vSrc).ptr, image[vDst].ptr, rowBytes);
 			}
 		}
 		else
 		{
-			for (UInt v = 0; v < vars->height; v++)
+			for (UInt v = 0; v < var()->height; v++)
 			{
 				memoryCopy(operator[](v).ptr, image[v].ptr, rowBytes);
 			}
@@ -847,16 +847,16 @@ Image Image::flip(Bool upDownFlip, Bool leftRightFlip)
 Image Image::rotate(Enum<ImageRotation> rotation)
 {
     SPADAS_ERROR_RETURNVAL(!vars, Image());
-    SPADAS_ERROR_RETURNVAL(vars->format == PixelFormat::Value::ByteUYVY, Image());
+    SPADAS_ERROR_RETURNVAL(var()->format == PixelFormat::Value::ByteUYVY, Image());
     SPADAS_ERROR_RETURNVAL(rotation == ImageRotation::Value::None, Image());
 
 	Size2D targetSize;
 	if (rotation == ImageRotation::Value::CW180) targetSize = this->size();
-	else targetSize = Size2D::wh(vars->height, vars->width);
+	else targetSize = Size2D::wh(var()->height, var()->width);
     
-    Image image(targetSize, vars->format, FALSE);
+    Image image(targetSize, var()->format, FALSE);
 	
-	switch (vars->format.value())
+	switch (var()->format.value())
 	{
 		case PixelFormat::Value::ByteBGR:
 		case PixelFormat::Value::ByteGray:
@@ -865,16 +865,16 @@ Image Image::rotate(Enum<ImageRotation> rotation)
         case PixelFormat::Value::ByteBool:
         case PixelFormat::Value::ByteBGRA:
         case PixelFormat::Value::ByteRGBA:
-			rotateByte(*this, image, PixelFormat::nChannels(vars->format), rotation);
+			rotateByte(*this, image, PixelFormat::nChannels(var()->format), rotation);
 			break;
 		case PixelFormat::Value::WordBGR:
 		case PixelFormat::Value::WordGray:
-			rotateWord(*this, image, PixelFormat::isColor(vars->format), rotation);
+			rotateWord(*this, image, PixelFormat::isColor(var()->format), rotation);
 			break;
 		case PixelFormat::Value::FloatBGR:
 		case PixelFormat::Value::FloatGray:
 		case PixelFormat::Value::FloatHSV:
-			rotateInt(*this, image, PixelFormat::isColor(vars->format), rotation);
+			rotateInt(*this, image, PixelFormat::isColor(var()->format), rotation);
 			break;
 		default:
 			break;
@@ -888,7 +888,7 @@ Array<Image> Image::splitChannels()
 
 	/* check formats of outputs */
 	Enum<PixelFormat> dstFormat;
-	switch (vars->format.value())
+	switch (var()->format.value())
 	{
 	case PixelFormat::Value::ByteBGR:
 	case PixelFormat::Value::ByteRGB:
@@ -905,16 +905,16 @@ Array<Image> Image::splitChannels()
 		dstFormat = PixelFormat::Value::FloatGray;
 		break;
 	default:
-		SPADAS_ERROR_MSG("Invalid vars->format");
+		SPADAS_ERROR_MSG("Invalid var()->format");
 		return Array<Image>();
 	}
 
-    UInt nChannels = PixelFormat::nChannels(vars->format);
+    UInt nChannels = PixelFormat::nChannels(var()->format);
     Array<Image> channels(nChannels);
-	for (UInt i = 0; i < nChannels; i++) channels[i] = Image(Size2D::wh(vars->width, vars->height), dstFormat, FALSE);
+	for (UInt i = 0; i < nChannels; i++) channels[i] = Image(Size2D::wh(var()->width, var()->height), dstFormat, FALSE);
 
 	/* split */
-    for (UInt v = 0; v < vars->height; v++)
+    for (UInt v = 0; v < var()->height; v++)
     {
         PixelData srcRow = operator[](v);
         PixelData c0Row = channels[0][v];
@@ -923,12 +923,12 @@ Array<Image> Image::splitChannels()
         PixelData c3Row = nChannels == 4 ? channels[3][v] : PixelData();
         
         UInt i = 0;
-        switch (vars->format.value())
+        switch (var()->format.value())
         {
         case PixelFormat::Value::ByteBGR:
         case PixelFormat::Value::ByteRGB:
         case PixelFormat::Value::ByteYUV:
-            for (UInt u = 0; u < vars->width; u++)
+            for (UInt u = 0; u < var()->width; u++)
             {
                 c0Row.b[u] = srcRow.b[i++];
                 c1Row.b[u] = srcRow.b[i++];
@@ -937,7 +937,7 @@ Array<Image> Image::splitChannels()
             break;
         case PixelFormat::Value::ByteBGRA:
         case PixelFormat::Value::ByteRGBA:
-			for (UInt u = 0; u < vars->width; u++)
+			for (UInt u = 0; u < var()->width; u++)
 			{
 				c0Row.b[u] = srcRow.b[i++];
 				c1Row.b[u] = srcRow.b[i++];
@@ -946,7 +946,7 @@ Array<Image> Image::splitChannels()
 			}
 			break;
         case PixelFormat::Value::WordBGR:
-            for (UInt u = 0; u < vars->width; u++)
+            for (UInt u = 0; u < var()->width; u++)
             {
                 c0Row.w[u] = srcRow.w[i++];
                 c1Row.w[u] = srcRow.w[i++];
@@ -954,7 +954,7 @@ Array<Image> Image::splitChannels()
             }
             break;
         case PixelFormat::Value::FloatBGR:
-            for (UInt u = 0; u < vars->width; u++)
+            for (UInt u = 0; u < var()->width; u++)
             {
                 c0Row.f[u] = srcRow.f[i++];
                 c1Row.f[u] = srcRow.f[i++];
@@ -962,7 +962,7 @@ Array<Image> Image::splitChannels()
             }
             break;
         case PixelFormat::Value::FloatHSV:
-            for (UInt u = 0; u < vars->width; u++)
+            for (UInt u = 0; u < var()->width; u++)
             {
                 c0Row.f[u] = clamp(srcRow.f[i++] / 360, 0.0f, 1.0f);
                 c1Row.f[u] = srcRow.f[i++];
@@ -1087,8 +1087,8 @@ Array<Image> Image::genMipmap(UInt nLevels)
 
 	if (nLevels == 0) return Array<Image>();
 	
-	Int width = (Int)vars->width;
-	Int height = (Int)vars->height;
+	Int width = (Int)var()->width;
+	Int height = (Int)var()->height;
 	
 	Int maxMultiplier = (Int)math::round(math::power(2.0f, (Float)nLevels - 1));
     SPADAS_ERROR_RETURNVAL(width % maxMultiplier != 0 || height % maxMultiplier != 0, Array<Image>());
@@ -1153,5 +1153,5 @@ void Image::save(Path filePath, UInt jpgQuality)
 String Image::getInfoText()
 {
 	if (!vars) return "(null)";
-	else return (String)"Width: " + vars->width + "\nHeight: " + vars->height + "\nPixel format: " + vars->format.toString() + "\nRow offset bytes: " + vars->rowBytes + "\nBytes per pixel: " + vars->bytesPerPixel;
+	else return (String)"Width: " + var()->width + "\nHeight: " + var()->height + "\nPixel format: " + var()->format.toString() + "\nRow offset bytes: " + var()->rowBytes + "\nBytes per pixel: " + var()->bytesPerPixel;
 }

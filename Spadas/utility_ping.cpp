@@ -17,7 +17,7 @@ Bool spadas::system::ping(String ip, UInt timeout)
 
 	IPAddr pAddr = (IPAddr)inet_addr(ip.chars().data());
 	icmp_echo_reply pData;
-	IcmpSendEcho(iHwnd, pAddr, NULL, 0, NULL, (LPVOID)&pData, sizeof(icmp_echo_reply), timeout);
+	IcmpSendEcho(iHwnd, pAddr, 0, 0, 0, (LPVOID)&pData, sizeof(icmp_echo_reply), timeout);
 
 	IcmpCloseHandle(iHwnd);
 
@@ -42,11 +42,11 @@ Bool spadas::system::ping(String ip, UInt timeout)
 	String command = (String)"ping -c 1 -W " + t + " " + ip;
 
 	FILE *pf = popen(command.chars().data(), "r");
-	if (pf == NULL) return FALSE;
+	if (pf == 0) return FALSE;
 
 	char result[2048] = {0};
 	char buffer[1024] = {0};
-	while(fgets(buffer, 1024, pf) != NULL)
+	while(fgets(buffer, 1024, pf) != 0)
 	{
 		strcat(result, buffer);
 		if(strlen(result) > 1024) break;
@@ -78,11 +78,11 @@ Bool spadas::system::ping(String ip, UInt timeout)
 	String command = (String)"ping -c 1 -W " + timeout + " " + ip;
 
 	FILE *pf = popen(command.chars().data(), "r");
-	if (pf == NULL) return FALSE;
+	if (pf == 0) return FALSE;
 
 	char result[2048] = {0};
 	char buffer[1024] = {0};
-	while(fgets(buffer, 1024, pf) != NULL)
+	while(fgets(buffer, 1024, pf) != 0)
 	{
 		strcat(result, buffer);
 		if(strlen(result) > 1024) break;

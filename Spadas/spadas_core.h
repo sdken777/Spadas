@@ -864,11 +864,11 @@ namespace spadas
 
 		/// \~English @brief Initialize with the specified pointer to variables
 		/// \~Chinese @brief 以指定变量数据指针初始化
-		/// \~English @param newVars Pointer to variables
-		/// \~Chinese @param newVars 变量数据的指针
+		/// \~English @param initVars Pointer to variables
+		/// \~Chinese @param initVars 变量数据的指针
 		/// \~English @param isNew Should be TRUE for the new pointer, otherwise FALSE (obtained by Object::getVars, etc.)
 		/// \~Chinese @param isNew 对于new出来的指针isNew应为TRUE，否则为FALSE（由 Object::getVars 等获得的情况）
-		Object(VarsType *newVars, Bool isNew);
+		Object(VarsType *initVars, Bool isNew);
 		
 		/// \~English @brief Destructor, the reference of variables is decremented by 1
 		/// \~Chinese @brief 析构函数，变量数据的引用减1
@@ -935,11 +935,11 @@ namespace spadas
 
 		/// \~English @brief @brief [Unsafe] Redirection, set pointer to variables
 		/// \~Chinese @brief @brief [非安全] 重定向，设置变量数据指针
-		/// \~English @param newVars Pointer to variables
-		/// \~Chinese @param newVars 变量数据的指针
+		/// \~English @param targetVars Pointer to variables
+		/// \~Chinese @param targetVars 变量数据的指针
 		/// \~English @param isNew Should be TRUE for the new pointer, otherwise FALSE (obtained by Object::getVars, etc.)
 		/// \~Chinese @param isNew 对于new出来的指针isNew应为TRUE，否则为FALSE（由 Object::getVars 等获得的情况）
-		void setVars(VarsType* newVars, Bool isNew);
+		void setVars(VarsType* targetVars, Bool isNew);
 		
 		/// \~English @brief [Unsafe] Convert the input pointer to variables to the current type, and create the object
 		/// \~Chinese @brief [非安全] 以输入的变量数据指针转换为当前类型创建对象
@@ -955,20 +955,6 @@ namespace spadas
 		VarsType *vars;
 	};
 
-	/// \~English @brief Reference counting base class without member variables
-	/// \~Chinese @brief 无需成员变量的引用计数基类
-	class SPADAS_API EmptyObject : public Object<Vars>
-	{
-	public:
-		/// \~English @brief Create object
-		/// \~Chinese @brief 创建对象
-		EmptyObject();
-
-	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
-	};
-
 	/// \~English @brief Convertible base class object
 	/// \~Chinese @brief 可转换的基类对象
 	class SPADAS_API BaseObject : public Object<Vars>
@@ -979,6 +965,26 @@ namespace spadas
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
 		BaseObject();
+
+		/// \~English @brief Initialize with the specified pointer to variables
+		/// \~Chinese @brief 以指定变量数据指针初始化
+		/// \~English @param newVars New pointer to variables
+		/// \~Chinese @param newVars new出来的变量数据的指针
+		BaseObject(Vars* newVars);
+	};
+
+	/// \~English @brief Reference counting base class without member variables
+	/// \~Chinese @brief 无需成员变量的引用计数基类
+	class SPADAS_API EmptyObject : public BaseObject
+	{
+	public:
+		/// \~English @brief Create object
+		/// \~Chinese @brief 创建对象
+		EmptyObject();
+
+	private:
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Container to realize the multithread safety for redirection operation
@@ -996,12 +1002,12 @@ namespace spadas
 
 		/// \~English @brief [Unsafe] Redirection, set pointer to variables
 		/// \~Chinese @brief [非安全] 重定向，设置变量数据指针
-		/// \~English @param newVars Pointer to variables
-		/// \~Chinese @param newVars 变量数据的指针
+		/// \~English @param targetVars Pointer to variables
+		/// \~Chinese @param targetVars 变量数据的指针
 		/// \~English @param isNew Should be TRUE for the new pointer, otherwise FALSE (obtained by Object::getVars, etc.)
 		/// \~Chinese @param isNew 对于new出来的指针isNew应为TRUE，否则为FALSE（由 Object::getVars 等获得的情况）
 		template <typename VarsType>
-		void setVars(VarsType* newVars, Bool isNew);
+		void setVars(VarsType* targetVars, Bool isNew);
 
 		/// \~English @brief Get object
 		/// \~Chinese @brief 获取对象
@@ -1043,10 +1049,11 @@ namespace spadas
 
 	/// \~English @brief The container of the interface implementation object, where Type is the interface definition type
 	/// \~Chinese @brief 接口实现对象的容器，其中Type为接口定义类型
-	template <typename Type> class Interface : public Object<InterfaceVars<Type> >
+	template <typename Type> class Interface : public BaseObject
 	{
 	public:
 		static String typeName();
+		class InterfaceVars<Type>* var();
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -1084,10 +1091,11 @@ namespace spadas
 
 	/// \~English @brief Nullable object, where Type can be any type
 	/// \~Chinese @brief 可空对象，其中Type可为任意类型
-	template <typename Type> class Optional : public Object<OptionalVars<Type> >
+	template <typename Type> class Optional : public BaseObject
 	{
 	public:
 		static String typeName();
+		class OptionalVars<Type>* var();
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -1167,10 +1175,11 @@ namespace spadas
 
 	/// \~English @brief Fixed length array
 	/// \~Chinese @brief 定长数组
-	template <typename Type> class Array : public Object<ArrayVars<Type> >
+	template <typename Type> class Array : public BaseObject
 	{
 	public:
 		static String typeName();
+		class ArrayVars<Type>* var();
 
 		/// \~English @brief Default constructor, create an empty array
 		/// \~Chinese @brief 默认构造函数，创建一个空数组
@@ -1355,8 +1364,8 @@ namespace spadas
 		static Array<Type> merge(Array<ArraySpan<Type> > spans);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Fixed-length array span, whose data bound to the external array data
@@ -1503,9 +1512,12 @@ namespace spadas
 
 	/// \~English @brief Linked list node
 	/// \~Chinese @brief 链表节点
-	template <typename Type> class ListNode : public Object<ListNodeVars<Type> >
+	template <typename Type> class ListNode : public BaseObject
 	{
 	public:
+		static String typeName();
+		class ListNodeVars<Type>* var();
+
 		/// \~English @brief Create a node whose data is the default value
 		/// \~Chinese @brief 创建一个节点，其数据为默认值
 		ListNode();
@@ -1608,8 +1620,8 @@ namespace spadas
 		
 	private:
 		ListNode(ListNodeVars<Type> *vars);
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Variables of spadas::TreeNode template class
@@ -1618,9 +1630,12 @@ namespace spadas
 
 	/// \~English @brief Tree node
 	/// \~Chinese @brief 树节点
-	template <typename Type> class TreeNode : public Object<TreeNodeVars<Type> >
+	template <typename Type> class TreeNode : public BaseObject
 	{
 	public:
+		static String typeName();
+		class TreeNodeVars<Type>* var();
+
 		/// \~English @brief Create a node whose data is the default value
 		/// \~Chinese @brief 创建一个节点，其数据为默认值
 		TreeNode();
@@ -1699,8 +1714,8 @@ namespace spadas
 		
 	private:
 		TreeNode(TreeNodeVars<Type> *vars);
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 		void collapseSub();
 	};
 
@@ -1710,9 +1725,12 @@ namespace spadas
 
 	/// \~English @brief Graph node (NType: node data type, LType: link data type)
 	/// \~Chinese @brief 图节点 (NType: 节点数据类型, LType: 链接数据类型)
-	template <typename NType, typename LType> class GraphNode : public Object<GraphNodeVars<NType, LType> >
+	template <typename NType, typename LType> class GraphNode : public BaseObject
 	{
 	public:
+		static String typeName();
+		class GraphNodeVars<NType, LType>* var();
+
 		/// \~English @brief Create a node whose data is the default value
 		/// \~Chinese @brief 创建一个节点，其数据为默认值
 		GraphNode();
@@ -1767,8 +1785,8 @@ namespace spadas
 		
 	private:
 		GraphNode(GraphNodeVars<NType, LType> *vars0);
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Variables of spadas::ArrayX template class
@@ -1777,10 +1795,11 @@ namespace spadas
 
 	/// \~English @brief Expandable array
 	/// \~Chinese @brief 可扩展数组
-	template <typename Type> class ArrayX : public Object<ArrayXVars<Type> >
+	template <typename Type> class ArrayX : public BaseObject
 	{
 	public:
 		static String typeName();
+		class ArrayXVars<Type>* var();
 
 		/// \~English @brief Create an empty array, each segment size is 16
 		/// \~Chinese @brief 创建一个空数组，每段大小为16
@@ -1835,8 +1854,8 @@ namespace spadas
 		Array<Type> toArray(Region thisRegion);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 		void copyRegion(Pointer, UInt, Array<Type>&, UInt, UInt, UInt, UInt);
 		Pointer getSegmentNode(UInt);
 	};
@@ -1931,10 +1950,11 @@ namespace spadas
 	
 	/// \~English @brief Linked list
 	/// \~Chinese @brief 链表
-	template <typename Type> class List : public Object<ListVars<Type> >
+	template <typename Type> class List : public BaseObject
 	{
 	public:
 		static String typeName();
+		class ListVars<Type>* var();
 
 		/// \~English @brief Create an empty linked list
 		/// \~Chinese @brief 创建一个空链表
@@ -2005,8 +2025,8 @@ namespace spadas
 		Array<Type> toArray();
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Variables of spadas::Stream template class
@@ -2015,10 +2035,11 @@ namespace spadas
 
 	/// \~English @brief [Multithread safe] Data stream object (queue), in which elements have first-in-first-out characteristics
 	/// \~Chinese @brief [多线程安全] 数据流，即队列或管道，元素具有先入先出特性
-	template <typename Type> class Stream : public Object<StreamVars<Type> >
+	template <typename Type> class Stream : public BaseObject
 	{
 	public:
 		static String typeName();
+		class StreamVars<Type>* var();
 
 		/// \~English @brief Create a data stream with a capacity of 1, and its elements can be discarded
 		/// \~Chinese @brief 创建容量为1的数据流，且其元素可丢弃
@@ -2097,8 +2118,8 @@ namespace spadas
 		void reset();
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	// Mapping template / 映射模板 //////////////////////////////////////////////////////////////
@@ -2179,10 +2200,11 @@ namespace spadas
 
 	/// \~English @brief Mapping table
 	/// \~Chinese @brief 映射表
-	template <typename KeyType, typename ValueType> class Map : public Object<MapVars<KeyType, ValueType> >
+	template <typename KeyType, typename ValueType> class Map : public BaseObject
 	{
 	public:
 		static String typeName();
+		class MapVars<KeyType, ValueType>* var();
 
 		/// \~English @brief Create an empty mapping table, the default number of buckets is 256
 		/// \~Chinese @brief 创建空的映射表，默认bucket个数为256
@@ -2270,8 +2292,8 @@ namespace spadas
 		ValueType& operator [](KeyType key);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Dictionary, which can be indexed by string
@@ -2357,10 +2379,11 @@ namespace spadas
 
 	/// \~English @brief Binary data class
 	/// \~Chinese @brief 二进制数据类
-	class SPADAS_API Binary : public Object<class BinaryVars>
+	class SPADAS_API Binary : public BaseObject
 	{
 	public:
 		static String typeName();
+		class BinaryVars* var();
 
 		/// \~English @brief Create an empty data block (length is 0)
 		/// \~Chinese @brief 创建一个空数据块（长度为0）
@@ -2501,8 +2524,8 @@ namespace spadas
 		static Binary merge(Array<Binary> binaries);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Span of binary data, bound to the external byte array
@@ -2620,10 +2643,10 @@ namespace spadas
 
 	/// \~English @brief String
 	/// \~Chinese @brief 字符串
-	class SPADAS_API String : public Object<class StringVars>
+	class SPADAS_API String : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.String")
+		SPADAS_CLASS("spadas.String", StringVars)
 
 		/// \~English @brief Create an empty string
 		/// \~Chinese @brief 创建空字符串
@@ -3156,8 +3179,8 @@ namespace spadas
 		static String merge(Array<Type> arr, String separator);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 		void initBuffer(UInt dataSize);
 		void ensureBuffer(UInt appendSize);
 		static String mergeStrings(Array<String> strs, String separator);
@@ -3408,10 +3431,10 @@ namespace spadas
 
 	/// \~English @brief String buffer, used to parse large string
 	/// \~Chinese @brief 字符串缓存，用于连续的生成大字符串
-	class SPADAS_API StringBuffer : public Object<class StringBufferVars>
+	class SPADAS_API StringBuffer : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.StringBuffer")
+		SPADAS_CLASS("spadas.StringBuffer", StringBufferVars)
 
 		/// \~English @brief Create string buffer, default size is 1024 bytes
 		/// \~Chinese @brief 创建字符串缓存，默认大小1024字节
@@ -3437,14 +3460,18 @@ namespace spadas
 		/// \~English @brief Output the string and specify whether to copy it (if not copied, later reset or append operations will modify this string)
 		/// \~Chinese @brief 输出字符串，并指定是否拷贝（若不拷贝，后续的重置或拼接操作将修改此字符串）
 		String output(Bool clone);
+
+	private:
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief String viewer, used to parse large string
 	/// \~Chinese @brief 字符串浏览，用于解析大字符串
-	class SPADAS_API StringViewer : Object<class StringViewerVars>
+	class SPADAS_API StringViewer : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.StringViewer")
+		SPADAS_CLASS("spadas.StringViewer", StringViewerVars)
 
 		/// \~English @brief View empty string
 		/// \~Chinese @brief 浏览空字符串
@@ -3469,6 +3496,10 @@ namespace spadas
 		/// \~English @brief Get the span ending with the specified separator (not including the separator)
 		/// \~Chinese @brief 获取到指定分割符的下一个片段（不含分割符）
 		StringSpan& next(String target);
+
+	private:
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Convenience for l-value to concatenate string, see macro "cat"
@@ -3712,10 +3743,10 @@ namespace spadas
 
 	/// \~English @brief File path
 	/// \~Chinese @brief 文件路径
-	class SPADAS_API Path : public Object<class PathVars>
+	class SPADAS_API Path : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.Path")
+		SPADAS_CLASS("spadas.Path", PathVars)
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -3887,10 +3918,10 @@ namespace spadas
 
 	/// \~English @brief File data I/O
 	/// \~Chinese @brief 文件数据I/O
-	class SPADAS_API File : public Object<class FileVars>
+	class SPADAS_API File : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.File")
+		SPADAS_CLASS("spadas.File", FileVars)
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -3983,10 +4014,10 @@ namespace spadas
 
 	/// \~English @brief Print to file
 	/// \~Chinese @brief 打印至文件
-	class SPADAS_API FileConsole : public Object<class FileConsoleVars>, public IConsole
+	class SPADAS_API FileConsole : public BaseObject, public IConsole
 	{
 	public:
-		SPADAS_TYPE("spadas.FileConsole")
+		SPADAS_CLASS("spadas.FileConsole", FileConsoleVars)
 
 		/// \~English @brief Create an object to ignore all printing
 		/// \~Chinese @brief 创建用于忽略所有打印的对象
@@ -4001,8 +4032,8 @@ namespace spadas
 		void print(String text, Enum<MessageLevel> level);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	// XML //////////////////////////////////////////////////////////////
@@ -4046,10 +4077,10 @@ namespace spadas
 
 	/// \~English @brief XML document object
 	/// \~Chinese @brief XML文档对象
-	class SPADAS_API XML : public Object<class XMLVars>
+	class SPADAS_API XML : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.XML")
+		SPADAS_CLASS("spadas.XML", XMLVars)
 
 		/// \~English @brief Create an empty document (root node's tag is "root")
 		/// \~Chinese @brief 创建一个空文档（根标签为root）
@@ -4100,8 +4131,8 @@ namespace spadas
 		static Array<XMLAttribute> dictionaryToAttributes(Dictionary<String> dict);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief XML element node
@@ -4472,10 +4503,10 @@ namespace spadas
 
 	/// \~English @brief Image class
 	/// \~Chinese @brief 图像类
-	class SPADAS_API Image : public Object<class ImageVars>
+	class SPADAS_API Image : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.Image")
+		SPADAS_CLASS("spadas.Image", ImageVars)
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -4630,10 +4661,10 @@ namespace spadas
 
 	/// \~English @brief Large integer number
 	/// \~Chinese @brief 大数
-	class SPADAS_API BigInteger : public Object<class BigIntegerVars>
+	class SPADAS_API BigInteger : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.BigInteger")
+		SPADAS_CLASS("spadas.BigInteger", BigIntegerVars)
 
 		/// \~English @brief Zero
 		/// \~Chinese @brief 零
@@ -4700,8 +4731,8 @@ namespace spadas
 		BigInteger modPow(BigInteger exponent, BigInteger modulus);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Variables of spadas::Matrix template class
@@ -4710,10 +4741,10 @@ namespace spadas
 
 	/// \~English @brief Matrix
 	/// \~Chinese @brief 矩阵
-	template <typename Type> class Matrix : public Object<class MatrixVars<Type> >
+	template <typename Type> class Matrix : public BaseObject
 	{
 	public:
-		SPADAS_TYPE((String)"spadas.Matrix<" + typeid(Type).name() + ">")
+		SPADAS_CLASS((String)"spadas.Matrix<" + typeid(Type).name() + ">", MatrixVars<Type>)
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -5091,10 +5122,10 @@ namespace spadas
 
 	/// \~English @brief [Multithread safe] Thread lock
 	/// \~Chinese @brief [多线程安全] 线程锁
-	class SPADAS_API Lock : public Object<class LockVars>
+	class SPADAS_API Lock : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.Lock")
+		SPADAS_CLASS("spadas.Lock", LockVars)
 
 		/// \~English @brief Create a non-spinlock object (default is not entered)
 		/// \~Chinese @brief 创建非自旋锁对象 (默认为未进入)
@@ -5117,8 +5148,8 @@ namespace spadas
 		void leave();
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Thread lock proxy, which can secure the use of thread locks and prevent dead locks caused by not calling Lock::leave
@@ -5147,10 +5178,10 @@ namespace spadas
 
 	/// \~English @brief [Multithread safe] Flag
 	/// \~Chinese @brief [多线程安全] 标志位
-	class SPADAS_API Flag : public Object<class FlagVars>
+	class SPADAS_API Flag : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.Flag")
+		SPADAS_CLASS("spadas.Flag", FlagVars)
 
 		/// \~English @brief Create a Flag object (the default is "not set" state)
 		/// \~Chinese @brief 创建Flag对象 (默认为not set状态)
@@ -5203,16 +5234,16 @@ namespace spadas
 		Bool waitReset(UInt waitTime = UINF);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief [Multithread safe] Thread synchronizer
 	/// \~Chinese @brief [多线程安全] 线程同步器
-	class SPADAS_API Barrier : public Object<class BarrierVars>
+	class SPADAS_API Barrier : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.Barrier")
+		SPADAS_CLASS("spadas.Barrier", BarrierVars)
 
 		/// \~English @brief Create a synchronizer object (default strength is 0)
 		/// \~Chinese @brief 创建一个同步器对象 (默认强度为0)
@@ -5227,8 +5258,8 @@ namespace spadas
 		Bool against(Flag interrupt);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Status information of a thread
@@ -5327,10 +5358,10 @@ namespace spadas
 
 	/// \~English @brief [Multithread safe] Multi-threaded container
 	/// \~Chinese @brief [多线程安全] 多线程容器
-	class SPADAS_API Threads : public Object<class ThreadsVars>
+	class SPADAS_API Threads : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.Threads")
+		SPADAS_CLASS("spadas.Threads", ThreadsVars)
 
 		/// \~English @brief Invalid object (should be created by Threads::start or Threads::begin)
 		/// \~Chinese @brief 无效对象（应由 Threads::start 或 Threads::begin 创建）
@@ -5411,10 +5442,10 @@ namespace spadas
 
 	/// \~English @brief [Multithread safe] Task thread manager
 	/// \~Chinese @brief [多线程安全] 任务线程管理器
-	class SPADAS_API TaskManager : public Object<class TaskManagerVars>
+	class SPADAS_API TaskManager : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.TaskManager")
+		SPADAS_CLASS("spadas.TaskManager", TaskManagerVars)
 
 		/// \~English @brief Create task thread manager
 		/// \~Chinese @brief 创建任务线程管理器
@@ -5449,8 +5480,8 @@ namespace spadas
 		void stopAll(UInt timeout = UINF);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	// Utilities / 实用工具 //////////////////////////////////////////////////////////////
@@ -5615,10 +5646,10 @@ namespace spadas
 
 	/// \~English @brief Timer
 	/// \~Chinese @brief 计时器
-	class SPADAS_API Timer : public Object<class TimerVars>
+	class SPADAS_API Timer : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.Timer")
+		SPADAS_CLASS("spadas.Timer", TimerVars)
 
 		/// \~English @brief Create a timer object and start it immediately
 		/// \~Chinese @brief 创建一个计时器对象并立即启动
@@ -5653,8 +5684,8 @@ namespace spadas
 		static ULong cpuTicksPerSecond();
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Oscillator task interface
@@ -5671,10 +5702,10 @@ namespace spadas
 
 	/// \~English @brief Oscillator
 	/// \~Chinese @brief 振荡器
-	class SPADAS_API Tick : public Object<class TickVars>, public IWorkflow
+	class SPADAS_API Tick : public BaseObject, public IWorkflow
 	{
 	public:
-		SPADAS_TYPE("spadas.Tick")
+		SPADAS_CLASS("spadas.Tick", TickVars)
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -5699,10 +5730,10 @@ namespace spadas
 
 	/// \~English @brief Memory mapping management, used for hardware drivers and inter-process communication, etc.
 	/// \~Chinese @brief 内存映射管理，用于硬件驱动和多进程通讯等
-	class SPADAS_API MemoryMap : public Object<class MemoryMapVars>
+	class SPADAS_API MemoryMap : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.MemoryMap")
+		SPADAS_CLASS("spadas.MemoryMap", MemoryMapVars)
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象
@@ -5756,10 +5787,10 @@ namespace spadas
 
 	/// \~English @brief [Multithread safe] Data stream based on memory mapping
 	/// \~Chinese @brief [多线程安全] 基于内存映射的数据流
-	class SPADAS_API MemoryMapStream : public Object<class MemoryMapStreamVars>
+	class SPADAS_API MemoryMapStream : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.MemoryMapStream")
+		SPADAS_CLASS("spadas.MemoryMapStream", MemoryMapStreamVars)
 
 		/// \~English @brief Create a data stream (unopened state)
 		/// \~Chinese @brief 创建一个数据流（未开启状态）
@@ -5812,16 +5843,16 @@ namespace spadas
 		Array<Binary> receive();
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Dynamic library loader
 	/// \~Chinese @brief 动态库加载器
-	class SPADAS_API LibraryLoader : public Object<class LibraryLoaderVars>
+	class SPADAS_API LibraryLoader : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.LibraryLoader")
+		SPADAS_CLASS("spadas.LibraryLoader", LibraryLoaderVars)
 
 		/// \~English @brief Create a dynamic library loader
 		/// \~Chinese @brief 创建动态库加载器
@@ -5852,8 +5883,8 @@ namespace spadas
 		Pointer getSymbol(String symbol);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Checkpoint time cost statistics
@@ -6632,14 +6663,20 @@ namespace spadas
 
 	/// \~English @brief Sample
 	/// \~Chinese @brief 样本
-	class SPADAS_API SessionSample : public Object<SessionSampleVars>
+	class SPADAS_API SessionSample : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.SessionSample")
+		SPADAS_CLASS("spadas.SessionSample", SessionSampleVars)
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
 		SessionSample();
+
+		/// \~English @brief Initialize with the specified pointer to variables
+		/// \~Chinese @brief 以指定变量数据指针初始化
+		/// \~English @param newVars New pointer to variables
+		/// \~Chinese @param newVars new出来的变量数据的指针
+		SessionSample(SessionSampleVars* newVars);
 
 		/// \~English @brief Get the reference of the timestamp
 		/// \~Chinese @brief 取得时间戳的引用
@@ -6656,6 +6693,10 @@ namespace spadas
 		/// \~English @brief Specialized sample interpolation
 		/// \~Chinese @brief 特化样本插值
 		SessionSample interpolate(SessionSample& s1, Double w1, SessionSample& s2, Double w2, FullTimestamp timestamp);
+
+	private:
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief General sample element
@@ -6709,10 +6750,10 @@ namespace spadas
 
 	/// \~English @brief General sample
 	/// \~Chinese @brief 通用样本
-	class SPADAS_API SessionGeneralSample : public Object<class SessionGeneralSampleVars>
+	class SPADAS_API SessionGeneralSample : public SessionSample
 	{
 	public:
-		SPADAS_TYPE("spadas.SessionGeneralSample")
+		SPADAS_CLASS("spadas.SessionGeneralSample", SessionGeneralSampleVars)
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
@@ -6737,14 +6778,18 @@ namespace spadas
 		/// \~English @brief Get the reference of the key element number, indicating that the first few in the sample element array are key data, the default is 0
 		/// \~Chinese @brief 取得关键元素个数的引用，表示样本数据数组中前若干个为关键数据，默认为0
 		UInt& significantCount();
+
+	private:
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Matrix sample
 	/// \~Chinese @brief 矩阵样本
-	class SPADAS_API SessionMatrixSample : public Object<class SessionMatrixSampleVars>
+	class SPADAS_API SessionMatrixSample : public SessionSample
 	{
 	public:
-		SPADAS_TYPE("spadas.SessionMatrixSample")
+		SPADAS_CLASS("spadas.SessionMatrixSample", SessionMatrixSampleVars)
 
 		/// \~English @brief Default constructor
 		/// \~Chinese @brief 默认构造函数
@@ -6769,6 +6814,10 @@ namespace spadas
 		/// \~English @brief Get the reference of the column number
 		/// \~Chinese @brief 取得列数的引用
 		UInt& cols();
+
+	private:
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief General sample data table, the key is the sample protocol ID whose format is "xxx-v?" or "xxx-v?@?", "xxx" indicates the sample type, "v?" indicates the version, "@?" indicates the channel index that starts from 0
@@ -6821,10 +6870,10 @@ namespace spadas
 
 	/// \~English @brief [Multithread safe] Sample buffer
 	/// \~Chinese @brief [多线程安全] 样本缓存
-	class SPADAS_API SessionSampleBuffer : public Object<class SessionSampleBufferVars>
+	class SPADAS_API SessionSampleBuffer : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.SessionSampleBuffer")
+		SPADAS_CLASS("spadas.SessionSampleBuffer", SessionSampleBufferVars)
 
 		/// \~English @brief Create a sample buffer
 		/// \~Chinese @brief 创建样本缓存
@@ -6944,8 +6993,8 @@ namespace spadas
 		Enum<SampleInterpolationResult> interpolate(Double offset, Type& interpolatedSample, UInt earlyThresh = 1000/* ms */);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Sample buffer table, the key is the sample protocol ID whose format is "xxx-v?" or "xxx-v?@?", "xxx" indicates the sample type, "v?" indicates the version, "@?" indicates the channel number that starts from 0
@@ -8466,10 +8515,10 @@ namespace spadas
 
 	/// \~English @brief General function IO object
 	/// \~Chinese @brief 通用的函数IO用对象
-	class SPADAS_API GeneralIOObject : public Object<class GeneralIOObjectVars>
+	class SPADAS_API GeneralIOObject : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.GeneralIOObject")
+		SPADAS_CLASS("spadas.GeneralIOObject", GeneralIOObjectVars)
 
 		/// \~English @brief Create object
 		/// \~Chinese @brief 创建对象
@@ -8492,8 +8541,8 @@ namespace spadas
 		void setOutput(Binary data);
 
 	private:
-		Bool isNull() { return FALSE; }
-		Bool isValid() { return FALSE; }
+		Bool isNull();
+		Bool isValid();
 	};
 
 	/// \~English @brief Variables of spadas::SampleParser template class
@@ -8503,10 +8552,11 @@ namespace spadas
 	/// \~English @brief Convenience for sample parsing
 	/// \~Chinese @brief 方便解析样本
     template <typename Type>
-    class SampleParser : Object<SampleParserVars<Type> >
+    class SampleParser : public BaseObject
     {
     public:
         static String typeName();
+		class SampleParserVars<Type> *var();
 
 		/// \~English @brief Create invalid object
 		/// \~Chinese @brief 创建无效对象
@@ -8536,11 +8586,12 @@ namespace spadas
 	/// \~English @brief Convenience for sample synchronization
 	/// \~Chinese @brief 方便同步样本
     template <typename Type>
-    class SampleSync : Object<SampleSyncVars<Type> >
+    class SampleSync : public BaseObject
     {
     public:
         static String typeName();
-
+		class SampleSyncVars<Type> *var();
+		
 		/// \~English @brief Create invalid object
 		/// \~Chinese @brief 创建无效对象
         SampleSync();
@@ -8560,10 +8611,10 @@ namespace spadas
 
 	/// \~English @brief Object container for raw data exchange
 	/// \~Chinese @brief 用于原始数据交换的对象容器
-	class SPADAS_API GeneralRawObject : public Object<class GeneralRawObjectVars>
+	class SPADAS_API GeneralRawObject : public BaseObject
 	{
 	public:
-		SPADAS_TYPE("spadas.GeneralRawObject")
+		SPADAS_CLASS("spadas.GeneralRawObject", GeneralRawObjectVars)
 
 		/// \~English @brief Invalid object
 		/// \~Chinese @brief 无效对象

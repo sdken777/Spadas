@@ -4,10 +4,10 @@
 using namespace spadas;
 
 // Declaration of MyObject / MyObject声明
-class MyObject : public Object<class MyObjectVars>
+class MyObject : public BaseObject
 {
 public:
-	SPADAS_TYPE("MyObject") // Declare type name to support type conversion / 声明类型名称以支持类型转换
+	SPADAS_CLASS("MyObject", MyObjectVars) // Declare type name to support type conversion / 声明类型名称以支持类型转换
 	MyObject();
 	MyObject(Double number);
 	Double getNumber();
@@ -23,15 +23,15 @@ public:
 	String toString() override { return "My object with number: " cat number; }
 };
 
-MyObject::MyObject() : Object<MyObjectVars>(new MyObjectVars(0), TRUE)
+MyObject::MyObject() : BaseObject(new MyObjectVars(0))
 {}
 
-MyObject::MyObject(Double number) : Object<MyObjectVars>(new MyObjectVars(number), TRUE)
+MyObject::MyObject(Double number) : BaseObject(new MyObjectVars(number))
 {}
 
 Double MyObject::getNumber()
 {
-	return vars->number;
+	return var()->number;
 }
 
 // Main function / 主函数

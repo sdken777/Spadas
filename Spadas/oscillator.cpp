@@ -23,7 +23,7 @@ namespace oscillator_internal
 		Flag trigger;
 		OscillatorEvent *prev;
 		OscillatorEvent *next;
-		OscillatorEvent() : disposable(FALSE), toSet(FALSE), passed(ULINF), offset(ULINF), period(0), prev(NULL), next(NULL)
+		OscillatorEvent() : disposable(FALSE), toSet(FALSE), passed(ULINF), offset(ULINF), period(0), prev(0), next(0)
 		{
 		}
 		OscillatorEvent(Bool disposable0, Bool toSet0, ULong period0, Flag trigger0, OscillatorEvent* prev0, OscillatorEvent* next0) : disposable(disposable0), toSet(toSet0), passed(ULINF), offset(ULINF), period(period0), trigger(trigger0), prev(prev0), next(next0)
@@ -36,7 +36,7 @@ namespace oscillator_internal
 		BaseObject obj;
 		ULong timeoutTick;
 		DelayDelete *next;
-		DelayDelete() : timeoutTick(0), next(NULL)
+		DelayDelete() : timeoutTick(0), next(0)
 		{
 		}
 	};
@@ -54,7 +54,7 @@ namespace oscillator_internal
 			evTail = new OscillatorEvent();
 			evHead->next = evTail;
 			evTail->prev = evHead;
-			for (UInt i = 0; i < (UInt)DelayDeleteTimeout::Count; i++) ddHead[i] = ddTail[i] = NULL;
+			for (UInt i = 0; i < (UInt)DelayDeleteTimeout::Count; i++) ddHead[i] = ddTail[i] = 0;
 			oscillatorID = startOscillator();
 		}
 		~OscillatorVars()
@@ -88,7 +88,7 @@ namespace oscillator_internal
 	
 	OscillatorManager::OscillatorManager()
 	{
-		oscillator = NULL;
+		oscillator = 0;
 	}
 	OscillatorManager::~OscillatorManager()
 	{
@@ -191,7 +191,7 @@ void Oscillator::pulse()
 			}
 			if (!vars->ddHead[i])
 			{
-				vars->ddTail[i] = NULL;
+				vars->ddTail[i] = 0;
 			}
 		}
 	}
@@ -272,7 +272,7 @@ void oscillator_internal::sleepTime(spadas::UInt time)
 	timeval interval;
 	interval.tv_sec = time / 1000;
 	interval.tv_usec = (time % 1000) * 1000;
-	select(0, NULL, NULL, NULL, &interval);
+	select(0, 0, 0, 0, &interval);
 }
 
 volatile Bool oscillatorShouldEnd = FALSE;
@@ -297,7 +297,7 @@ UInt OscillatorVars::startOscillator()
 	pthread_attr_setdetachstate(&threadAttri, PTHREAD_CREATE_DETACHED);
 	
 	pthread_t thread;
-	pthread_create(&thread, &threadAttri, oscillatorThreadFunc, NULL);
+	pthread_create(&thread, &threadAttri, oscillatorThreadFunc, 0);
 	
 	pthread_attr_destroy(&threadAttri);
 	

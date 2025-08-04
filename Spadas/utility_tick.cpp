@@ -38,9 +38,9 @@ Tick::Tick(String name, Interface<ITickHandler> handler, UInt period)
 
 	setVars(new TickVars(FALSE), TRUE);
 
-	if (!name.isEmpty()) vars->name = name;
-	if (handler.isValid()) vars->handler = handler;
-	vars->period = math::max(period, 1u);
+	if (!name.isEmpty()) var()->name = name;
+	if (handler.isValid()) var()->handler = handler;
+	var()->period = math::max(period, 1u);
 }
 
 Tick::Tick(String name, Interface<ITickHandler> handler, UInt period, Bool spin)
@@ -49,9 +49,9 @@ Tick::Tick(String name, Interface<ITickHandler> handler, UInt period, Bool spin)
 
 	setVars(new TickVars(spin), TRUE);
 
-	if (!name.isEmpty()) vars->name = name;
-	if (handler.isValid()) vars->handler = handler;
-	vars->period = math::max(period, 1u);
+	if (!name.isEmpty()) var()->name = name;
+	if (handler.isValid()) var()->handler = handler;
+	var()->period = math::max(period, 1u);
 }
 
 String Tick::getWorkflowName()
@@ -64,30 +64,30 @@ Array<String> Tick::getThreadNames()
 }
 UInt Tick::getTimeInterval(UInt threadIndex)
 {
-	return vars->isSpin ? 0 : 1;
+	return var()->isSpin ? 0 : 1;
 }
 Bool Tick::onThreadBegin(UInt threadIndex)
 {
-	if (vars->isSpin) vars->lastCPUTick = Timer::cpuTick();
-	else om.obj()->add(vars->trigger, vars->period, FALSE, TRUE);
+	if (var()->isSpin) var()->lastCPUTick = Timer::cpuTick();
+	else om.obj()->add(var()->trigger, var()->period, FALSE, TRUE);
     return TRUE;
 }
 void Tick::onThreadLoop(UInt threadIndex, Flag shouldEnd)
 {
-	if (vars->isSpin)
+	if (var()->isSpin)
 	{
-		ULong step = Timer::cpuTicksPerSecond() * vars->period / 1000;
-		while (Timer::cpuTick() < vars->lastCPUTick + step) {}
-		vars->lastCPUTick += step;
+		ULong step = Timer::cpuTicksPerSecond() * var()->period / 1000;
+		while (Timer::cpuTick() < var()->lastCPUTick + step) {}
+		var()->lastCPUTick += step;
 	}
 	else
 	{
-		if (!vars->trigger.waitSet(10)) return;
-		vars->trigger.reset();
+		if (!var()->trigger.waitSet(10)) return;
+		var()->trigger.reset();
 	}
-    vars->handler->onTick(vars->name);
+    var()->handler->onTick(var()->name);
 }
 void Tick::onThreadEnd(UInt threadIndex)
 {
-	if (!vars->isSpin) om.obj()->remove(vars->trigger);
+	if (!var()->isSpin) om.obj()->remove(var()->trigger);
 }

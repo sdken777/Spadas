@@ -31,47 +31,47 @@ namespace spadas
 
 using namespace spadas;
 
-Barrier::Barrier() : Object<class BarrierVars>(new BarrierVars(), TRUE)
+Barrier::Barrier() : BaseObject(new BarrierVars)
 {
 }
 
 void Barrier::setStrength(UInt strength)
 {
-	vars->lock.enter();
-	if (vars->nJoined != 0)
+	var()->lock.enter();
+	if (var()->nJoined != 0)
 	{
-		SPADAS_ERROR_MSG("vars->nJoined != 0");
+		SPADAS_ERROR_MSG("var()->nJoined != 0");
 	}
 	else
 	{
-		vars->strength = strength;
+		var()->strength = strength;
 	}
-	vars->lock.leave();
+	var()->lock.leave();
 }
 
 Bool Barrier::against(Flag interrupt)
 {
-	LockProxy lock(vars->lock);
+	LockProxy lock(var()->lock);
 	
-	if (vars->strength == 0) return TRUE;
+	if (var()->strength == 0) return TRUE;
 	
-	if (vars->nJoined + 1 == vars->strength)
+	if (var()->nJoined + 1 == var()->strength)
 	{
-		ListNode<Flag> thisNode = vars->flagCircle0.next();
-		for (UInt i = 0; i < vars->nJoined; i++)
+		ListNode<Flag> thisNode = var()->flagCircle0.next();
+		for (UInt i = 0; i < var()->nJoined; i++)
 		{
 			thisNode->set();
 			thisNode = thisNode.next();
 		}
-		vars->flagCircle0.collapse();
-		vars->flagCircle0.joinNext(vars->flagCircle0);
-		vars->nJoined = 0;
+		var()->flagCircle0.collapse();
+		var()->flagCircle0.joinNext(var()->flagCircle0);
+		var()->nJoined = 0;
 		return TRUE;
 	}
 
 	Flag flag;
-	vars->flagCircle0.insertPrevious(flag);
-	vars->nJoined++;
+	var()->flagCircle0.insertPrevious(flag);
+	var()->nJoined++;
 	lock.releaseLock();
 	
 	while (!interrupt.check())

@@ -3,8 +3,11 @@
 
 using namespace spadas;
 
-EmptyObject::EmptyObject() : Object<Vars>(new Vars, TRUE)
+BaseObject::BaseObject()
 {}
 
-BaseObject::BaseObject()
+BaseObject::BaseObject(Vars* newVars) : Object<Vars>(newVars, TRUE)
+{}
+
+EmptyObject::EmptyObject() : BaseObject(new Vars)
 {}

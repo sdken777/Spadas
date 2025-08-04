@@ -6,7 +6,7 @@ namespace console_internal
 	using namespace spadas;
 
     // default console and console interface
-	class DefaultConsole : public Object<Vars>, public IConsole
+	class DefaultConsole : public EmptyObject, public IConsole
 	{
 	public:
 		DefaultConsole();

@@ -13,7 +13,7 @@ namespace string_internal
 	{
 		utility::memoryCopy(src, buf, len);
 		buf[len] = 0;
-		Char *endPtr = NULL;
+		Char *endPtr = 0;
 		out = (Int)strtol((Char*)buf, &endPtr, 10);
 		return endPtr - (Char*)buf == len;
 	}
@@ -22,7 +22,7 @@ namespace string_internal
 	{
 		utility::memoryCopy(src, buf, len);
 		buf[len] = 0;
-		Char *endPtr = NULL;
+		Char *endPtr = 0;
 		out = strtoll((Char*)buf, &endPtr, 10);
 		return endPtr - (Char*)buf == len;
 	}
@@ -31,7 +31,7 @@ namespace string_internal
 	{
 		utility::memoryCopy(src, buf, len);
 		buf[len] = 0;
-		Char *endPtr = NULL;
+		Char *endPtr = 0;
 		out = strtof((Char*)buf, &endPtr);
 		return endPtr - (Char*)buf == len;
 	}
@@ -40,7 +40,7 @@ namespace string_internal
 	{
 		utility::memoryCopy(src, buf, len);
 		buf[len] = 0;
-		Char *endPtr = NULL;
+		Char *endPtr = 0;
 		out = strtod((Char*)buf, &endPtr);
 		return endPtr - (Char*)buf == len;
 	}
@@ -67,8 +67,8 @@ String StringCommon::clone(const Byte* bytes, UInt len)
 	if (len == 0) return String();
 
 	String out = String::createWithSize(len);
-	utility::memoryCopy(bytes, out.getVars()->data, len);
-	out.getVars()->length = len;
+	utility::memoryCopy(bytes, out.var()->data, len);
+	out.var()->length = len;
 	return out;
 }
 
@@ -99,9 +99,9 @@ StringAppender StringCommon::operatorPlus(const Byte* bytes, UInt originLength, 
 	if (totalLength == 0) return String();
 
 	String out = String::createWithSize(totalLength * 2);
-	if (originLength != 0) utility::memoryCopy(bytes, out.getVars()->data, originLength);
-	if (appendLength != 0) utility::memoryCopy(append.getVars()->data, &out.getVars()->data[originLength], appendLength);
-	out.getVars()->length = totalLength;
+	if (originLength != 0) utility::memoryCopy(bytes, out.var()->data, originLength);
+	if (appendLength != 0) utility::memoryCopy(append.var()->data, &out.var()->data[originLength], appendLength);
+	out.var()->length = totalLength;
 	return out;
 }
 
@@ -112,9 +112,9 @@ StringAppender StringCommon::operatorPlusSpan(const Byte* bytes, UInt originLeng
 	if (totalLength == 0) return String();
 
 	String out = String::createWithSize(totalLength * 2);
-	if (originLength != 0) utility::memoryCopy(bytes, out.getVars()->data, originLength);
-	if (appendLength != 0) utility::memoryCopy(append.bytes(), &out.getVars()->data[originLength], appendLength);
-	out.getVars()->length = totalLength;
+	if (originLength != 0) utility::memoryCopy(bytes, out.var()->data, originLength);
+	if (appendLength != 0) utility::memoryCopy(append.bytes(), &out.var()->data[originLength], appendLength);
+	out.var()->length = totalLength;
 	return out;
 }
 
@@ -301,7 +301,7 @@ String StringCommon::toUpper(const Byte* bytes, UInt len)
 	if (len == 0) return String();
 
 	String out = clone(bytes, len);
-	Byte *data = out.getVars()->data;
+	Byte *data = out.var()->data;
 	for (UInt i = 0; i < len; i++)
 	{
 		if (data[i] >= 97 && data[i] <= 122) data[i] -= 32;
@@ -314,7 +314,7 @@ String StringCommon::toLower(const Byte* bytes, UInt len)
 	if (len == 0) return String();
 
 	String out = clone(bytes, len);
-	Byte *data = out.getVars()->data;
+	Byte *data = out.var()->data;
 	for (UInt i = 0; i < len; i++)
 	{
 		if (data[i] >= 65 && data[i] <= 90) data[i] += 32;
@@ -328,7 +328,7 @@ Bool StringCommon::startsWith(const Byte* srcData, UInt srcLength, String& targe
 	if (srcLength == 0 || targetLength == 0) return FALSE;
 	if (targetLength > srcLength) return FALSE;
 
-	Byte *targetData = target.getVars()->data;
+	Byte *targetData = target.var()->data;
 	for (UInt i = 0; i < targetLength; i++)
 	{
 		if (srcData[i] != targetData[i]) return FALSE;
@@ -342,7 +342,7 @@ Bool StringCommon::endsWith(const Byte* srcData, UInt srcLength, String& target)
 	if (srcLength == 0 || targetLength == 0) return FALSE;
 	if (targetLength > srcLength) return FALSE;
 
-	Byte *targetData = target.getVars()->data;
+	Byte *targetData = target.var()->data;
 	UInt offset = srcLength - targetLength;
 	for (UInt i = 0; i < targetLength; i++)
 	{
@@ -365,7 +365,7 @@ UInt StringCommon::count(const Byte* srcData, UInt srcLength, String& string)
 	SPADAS_ERROR_RETURNVAL(subLength == 0, 0);
 	if (subLength > srcLength) return 0;
 
-	Byte *subData = string.getVars()->data;
+	Byte *subData = string.var()->data;
 	const UInt forCount = srcLength - subLength;
 
     UInt nMatches = 0;
@@ -404,7 +404,7 @@ Array<UInt> StringCommon::search(const Byte* srcData, UInt srcLength, String& st
 	SPADAS_ERROR_RETURNVAL(subLength == 0, Array<UInt>());
 	if (subLength > srcLength) return Array<UInt>();
 
-	Byte *subData = string.getVars()->data;
+	Byte *subData = string.var()->data;
 	const UInt forCount = srcLength - subLength;
 
 	if (srcLength >= 64)
@@ -479,7 +479,7 @@ UInt StringCommon::searchFirst(const Byte* srcData, UInt srcLength, String& stri
 	SPADAS_ERROR_RETURNVAL(subLength == 0, UINF);
 	if (subLength > srcLength) return UINF;
 
-	Byte *subData = string.getVars()->data;
+	Byte *subData = string.var()->data;
 	const UInt forCount = srcLength - subLength;
 
 	if (subLength == 1)
@@ -517,7 +517,7 @@ UInt StringCommon::searchLast(const Byte* srcData, UInt srcLength, String& strin
 	SPADAS_ERROR_RETURNVAL(subLength == 0, UINF);
 	if (subLength > srcLength) return UINF;
 
-	Byte *subData = string.getVars()->data;
+	Byte *subData = string.var()->data;
 	if (subLength == 1)
 	{
 		Byte targetByte = subData[0];
@@ -655,10 +655,10 @@ String StringCommon::replace(const Byte* srcStringData, UInt srcStringLength, St
 	if (outLength == 0) return String();
 	
 	String out = String::createWithSize(outLength);
-	out.getVars()->length = outLength;
+	out.var()->length = outLength;
 
-	Byte *newStringData = newStringLength == 0 ? NULL : newString.getVars()->data;
-	Byte *outData = out.getVars()->data;
+	Byte *newStringData = newStringLength == 0 ? 0 : newString.var()->data;
+	Byte *outData = out.var()->data;
 
 	UInt outIndex = 0;
 	if (matches[0] != 0)

@@ -4,27 +4,33 @@
 using namespace spadas;
 
 // Implement a workflow class / 实现一个Workflow类
-class LockTestVars : public Vars
+class LockTest : public BaseObject, public IWorkflow
 {
-public:
-    ULong startCPUTick;
-    ULong intervalSum;
-    UInt intervalCount;
-    Lock lock;
-    LockTestVars(Bool spin) : startCPUTick(0), intervalSum(0), intervalCount(0), lock(spin) // Specify weather to use a spin lock / 指定是否使用自旋锁
-    {}
-};
+private:
+    class LockTestVars : public Vars
+    {
+    public:
+        SPADAS_VARS(LockTest, Vars);
 
-class LockTest : public Object<LockTestVars>, public IWorkflow
-{
+        ULong startCPUTick;
+        ULong intervalSum;
+        UInt intervalCount;
+        Lock lock;
+        
+        LockTestVars(Bool spin) : startCPUTick(0), intervalSum(0), intervalCount(0), lock(spin) // Specify weather to use a spin lock / 指定是否使用自旋锁
+        {}
+    };
+
 public:
-    LockTest(Bool spin) : Object<LockTestVars>(new LockTestVars(spin), TRUE)
+    SPADAS_CLASS("LockTest", LockTestVars)
+
+    LockTest(Bool spin) : BaseObject(new LockTestVars(spin))
     {}
 
     OptionalDouble getAverageInterval() // Microseconds / 微秒
     {
-        if (vars->intervalCount == 0) return OptionalDouble();
-        else return (Double)vars->intervalSum / vars->intervalCount * 1000000 / Timer::cpuTicksPerSecond();
+        if (var()->intervalCount == 0) return OptionalDouble();
+        else return (Double)var()->intervalSum / var()->intervalCount * 1000000 / Timer::cpuTicksPerSecond();
     }
 
 private:
@@ -36,18 +42,18 @@ private:
 	{
 		if (threadIndex == 0)
 		{
-            LockProxy lock(vars->lock);
+            LockProxy lock(var()->lock);
 			system::wait(3);
-			vars->startCPUTick = Timer::cpuTick();
+			var()->startCPUTick = Timer::cpuTick();
 		}
 		else
 		{
-            LockProxy lock(vars->lock);
-            if (vars->startCPUTick != 0)
+            LockProxy lock(var()->lock);
+            if (var()->startCPUTick != 0)
             {
-                vars->intervalSum += Timer::cpuTick() - vars->startCPUTick;
-                vars->intervalCount++;
-                vars->startCPUTick = 0;
+                var()->intervalSum += Timer::cpuTick() - var()->startCPUTick;
+                var()->intervalCount++;
+                var()->startCPUTick = 0;
             }
 		}
 	}

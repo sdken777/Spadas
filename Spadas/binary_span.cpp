@@ -18,13 +18,13 @@ BinarySpan::BinarySpan(Binary& sourceBinary, UInt offset, UInt size) : source(0)
 {
     if (size == 0) return;
 
-    BinaryVars *vars = sourceBinary.getVars();
-    SPADAS_ERROR_RETURN(!vars);
-    SPADAS_ERROR_RETURN(offset >= vars->size);
-    vars->retain();
-    source = (ULong)vars;
-    idx = (UInt)((ULong)vars->data + offset - source);
-    siz = math::min(size, vars->size - offset);
+    BinaryVars *sourceVars = sourceBinary.var();
+    SPADAS_ERROR_RETURN(!sourceVars);
+    SPADAS_ERROR_RETURN(offset >= sourceVars->size);
+    sourceVars->retain();
+    source = (ULong)sourceVars;
+    idx = (UInt)((ULong)sourceVars->data + offset - source);
+    siz = math::min(size, sourceVars->size - offset);
 }
 
 BinarySpan::BinarySpan(BinarySpan& sourceSpan, UInt offset, UInt size) : source(0), idx(0), siz(0)

@@ -190,10 +190,10 @@ Path::Path(const Char pathStringChars[])
 	Array<StringSpan> components;
 	if (parsePathString(pathString, FALSE, components, isFolder))
 	{
-		PathVars *vars = new PathVars();
-		vars->isFolder = isFolder;
-		vars->components = components;
-		setVars(vars, TRUE);
+		PathVars *newVars = new PathVars();
+		newVars->isFolder = isFolder;
+		newVars->components = components;
+		setVars(newVars, TRUE);
 	}
 	else
 	{
@@ -209,10 +209,10 @@ Path::Path(String pathString)
 	Array<StringSpan> components;
 	if (parsePathString(pathString, FALSE, components, isFolder))
 	{
-		PathVars *vars = new PathVars();
-		vars->isFolder = isFolder;
-		vars->components = components;
-		setVars(vars, TRUE);
+		PathVars *newVars = new PathVars();
+		newVars->isFolder = isFolder;
+		newVars->components = components;
+		setVars(newVars, TRUE);
 	}
 	else
 	{
@@ -222,9 +222,9 @@ Path::Path(String pathString)
 
 String Path::name()
 {
-	if (!vars || vars->components.size() < 2) return String();
+	if (!vars || var()->components.size() < 2) return String();
 	
-	StringSpan& fileFullName = vars->components.last();
+	StringSpan& fileFullName = var()->components.last();
 	Array<UInt> dotIndices = fileFullName.search(dot);
 	
 	if (dotIndices.isEmpty()) return fileFullName.clone();
@@ -233,9 +233,9 @@ String Path::name()
 
 String Path::extension()
 {
-	if (!vars || vars->components.size() < 2) return String();
+	if (!vars || var()->components.size() < 2) return String();
 	
-	StringSpan& fileFullName = vars->components.last();
+	StringSpan& fileFullName = var()->components.last();
 	Array<UInt> dotIndices = fileFullName.search(dot);
 	
 	if (dotIndices.isEmpty()) return String();
@@ -244,14 +244,14 @@ String Path::extension()
 
 String Path::fullName()
 {
-	SPADAS_ERROR_RETURNVAL(!vars || vars->components.size() < 2, String());
-	return vars->components.last().clone();
+	SPADAS_ERROR_RETURNVAL(!vars || var()->components.size() < 2, String());
+	return var()->components.last().clone();
 }
 
 String Path::fullPath()
 {
 	SPADAS_ERROR_RETURNVAL(!vars, String());
-	return vars->getPathString().clone();
+	return var()->getPathString().clone();
 }
 
 Bool Path::operator ==(Path path)
@@ -260,11 +260,11 @@ Bool Path::operator ==(Path path)
 	{
 		if (path.vars)
 		{
-			if (vars->isFolder != path.vars->isFolder) return FALSE;
-			if (vars->components.size() != path.vars->components.size()) return FALSE;
-			StringSpan *srcSpans = vars->components.data();
-			StringSpan *targetSpans = path.vars->components.data();
-			UInt nComponents = vars->components.size();
+			if (var()->isFolder != path.var()->isFolder) return FALSE;
+			if (var()->components.size() != path.var()->components.size()) return FALSE;
+			StringSpan *srcSpans = var()->components.data();
+			StringSpan *targetSpans = path.var()->components.data();
+			UInt nComponents = var()->components.size();
 			for (UInt i = 0; i < nComponents; i++)
 			{
 				if (srcSpans[i] != targetSpans[i]) return FALSE;
@@ -282,11 +282,11 @@ Bool Path::operator !=(Path path)
 	{
 		if (path.vars)
 		{
-			if (vars->isFolder != path.vars->isFolder) return TRUE;
-			if (vars->components.size() != path.vars->components.size()) return TRUE;
-			StringSpan *srcSpans = vars->components.data();
-			StringSpan *targetSpans = path.vars->components.data();
-			UInt nComponents = vars->components.size();
+			if (var()->isFolder != path.var()->isFolder) return TRUE;
+			if (var()->components.size() != path.var()->components.size()) return TRUE;
+			StringSpan *srcSpans = var()->components.data();
+			StringSpan *targetSpans = path.var()->components.data();
+			UInt nComponents = var()->components.size();
 			for (UInt i = 0; i < nComponents; i++)
 			{
 				if (srcSpans[i] != targetSpans[i]) return TRUE;
@@ -301,48 +301,48 @@ Bool Path::operator !=(Path path)
 Word Path::getHash()
 {
 	if (!vars) return 0;
-	else return vars->components.last().getHash();
+	else return var()->components.last().getHash();
 }
 
 Bool Path::exist()
 {
 	SPADAS_ERROR_RETURNVAL(!vars, FALSE);
-	if (vars->isFolder) return folderExist(vars->getPathString());
-	else return fileExist(vars->getPathString());
+	if (var()->isFolder) return folderExist(var()->getPathString());
+	else return fileExist(var()->getPathString());
 }
 
 Bool Path::isFile()
 {
 	SPADAS_ERROR_RETURNVAL(!vars, FALSE);
-	return !vars->isFolder;
+	return !var()->isFolder;
 }
 
 Bool Path::isFolder()
 {
 	SPADAS_ERROR_RETURNVAL(!vars, FALSE);
-	return vars->isFolder;
+	return var()->isFolder;
 }
 
 void Path::remove()
 {
 	SPADAS_ERROR_RETURN(!vars);
 
-	if (vars->isFolder)
+	if (var()->isFolder)
 	{
-		if (!folderExist(vars->getPathString())) return;
+		if (!folderExist(var()->getPathString())) return;
 
 		for (auto e = folderContents(TRUE).lastElem(); e.valid(); --e)
 		{
 			if (!e->vars) continue;
-			if (e->vars->isFolder) folderRemove(e->vars->getPathString());
-			else fileRemove(e->vars->getPathString());
+			if (e->var()->isFolder) folderRemove(e->var()->getPathString());
+			else fileRemove(e->var()->getPathString());
 		}
 
-		folderRemove(vars->getPathString());
+		folderRemove(var()->getPathString());
 	}
 	else
 	{
-		if (fileExist(vars->getPathString())) fileRemove(vars->getPathString());
+		if (fileExist(var()->getPathString())) fileRemove(var()->getPathString());
 	}
 }
 
@@ -427,35 +427,35 @@ void file_internal::moveOrCopy(Path srcPath, Path dstPath, Bool isCopy, Bool mer
 
 void Path::moveTo(Path dstPath)
 {
-	SPADAS_ERROR_RETURN(!vars || !dstPath.vars || vars->isFolder);
+	SPADAS_ERROR_RETURN(!vars || !dstPath.vars || var()->isFolder);
 	moveOrCopy(*this, dstPath, FALSE, FALSE);
 }
 
 void Path::moveTo(Path dstPath, Bool mergeDst)
 {
-	SPADAS_ERROR_RETURN(!vars || !dstPath.vars || !vars->isFolder);
+	SPADAS_ERROR_RETURN(!vars || !dstPath.vars || !var()->isFolder);
 	moveOrCopy(*this, dstPath, FALSE, mergeDst);
 }
 
 void Path::copyTo(Path dstPath)
 {
-	SPADAS_ERROR_RETURN(!vars || !dstPath.vars || vars->isFolder);
+	SPADAS_ERROR_RETURN(!vars || !dstPath.vars || var()->isFolder);
 	moveOrCopy(*this, dstPath, TRUE, FALSE);
 }
 
 void Path::copyTo(Path dstPath, Bool mergeDst)
 {
-	SPADAS_ERROR_RETURN(!vars || !dstPath.vars || !vars->isFolder);
+	SPADAS_ERROR_RETURN(!vars || !dstPath.vars || !var()->isFolder);
 	moveOrCopy(*this, dstPath, TRUE, mergeDst);
 }
 
 ULong Path::fileSize()
 {
 	SPADAS_ERROR_RETURNVAL(!vars, 0);
-	SPADAS_ERROR_RETURNVAL(vars->isFolder, 0);
+	SPADAS_ERROR_RETURNVAL(var()->isFolder, 0);
 	SPADAS_ERROR_RETURNVAL(!exist(), 0);
 	
-	Pointer filePtr = fileOpen(vars->getPathString(), FALSE, FALSE);
+	Pointer filePtr = fileOpen(var()->getPathString(), FALSE, FALSE);
 	SPADAS_ERROR_RETURNVAL(filePtr == NULL, 0);
 	
 	ULong size = fileGetSize(filePtr);
@@ -467,15 +467,15 @@ ULong Path::fileSize()
 void Path::fileCreate(UInt size)
 {
 	SPADAS_ERROR_RETURN(!vars);
-	SPADAS_ERROR_RETURN(vars->isFolder);
+	SPADAS_ERROR_RETURN(var()->isFolder);
 
 	Path parentFolder = this->parentFolder();
 	SPADAS_ERROR_RETURN(!parentFolder.vars);
-	SPADAS_ERROR_RETURN(fileExist(parentFolder.vars->getPathString()));
+	SPADAS_ERROR_RETURN(fileExist(parentFolder.var()->getPathString()));
 
-	if (!folderExist(parentFolder.vars->getPathString())) parentFolder.folderMake();
+	if (!folderExist(parentFolder.var()->getPathString())) parentFolder.folderMake();
 	
-	Pointer file = fileOpen(vars->getPathString(), TRUE, FALSE);
+	Pointer file = fileOpen(var()->getPathString(), TRUE, FALSE);
 	SPADAS_ERROR_RETURN(file == NULL);
 
 	if (size != 0)
@@ -490,20 +490,20 @@ void Path::fileCreate(UInt size)
 void Path::folderMake()
 {
 	SPADAS_ERROR_RETURN(!vars);
-	SPADAS_ERROR_RETURN(!vars->isFolder);
+	SPADAS_ERROR_RETURN(!var()->isFolder);
 	
-	SPADAS_ERROR_RETURN(fileExist(vars->getPathString()));
-	if (folderExist(vars->getPathString())) return;
+	SPADAS_ERROR_RETURN(fileExist(var()->getPathString()));
+	if (folderExist(var()->getPathString())) return;
 	
 	Path parent = parentFolder();
 	if (parent.isValid()) parent.folderMake();
 	
-	folderCreate(vars->getPathString());
+	folderCreate(var()->getPathString());
 }
 
 Path Path::childFile(String childName)
 {
-	SPADAS_ERROR_RETURNVAL(!vars || !vars->isFolder, Path());
+	SPADAS_ERROR_RETURNVAL(!vars || !var()->isFolder, Path());
 
 	UInt len = childName.length();
 	const Byte* bytes = childName.bytes();
@@ -513,13 +513,13 @@ Path Path::childFile(String childName)
 	SPADAS_ERROR_RETURNVAL(bytes[len - 1] == (Byte)getSeparatorChar(), Path());
 
 	Path path;
-	path.setVars(new PathVars(vars->components, String(), StringSpan(childName, 0, childName.length()), FALSE), TRUE);
+	path.setVars(new PathVars(var()->components, String(), StringSpan(childName, 0, childName.length()), FALSE), TRUE);
     return path;
 }
 
 Path Path::childFolder(String childName)
 {
-	SPADAS_ERROR_RETURNVAL(!vars || !vars->isFolder, Path());
+	SPADAS_ERROR_RETURNVAL(!vars || !var()->isFolder, Path());
 
 	UInt len = childName.length();
 	const Byte* bytes = childName.bytes();
@@ -529,26 +529,26 @@ Path Path::childFolder(String childName)
 	SPADAS_ERROR_RETURNVAL(bytes[len - 1] == (Byte)getSeparatorChar(), Path());
 
 	Path path;
-	path.setVars(new PathVars(vars->components, String(), StringSpan(childName, 0, childName.length()), TRUE), TRUE);
+	path.setVars(new PathVars(var()->components, String(), StringSpan(childName, 0, childName.length()), TRUE), TRUE);
     return path;
 }
 
 Path Path::childPath(String pathString)
 {
-	SPADAS_ERROR_RETURNVAL(!vars || !vars->isFolder, Path());
+	SPADAS_ERROR_RETURNVAL(!vars || !var()->isFolder, Path());
 
-	pathString = vars->getPathString() + pathString;
+	pathString = var()->getPathString() + pathString;
 
 	Bool isFolder = FALSE;
 	Array<StringSpan> components;
 	if (parsePathString(pathString, TRUE, components, isFolder))
 	{
-		PathVars *vars = new PathVars();
-		vars->isFolder = isFolder;
-		vars->components = components;
+		PathVars *newVars = new PathVars();
+		newVars->isFolder = isFolder;
+		newVars->components = components;
 
 		Path path;
-		path.setVars(vars, TRUE);
+		path.setVars(newVars, TRUE);
 		return path;
 	}
 	else
@@ -566,11 +566,11 @@ Bool Path::contain(Path path)
 
 Bool Path::contain(Path path, String& pathString)
 {
-	SPADAS_ERROR_RETURNVAL(!vars || !vars->isFolder, FALSE);
+	SPADAS_ERROR_RETURNVAL(!vars || !var()->isFolder, FALSE);
 	SPADAS_ERROR_RETURNVAL(!path.vars, FALSE);
 
-	String srcPathString = vars->getPathString();
-	String dstPathString = path.vars->getPathString();
+	String srcPathString = var()->getPathString();
+	String dstPathString = path.var()->getPathString();
 	UInt srcPathLen = srcPathString.length();
 	UInt dstPathLen = dstPathString.length();
 
@@ -593,12 +593,12 @@ Path Path::parentFolder()
 {
 	SPADAS_ERROR_RETURNVAL(!vars, Path());
     
-	if (vars->components.size() < 2) return Path();
+	if (var()->components.size() < 2) return Path();
 
 	PathVars *newVars = new PathVars();
 	newVars->isFolder = TRUE;
-	newVars->components = Array<StringSpan>::createUninitialized(vars->components.size() - 1);
-	for (UInt i = 0; i < newVars->components.size(); i++) newVars->components.initialize(i, vars->components[i]);
+	newVars->components = Array<StringSpan>::createUninitialized(var()->components.size() - 1);
+	for (UInt i = 0; i < newVars->components.size(); i++) newVars->components.initialize(i, var()->components[i]);
     
     Path path;
 	path.setVars(newVars, TRUE);
@@ -620,26 +620,26 @@ void Path::addFolderContents(ArrayX<Path>& contents, String folderPathString, Ar
 
 		if (contentIsFolder)
 		{
-			addFolderContents(contents, path.vars->getPathString(), path.vars->components);
+			addFolderContents(contents, path.var()->getPathString(), path.var()->components);
 		}
 	}
 }
 
 Array<Path> Path::folderContents(Bool includeAllLevels)
 {
-	SPADAS_ERROR_RETURNVAL(!vars || !vars->isFolder, Array<Path>());
+	SPADAS_ERROR_RETURNVAL(!vars || !var()->isFolder, Array<Path>());
 
-	if (!folderExist(vars->getPathString())) return Array<Path>();
+	if (!folderExist(var()->getPathString())) return Array<Path>();
 
 	if (includeAllLevels)
 	{
 		ArrayX<Path> buf(256, Path());
-		addFolderContents(buf, vars->getPathString(), vars->components);
+		addFolderContents(buf, var()->getPathString(), var()->components);
 		return buf.toArray();
 	}
 	else
 	{
-		Array<String> contents = folderGetContents(vars->getPathString());
+		Array<String> contents = folderGetContents(var()->getPathString());
 		Array<Path> out = Array<Path>::createUninitialized(contents.size());
 		for (auto e = contents.firstElem(); e.valid(); ++e)
 		{
@@ -649,7 +649,7 @@ Array<Path> Path::folderContents(Bool includeAllLevels)
 			StringSpan contentFullName(content, 0, contentIsFolder ? (content.length() - 1) : content.length());
 
 			Path path;
-			path.setVars(new PathVars(vars->components, vars->getPathString(), contentFullName, contentIsFolder), TRUE);
+			path.setVars(new PathVars(var()->components, var()->getPathString(), contentFullName, contentIsFolder), TRUE);
 			out.initialize(e.index(), path);
 		}
 		return out;
@@ -726,5 +726,5 @@ void Path::setEntryFolderPath(Path path)
 	SPADAS_ERROR_RETURN(!path.isFolder());
 	SPADAS_ERROR_RETURN(!path.exist());
 
-	pathsInfo.setEntryFolderPath(path.vars->components.clone(), path.fullPath());
+	pathsInfo.setEntryFolderPath(path.var()->components.clone(), path.fullPath());
 }

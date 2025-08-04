@@ -43,17 +43,17 @@ using namespace oscillator_internal;
 
 Bool Flag::check()
 {
-	return WaitForSingleObject(vars->hEventSet, 0) == WAIT_OBJECT_0;
+	return WaitForSingleObject(var()->hEventSet, 0) == WAIT_OBJECT_0;
 }
 
 Bool Flag::waitSet(UInt waitTime)
 {
-	return WaitForSingleObject(vars->hEventSet, waitTime) != WAIT_TIMEOUT;
+	return WaitForSingleObject(var()->hEventSet, waitTime) != WAIT_TIMEOUT;
 }
 
 Bool Flag::waitReset(UInt waitTime)
 {
-	return WaitForSingleObject(vars->hEventReset, waitTime) != WAIT_TIMEOUT;
+	return WaitForSingleObject(var()->hEventReset, waitTime) != WAIT_TIMEOUT;
 }
 
 #elif defined(SPADAS_ENV_LINUX) || defined(SPADAS_ENV_MACOS)
@@ -79,9 +79,9 @@ namespace spadas
 		
         FlagVars() : flag(FALSE), waitingSet(FALSE), waitingReset(FALSE)
         {
-            pthread_mutex_init(&mutex, NULL);
-            pthread_cond_init(&setSignal, NULL);
-            pthread_cond_init(&resetSignal, NULL);
+            pthread_mutex_init(&mutex, 0);
+            pthread_cond_init(&setSignal, 0);
+            pthread_cond_init(&resetSignal, 0);
         }
         ~FlagVars()
         {
@@ -130,26 +130,26 @@ using namespace oscillator_internal;
 Bool Flag::waitSet(UInt waitTime)
 {
 	int ret;
-	pthread_mutex_lock(&vars->mutex);
+	pthread_mutex_lock(&var()->mutex);
 	{
-		if (vars->flag)
+		if (var()->flag)
 		{
-			pthread_mutex_unlock(&vars->mutex);
+			pthread_mutex_unlock(&var()->mutex);
 			return TRUE;
 		}
 		
 		timeval target;
-		gettimeofday(&target, NULL);
+		gettimeofday(&target, 0);
 		ULong targetMicro = (ULong)target.tv_usec + (ULong)waitTime * 1000ull;
 
 		timespec timeInfo;
 		timeInfo.tv_sec = target.tv_sec + (time_t)(targetMicro / 1000000ull);
 		timeInfo.tv_nsec = (time_t)(targetMicro % 1000000ull) * 1000;
 
-		vars->waitingSet = TRUE;
-		ret = pthread_cond_timedwait(&vars->setSignal, &vars->mutex, &timeInfo);
+		var()->waitingSet = TRUE;
+		ret = pthread_cond_timedwait(&var()->setSignal, &var()->mutex, &timeInfo);
 	}
-	pthread_mutex_unlock(&vars->mutex);
+	pthread_mutex_unlock(&var()->mutex);
 
 	if (ret == 0) return TRUE;
 	else if (ret == ETIMEDOUT) return FALSE;
@@ -163,26 +163,26 @@ Bool Flag::waitSet(UInt waitTime)
 Bool Flag::waitReset(UInt waitTime)
 {
 	int ret = 0;
-	pthread_mutex_lock(&vars->mutex);
+	pthread_mutex_lock(&var()->mutex);
 	{
-		if (!vars->flag)
+		if (!var()->flag)
 		{
-			pthread_mutex_unlock(&vars->mutex);
+			pthread_mutex_unlock(&var()->mutex);
 			return TRUE;
 		}
 		
 		timeval target;
-		gettimeofday(&target, NULL);
+		gettimeofday(&target, 0);
 		ULong targetMicro = (ULong)target.tv_usec + (ULong)waitTime * 1000ull;
 
 		timespec timeInfo;
 		timeInfo.tv_sec = target.tv_sec + (time_t)(targetMicro / 1000000ull);
 		timeInfo.tv_nsec = (time_t)(targetMicro % 1000000ull) * 1000;
 
-		vars->waitingReset = TRUE;
-		ret = pthread_cond_timedwait(&vars->resetSignal, &vars->mutex, &timeInfo);
+		var()->waitingReset = TRUE;
+		ret = pthread_cond_timedwait(&var()->resetSignal, &var()->mutex, &timeInfo);
 	}
-	pthread_mutex_unlock(&vars->mutex);
+	pthread_mutex_unlock(&var()->mutex);
 
 	if (ret == 0) return TRUE;
 	else if (ret == ETIMEDOUT) return FALSE;
@@ -195,28 +195,28 @@ Bool Flag::waitReset(UInt waitTime)
 
 Bool Flag::check()
 {
-	return vars->flag;
+	return var()->flag;
 }
 
 #endif
 
-Flag::Flag() : Object<class FlagVars>(new FlagVars(), TRUE)
+Flag::Flag() : BaseObject(new FlagVars())
 {
 }
 
-Flag::Flag(UInt time) : Object<class FlagVars>(new FlagVars(), TRUE)
+Flag::Flag(UInt time) : BaseObject(new FlagVars())
 {
 	delaySet(time);
 }
 
 void Flag::set()
 {
-    vars->set();
+    var()->set();
 }
 
 void Flag::reset()
 {
-    vars->reset();
+    var()->reset();
 }
 
 void Flag::delaySet(UInt time)

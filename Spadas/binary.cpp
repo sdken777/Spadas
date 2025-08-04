@@ -6,6 +6,8 @@ using namespace binary_internal;
 
 String spadas::Binary::typeName() { static String name = "spadas.Binary"; return name; }
 
+BinaryVars* Binary::var() { return (BinaryVars*)this->vars; }
+
 Binary::Binary()
 {}
 
@@ -27,7 +29,7 @@ Binary::Binary(UInt size, Byte origin)
 	BinaryVars* newVars = new (newVarsRaw)BinaryVars(size, &newVarsRaw[sizeof(BinaryVars)]);
 	setVars(newVars, TRUE);
 
-	utility::memorySet(origin, vars->data, size);
+	utility::memorySet(origin, var()->data, size);
 }
 
 Binary::Binary(const Byte *arr, UInt size)
@@ -39,14 +41,14 @@ Binary::Binary(const Byte *arr, UInt size)
 	BinaryVars* newVars = new (newVarsRaw)BinaryVars(size, &newVarsRaw[sizeof(BinaryVars)]);
 	setVars(newVars, TRUE);
 
-	utility::memoryCopy(arr, vars->data, size);
+	utility::memoryCopy(arr, var()->data, size);
 }
 
 Binary Binary::create(UInt size, UInt firstByte, ...)
 {
 	if (size == 0) return Binary();
 	Binary out(size);
-	Byte *data = out.vars->data;
+	Byte *data = out.var()->data;
 	data[0] = firstByte;
 	if (size == 1) return out;
 	va_list list;
@@ -61,12 +63,12 @@ Binary Binary::create(UInt size, UInt firstByte, ...)
 
 Byte *Binary::data()
 {
-	return vars ? vars->data : 0;
+	return vars ? var()->data : 0;
 }
 
 UInt Binary::size()
 {
-	return vars ? vars->size : 0;
+	return vars ? var()->size : 0;
 }
 
 Bool Binary::isEmpty()
@@ -77,27 +79,27 @@ Bool Binary::isEmpty()
 Binary Binary::clone()
 {
 	if (!vars) return Binary();
-	else return BinaryCommon::clone(vars->data, vars->size);
+	else return BinaryCommon::clone(var()->data, var()->size);
 }
 
 Byte& Binary::operator [](UInt index)
 {
-	SPADAS_ERROR_RETURNVAL(!vars || index >= vars->size, *(new Byte));
-	return vars->data[index];
+	SPADAS_ERROR_RETURNVAL(!vars || index >= var()->size, *(new Byte));
+	return var()->data[index];
 }
 
 Binary Binary::operator +(Binary bin)
 {
 	if (!vars) return bin.clone();
-	else return BinaryCommon::operatorPlus(vars->data, vars->size, bin);
+	else return BinaryCommon::operatorPlus(var()->data, var()->size, bin);
 }
 
 Binary& Binary::trim(UInt size)
 {
 	SPADAS_ERROR_RETURNVAL(size == 0, *this);
-	if (vars && size < vars->size)
+	if (vars && size < var()->size)
 	{
-		vars->size = size;
+		var()->size = size;
 	}
 	return *this;
 }
@@ -105,37 +107,37 @@ Binary& Binary::trim(UInt size)
 void Binary::set(Byte val)
 {
 	if (!vars) return;
-	utility::memorySet(val, vars->data, vars->size);
+	utility::memorySet(val, var()->data, var()->size);
 }
 
 Array<BinarySpan> Binary::split(Array<UInt> sizes)
 {
 	SPADAS_ERROR_RETURNVAL(!vars, Array<BinarySpan>());
-	return BinaryCommon::split(vars->data, vars->size, sizes, vars);
+	return BinaryCommon::split(var()->data, var()->size, sizes, vars);
 }
 
 Binary Binary::reverse()
 {
 	if (!vars) return Binary();
-	else return BinaryCommon::reverse(vars->data, vars->size);
+	else return BinaryCommon::reverse(var()->data, var()->size);
 }
 
 String Binary::toBase64()
 {
 	if (!vars) return String();
-	else return BinaryCommon::toBase64(vars->data, vars->size);
+	else return BinaryCommon::toBase64(var()->data, var()->size);
 }
 
 Binary Binary::toSHA1()
 {
 	if (!vars) return Binary();
-	else return BinaryCommon::toSHA1(vars->data, vars->size);
+	else return BinaryCommon::toSHA1(var()->data, var()->size);
 }
 
 Binary Binary::toDES(String key)
 {
 	if (!vars) return Binary();
-	else return BinaryCommon::toDES(vars->data, vars->size, key);
+	else return BinaryCommon::toDES(var()->data, var()->size, key);
 }
 
 BinarySpan Binary::span(UInt index, UInt size)
@@ -146,10 +148,10 @@ BinarySpan Binary::span(UInt index, UInt size)
 void Binary::copy(Binary src, Region srcRegion, UInt thisOffset)
 {
 	SPADAS_ERROR_RETURN(!vars || !src.vars || vars == src.vars);
-	UInt srcSize = src.vars->size;
+	UInt srcSize = src.var()->size;
 	SPADAS_ERROR_RETURN(srcRegion.offset < 0 || srcRegion.offset + srcRegion.size > srcSize);
-	SPADAS_ERROR_RETURN(thisOffset + srcRegion.size > vars->size);
-	utility::memoryCopy(&src.vars->data[srcRegion.offset], &vars->data[thisOffset], srcRegion.size);
+	SPADAS_ERROR_RETURN(thisOffset + srcRegion.size > var()->size);
+	utility::memoryCopy(&src.var()->data[srcRegion.offset], &var()->data[thisOffset], srcRegion.size);
 }
 
 Binary Binary::merge(Array<Binary> binaries)
@@ -165,8 +167,8 @@ Binary Binary::merge(Array<Binary> binaries)
 	{
 		Binary& bin = binaries[i];
 		if (bin.isEmpty()) continue;
-		UInt copySize = bin.vars->size;
-		utility::memoryCopy(bin.vars->data, &dstData[n], copySize);
+		UInt copySize = bin.var()->size;
+		utility::memoryCopy(bin.var()->data, &dstData[n], copySize);
 		n += copySize;
 	}
 	return out;

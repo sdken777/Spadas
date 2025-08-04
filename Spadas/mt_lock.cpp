@@ -32,7 +32,7 @@ void leaveLock(CRITICAL_SECTION *context)
 typedef pthread_mutex_t LockContext;
 void initLock(pthread_mutex_t *context)
 {
-	pthread_mutex_init(context, NULL);
+	pthread_mutex_init(context, 0);
 }
 void releaseLock(pthread_mutex_t *context)
 {
@@ -75,40 +75,40 @@ namespace spadas
 
 using namespace spadas;
 
-Lock::Lock() : Object<class LockVars>(new LockVars(FALSE), TRUE)
+Lock::Lock() : BaseObject(new LockVars(FALSE))
 {
 }
 
-Lock::Lock(Bool spin) : Object<class LockVars>(new LockVars(spin), TRUE)
+Lock::Lock(Bool spin) : BaseObject(new LockVars(spin))
 {
 }
 
 Bool Lock::isSpin()
 {
-	return vars->isSpin;
+	return var()->isSpin;
 }
 
 void Lock::enter()
 {
 	UInt threadID = Threads::getCurrentThreadID();
 	SPADAS_ERROR_RETURN(threadID == 0);
-	SPADAS_ERROR_RETURN(vars->threadID == threadID);
+	SPADAS_ERROR_RETURN(var()->threadID == threadID);
 
-	if (vars->isSpin) vars->spinEnter();
-	else enterLock(&vars->context);
+	if (var()->isSpin) var()->spinEnter();
+	else enterLock(&var()->context);
 
-	vars->threadID = threadID;
+	var()->threadID = threadID;
 }
 
 void Lock::leave()
 {
 	UInt threadID = Threads::getCurrentThreadID();
 	SPADAS_ERROR_RETURN(threadID == 0);
-	SPADAS_ERROR_RETURN(vars->threadID != threadID);
-	vars->threadID = 0;
+	SPADAS_ERROR_RETURN(var()->threadID != threadID);
+	var()->threadID = 0;
 
-	if (vars->isSpin) vars->spinLeave();
-	else leaveLock(&vars->context);
+	if (var()->isSpin) var()->spinLeave();
+	else leaveLock(&var()->context);
 }
 
 LockProxy::LockProxy(Lock& lock0) : lock(lock0), released(FALSE)

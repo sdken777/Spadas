@@ -3,36 +3,42 @@
 
 using namespace spadas;
 
-class ThreadSafeTestVars : public Vars
+class ThreadSafeTest : public BaseObject, public IWorkflow
 {
-public:
-	Safe<String> forRead; // Used to test multithread safety for copy constructor, destructor, and redirection operation / 用于测试拷贝构造函数、析构函数和重定向操作的多线程安全
-	Safe<String> forWrite; // Used to test multithreaded safety of writing to the same object / 用于测试对同一个对象写操作的多线程安全
-	Array<UInt> counters; // Record the number of write operations to check whether the result is correct / 记录写操作次数，用于确认操作结果是否正确
-	Stream<BusDeviceData> streamFull, streamEmpty; // Used to test stream enqueue and dequeue / 用于测试数据流元素的推入和取出
-	Bool streamDisable;
-	ThreadSafeTestVars() : streamFull(10000, FALSE), streamEmpty(10000, FALSE), streamDisable(FALSE)
-	{}
-};
-
-class ThreadSafeTest : public Object<ThreadSafeTestVars>, public IWorkflow
-{
-public:
-	ThreadSafeTest() : Object<ThreadSafeTestVars>(new ThreadSafeTestVars, TRUE)
+private:
+	class ThreadSafeTestVars : public Vars
 	{
-		vars->forRead = "A";
-		vars->forWrite = String::createWithSize(1); // Empty objects cannot be locked (strings default to empty objects) / 空对象无法加锁（字符串默认为空对象）
-		vars->counters = Array<UInt>(2, 0);
+	public:
+		SPADAS_VARS(ThreadSafeTest, Vars);
+
+		Safe<String> forRead; // Used to test multithread safety for copy constructor, destructor, and redirection operation / 用于测试拷贝构造函数、析构函数和重定向操作的多线程安全
+		Safe<String> forWrite; // Used to test multithreaded safety of writing to the same object / 用于测试对同一个对象写操作的多线程安全
+		Array<UInt> counters; // Record the number of write operations to check whether the result is correct / 记录写操作次数，用于确认操作结果是否正确
+		Stream<BusDeviceData> streamFull, streamEmpty; // Used to test stream enqueue and dequeue / 用于测试数据流元素的推入和取出
+		Bool streamDisable;
+		
+		ThreadSafeTestVars() : streamFull(10000, FALSE), streamEmpty(10000, FALSE), streamDisable(FALSE)
+		{}
+	};
+
+public:
+	SPADAS_CLASS("ThreadSafeTest", ThreadSafeTestVars)
+
+	ThreadSafeTest() : BaseObject(new ThreadSafeTestVars)
+	{
+		var()->forRead = "A";
+		var()->forWrite = String::createWithSize(1); // Empty objects cannot be locked (strings default to empty objects) / 空对象无法加锁（字符串默认为空对象）
+		var()->counters = Array<UInt>(2, 0);
 	}
 	void clearStreams()
 	{
-		console::print("Elements: Full=" cat vars->streamFull.nElements() cat " Empty=" cat vars->streamEmpty.nElements());
-		vars->streamDisable = TRUE;
+		console::print("Elements: Full=" cat var()->streamFull.nElements() cat " Empty=" cat var()->streamEmpty.nElements());
+		var()->streamDisable = TRUE;
 	}
 	void printResult()
 	{
-		UInt counterSum = vars->counters[0] + vars->counters[1];
-		console::print(catAll(vars->forWrite.get().length(), "=", counterSum, " (", String::merge(vars->counters, ", "), ")")); // The string length of "forWrite" must be the same as the number of write operations / forWrite字符串长度应与写操作次数一致
+		UInt counterSum = var()->counters[0] + var()->counters[1];
+		console::print(catAll(var()->forWrite.get().length(), "=", counterSum, " (", String::merge(var()->counters, ", "), ")")); // The string length of "forWrite" must be the same as the number of write operations / forWrite字符串长度应与写操作次数一致
 	}
 
 private:
@@ -50,43 +56,43 @@ private:
 		if (threadIndex >= 2)
 		{
 			// Constantly redirects to newly created strings / 不断重定向至新创建的字符串
-			vars->forRead = "A";
+			var()->forRead = "A";
 
 			// Constantly enqueue data to streams / 不断向数据流推入数据
-			if (vars->streamDisable) return;
+			if (var()->streamDisable) return;
 			if (threadIndex % 2 == 0)
 			{
 				BusDeviceData data;
 				data.binary = Binary(8, 0);
-				vars->streamFull.enqueue(data);
-				vars->streamFull.enqueue(data);
-				vars->streamFull.enqueue(data);
-				vars->streamFull.enqueue(data);
+				var()->streamFull.enqueue(data);
+				var()->streamFull.enqueue(data);
+				var()->streamFull.enqueue(data);
+				var()->streamFull.enqueue(data);
 			}
 			else
 			{
 				BusDeviceData data;
 				data.binary = Binary(8, 0);
-				vars->streamEmpty.enqueue(data);
+				var()->streamEmpty.enqueue(data);
 			}
 		}
 		else
 		{
 			// Keep reading strings and adding them to the end of another string / 不断读字符串并添加至另一字符串结尾
-			SpinLocked<String>(vars->forWrite)->operator+=(vars->forRead.get());
-			vars->counters[threadIndex]++;
+			SpinLocked<String>(var()->forWrite)->operator+=(var()->forRead.get());
+			var()->counters[threadIndex]++;
 
 			// Keep dequeuing data from streams / 不断从数据流取出数据
 			if (threadIndex % 2 == 0)
 			{
-				vars->streamFull.dequeue(1);
+				var()->streamFull.dequeue(1);
 			}
 			else
 			{
-				vars->streamEmpty.dequeue(1);
-				vars->streamEmpty.dequeue(1);
-				vars->streamEmpty.dequeue(1);
-				vars->streamEmpty.dequeue(1);
+				var()->streamEmpty.dequeue(1);
+				var()->streamEmpty.dequeue(1);
+				var()->streamEmpty.dequeue(1);
+				var()->streamEmpty.dequeue(1);
 			}
 		}
 	}

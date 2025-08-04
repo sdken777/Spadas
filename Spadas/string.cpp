@@ -736,8 +736,8 @@ String::String(Char character)
 	if (character == 0) return;
 
 	initBuffer(4);
-	vars->data[0] = (Byte)character;
-	vars->length = 1;
+	var()->data[0] = (Byte)character;
+	var()->length = 1;
 }
 
 String::String(WChar character)
@@ -747,13 +747,13 @@ String::String(WChar character)
 		if (character == 0) return;
 
 		initBuffer(4);
-		vars->data[0] = (Byte)character;
-		vars->length = 1;
+		var()->data[0] = (Byte)character;
+		var()->length = 1;
 	}
 	else
 	{
 		initBuffer(8);
-		vars->length = wCharToUTF8(&character, 1, (Char*)vars->data, vars->size);
+		var()->length = wCharToUTF8(&character, 1, (Char*)var()->data, var()->size);
 	}
 }
 
@@ -767,14 +767,14 @@ String::String(Char text[])
 		if (textLength == 0) return;
 
 		initBuffer(4);
-		vars->data[0] = (Byte)text[0];
-		vars->length = 1;
+		var()->data[0] = (Byte)text[0];
+		var()->length = 1;
 	}
 	else
 	{
 		initBuffer(textLength);
-		utility::memoryCopy(text, vars->data, textLength);
-		vars->length = textLength;
+		utility::memoryCopy(text, var()->data, textLength);
+		var()->length = textLength;
 	}
 }
 
@@ -788,14 +788,14 @@ String::String(const Char text[])
 		if (textLength == 0) return;
 
 		initBuffer(4);
-		vars->data[0] = (Byte)text[0];
-		vars->length = 1;
+		var()->data[0] = (Byte)text[0];
+		var()->length = 1;
 	}
 	else
 	{
 		initBuffer(textLength);
-		utility::memoryCopy((Pointer)&text[0], vars->data, textLength);
-		vars->length = textLength;
+		utility::memoryCopy((Pointer)&text[0], var()->data, textLength);
+		var()->length = textLength;
 	}
 }
 
@@ -809,13 +809,13 @@ String::String(WChar text[])
 	if (textLength == 1 && (UInt)text[0] < 256)
 	{
 		initBuffer(4);
-		vars->data[0] = (Byte)text[0];
-		vars->length = 1;
+		var()->data[0] = (Byte)text[0];
+		var()->length = 1;
 	}
 	else
 	{
 		initBuffer(textLength * 4 + 4);
-		vars->length = wCharToUTF8(text, textLength, (Char*)vars->data, vars->size);
+		var()->length = wCharToUTF8(text, textLength, (Char*)var()->data, var()->size);
 	}
 }
 
@@ -829,13 +829,13 @@ String::String(const WChar text[])
 	if (textLength == 1 && (UInt)text[0] < 256)
 	{
 		initBuffer(4);
-		vars->data[0] = (Byte)text[0];
-		vars->length = 1;
+		var()->data[0] = (Byte)text[0];
+		var()->length = 1;
 	}
 	else
 	{
 		initBuffer(textLength * 4 + 4);
-		vars->length = wCharToUTF8(text, textLength, (Char*)vars->data, vars->size);
+		var()->length = wCharToUTF8(text, textLength, (Char*)var()->data, var()->size);
 	}
 }
 
@@ -852,8 +852,8 @@ String::String(Array<Char> text)
 	if (textLength == 0) return;
 
 	initBuffer(textLength);
-	utility::memoryCopy(text.data(), vars->data, textLength);
-	vars->length = textLength;
+	utility::memoryCopy(text.data(), var()->data, textLength);
+	var()->length = textLength;
 }
 
 String::String(Array<WChar> text)
@@ -869,31 +869,31 @@ String::String(Array<WChar> text)
 	if (textLength == 0) return;
 
 	initBuffer(textLength * 4 + 4);
-	vars->length = wCharToUTF8(textData, textLength, (Char*)vars->data, vars->size);
+	var()->length = wCharToUTF8(textData, textLength, (Char*)var()->data, var()->size);
 }
 
 String::String(Bool val)
 {
 	initBuffer(8);
-	vars->length = writeBool(val, vars->data);
+	var()->length = writeBool(val, var()->data);
 }
 
 String::String(Byte val)
 {
 	initBuffer(4);
-	vars->length = writeByte(val, vars->data);
+	var()->length = writeByte(val, var()->data);
 }
 
 String::String(Word val)
 {
 	initBuffer(8);
-	vars->length = writeWord(val, vars->data);
+	var()->length = writeWord(val, var()->data);
 }
 
 String::String(UInt val)
 {
 	initBuffer(16);
-	vars->length = writeUInt(val, vars->data);
+	var()->length = writeUInt(val, var()->data);
 }
 
 String::String(UInt val, UInt nDigits)
@@ -933,20 +933,20 @@ String::String(UInt val, UInt nDigits)
 	initBuffer(nDigits);
 	for (UInt i = 0; i < nDigits - validDigits; i++)
 	{
-		vars->data[i] = 48;
+		var()->data[i] = 48;
 	}
 	for (UInt i = 0; i < validDigits; i++)
 	{
-		vars->data[nDigits - 1 - i] = val % 10 + 48;
+		var()->data[nDigits - 1 - i] = val % 10 + 48;
 		val /= 10;
 	}
-	vars->length = nDigits;
+	var()->length = nDigits;
 }
 
 String::String(ULong val)
 {
 	initBuffer(32);
-	vars->length = writeULong(val, vars->data);
+	var()->length = writeULong(val, var()->data);
 }
 
 String::String(ULong val, UInt nDigits)
@@ -1020,32 +1020,32 @@ String::String(ULong val, UInt nDigits)
 	initBuffer(nDigits);
 	for (UInt i = 0; i < nDigits - validDigits; i++)
 	{
-		vars->data[i] = 48;
+		var()->data[i] = 48;
 	}
 	for (UInt i = 0; i < validDigits; i++)
 	{
-		vars->data[nDigits - 1 - i] = val % 10 + 48;
+		var()->data[nDigits - 1 - i] = val % 10 + 48;
 		val /= 10;
 	}
-	vars->length = nDigits;
+	var()->length = nDigits;
 }
 
 String::String(Short val)
 {
 	initBuffer(8);
-	vars->length = writeShort(val, vars->data);
+	var()->length = writeShort(val, var()->data);
 }
 
 String::String(Int val)
 {
 	initBuffer(16);
-	vars->length = writeInt(val, vars->data);
+	var()->length = writeInt(val, var()->data);
 }
 
 String::String(Long val)
 {
 	initBuffer(32);
-	vars->length = writeLong(val, vars->data);
+	var()->length = writeLong(val, var()->data);
 }
 
 String::String(Float val)
@@ -1054,13 +1054,13 @@ String::String(Float val)
 	if (valPos <= 0.000001f)
 	{
 		initBuffer(4);
-		vars->data[0] = (Byte)'0';
-		vars->length = 1;
+		var()->data[0] = (Byte)'0';
+		var()->length = 1;
 	}
 	else
 	{
 		initBuffer(32);
-		vars->length = writeFloat(val, valPos, vars->data);
+		var()->length = writeFloat(val, valPos, var()->data);
 	}
 }
 
@@ -1070,13 +1070,13 @@ String::String(Double val)
 	if (valPos <= 0.0000000001)
 	{
 		initBuffer(4);
-		vars->data[0] = (Byte)'0';
-		vars->length = 1;
+		var()->data[0] = (Byte)'0';
+		var()->length = 1;
 	}
 	else
 	{
 		initBuffer(64);
-		vars->length = writeDouble(val, valPos, vars->data);
+		var()->length = writeDouble(val, valPos, var()->data);
 	}
 }
 
@@ -1090,7 +1090,7 @@ String::String(Float val, UInt nDigits)
 		initBuffer(64);
 		Char format[16];
 		printToString(format, 16, "%%.%df", nDigits);
-		vars->length = printToString((Char*)vars->data, 64, format, val);
+		var()->length = printToString((Char*)var()->data, 64, format, val);
 		return;
 	}
 
@@ -1118,35 +1118,35 @@ String::String(Float val, UInt nDigits)
 	}
 
 	UInt curIndex = 0;
-	if (val < 0) vars->data[curIndex++] = '-';
+	if (val < 0) var()->data[curIndex++] = '-';
 	for (Int i = intDigits - 1; i >= 0; i--)
 	{
-		vars->data[curIndex + i] = intValPos % 10 + 48;
+		var()->data[curIndex + i] = intValPos % 10 + 48;
 		intValPos /= 10;
 	}
 	curIndex += intDigits;
 
 	if (nDigits == 0)
 	{
-		vars->length = curIndex;
+		var()->length = curIndex;
 		return;
 	}
 
 	initTenPowers();
 
-	vars->data[curIndex++] = '.';
+	var()->data[curIndex++] = '.';
 
 	ULong floatValPosClip = (ULong)math::round(floatValPos * tenPowers[nDigits]);
 	if (floatValPosClip >= tenPowers[nDigits]) floatValPosClip = tenPowers[nDigits] - 1;
 
 	for (Int i = (Int)nDigits - 1; i >= 0; i--)
 	{
-		vars->data[curIndex + i] = floatValPosClip % 10 + 48;
+		var()->data[curIndex + i] = floatValPosClip % 10 + 48;
 		floatValPosClip /= 10;
 	}
 	curIndex += nDigits;
 
-	vars->length = curIndex;
+	var()->length = curIndex;
 }
 
 String::String(Double val, UInt nDigits)
@@ -1159,7 +1159,7 @@ String::String(Double val, UInt nDigits)
 		initBuffer(384);
 		Char format[16];
 		printToString(format, 16, "%%.%dlf", nDigits);
-		vars->length = printToString((Char*)vars->data, 384, format, val);
+		var()->length = printToString((Char*)var()->data, 384, format, val);
 		return;
 	}
 
@@ -1220,35 +1220,35 @@ String::String(Double val, UInt nDigits)
 	}
 
 	UInt curIndex = 0;
-	if (val < 0) vars->data[curIndex++] = '-';
+	if (val < 0) var()->data[curIndex++] = '-';
 	for (Int i = intDigits - 1; i >= 0; i--)
 	{
-		vars->data[curIndex + i] = intValPos % 10 + 48;
+		var()->data[curIndex + i] = intValPos % 10 + 48;
 		intValPos /= 10;
 	}
 	curIndex += intDigits;
 
 	if (nDigits == 0)
 	{
-		vars->length = curIndex;
+		var()->length = curIndex;
 		return;
 	}
 
 	initTenPowers();
 
-	vars->data[curIndex++] = '.';
+	var()->data[curIndex++] = '.';
 
 	ULong floatValPosClip = (ULong)math::round(floatValPos * tenPowers[nDigits]);
 	if (floatValPosClip >= tenPowers[nDigits]) floatValPosClip = tenPowers[nDigits] - 1;
 
 	for (Int i = (Int)nDigits - 1; i >= 0; i--)
 	{
-		vars->data[curIndex + i] = floatValPosClip % 10 + 48;
+		var()->data[curIndex + i] = floatValPosClip % 10 + 48;
 		floatValPosClip /= 10;
 	}
 	curIndex += nDigits;
 
-	vars->length = curIndex;
+	var()->length = curIndex;
 }
 
 String::String(Binary binary)
@@ -1265,8 +1265,8 @@ String::String(Binary binary)
 	if (textLength == 0) return;
 
 	initBuffer(textLength);
-	utility::memoryCopy(textData, vars->data, textLength);
-	vars->length = textLength;
+	utility::memoryCopy(textData, var()->data, textLength);
+	var()->length = textLength;
 }
 
 String::String(BinarySpan span)
@@ -1283,8 +1283,8 @@ String::String(BinarySpan span)
 	if (textLength == 0) return;
 
 	initBuffer(textLength);
-	utility::memoryCopy(textData, vars->data, textLength);
-	vars->length = textLength;
+	utility::memoryCopy(textData, var()->data, textLength);
+	var()->length = textLength;
 }
 
 Bool String::operator ==(String string)
@@ -1293,7 +1293,7 @@ Bool String::operator ==(String string)
 	UInt targetLength = string.length();
 	if (thisLength != targetLength) return FALSE;
 	else if (thisLength == 0) return TRUE;
-	else return isSameString(vars->data, string.vars->data, thisLength);
+	else return isSameString(var()->data, string.var()->data, thisLength);
 }
 
 Bool String::operator !=(String string)
@@ -1302,7 +1302,7 @@ Bool String::operator !=(String string)
 	UInt targetLength = string.length();
 	if (thisLength != targetLength) return TRUE;
 	else if (thisLength == 0) return FALSE;
-	else return !isSameString(vars->data, string.vars->data, thisLength);
+	else return !isSameString(var()->data, string.var()->data, thisLength);
 }
 
 Bool String::operator >(String string)
@@ -1314,7 +1314,7 @@ Bool String::operator >(String string)
 	else
 	{
 		if (string.length() == 0) return TRUE;
-		else return compareString(vars->data, vars->length, string.vars->data, string.vars->length) > 0;
+		else return compareString(var()->data, var()->length, string.var()->data, string.var()->length) > 0;
 	}
 }
 
@@ -1327,34 +1327,34 @@ Bool String::operator <(String string)
 	else
 	{
 		if (string.length() == 0) return FALSE;
-		else return compareString(vars->data, vars->length, string.vars->data, string.vars->length) < 0;
+		else return compareString(var()->data, var()->length, string.var()->data, string.var()->length) < 0;
 	}
 }
 
 const Byte *String::bytes()
 {
-	return vars ? vars->data : NULL;
+	return vars ? var()->data : NULL;
 }
 
 UInt String::length()
 {
-	return vars ? vars->length : 0;
+	return vars ? var()->length : 0;
 }
 
 Bool String::isEmpty()
 {
-	return !vars || vars->length == 0;
+	return !vars || var()->length == 0;
 }
 
 Word String::getHash()
 {
-	if (vars) return StringCommon::getHashCode(vars->data, vars->length);
+	if (vars) return StringCommon::getHashCode(var()->data, var()->length);
 	else return 0;
 }
 
 String String::clone()
 {
-	if (vars) return StringCommon::clone(vars->data, vars->length);
+	if (vars) return StringCommon::clone(var()->data, var()->length);
 	else return String();
 }
 
@@ -1380,139 +1380,139 @@ StringAppender String::operator +(StringSpan span)
 
 Optional<Int> String::toInt()
 {
-	if (vars) return StringCommon::toInt(vars->data, vars->length);
+	if (vars) return StringCommon::toInt(var()->data, var()->length);
 	else return Optional<Int>();
 }
 
 Int String::toInt(Int defaultValue)
 {
-	if (vars) return StringCommon::toInt(vars->data, vars->length, defaultValue);
+	if (vars) return StringCommon::toInt(var()->data, var()->length, defaultValue);
 	else return defaultValue;
 }
 
 Optional<Long> String::toLong()
 {
-	if (vars) return StringCommon::toLong(vars->data, vars->length);
+	if (vars) return StringCommon::toLong(var()->data, var()->length);
 	else return Optional<Long>();
 }
 
 Long String::toLong(Long defaultValue)
 {
-	if (vars) return StringCommon::toLong(vars->data, vars->length, defaultValue);
+	if (vars) return StringCommon::toLong(var()->data, var()->length, defaultValue);
 	else return defaultValue;
 }
 
 Optional<Float> String::toFloat()
 {
-	if (vars) return StringCommon::toFloat(vars->data, vars->length);
+	if (vars) return StringCommon::toFloat(var()->data, var()->length);
 	else return Optional<Float>();
 }
 
 Float String::toFloat(Float defaultValue)
 {
-	if (vars) return StringCommon::toFloat(vars->data, vars->length, defaultValue);
+	if (vars) return StringCommon::toFloat(var()->data, var()->length, defaultValue);
 	else return defaultValue;
 }
 
 Optional<Double> String::toDouble()
 {
-	if (vars) return StringCommon::toDouble(vars->data, vars->length);
+	if (vars) return StringCommon::toDouble(var()->data, var()->length);
 	else return Optional<Double>();
 }
 
 Double String::toDouble(Double defaultValue)
 {
-	if (vars) return StringCommon::toDouble(vars->data, vars->length, defaultValue);
+	if (vars) return StringCommon::toDouble(var()->data, var()->length, defaultValue);
 	else return defaultValue;
 }
 
 Bool String::toNumber(Int& number)
 {
-	if (vars) return StringCommon::toNumber(vars->data, vars->length, number);
+	if (vars) return StringCommon::toNumber(var()->data, var()->length, number);
 	else return FALSE;
 }
 
 Bool String::toNumber(Long& number)
 {
-	if (vars) return StringCommon::toNumber(vars->data, vars->length, number);
+	if (vars) return StringCommon::toNumber(var()->data, var()->length, number);
 	else return FALSE;
 }
 
 Bool String::toNumber(Float& number)
 {
-	if (vars) return StringCommon::toNumber(vars->data, vars->length, number);
+	if (vars) return StringCommon::toNumber(var()->data, var()->length, number);
 	else return FALSE;
 }
 
 Bool String::toNumber(Double& number)
 {
-	if (vars) return StringCommon::toNumber(vars->data, vars->length, number);
+	if (vars) return StringCommon::toNumber(var()->data, var()->length, number);
 	else return FALSE;
 }
 
 Binary String::toBinary()
 {
-	if (vars) return StringCommon::toBinary(vars->data, vars->length);
+	if (vars) return StringCommon::toBinary(var()->data, var()->length);
 	else return Binary();
 }
 
 String String::toUpper()
 {
-	if (vars) return StringCommon::toUpper(vars->data, vars->length);
+	if (vars) return StringCommon::toUpper(var()->data, var()->length);
 	else return String();
 }
 
 String String::toLower()
 {
-	if (vars) return StringCommon::toLower(vars->data, vars->length);
+	if (vars) return StringCommon::toLower(var()->data, var()->length);
 	else return String();
 }
 
 Bool String::startsWith(String target)
 {
-	if (vars) return StringCommon::startsWith(vars->data, vars->length, target);
+	if (vars) return StringCommon::startsWith(var()->data, var()->length, target);
 	else return FALSE;
 }
 
 Bool String::endsWith(String target)
 {
-	if (vars) return StringCommon::endsWith(vars->data, vars->length, target);
+	if (vars) return StringCommon::endsWith(var()->data, var()->length, target);
 	else return FALSE;
 }
 
 UInt String::count(String target)
 {
-	if (vars) return StringCommon::count(vars->data, vars->length, target);
+	if (vars) return StringCommon::count(var()->data, var()->length, target);
 	else return 0;
 }
 
 Array<UInt> String::search(String target)
 {
-	if (vars) return StringCommon::search(vars->data, vars->length, target);
+	if (vars) return StringCommon::search(var()->data, var()->length, target);
 	else return Array<UInt>();
 }
 
 UInt String::searchFirst(String target)
 {
-	if (vars) return StringCommon::searchFirst(vars->data, vars->length, target);
+	if (vars) return StringCommon::searchFirst(var()->data, var()->length, target);
 	else return UINF;
 }
 
 UInt String::searchLast(String target)
 {
-	if (vars) return StringCommon::searchLast(vars->data, vars->length, target);
+	if (vars) return StringCommon::searchLast(var()->data, var()->length, target);
 	else return UINF;
 }
 
 String String::trim()
 {
-	if (vars) return StringCommon::trim(vars->data, vars->length);
+	if (vars) return StringCommon::trim(var()->data, var()->length);
 	else return String();
 }
 
 Array<StringSpan> String::split(String target)
 {
-	if (vars) return StringCommon::split(vars->data, vars->length, target, vars);
+	if (vars) return StringCommon::split(var()->data, var()->length, target, vars);
 	else return Array<StringSpan>();
 }
 
@@ -1539,15 +1539,15 @@ void String::ensureBuffer(UInt appendSize)
 		return;
 	}
 
-	UInt originLength = vars->length;
+	UInt originLength = var()->length;
 	UInt totalLength = originLength + appendSize;
-	if (totalLength > vars->size)
+	if (totalLength > var()->size)
 	{
 		Byte *dstData = new Byte[totalLength * 2];
-		utility::memoryCopy(vars->data, dstData, originLength);
-		if (vars->extData) delete[] vars->extData;
-		vars->data = vars->extData = dstData;
-		vars->size = totalLength * 2;
+		utility::memoryCopy(var()->data, dstData, originLength);
+		if (var()->extData) delete[] var()->extData;
+		var()->data = var()->extData = dstData;
+		var()->size = totalLength * 2;
 	}
 }
 
@@ -1559,8 +1559,8 @@ void String::operator +=(String append)
 	UInt originLength = length();
 	
 	ensureBuffer(appendLength);
-	utility::memoryCopy(append.vars->data, &vars->data[originLength], appendLength);
-	vars->length = originLength + appendLength;
+	utility::memoryCopy(append.var()->data, &var()->data[originLength], appendLength);
+	var()->length = originLength + appendLength;
 }
 
 void String::operator +=(StringSpan span)
@@ -1571,18 +1571,18 @@ void String::operator +=(StringSpan span)
 	UInt originLength = length();
 	
 	ensureBuffer(appendLength);
-	utility::memoryCopy(span.bytes(), &vars->data[originLength], appendLength);
-	vars->length = originLength + appendLength;
+	utility::memoryCopy(span.bytes(), &var()->data[originLength], appendLength);
+	var()->length = originLength + appendLength;
 }
 
 void String::operator +=(Char character)
 {
 	if (character == 0) return;
 
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	ensureBuffer(4);
-	vars->data[originLength] = (Byte)character;
-	vars->length = originLength + 1;
+	var()->data[originLength] = (Byte)character;
+	var()->length = originLength + 1;
 }
 
 void String::operator +=(WChar character)
@@ -1591,16 +1591,16 @@ void String::operator +=(WChar character)
 	{
 		if (character == 0) return;
 
-		UInt originLength = vars ? vars->length : 0;
+		UInt originLength = vars ? var()->length : 0;
 		ensureBuffer(4);
-		vars->data[originLength] = (Byte)character;
-		vars->length = originLength + 1;
+		var()->data[originLength] = (Byte)character;
+		var()->length = originLength + 1;
 	}
 	else
 	{
-		UInt originLength = vars ? vars->length : 0;
+		UInt originLength = vars ? var()->length : 0;
 		ensureBuffer(8);
-		vars->length = originLength + wCharToUTF8(&character, 1, (Char*)&vars->data[originLength], vars->size - originLength);
+		var()->length = originLength + wCharToUTF8(&character, 1, (Char*)&var()->data[originLength], var()->size - originLength);
 	}
 }
 
@@ -1613,17 +1613,17 @@ void String::operator +=(Char text[])
 	{
 		if (textLength == 0) return;
 
-		UInt originLength = vars ? vars->length : 0;
+		UInt originLength = vars ? var()->length : 0;
 		ensureBuffer(4);
-		vars->data[originLength] = (Byte)text[0];
-		vars->length = originLength + 1;
+		var()->data[originLength] = (Byte)text[0];
+		var()->length = originLength + 1;
 	}
 	else
 	{
-		UInt originLength = vars ? vars->length : 0;
+		UInt originLength = vars ? var()->length : 0;
 		ensureBuffer(textLength);
-		utility::memoryCopy(text, &vars->data[originLength], textLength);
-		vars->length = originLength + textLength;
+		utility::memoryCopy(text, &var()->data[originLength], textLength);
+		var()->length = originLength + textLength;
 	}
 }
 
@@ -1636,17 +1636,17 @@ void String::operator +=(const Char text[])
 	{
 		if (textLength == 0) return;
 
-		UInt originLength = vars ? vars->length : 0;
+		UInt originLength = vars ? var()->length : 0;
 		ensureBuffer(4);
-		vars->data[originLength] = (Byte)text[0];
-		vars->length = originLength + 1;
+		var()->data[originLength] = (Byte)text[0];
+		var()->length = originLength + 1;
 	}
 	else
 	{
-		UInt originLength = vars ? vars->length : 0;
+		UInt originLength = vars ? var()->length : 0;
 		ensureBuffer(textLength);
-		utility::memoryCopy((Pointer)&text[0], &vars->data[originLength], textLength);
-		vars->length = originLength + textLength;
+		utility::memoryCopy((Pointer)&text[0], &var()->data[originLength], textLength);
+		var()->length = originLength + textLength;
 	}
 }
 
@@ -1657,17 +1657,17 @@ void String::operator +=(WChar text[])
 	UInt textLength = lengthWChar(text);
 	if (textLength == 0) return;
 
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	if (textLength == 1 && (UInt)text[0] < 256)
 	{
 		ensureBuffer(4);
-		vars->data[originLength] = (Byte)text[0];
-		vars->length = originLength + 1;
+		var()->data[originLength] = (Byte)text[0];
+		var()->length = originLength + 1;
 	}
 	else
 	{
 		ensureBuffer(textLength * 4 + 4);
-		vars->length = originLength + wCharToUTF8(text, textLength, (Char*)&vars->data[originLength], vars->size - originLength);
+		var()->length = originLength + wCharToUTF8(text, textLength, (Char*)&var()->data[originLength], var()->size - originLength);
 	}
 }
 
@@ -1678,17 +1678,17 @@ void String::operator +=(const WChar text[])
 	UInt textLength = lengthWChar(text);
 	if (textLength == 0) return;
 
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	if (textLength == 1 && (UInt)text[0] < 256)
 	{
 		ensureBuffer(4);
-		vars->data[originLength] = (Byte)text[0];
-		vars->length = originLength + 1;
+		var()->data[originLength] = (Byte)text[0];
+		var()->length = originLength + 1;
 	}
 	else
 	{
 		ensureBuffer(textLength * 4 + 4);
-		vars->length = originLength + wCharToUTF8(text, textLength, (Char*)&vars->data[originLength], vars->size - originLength);
+		var()->length = originLength + wCharToUTF8(text, textLength, (Char*)&var()->data[originLength], var()->size - originLength);
 	}
 }
 
@@ -1704,10 +1704,10 @@ void String::operator +=(Array<Char> text)
 	}
 	if (textLength == 0) return;
 
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	ensureBuffer(textLength);
-	utility::memoryCopy(text.data(), &vars->data[originLength], textLength);
-	vars->length = originLength + textLength;
+	utility::memoryCopy(text.data(), &var()->data[originLength], textLength);
+	var()->length = originLength + textLength;
 }
 
 void String::operator +=(Array<WChar> text)
@@ -1722,98 +1722,98 @@ void String::operator +=(Array<WChar> text)
 	}
 	if (textLength == 0) return;
 
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	ensureBuffer(textLength * 4 + 4);
-	vars->length = originLength + wCharToUTF8(textData, textLength, (Char*)&vars->data[originLength], vars->size - originLength);
+	var()->length = originLength + wCharToUTF8(textData, textLength, (Char*)&var()->data[originLength], var()->size - originLength);
 }
 
 void String::operator +=(Bool val)
 {
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	ensureBuffer(8);
-	vars->length = originLength + writeBool(val, &vars->data[originLength]);
+	var()->length = originLength + writeBool(val, &var()->data[originLength]);
 }
 
 void String::operator +=(Byte val)
 {
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	ensureBuffer(4);
-	vars->length = originLength + writeByte(val, &vars->data[originLength]);
+	var()->length = originLength + writeByte(val, &var()->data[originLength]);
 }
 
 void String::operator +=(Word val)
 {
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	ensureBuffer(8);
-	vars->length = originLength + writeWord(val, &vars->data[originLength]);
+	var()->length = originLength + writeWord(val, &var()->data[originLength]);
 }
 
 void String::operator +=(UInt val)
 {
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	ensureBuffer(16);
-	vars->length = originLength + writeUInt(val, &vars->data[originLength]);
+	var()->length = originLength + writeUInt(val, &var()->data[originLength]);
 }
 
 void String::operator +=(ULong val)
 {
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	ensureBuffer(32);
-	vars->length = originLength + writeULong(val, &vars->data[originLength]);
+	var()->length = originLength + writeULong(val, &var()->data[originLength]);
 }
 
 void String::operator +=(Short val)
 {
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	ensureBuffer(8);
-	vars->length = originLength + writeShort(val, &vars->data[originLength]);
+	var()->length = originLength + writeShort(val, &var()->data[originLength]);
 }
 
 void String::operator +=(Int val)
 {
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	ensureBuffer(16);
-	vars->length = originLength + writeInt(val, &vars->data[originLength]);
+	var()->length = originLength + writeInt(val, &var()->data[originLength]);
 }
 
 void String::operator +=(Long val)
 {
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	ensureBuffer(32);
-	vars->length = originLength + writeLong(val, &vars->data[originLength]);
+	var()->length = originLength + writeLong(val, &var()->data[originLength]);
 }
 
 void String::operator +=(Float val)
 {
 	Float valPos = math::abs(val);
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	if (valPos <= 0.000001f)
 	{
 		ensureBuffer(4);
-		vars->data[originLength] = (Byte)'0';
-		vars->length = originLength + 1;
+		var()->data[originLength] = (Byte)'0';
+		var()->length = originLength + 1;
 	}
 	else
 	{
 		ensureBuffer(32);
-		vars->length = originLength + writeFloat(val, valPos, &vars->data[originLength]);
+		var()->length = originLength + writeFloat(val, valPos, &var()->data[originLength]);
 	}
 }
 
 void String::operator +=(Double val)
 {
 	Double valPos = math::abs(val);
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	if (valPos <= 0.0000000001)
 	{
 		ensureBuffer(4);
-		vars->data[originLength] = (Byte)'0';
-		vars->length = originLength + 1;
+		var()->data[originLength] = (Byte)'0';
+		var()->length = originLength + 1;
 	}
 	else
 	{
 		ensureBuffer(64);
-		vars->length = originLength + writeDouble(val, valPos, &vars->data[originLength]);
+		var()->length = originLength + writeDouble(val, valPos, &var()->data[originLength]);
 	}
 }
 
@@ -1830,10 +1830,10 @@ void String::operator +=(Binary binary)
 	}
 	if (textLength == 0) return;
 
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	ensureBuffer(textLength);
-	utility::memoryCopy(textData, &vars->data[originLength], textLength);
-	vars->length = originLength + textLength;
+	utility::memoryCopy(textData, &var()->data[originLength], textLength);
+	var()->length = originLength + textLength;
 }
 
 void String::operator +=(BinarySpan span)
@@ -1849,8 +1849,8 @@ void String::operator +=(BinarySpan span)
 	}
 	if (textLength == 0) return;
 
-	UInt originLength = vars ? vars->length : 0;
+	UInt originLength = vars ? var()->length : 0;
 	ensureBuffer(textLength);
-	utility::memoryCopy(textData, &vars->data[originLength], textLength);
-	vars->length = originLength + textLength;
+	utility::memoryCopy(textData, &var()->data[originLength], textLength);
+	var()->length = originLength + textLength;
 }

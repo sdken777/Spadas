@@ -38,7 +38,7 @@ void spadas::console::popup(String text)
 	MessageBoxW(0, text.wchars().data(), L"", MB_OK);
 }
 
-DefaultConsole::DefaultConsole() : Object<Vars>(new Vars(), TRUE)
+DefaultConsole::DefaultConsole()
 {}
 
 Bool DefaultConsole::supportScan()

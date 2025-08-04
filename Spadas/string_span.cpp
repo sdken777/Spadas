@@ -23,14 +23,14 @@ StringSpan::StringSpan(String& sourceString, UInt offset, UInt length) : source(
 {
 	if (length == 0) return;
 
-    StringVars *vars = sourceString.getVars();
-    SPADAS_ERROR_RETURN(!vars);
-    SPADAS_ERROR_RETURN(offset >= vars->length);
+    StringVars *localVars = sourceString.var();
+    SPADAS_ERROR_RETURN(!localVars);
+    SPADAS_ERROR_RETURN(offset >= localVars->length);
 
-    vars->retain();
-    source = (ULong)vars;
+    localVars->retain();
+    source = (ULong)localVars;
     idx = offset | 0x80000000; // refCounting flag (offset maybe zero)
-    len = math::min(length, vars->length - offset);
+    len = math::min(length, localVars->length - offset);
 }
 
 StringSpan::StringSpan(StringSpan& sourceSpan, UInt offset, UInt length) : source(0), idx(0), len(0)

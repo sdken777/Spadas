@@ -91,14 +91,14 @@ Pointer taskThreadFunc(Pointer param)
 
 // taskThreadFunc
 {
-	TaskManagerVars *vars = (TaskManagerVars*)param;
+	TaskManagerVars *localVars = (TaskManagerVars*)param;
 
 	ListNode<TaskThreadContext> targetNode;
 	while (!targetNode->task.isValid())
 	{
-		vars->threadsLock.enter();
-		ListNode<TaskThreadContext> currentNode = vars->threads.next();
-		while (currentNode != vars->threads)
+		localVars->threadsLock.enter();
+		ListNode<TaskThreadContext> currentNode = localVars->threads.next();
+		while (currentNode != localVars->threads)
 		{
 			if (!currentNode->valid.check())
 			{
@@ -107,7 +107,7 @@ Pointer taskThreadFunc(Pointer param)
 			}
 			currentNode = currentNode.next();
 		}
-		vars->threadsLock.leave();
+		localVars->threadsLock.leave();
 		system::wait(1);
 	}
 
@@ -116,16 +116,16 @@ Pointer taskThreadFunc(Pointer param)
 	targetNode->valid.set();
 	targetNode->task->onRunTask(targetNode->shouldEnd);
 
-	vars->threadsLock.enter();
+	localVars->threadsLock.enter();
 	targetNode.removeSelf();
-	vars->threadsLock.leave();
+	localVars->threadsLock.leave();
 
 	lm.clearLogger(Threads::getCurrentThreadID());
 
 	return 0;
 }
 
-TaskManager::TaskManager() : Object<TaskManagerVars>(new TaskManagerVars, TRUE)
+TaskManager::TaskManager() : BaseObject(new TaskManagerVars)
 {
 
 }
@@ -134,30 +134,30 @@ void TaskManager::start(Interface<ITask> task, Interface<ILogger> logger)
 {
 	SPADAS_ERROR_RETURN(!task.isValid());
 
-	vars->threadsLock.enter();
+	var()->threadsLock.enter();
 
-	ListNode<TaskThreadContext> currentNode = vars->threads.next();
-	while (currentNode != vars->threads)
+	ListNode<TaskThreadContext> currentNode = var()->threads.next();
+	while (currentNode != var()->threads)
 	{
 		if (currentNode->task == task)
 		{
-			vars->threadsLock.leave();
+			var()->threadsLock.leave();
 			return;
 		}
 		currentNode.goNext();
 	}
 
-	vars->threadsLock.leave();
+	var()->threadsLock.leave();
 
 	TaskThreadContext newContext;
 	newContext.task = task;
 	newContext.logger = logger;
 
-	vars->threadsLock.enter();
-	vars->threads.insertPrevious(newContext);
-	vars->threadsLock.leave();
+	var()->threadsLock.enter();
+	var()->threads.insertPrevious(newContext);
+	var()->threadsLock.leave();
 
-	taskThreadCreate(vars);
+	taskThreadCreate(var());
 
 	newContext.valid.waitSet();
 }
@@ -174,10 +174,10 @@ Bool TaskManager::stop(Interface<ITask> task, UInt timeout)
 	Bool targetNodeFound = FALSE;
 	ListNode<TaskThreadContext> targetNode;
 
-	vars->threadsLock.enter();
+	var()->threadsLock.enter();
 	{
-		ListNode<TaskThreadContext> currentNode = vars->threads.next();
-		while (currentNode != vars->threads)
+		ListNode<TaskThreadContext> currentNode = var()->threads.next();
+		while (currentNode != var()->threads)
 		{
 			if (currentNode->task == task)
 			{
@@ -188,7 +188,7 @@ Bool TaskManager::stop(Interface<ITask> task, UInt timeout)
 			currentNode.goNext();
 		}
 	}
-	vars->threadsLock.leave();
+	var()->threadsLock.leave();
 	
 	if (!targetNodeFound) return TRUE;
 
@@ -198,10 +198,10 @@ Bool TaskManager::stop(Interface<ITask> task, UInt timeout)
 	while (timer.check() < (Double)timeout)
 	{
 		Bool found = FALSE;
-		vars->threadsLock.enter();
+		var()->threadsLock.enter();
 		{
-			ListNode<TaskThreadContext> currentNode = vars->threads.next();
-			while (currentNode != vars->threads)
+			ListNode<TaskThreadContext> currentNode = var()->threads.next();
+			while (currentNode != var()->threads)
 			{
 				if (currentNode->task == task)
 				{
@@ -211,7 +211,7 @@ Bool TaskManager::stop(Interface<ITask> task, UInt timeout)
 				currentNode.goNext();
 			}
 		}
-		vars->threadsLock.leave();
+		var()->threadsLock.leave();
 
 		if (!found) return TRUE;
 
@@ -224,10 +224,10 @@ Bool TaskManager::stop(Interface<ITask> task, UInt timeout)
 Array<Interface<ITask> > TaskManager::getTasks()
 {
 	ArrayX<Interface<ITask> > list;
-	LockProxy lock(vars->threadsLock);
+	LockProxy lock(var()->threadsLock);
 
-	ListNode<TaskThreadContext> currentNode = vars->threads.next();
-	while (currentNode != vars->threads)
+	ListNode<TaskThreadContext> currentNode = var()->threads.next();
+	while (currentNode != var()->threads)
 	{
 		list.append(currentNode->task);
 		currentNode = currentNode.next();
@@ -241,10 +241,10 @@ Bool TaskManager::isTaskRunning(Interface<ITask> task)
 	SPADAS_ERROR_RETURNVAL(task.isNull(), FALSE)
 
 	ArrayX<Interface<ITask> > list;
-	LockProxy lock(vars->threadsLock);
+	LockProxy lock(var()->threadsLock);
 
-	ListNode<TaskThreadContext> currentNode = vars->threads.next();
-	while (currentNode != vars->threads)
+	ListNode<TaskThreadContext> currentNode = var()->threads.next();
+	while (currentNode != var()->threads)
 	{
 		if (currentNode->task == task) return TRUE;
 		currentNode.goNext();
@@ -257,8 +257,8 @@ Bool TaskManager::waitAll(Flag interrupt)
 {
 	while (!interrupt.check())
 	{
-		LockProxy lock(vars->threadsLock);
-		if (vars->threads.next() == vars->threads) return TRUE;
+		LockProxy lock(var()->threadsLock);
+		if (var()->threads.next() == var()->threads) return TRUE;
 		system::wait(10);
 	}
 	return FALSE;
@@ -266,7 +266,7 @@ Bool TaskManager::waitAll(Flag interrupt)
 
 void TaskManager::stopAll(UInt timeout)
 {
-	vars->stopAll(timeout);
+	var()->stopAll(timeout);
 }
 
 void TaskManagerVars::stopAll(UInt timeout)

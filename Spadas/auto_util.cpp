@@ -300,28 +300,28 @@ void IFlexHandler::destroyData(Pointer data)
 
 // GeneralIOObject ///////////////////////////////////////////////////////////////////////////
 
-GeneralIOObject::GeneralIOObject() : Object<GeneralIOObjectVars>(new GeneralIOObjectVars, TRUE)
+GeneralIOObject::GeneralIOObject() : BaseObject(new GeneralIOObjectVars)
 {
 }
 
 Binary GeneralIOObject::getInput()
 {
-	return vars->input;
+	return var()->input;
 }
 
 void GeneralIOObject::setInput(Binary data)
 {
-	vars->input = data;
+	var()->input = data;
 }
 
 Binary GeneralIOObject::getOutput()
 {
-	return vars->output;
+	return var()->output;
 }
 
 void GeneralIOObject::setOutput(Binary data)
 {
-	vars->output = data;
+	var()->output = data;
 }
 
 // GeneralRawObject ///////////////////////////////////////////////////////////////////////////
@@ -369,7 +369,7 @@ GeneralRawObject::GeneralRawObject(SessionGeneralRawData data)
 
 BaseObject GeneralRawObject::getObject()
 {
-	return vars ? vars->obj : BaseObject();
+	return vars ? var()->obj : BaseObject();
 }
 
 GeneralDeviceData GeneralRawObject::toGeneralDeviceData(ULong cpuTick, String protocol)
@@ -381,11 +381,11 @@ GeneralDeviceData GeneralRawObject::toGeneralDeviceData(ULong cpuTick, String pr
 	output.cpuTick = cpuTick;
 	output.binary = Binary(40);
 
-	*(ULong*)&output.binary[0] = (ULong)vars->obj.getVars();
-	*(ULong*)&output.binary[8] = vars->startTick;
-	*(ULong*)&output.binary[16] = vars->endTick;
-	*(ULong*)&output.binary[24] = vars->startPosix;
-	*(ULong*)&output.binary[32] = vars->endPosix;
+	*(ULong*)&output.binary[0] = (ULong)var()->obj.getVars();
+	*(ULong*)&output.binary[8] = var()->startTick;
+	*(ULong*)&output.binary[16] = var()->endTick;
+	*(ULong*)&output.binary[24] = var()->startPosix;
+	*(ULong*)&output.binary[32] = var()->endPosix;
 
 	return output;
 }
@@ -398,11 +398,11 @@ SessionGeneralRawData GeneralRawObject::toSessionGeneralRawData(FullTimestamp ti
 	output.timestamp = timestamp;
 	output.binary = Binary(40);
 
-	*(ULong*)&output.binary[0] = (ULong)vars->obj.getVars();
-	*(ULong*)&output.binary[8] = vars->startTick;
-	*(ULong*)&output.binary[16] = vars->endTick;
-	*(ULong*)&output.binary[24] = vars->startPosix;
-	*(ULong*)&output.binary[32] = vars->endPosix;
+	*(ULong*)&output.binary[0] = (ULong)var()->obj.getVars();
+	*(ULong*)&output.binary[8] = var()->startTick;
+	*(ULong*)&output.binary[16] = var()->endTick;
+	*(ULong*)&output.binary[24] = var()->startPosix;
+	*(ULong*)&output.binary[32] = var()->endPosix;
 
 	return output;
 }

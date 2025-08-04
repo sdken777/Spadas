@@ -2,11 +2,11 @@
 #ifndef SPADAS_DEFINE_H
 #define SPADAS_DEFINE_H
 
-// Update log / 更新记录: 通道数宏定义改为调用函数
+// Update log / 更新记录: 支持使用更现代的继承定义方式（但vars->需要改为var()->）。EmptyObject及其他继承Object的类改为继承BaseObject或SessionSample。private下的isNull()和isValid()无需实现
 
 // Version definition / 版本定义
 #define SPADAS_VERSION_MAJOR 9
-#define SPADAS_VERSION_MINOR 6
+#define SPADAS_VERSION_MINOR 7
 #define SPADAS_VERSION_BUILD 0
 
 // Latest plugin getter name / 最新插件接口函数名
@@ -20,8 +20,8 @@
 /*! \mainpage
 * \~English Spadas is a "write once and compile everywhere" C++ multifunctional class library that supports Windows, Linux and other operating systems. \n
 * \~Chinese Spadas是支持Windows、Linux等操作系统的“一次编写到处编译”C++多功能类库。 \n
-* \~English This document corresponds to Spadas version: 9.6.0 \n
-* \~Chinese 本文档对应Spadas版本：9.6.0 \n
+* \~English This document corresponds to Spadas version: 9.7.0 \n
+* \~Chinese 本文档对应Spadas版本：9.7.0 \n
 * \~English The source code repository is: https://gitee.com/ken777/Spadas \n
 * \~Chinese 源码仓库位于： https://gitee.com/ken777/Spadas \n
 *
@@ -415,9 +415,11 @@
 
 // Convenience for type conversion definitions / 方便用于类型转换的定义
 #define SPADAS_TYPE(typeNameString) static spadas::String typeName() { static spadas::String name = typeNameString; return name; }
+#define SPADAS_CLASS(typeNameString, varsType) static spadas::String typeName() { static spadas::String name = typeNameString; return name; } \
+    class varsType* var() { return (class varsType*)vars; }
 #define SPADAS_VARS(classType, baseVarsType) virtual spadas::String getTypeName() override { return classType::typeName(); } \
-virtual spadas::Bool isType(spadas::ULong id) override { return id == classType::typeName().getID() || baseVarsType::isType(id); } \
-virtual spadas::Bool isType(spadas::String name) override { return name == classType::typeName() || baseVarsType::isType(name); }
+    virtual spadas::Bool isType(spadas::ULong id) override { return id == classType::typeName().getID() || baseVarsType::isType(id); } \
+    virtual spadas::Bool isType(spadas::String name) override { return name == classType::typeName() || baseVarsType::isType(name); }
 
 // Convenience for plugin getter definition / 方便定义插件接口函数
 #define getPlugin(version) get_plugin_v ## version

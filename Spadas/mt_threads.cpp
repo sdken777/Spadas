@@ -244,53 +244,53 @@ Pointer threadFunc(Pointer param)
 
 // threadFunc
 {
-    ThreadsVars *vars = (ThreadsVars*)param;
+    ThreadsVars *localVars = (ThreadsVars*)param;
 
     // get thread index
-	vars->spinEnter();
+	localVars->spinEnter();
     UInt threadIndex = UINF;
-    for (UInt i = 0; i < vars->status.threadStatus.size(); i++)
+    for (UInt i = 0; i < localVars->status.threadStatus.size(); i++)
     {
-        if ((volatile Bool)vars->status.threadStatus[i].isActive == FALSE)
+        if ((volatile Bool)localVars->status.threadStatus[i].isActive == FALSE)
         {
-			vars->status.threadStatus[i].isActive = TRUE;
+			localVars->status.threadStatus[i].isActive = TRUE;
             threadIndex = i;
             break;
         }
     }
 
     // get thread ID
-    ThreadStatus& status = vars->status.threadStatus[threadIndex];
+    ThreadStatus& status = localVars->status.threadStatus[threadIndex];
 	UInt curThreadID = Threads::getCurrentThreadID();
     status.threadID = curThreadID;
-	vars->spinLeave();
+	localVars->spinLeave();
 
 	// set thread logger
-	if (vars->logger.isValid()) lm.useLogger(curThreadID, vars->logger);
+	if (localVars->logger.isValid()) lm.useLogger(curThreadID, localVars->logger);
 	
 	// thread initialization
-	Bool ret = vars->workflow->onThreadBegin(threadIndex);
-	if (threadIndex <= vars->beginRet.size()) vars->beginRet[threadIndex] = ret;
+	Bool ret = localVars->workflow->onThreadBegin(threadIndex);
+	if (threadIndex <= localVars->beginRet.size()) localVars->beginRet[threadIndex] = ret;
 
 	// begin synchronization
-	vars->barrier.against(Flag());
-	if (threadIndex == 0) vars->allBegin.set();
+	localVars->barrier.against(Flag());
+	if (threadIndex == 0) localVars->allBegin.set();
 
 	// main loop
 	while (ret)
 	{
 		// run onLoop and record time
-		vars->timers[threadIndex].start();
-		vars->workflow->onThreadLoop(threadIndex, vars->shouldEnd);
-		Float thisProcessTime = (Float)vars->timers[threadIndex].check();
+		localVars->timers[threadIndex].start();
+		localVars->workflow->onThreadLoop(threadIndex, localVars->shouldEnd);
+		Float thisProcessTime = (Float)localVars->timers[threadIndex].check();
 
 		// update status and get time interval
-		vars->spinEnter();
+		localVars->spinEnter();
 		status.averageProcessTime = status.averageProcessTime.isValid() ? updateTime(status.averageProcessTime.value(), thisProcessTime) : thisProcessTime;
 		UInt timeInterval;
 		if (status.userTimeInterval.isValid()) timeInterval = status.userTimeInterval.value();
-		else timeInterval = vars->workflow->getTimeInterval(threadIndex);
-		vars->spinLeave();
+		else timeInterval = localVars->workflow->getTimeInterval(threadIndex);
+		localVars->spinLeave();
 
 		// wait
 		if (timeInterval < 1000)
@@ -300,13 +300,13 @@ Pointer threadFunc(Pointer param)
 		else
 		{
 			Timer longWaitTimer;
-			while (!vars->shouldEnd.check())
+			while (!localVars->shouldEnd.check())
 			{
 				// get time interval
-				vars->spinEnter();
+				localVars->spinEnter();
 				if (status.userTimeInterval.isValid()) timeInterval = status.userTimeInterval.value();
-				else timeInterval = vars->workflow->getTimeInterval(threadIndex);
-				vars->spinLeave();
+				else timeInterval = localVars->workflow->getTimeInterval(threadIndex);
+				localVars->spinLeave();
 
 				// wait
 				Float longWaitTimerCheck = (Float)longWaitTimer.check();
@@ -323,29 +323,29 @@ Pointer threadFunc(Pointer param)
 		}
 
 		// see the shouldEnd flag
-		if (vars->shouldEnd.check()) break;
+		if (localVars->shouldEnd.check()) break;
 	}
 
 	// end synchronization 1
-	vars->barrier.against(Flag());
+	localVars->barrier.against(Flag());
 
 	// thread deinitialization
-	vars->workflow->onThreadEnd(threadIndex);
+	localVars->workflow->onThreadEnd(threadIndex);
     
     // set isActive to FALSE
     status.isActive = FALSE;
 	
 	// end synchronization 2
-	vars->barrier.against(Flag());
+	localVars->barrier.against(Flag());
 
 	// remove from ThreadsManager
     if (threadIndex == 0)
     {
-        vars->status.isActive = FALSE;
-		vars->allEnd.set();
+        localVars->status.isActive = FALSE;
+		localVars->allEnd.set();
 
 		sleepTime(1);
-		threadsManager.remove(vars->status.workflowID);
+		threadsManager.remove(localVars->status.workflowID);
     }
 
 	// clear thread logger
@@ -361,24 +361,24 @@ Threads::Threads()
 Bool Threads::isRunning()
 {
 	if (!vars) return FALSE;
-	vars->spinEnter();
-	Bool isRunning = vars->status.isActive;
-	vars->spinLeave();
+	var()->spinEnter();
+	Bool isRunning = var()->status.isActive;
+	var()->spinLeave();
 	return isRunning;
 }
 
 Bool Threads::stop(UInt timeout)
 {
 	if (!vars) return TRUE;
-    if ((volatile Bool)vars->status.isActive == FALSE) return TRUE;
+    if ((volatile Bool)var()->status.isActive == FALSE) return TRUE;
     
-	vars->shouldEnd.set();
+	var()->shouldEnd.set();
 	if (timeout == 0) return FALSE;
 
     Timer timer;
     while (timer.check() < (Double)timeout)
     {
-        if (vars->allEnd.waitSet(10)) return TRUE;
+        if (var()->allEnd.waitSet(10)) return TRUE;
     }
     return FALSE;
 }
@@ -386,52 +386,52 @@ Bool Threads::stop(UInt timeout)
 void Threads::stopAsync()
 {
 	if (!vars) return;
-	if ((volatile Bool)vars->status.isActive == FALSE) return;
+	if ((volatile Bool)var()->status.isActive == FALSE) return;
 
-	vars->shouldEnd.set();
+	var()->shouldEnd.set();
 }
 
 Interface<IWorkflow> Threads::getWorkflow()
 {
-	return vars ? vars->workflow : Interface<IWorkflow>();
+	return vars ? var()->workflow : Interface<IWorkflow>();
 }
 
 WorkflowStatus Threads::getWorkflowStatus()
 {
 	if (!vars) return WorkflowStatus();
-    vars->spinEnter();
-    WorkflowStatus out = vars->status;
-    out.workflowName = vars->status.workflowName.clone();
-    out.threadStatus = vars->status.threadStatus.clone();
+    var()->spinEnter();
+    WorkflowStatus out = var()->status;
+    out.workflowName = var()->status.workflowName.clone();
+    out.threadStatus = var()->status.threadStatus.clone();
     for (UInt i = 0; i < out.threadStatus.size(); i++)
     {
-        out.threadStatus[i].threadName = vars->status.threadStatus[i].threadName.clone();
-        out.threadStatus[i].currentLoopTime = (Float)vars->timers[i].check();
+        out.threadStatus[i].threadName = var()->status.threadStatus[i].threadName.clone();
+        out.threadStatus[i].currentLoopTime = (Float)var()->timers[i].check();
     }
-    vars->spinLeave();
+    var()->spinLeave();
 	return out;
 }
 
 void Threads::useUserTimeInterval(UInt threadIndex, UInt interval)
 {
 	if (!vars) return;
-    UInt nThreads = vars->status.threadStatus.size();
+    UInt nThreads = var()->status.threadStatus.size();
     if (threadIndex >= nThreads) return;
-	SPADAS_ERROR_RETURN(!vars->workflow->supportUserTimeInterval(threadIndex));
+	SPADAS_ERROR_RETURN(!var()->workflow->supportUserTimeInterval(threadIndex));
 
-	vars->spinEnter();
-    vars->status.threadStatus[threadIndex].userTimeInterval = interval;
-	vars->spinLeave();
+	var()->spinEnter();
+    var()->status.threadStatus[threadIndex].userTimeInterval = interval;
+	var()->spinLeave();
 }
 
 void Threads::useDefaultTimeInterval(UInt threadIndex)
 {
 	if (!vars) return;
-    UInt nThreads = vars->status.threadStatus.size();
+    UInt nThreads = var()->status.threadStatus.size();
     if (threadIndex >= nThreads) return;
-	vars->spinEnter();
-	vars->status.threadStatus[threadIndex].userTimeInterval = Optional<UInt>();
-	vars->spinLeave();
+	var()->spinEnter();
+	var()->status.threadStatus[threadIndex].userTimeInterval = Optional<UInt>();
+	var()->spinLeave();
 }
 
 Threads Threads::start(Interface<IWorkflow> workflow, Interface<ILogger> logger, Array<Bool>& threadsRet)
@@ -449,26 +449,26 @@ Threads Threads::start(Interface<IWorkflow> workflow, Interface<ILogger> logger,
 
     Threads out;
 	out.setVars(new ThreadsVars(), TRUE);
-    out.vars->workflow = workflow;
-	out.vars->logger = logger;
-    out.vars->timers = Array<Timer>(nThreads);
-	out.vars->barrier.setStrength(nThreads);
-    out.vars->status.isActive = TRUE;
-    out.vars->status.workflowID = threadsManager.newWorkflowID();
-    out.vars->status.workflowName = workflowName;
-	out.vars->beginRet = Array<Bool>(nThreads, FALSE);
+    out.var()->workflow = workflow;
+	out.var()->logger = logger;
+    out.var()->timers = Array<Timer>(nThreads);
+	out.var()->barrier.setStrength(nThreads);
+    out.var()->status.isActive = TRUE;
+    out.var()->status.workflowID = threadsManager.newWorkflowID();
+    out.var()->status.workflowName = workflowName;
+	out.var()->beginRet = Array<Bool>(nThreads, FALSE);
     
     Array<ThreadStatus> threadsStatus(nThreads);
-    out.vars->status.threadStatus = threadsStatus;
+    out.var()->status.threadStatus = threadsStatus;
     for (UInt i = 0; i < nThreads; i++)
     {
 		threadsStatus[i].isActive = FALSE;
 		threadsStatus[i].threadName = threadNames[i].isEmpty() ? "unknown_thread" : threadNames[i];
-        threadCreate(out.vars);
+        threadCreate(out.var());
     }
-	out.vars->allBegin.waitSet();
+	out.var()->allBegin.waitSet();
 
-	threadsRet = out.vars->beginRet.clone();
+	threadsRet = out.var()->beginRet.clone();
     
     threadsManager.addThreads(out);
 	return out;

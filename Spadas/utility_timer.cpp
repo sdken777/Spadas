@@ -105,32 +105,32 @@ namespace timer_interval
 using namespace spadas;
 using namespace timer_interval;
 
-Timer::Timer() : Object<TimerVars>(new TimerVars(getCurrentCPUTick()), TRUE)
+Timer::Timer() : BaseObject(new TimerVars(getCurrentCPUTick()))
 {}
 
-Timer::Timer(ULong startCPUTick) : Object<TimerVars>(new TimerVars(math::min(getCurrentCPUTick(), startCPUTick)), TRUE)
+Timer::Timer(ULong startCPUTick) : BaseObject(new TimerVars(math::min(getCurrentCPUTick(), startCPUTick)))
 {}
 
 void Timer::start()
 {
-	vars->startCPUTick = getCurrentCPUTick();
+	var()->startCPUTick = getCurrentCPUTick();
 }
 
 Double Timer::check()
 {
 	initTimerConstants();
-	return millisecondCoefficient * (getCurrentCPUTick() - vars->startCPUTick);
+	return millisecondCoefficient * (getCurrentCPUTick() - var()->startCPUTick);
 }
 
 Double Timer::getStartTime()
 {
 	initTimerConstants();
-	return millisecondCoefficient * vars->startCPUTick;
+	return millisecondCoefficient * var()->startCPUTick;
 }
 
 ULong Timer::getStartCPUTick()
 {
-	return vars->startCPUTick;
+	return var()->startCPUTick;
 }
 
 ULong Timer::cpuTick()

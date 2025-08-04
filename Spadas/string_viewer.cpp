@@ -22,39 +22,39 @@ namespace spadas
 
 using namespace spadas;
 
-StringViewer::StringViewer() : Object<StringViewerVars>(new StringViewerVars, TRUE)
+StringViewer::StringViewer() : BaseObject(new StringViewerVars)
 {
-    vars->curIndex = 0;
+    var()->curIndex = 0;
 }
-StringViewer::StringViewer(String source) : Object<StringViewerVars>(new StringViewerVars, TRUE)
+StringViewer::StringViewer(String source) : BaseObject(new StringViewerVars)
 {
     reset(source);
 }
 void StringViewer::reset(String source)
 {
-    vars->source = source;
-    vars->span = StringSpan();
+    var()->source = source;
+    var()->span = StringSpan();
     if (!source.isEmpty()) 
     {
-        StringVars *sourceVars = source.getVars();
+        StringVars *sourceVars = source.var();
         sourceVars->retain();
-        ((StringSpanStruct*)&vars->span)->source = (ULong)sourceVars;
-        ((StringSpanStruct*)&vars->span)->idx = 0x80000000; // refCounting flag
-        ((StringSpanStruct*)&vars->span)->len = 0;
+        ((StringSpanStruct*)&var()->span)->source = (ULong)sourceVars;
+        ((StringSpanStruct*)&var()->span)->idx = 0x80000000; // refCounting flag
+        ((StringSpanStruct*)&var()->span)->len = 0;
     }
-    vars->curIndex = 0;
+    var()->curIndex = 0;
 }
 Bool StringViewer::hasNext()
 {
-    return vars->curIndex < vars->source.length();
+    return var()->curIndex < var()->source.length();
 }
 StringSpan& StringViewer::next(Char splitter)
 {
-    UInt sourceLength = vars->source.length();
-    SPADAS_ERROR_RETURNVAL(vars->curIndex >= sourceLength, vars->span);
+    UInt sourceLength = var()->source.length();
+    SPADAS_ERROR_RETURNVAL(var()->curIndex >= sourceLength, var()->span);
 
-    const Byte *sourceData = vars->source.bytes();
-    const Byte *curPos = sourceData + vars->curIndex;
+    const Byte *sourceData = var()->source.bytes();
+    const Byte *curPos = sourceData + var()->curIndex;
     const Byte *endPos = sourceData + sourceLength;
     const Byte *targetPos = curPos;
 
@@ -69,32 +69,32 @@ StringSpan& StringViewer::next(Char splitter)
         else targetPos++;
     }
 
-    ((StringSpanStruct*)&vars->span)->idx = vars->curIndex | 0x80000000;
+    ((StringSpanStruct*)&var()->span)->idx = var()->curIndex | 0x80000000;
     if (matchBreak)
     {
-        ((StringSpanStruct*)&vars->span)->len = targetPos - curPos;
-        vars->curIndex = (UInt)(targetPos - sourceData + 1);
+        ((StringSpanStruct*)&var()->span)->len = targetPos - curPos;
+        var()->curIndex = (UInt)(targetPos - sourceData + 1);
     }
     else
     {
-        ((StringSpanStruct*)&vars->span)->len = sourceLength - vars->curIndex;
-        vars->curIndex = sourceLength;
+        ((StringSpanStruct*)&var()->span)->len = sourceLength - var()->curIndex;
+        var()->curIndex = sourceLength;
     }
-    return vars->span;
+    return var()->span;
 }
 StringSpan& StringViewer::next(String splitter)
 {
-    SPADAS_ERROR_RETURNVAL(splitter.isEmpty(), vars->span);
+    SPADAS_ERROR_RETURNVAL(splitter.isEmpty(), var()->span);
     
     UInt subLength = splitter.length();
     const Byte *subData = splitter.bytes();
     if (subLength == 1) return next((Char)subData[0]);
 
-    UInt sourceLength = vars->source.length();
-    SPADAS_ERROR_RETURNVAL(vars->curIndex >= sourceLength, vars->span);
+    UInt sourceLength = var()->source.length();
+    SPADAS_ERROR_RETURNVAL(var()->curIndex >= sourceLength, var()->span);
 
-    const Byte *sourceData = vars->source.bytes();
-    const Byte *curPos = sourceData + vars->curIndex;
+    const Byte *sourceData = var()->source.bytes();
+    const Byte *curPos = sourceData + var()->curIndex;
     const Byte *endPos = sourceData + sourceLength + 1 - subLength;
     const Byte *targetPos = curPos;
     
@@ -118,16 +118,16 @@ StringSpan& StringViewer::next(String splitter)
         else targetPos++;
     }
 
-    ((StringSpanStruct*)&vars->span)->idx = vars->curIndex | 0x80000000;
+    ((StringSpanStruct*)&var()->span)->idx = var()->curIndex | 0x80000000;
     if (matchBreak)
     {
-        ((StringSpanStruct*)&vars->span)->len = targetPos - curPos;
-        vars->curIndex = (UInt)(targetPos - sourceData + subLength);
+        ((StringSpanStruct*)&var()->span)->len = targetPos - curPos;
+        var()->curIndex = (UInt)(targetPos - sourceData + subLength);
     }
     else
     {
-        ((StringSpanStruct*)&vars->span)->len = sourceLength - vars->curIndex;
-        vars->curIndex = sourceLength;
+        ((StringSpanStruct*)&var()->span)->len = sourceLength - var()->curIndex;
+        var()->curIndex = sourceLength;
     }
-    return vars->span;
+    return var()->span;
 }

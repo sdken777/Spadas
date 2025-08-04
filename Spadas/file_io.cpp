@@ -364,7 +364,7 @@ File File::openEncrypted(Path filePath, String password)
 
 	File file;
 	file.setVars(new FileVars(filePath, filePtr, FileMode::InputEncrypted, fileSize, 16), TRUE);
-	file.vars->encCtx = encCtx;
+	file.var()->encCtx = encCtx;
 	return file;
 }
 
@@ -432,7 +432,7 @@ File File::createEncrypted(Path filePath, String password)
 
 	File file;
 	file.setVars(new FileVars(filePath, filePtr, FileMode::OutputEncrypted, 16, 16), TRUE);
-	file.vars->encCtx = EncryptionContext::createForNewFile(filePtr, password);
+	file.var()->encCtx = EncryptionContext::createForNewFile(filePtr, password);
 	return file;
 }
 
@@ -542,7 +542,7 @@ File File::appendEncrypted(Path filePath, String password)
 
 	File file;
 	file.setVars(new FileVars(filePath, filePtr, FileMode::OutputEncrypted, fileSize, fileSize), TRUE);
-	file.vars->encCtx = encCtx;
+	file.var()->encCtx = encCtx;
 	return file;
 }
 
@@ -550,76 +550,76 @@ void File::close()
 {
 	if (!isClosed())
 	{
-		if (vars->isOutputMode()) fileFlush(vars->file);
-		fileClose(vars->file);
-		vars->file = NULL;
-		if (vars->encCtx)
+		if (var()->isOutputMode()) fileFlush(var()->file);
+		fileClose(var()->file);
+		var()->file = NULL;
+		if (var()->encCtx)
 		{
-			delete vars->encCtx;
-			vars->encCtx = NULL;
+			delete var()->encCtx;
+			var()->encCtx = NULL;
 		}
 	}
 }
 
 Bool File::isClosed()
 {
-	return !vars || !vars->file;
+	return !vars || !var()->file;
 }
 
 ULong File::position()
 {
 	if (isClosed()) return ULINF;
-	else return vars->pos;
+	else return var()->pos;
 }
 
 ULong File::size()
 {
 	if (isClosed()) return ULINF;
-	else return vars->size;
+	else return var()->size;
 }
 
 Path File::path()
 {
-	return vars ? vars->path : Path();
+	return vars ? var()->path : Path();
 }
 	
 void File::print(String text)
 {
-	SPADAS_ERROR_RETURN(isClosed() || !vars->isOutputTextMode());
+	SPADAS_ERROR_RETURN(isClosed() || !var()->isOutputTextMode());
 
-	if (vars->mode == FileMode::OutputEncrypted)
+	if (var()->mode == FileMode::OutputEncrypted)
 	{
 		Binary data = text.toBinary();
 		const UInt dataSize = data.size();
 		Byte *dataPtr = data.data();
 		for (UInt i = 0; i < dataSize; i++)
 		{
-			dataPtr[i] = vars->encCtx->next(dataPtr[i]);
+			dataPtr[i] = var()->encCtx->next(dataPtr[i]);
 		}
-		fileOutput(vars->file, data);
-		fileOutput(vars->file, vars->encCtx->nextEnter());
+		fileOutput(var()->file, data);
+		fileOutput(var()->file, var()->encCtx->nextEnter());
 	}
 	else
 	{
-		filePrint(vars->file, text, vars->mode == FileMode::OutputTextUtf8);
+		filePrint(var()->file, text, var()->mode == FileMode::OutputTextUtf8);
 	}
 	
-	vars->pos = filePos(vars->file);
-	vars->size = math::max(vars->size, vars->pos);
+	var()->pos = filePos(var()->file);
+	var()->size = math::max(var()->size, var()->pos);
 	
-	if (vars->timer.check() > FILE_FLUSH_PERIOD)
+	if (var()->timer.check() > FILE_FLUSH_PERIOD)
 	{
-		vars->timer.start();
-		fileFlush(vars->file);
+		var()->timer.start();
+		fileFlush(var()->file);
 	}
 }
 
 void File::output(Binary data)
 {
-	SPADAS_ERROR_RETURN(isClosed() || !vars->isOutputMode());
+	SPADAS_ERROR_RETURN(isClosed() || !var()->isOutputMode());
 	if (data.isEmpty()) return;
 
-	if (vars->mode == FileMode::OutputEncrypted)
+	if (var()->mode == FileMode::OutputEncrypted)
 	{
 		const UInt dataSize = data.size();
 		Binary localData(dataSize);
@@ -627,46 +627,46 @@ void File::output(Binary data)
 		Byte *dstDataPtr = localData.data();
 		for (UInt i = 0; i < dataSize; i++)
 		{
-			dstDataPtr[i] = vars->encCtx->next(srcDataPtr[i]);
+			dstDataPtr[i] = var()->encCtx->next(srcDataPtr[i]);
 		}
-		fileOutput(vars->file, localData);
+		fileOutput(var()->file, localData);
 	}
 	else
 	{
-		fileOutput(vars->file, data);
+		fileOutput(var()->file, data);
 	}
 
-	vars->pos += data.size();
-	vars->size = math::max(vars->size, vars->pos);
+	var()->pos += data.size();
+	var()->size = math::max(var()->size, var()->pos);
 	
-	if (vars->timer.check() > FILE_FLUSH_PERIOD)
+	if (var()->timer.check() > FILE_FLUSH_PERIOD)
 	{
-		vars->timer.start();
-		fileFlush(vars->file);
+		var()->timer.start();
+		fileFlush(var()->file);
 	}
 }
 
 void File::flush()
 {
-	SPADAS_ERROR_RETURN(isClosed() || !vars->isOutputMode());
+	SPADAS_ERROR_RETURN(isClosed() || !var()->isOutputMode());
 
-	fileFlush(vars->file);
+	fileFlush(var()->file);
 }
 
 String File::scan()
 {
-	SPADAS_ERROR_RETURNVAL(isClosed() || !vars->isInputTextMode(), String());
+	SPADAS_ERROR_RETURNVAL(isClosed() || !var()->isInputTextMode(), String());
 
-	if (vars->mode == FileMode::InputEncrypted)
+	if (var()->mode == FileMode::InputEncrypted)
 	{
-		ULong originPos = vars->pos;
+		ULong originPos = var()->pos;
 
 		ArrayX<BinarySpan> stringBuffer;
 		UInt bufferedLength = 0;
 		UInt enderLength = 0;
 		while (TRUE)
 		{
-			Binary data = fileInput(vars->file, ENCRYPTED_SCAN_SIZE, vars->size, originPos + bufferedLength);
+			Binary data = fileInput(var()->file, ENCRYPTED_SCAN_SIZE, var()->size, originPos + bufferedLength);
 			if (data.isEmpty()) break;
 
 			Int validLength = -1;
@@ -674,7 +674,7 @@ String File::scan()
 			Byte *dataPtr = data.data();
 			for (UInt i = 0; i < dataSize; i++)
 			{
-				Char c = (Char)vars->encCtx->next(dataPtr[i]);
+				Char c = (Char)var()->encCtx->next(dataPtr[i]);
 				dataPtr[i] = (Byte)c;
 				if (c == 0)
 				{
@@ -722,18 +722,18 @@ String File::scan()
 			output += e.value();
 		}
 
-		ULong targetPos = math::min(vars->size, originPos + bufferedLength + enderLength);
-		vars->pos = fileSeek(vars->file, targetPos);
-		vars->encCtx->moveTo(targetPos);
+		ULong targetPos = math::min(var()->size, originPos + bufferedLength + enderLength);
+		var()->pos = fileSeek(var()->file, targetPos);
+		var()->encCtx->moveTo(targetPos);
 
 		return output;
 	}
 	else
 	{
-		if (vars->scanBuffer.isEmpty()) vars->scanBuffer = Array<Char>(SCAN_SIZE);
+		if (var()->scanBuffer.isEmpty()) var()->scanBuffer = Array<Char>(SCAN_SIZE);
 
-		String output = fileScan(vars->file, vars->scanBuffer.data(), vars->mode == FileMode::InputTextUtf8);
-		vars->pos = filePos(vars->file);
+		String output = fileScan(var()->file, var()->scanBuffer.data(), var()->mode == FileMode::InputTextUtf8);
+		var()->pos = filePos(var()->file);
 		return output;
 	}
 }
@@ -742,21 +742,21 @@ Binary File::input(UInt size)
 {
 	if (size == 0) return Binary();
 	
-	SPADAS_ERROR_RETURNVAL(isClosed() || vars->isOutputMode(), Binary());
+	SPADAS_ERROR_RETURNVAL(isClosed() || var()->isOutputMode(), Binary());
 
-	Binary output = fileInput(vars->file, size, vars->size, vars->pos);
+	Binary output = fileInput(var()->file, size, var()->size, var()->pos);
 
-	if (vars->mode == FileMode::InputEncrypted)
+	if (var()->mode == FileMode::InputEncrypted)
 	{
 		const UInt outputSize = output.size();
 		Byte *outputPtr = output.data();
 		for (UInt i = 0; i < outputSize; i++)
 		{
-			outputPtr[i] = vars->encCtx->next(outputPtr[i]);
+			outputPtr[i] = var()->encCtx->next(outputPtr[i]);
 		}
 	}
 
-	vars->pos += output.size();
+	var()->pos += output.size();
 	return output;
 }
 
@@ -765,7 +765,7 @@ ULong File::seek(ULong pos)
 	SPADAS_ERROR_RETURNVAL(isClosed(), ULINF);
 
 	ULong minPos = 0;
-	switch (vars->mode)
+	switch (var()->mode)
 	{
 	case FileMode::InputTextUtf8:
 	case FileMode::OutputTextUtf8:
@@ -781,19 +781,19 @@ ULong File::seek(ULong pos)
 	}
 	pos = math::max(minPos, pos);
 
-	vars->pos = fileSeek(vars->file, pos);
+	var()->pos = fileSeek(var()->file, pos);
 	
-	if (vars->mode == FileMode::InputEncrypted || vars->mode == FileMode::OutputEncrypted)
+	if (var()->mode == FileMode::InputEncrypted || var()->mode == FileMode::OutputEncrypted)
 	{
-		vars->encCtx->moveTo(vars->pos);
+		var()->encCtx->moveTo(var()->pos);
 	}
 
-	return vars->pos;
+	return var()->pos;
 }
 
 Bool File::endOfFile()
 {
-	SPADAS_ERROR_RETURNVAL(isClosed() || vars->isOutputMode(), TRUE);
+	SPADAS_ERROR_RETURNVAL(isClosed() || var()->isOutputMode(), TRUE);
 
-	return vars->pos >= vars->size;
+	return var()->pos >= var()->size;
 }

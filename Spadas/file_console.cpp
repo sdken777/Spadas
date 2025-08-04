@@ -26,35 +26,35 @@ namespace spadas
 
 using namespace spadas;
 
-FileConsole::FileConsole() : Object<FileConsoleVars>(new FileConsoleVars, TRUE)
+FileConsole::FileConsole() : BaseObject(new FileConsoleVars)
 {
 
 }
 
-FileConsole::FileConsole(Path filePath) : Object<FileConsoleVars>(new FileConsoleVars, TRUE)
+FileConsole::FileConsole(Path filePath) : BaseObject(new FileConsoleVars)
 {
 	SPADAS_ERROR_RETURN(filePath.isNull());
 	SPADAS_ERROR_RETURN(filePath.isFolder());
-	vars->file = File::createText(filePath);
+	var()->file = File::createText(filePath);
 }
 
 void FileConsole::print(String text, Enum<MessageLevel> level)
 {
-	if (!vars->file.isValid()) return;
+	if (!var()->file.isValid()) return;
 
 	switch (level.value())
 	{
 	case MessageLevel::Value::Error:
-		vars->file.print(vars->errorPrefix + text);
+		var()->file.print(var()->errorPrefix + text);
 		break;
 	case MessageLevel::Value::Warning:
-		vars->file.print(vars->warningPrefix + text);
+		var()->file.print(var()->warningPrefix + text);
 		break;
 	case MessageLevel::Value::Info:
-		vars->file.print(vars->infoPrefix + text);
+		var()->file.print(var()->infoPrefix + text);
 		break;
 	case MessageLevel::Value::Debug:
-		vars->file.print(vars->debugPrefix + text);
+		var()->file.print(var()->debugPrefix + text);
 		break;
 	default:
 		break;
